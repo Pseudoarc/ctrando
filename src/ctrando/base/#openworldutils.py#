@@ -1,0 +1,93 @@
+"""
+Module containing functions useful for openworld conversion.
+"""
+from typing import Optional
+
+from ctrando.common import ctenums
+from ctrando.locations.eventcommand import EventCommand as EC, Operation as OP
+from ctrando.locations.eventfunction import EventFunction as EF
+from ctrando.locations.locationevent import LocationEvent as Event
+from ctrando.common.memory import Flags
+
+
+def get_has_equipment_func(
+        item_id: ctenums.ItemID,
+        result_addr: int,
+        temp_addr: int = 0x7F0300
+) -> EF:
+    """
+    Returns an EventFunction that tests for the presence of an item.
+    Assumes result_addr holds a 0. Writes a 1 in result_addr if the item is
+    found.
+    """
+    
+    if item_id in range(ctenums.ItemID.WOOD_SWORD, ctenums.ItemID.HIDE_TUNIC):
+        start_addr = 0x7E2629
+    elif item_id in range(ctenums.ItemID.HIDE_TUNIC, ctenums.ItemID.HIDE_CAP):
+        start_addr = 0x7E2628
+    elif item_id in range(ctenums.ItemID.HIDE_CAP, ctenums.ItemID.BANDANA):
+        start_addr = 0x7E2627
+    else:
+        return (
+            EF().add_if(
+                EC.if_has_item(item_id),
+                EF().add(EC.assign_val_to_mem(1, result_addr, 1))
+            )
+        )
+
+    end_label = f'{item_id}{result_addr}'
+    ret_fn = (
+        EF().add_if(
+            EC.if_has_item(item_id),
+            EF().add(EC.assign_val_to_mem(1, result_addr, 1))
+            .jump_to_label(EC.jump_forward(), end_label)
+        )
+    )
+
+    cur_addr = start_addr
+    for _ in range(7):
+        ret_fn.add(EC.assign_mem_to_mem(cur_addr, temp_addr, 1))
+        ret_fn.add_if(
+            EC.if_mem_op_value(temp_addr, OP.EQUALS, item_id),
+            EF().add(EC.assign_val_to_mem(1, result_addr, 1))
+            .jump_to_label(EC.jump_forward(), end_label)
+        )
+        cur_addr += 0x50
+
+    ret_fn.set_label(end_label)
+    ret_fn.add(EC.pause(0))  # Otherwise, future appends may move label
+    return ret_fn
+
+
+def storyline_to_flag(
+        script: Event,
+        flag_dict: dict[int, Optional[Flags]]
+):
+    """
+    Convert storyline < X to if_not_flag(flag_dict[X]) in a script.
+    """
+    pos: Optional[int] = script.get_object_start(0)
+    while True:
+        pos, cmd = script.find_command_opt(
+            [
+                0x18,  # if storyline lt
+                # 0x12,  # if mem op value
+             ], pos
+        )
+
+        if pos is None:
+            break
+
+        if cmd.command == 0x18:
+            storyline_val = cmd.args[0]
+            if storyline_val in flag_dict:
+                flag = flag_dict[storyline_val]
+                if flag is None:
+                    script.delete_commands(pos, 1)
+                else:
+                    repl_cmd = EC.if_not_flag(flag)
+                    script.replace_jump_cmd(pos, repl_cmd)
+            else:
+                pos += len(cmd)
+
+        # print(f'{pos:04X}: {cmd}')
