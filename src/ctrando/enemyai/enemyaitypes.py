@@ -96,7 +96,14 @@ class Target(IntEnum):
 S = typing.TypeVar('S', bound='_EnemyAICondition')
 
 
-class _EnemyAICondition(cty.SizedBinaryData):
+class _AttrSizedBinaryData(cty.SizedBinaryData):
+    def _set_properties(self, *args: tuple[str, typing.Optional[int]]):
+        for name, val in args:
+            if val is not None:
+                setattr(self, name, val)
+
+
+class _EnemyAICondition(_AttrSizedBinaryData):
     """Base class for an AI condition."""
     SIZE = 4
     COND_ID: typing.ClassVar[int]
@@ -107,17 +114,6 @@ class _EnemyAICondition(cty.SizedBinaryData):
         default[0] = cls.COND_ID
 
         return default
-
-    def _set_properties(self, *args: tuple[str, typing.Optional[int]]):
-        for name, val in args:
-            if val is not None:
-                setattr(self, name, val)
-
-    # @classmethod
-    # def validate_data(cls: typing.Type[S], data: S):
-    #     super().validate_data(data)
-    #     if data[0] != cls.COND_ID:
-    #         raise ValueError
 
 
 class IfTrue(_EnemyAICondition):
@@ -168,6 +164,14 @@ class IfMonsterDead(_EnemyAICondition):
 class IfNumLivingEnemiesLessThanEqual(_EnemyAICondition):
     COND_ID = 5
     num_enemies = cty.byte_prop(1)
+
+    def __init__(self, *args,
+                 num_enemies: int | None = None,
+                 **kwargs):
+        super().__init__(*args, **kwargs)
+        self._set_properties(
+            ("num_enemies", num_enemies)
+        )
 
     def __str__(self):
         return f"If Number of Living Enemies <= {self.num_enemies}"
@@ -475,7 +479,7 @@ def get_condition_from_buffer(buf: typing.ByteString, pos: int = 0) -> _EnemyAIC
 T = typing.TypeVar('T', bound='_EnemyAIAction')
 
 
-class _EnemyAIAction(cty.SizedBinaryData):
+class _EnemyAIAction(_AttrSizedBinaryData):
     ACTION_ID: typing.ClassVar[int]
 
     @classmethod
@@ -512,7 +516,20 @@ class Tech(_EnemyAIAction):
     SIZE = 6
 
     tech_index = cty.byte_prop(1)
+    target = cty.byte_prop(2, ret_type=Target)
     message_id = cty.byte_prop(5)
+
+    def __init__(self, *args,
+                 tech_index: int | None = None,
+                 target: Target | None = None,
+                 message_id: int | None = None,
+                 **kwargs):
+        super().__init__(*args, **kwargs)
+        self._set_properties(
+            ("tech_index", tech_index),
+            ("target", target),
+            ("message_id", message_id)
+        )
 
 
 class RandomAction(_EnemyAIAction):
@@ -574,6 +591,15 @@ class DisplayMessage(_EnemyAIAction):
     SIZE = 2
 
     message_id = cty.byte_prop(1)
+
+    def __init__(self,
+                 *args,
+                 message_id: int | None = None,
+                 **kwargs):
+        super().__init__(*args, **kwargs)
+        self._set_properties(
+            ("message_id", message_id)
+        )
 
 
 class ReviveSupportEnemies(_EnemyAIAction):
