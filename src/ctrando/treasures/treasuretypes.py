@@ -27,15 +27,8 @@ class Gold(int):
 
 RewardType = typing.Union[ctenums.ItemID, Gold]
 
-class RewardSpot(typing.Protocol):
-    @property
-    def reward(self) -> RewardType:
-        pass
 
-    @reward.setter
-    def reward(self, new_reward: RewardType):
-        pass
-
+class _RewardSpotBase(typing.Protocol):
     def write_to_ct_rom(self, ct_rom: ctrom.CTRom,
                         script_manager: typing.Optional[ScriptManager] = None):
         """Write this RewardSpot to the given state."""
@@ -46,6 +39,23 @@ class RewardSpot(typing.Protocol):
 
     ) -> RewardType:
         """Read the reward currently held in this spot"""
+
+
+class RewardSpotProperty(_RewardSpotBase, typing.Protocol):
+    @property
+    def reward(self) -> RewardType:
+        pass
+
+    @reward.setter
+    def reward(self, new_reward: RewardType):
+        pass
+
+
+class RewardSpotField(_RewardSpotBase, typing.Protocol):
+    reward: RewardType
+
+
+type RewardSpot = RewardSpotProperty | RewardSpotField
 
 
 class ChestRW(ctt.RomRW):
@@ -541,6 +551,53 @@ class SpriteScriptTreasure(ScriptTreasure):
             pos, EC.load_npc(new_npc_id)
         )
 
+
+class MasaMuneTreasure(ScriptTreasure):
+    """
+    Treasure type for setting the Cave of Masamune key item.
+    Needs to change the "Are you here for {item}" prompt as well.
+    """
+    def __init__(
+            self,
+            location: ctenums.LocID,
+            object_id: int,
+            function_id: int,
+            reward: RewardType = ctenums.ItemID.MOP,
+            item_num=0,
+            text_object_id: int = 0x0D,
+            text_function_id: int = FID.ARBITRARY_0,
+    ):
+        ScriptTreasure.__init__(self, location, object_id, function_id, reward, item_num)
+        self.text_object_id = text_object_id
+        self.text_function_id = text_function_id
+
+
+    def write_to_ct_rom(self, ct_rom: ctrom.CTRom,
+                        script_manager: typing.Optional[ScriptManager] = None):
+        ScriptTreasure.write_to_ct_rom(self, ct_rom, script_manager)
+        self.write_item_to_decbox(script_manager)
+
+    def write_item_to_decbox(
+            self,
+            script_manager: ScriptManager
+    ):
+        script = script_manager[ctenums.LocID.DENADORO_CAVE_OF_MASAMUNE]
+        pos, _ = script.find_command(
+            [0xC0],
+            script.get_function_start(self.text_object_id, self.text_function_id)
+        )
+        str_ind = script.data[pos+1]
+
+        if isinstance(self.reward, ctenums.ItemID):
+            script.insert_commands(
+                EC.assign_val_to_mem(self.reward, 0x7F0200, 1).to_bytearray(), pos
+            )
+            repl_str = "{item}"
+        else:
+            repl_str = f"{int(self.reward)}G"
+
+        dec_str = ctstrings.CTString.ct_bytes_to_ascii(script.strings[str_ind]).replace("Masamune", repl_str)
+        script.strings[str_ind] = ctstrings.CTString.from_str(dec_str, True)
 
 
 class BekklerTreasure(ScriptTreasure):
@@ -1246,7 +1303,7 @@ def get_base_treasure_dict() -> dict[ctenums.TreasureID, RewardSpot]:
         TID.TABAN_GIFT_VEST: ScriptTreasure(
             LocID.LUCCAS_WORKSHOP, object_id=0x08, function_id=0x01, item_num=2
         ),
-        TID.DENADORO_MTS_KEY: ScriptTreasure(
+        TID.DENADORO_MTS_KEY: MasaMuneTreasure(
             location=LocID.DENADORO_CAVE_OF_MASAMUNE,
             object_id=0x0A,
             function_id=FID.TOUCH,
@@ -1633,7 +1690,7 @@ def get_treasure_count_dict() -> dict[ctenums.LocID, int]:
 def get_vanilla_assignment() -> dict[ctenums.TreasureID, RewardType]:
     return {
         ctenums.TreasureID.TRUCE_MAYOR_1F: ctenums.ItemID.TONIC,
-        ctenums.TreasureID.TRUCE_MAYOR_2F: 100,
+        ctenums.TreasureID.TRUCE_MAYOR_2F: Gold(100),
         ctenums.TreasureID.KINGS_ROOM_1000: ctenums.ItemID.FULL_ETHER,
         ctenums.TreasureID.QUEENS_ROOM_1000: ctenums.ItemID.MEGAELIXIR,
         ctenums.TreasureID.GUARDIA_BASEMENT_1: ctenums.ItemID.LAPIS,
@@ -1650,7 +1707,7 @@ def get_vanilla_assignment() -> dict[ctenums.TreasureID, RewardType]:
         ctenums.TreasureID.GUARDIA_JAIL_OMNICRONE_1: ctenums.ItemID.ETHER,
         ctenums.TreasureID.GUARDIA_JAIL_OMNICRONE_2: ctenums.ItemID.MID_TONIC,
         ctenums.TreasureID.GUARDIA_JAIL_OMNICRONE_3: ctenums.ItemID.ETHER,
-        ctenums.TreasureID.GUARDIA_JAIL_HOLE_1: 1500,
+        ctenums.TreasureID.GUARDIA_JAIL_HOLE_1: Gold(1500),
         ctenums.TreasureID.GUARDIA_JAIL_HOLE_2: ctenums.ItemID.LODE_SWORD,
         ctenums.TreasureID.GUARDIA_JAIL_OUTER_WALL: ctenums.ItemID.SHELTER,
         ctenums.TreasureID.GUARDIA_JAIL_OMNICRONE_4: ctenums.ItemID.MID_TONIC,
@@ -1672,7 +1729,7 @@ def get_vanilla_assignment() -> dict[ctenums.TreasureID, RewardType]:
         ctenums.TreasureID.CURSED_WOODS_1: ctenums.ItemID.MID_TONIC,
         ctenums.TreasureID.CURSED_WOODS_2: ctenums.ItemID.SHELTER,
         ctenums.TreasureID.FROGS_BURROW_RIGHT: ctenums.ItemID.MAGICSCARF,
-        ctenums.TreasureID.DENADORO_MTS_SCREEN2_1: 500,
+        ctenums.TreasureID.DENADORO_MTS_SCREEN2_1: Gold(500),
         ctenums.TreasureID.DENADORO_MTS_SCREEN2_2: ctenums.ItemID.ETHER,
         ctenums.TreasureID.DENADORO_MTS_SCREEN2_3: ctenums.ItemID.MIRAGEHAND,
         ctenums.TreasureID.DENADORO_MTS_FINAL_1: ctenums.ItemID.SHELTER,
@@ -1680,16 +1737,16 @@ def get_vanilla_assignment() -> dict[ctenums.TreasureID, RewardType]:
         ctenums.TreasureID.DENADORO_MTS_FINAL_3: ctenums.ItemID.MID_ETHER,
         ctenums.TreasureID.DENADORO_MTS_WATERFALL_TOP_1: ctenums.ItemID.SILVERSTUD,
         ctenums.TreasureID.DENADORO_MTS_WATERFALL_TOP_2: ctenums.ItemID.SILVERERNG,
-        ctenums.TreasureID.DENADORO_MTS_WATERFALL_TOP_3: 300,
+        ctenums.TreasureID.DENADORO_MTS_WATERFALL_TOP_3: Gold(300),
         ctenums.TreasureID.DENADORO_MTS_WATERFALL_TOP_4: ctenums.ItemID.MID_TONIC,
         ctenums.TreasureID.DENADORO_MTS_WATERFALL_TOP_5: ctenums.ItemID.MID_ETHER,
         ctenums.TreasureID.DENADORO_MTS_ENTRANCE_1: ctenums.ItemID.REVIVE,
-        ctenums.TreasureID.DENADORO_MTS_ENTRANCE_2: 300,
+        ctenums.TreasureID.DENADORO_MTS_ENTRANCE_2: Gold(300),
         ctenums.TreasureID.DENADORO_MTS_SCREEN3_1: ctenums.ItemID.MID_TONIC,
         ctenums.TreasureID.DENADORO_MTS_SCREEN3_2: ctenums.ItemID.MID_ETHER,
         ctenums.TreasureID.DENADORO_MTS_SCREEN3_3: ctenums.ItemID.GOLD_HELM,
         ctenums.TreasureID.DENADORO_MTS_SCREEN3_4: ctenums.ItemID.REVIVE,
-        ctenums.TreasureID.DENADORO_MTS_AMBUSH: 600,
+        ctenums.TreasureID.DENADORO_MTS_AMBUSH: Gold(600),
         ctenums.TreasureID.DENADORO_MTS_SAVE_PT: ctenums.ItemID.MID_ETHER,
         ctenums.TreasureID.FIONAS_HOUSE_1: ctenums.ItemID.MID_ETHER,
         ctenums.TreasureID.FIONAS_HOUSE_2: ctenums.ItemID.MID_ETHER,
@@ -1698,7 +1755,7 @@ def get_vanilla_assignment() -> dict[ctenums.TreasureID, RewardType]:
         ctenums.TreasureID.SUNKEN_DESERT_B1_SE: ctenums.ItemID.AEON_SUIT,
         ctenums.TreasureID.SUNKEN_DESERT_B1_SW: ctenums.ItemID.ELIXIR,
         ctenums.TreasureID.SUNKEN_DESERT_B2_NW: ctenums.ItemID.FULL_TONIC,
-        ctenums.TreasureID.SUNKEN_DESERT_B2_N: 5000,
+        ctenums.TreasureID.SUNKEN_DESERT_B2_N: Gold(5000),
         ctenums.TreasureID.SUNKEN_DESERT_B2_E: ctenums.ItemID.HYPERETHER,
         ctenums.TreasureID.SUNKEN_DESERT_B2_SE: ctenums.ItemID.AEON_HELM,
         ctenums.TreasureID.SUNKEN_DESERT_B2_SW: ctenums.ItemID.MEMORY_CAP,
@@ -1725,7 +1782,7 @@ def get_vanilla_assignment() -> dict[ctenums.TreasureID, RewardType]:
         ctenums.TreasureID.GIANTS_CLAW_ROCK: ctenums.ItemID.BLUE_ROCK,
         ctenums.TreasureID.GIANTS_CLAW_CAVES_5: ctenums.ItemID.FULL_ETHER,
         ctenums.TreasureID.YAKRAS_ROOM: ctenums.ItemID.MID_ETHER,
-        ctenums.TreasureID.MANORIA_SHRINE_SIDEROOM_1: 100,
+        ctenums.TreasureID.MANORIA_SHRINE_SIDEROOM_1: Gold(100),
         ctenums.TreasureID.MANORIA_SHRINE_SIDEROOM_2: ctenums.ItemID.ETHER,
         ctenums.TreasureID.MANORIA_BROMIDE_1: ctenums.ItemID.MAIDENSUIT,
         ctenums.TreasureID.MANORIA_BROMIDE_2: ctenums.ItemID.TONIC,
@@ -1760,7 +1817,7 @@ def get_vanilla_assignment() -> dict[ctenums.TreasureID, RewardType]:
         ctenums.TreasureID.FACTORY_RIGHT_CRANE_LOWER: ctenums.ItemID.ETHER,
         ctenums.TreasureID.FACTORY_RIGHT_INFO_ARCHIVE: ctenums.ItemID.BOLT_SWORD,
         ctenums.TreasureID.FACTORY_RUINS_GENERATOR: ctenums.ItemID.PLASMA_GUN,
-        ctenums.TreasureID.SEWERS_1: 600,
+        ctenums.TreasureID.SEWERS_1: Gold(600),
         ctenums.TreasureID.SEWERS_2: ctenums.ItemID.RAGE_BAND,
         ctenums.TreasureID.SEWERS_3: ctenums.ItemID.BOLT_SWORD,
         ctenums.TreasureID.DEATH_PEAK_SOUTH_FACE_KRAKKER: ctenums.ItemID.MAGIC_RING,
@@ -1772,10 +1829,10 @@ def get_vanilla_assignment() -> dict[ctenums.TreasureID, RewardType]:
         ctenums.TreasureID.GENO_DOME_1F_3: ctenums.ItemID.HYPERETHER,
         ctenums.TreasureID.GENO_DOME_1F_4: ctenums.ItemID.VIGIL_HAT,
         ctenums.TreasureID.GENO_DOME_ROOM_1: ctenums.ItemID.FULL_TONIC,
-        ctenums.TreasureID.GENO_DOME_ROOM_2: 50000,
+        ctenums.TreasureID.GENO_DOME_ROOM_2: Gold(50000),
         ctenums.TreasureID.GENO_DOME_PROTO4_1: ctenums.ItemID.ELIXIR,
         ctenums.TreasureID.GENO_DOME_PROTO4_2: ctenums.ItemID.LAPIS,
-        ctenums.TreasureID.FACTORY_RIGHT_DATA_CORE_1: 400,
+        ctenums.TreasureID.FACTORY_RIGHT_DATA_CORE_1: Gold(400),
         ctenums.TreasureID.FACTORY_RIGHT_DATA_CORE_2: ctenums.ItemID.MID_ETHER,
         ctenums.TreasureID.DEATH_PEAK_KRAKKER_PARADE: ctenums.ItemID.VEDICBLADE,
         ctenums.TreasureID.DEATH_PEAK_CAVES_LEFT: ctenums.ItemID.GIGA_ARM,
@@ -1783,7 +1840,7 @@ def get_vanilla_assignment() -> dict[ctenums.TreasureID, RewardType]:
         ctenums.TreasureID.DEATH_PEAK_CAVES_RIGHT: ctenums.ItemID.BRAVESWORD,
         ctenums.TreasureID.GENO_DOME_2F_1: ctenums.ItemID.FULL_ETHER,
         ctenums.TreasureID.GENO_DOME_2F_2: ctenums.ItemID.MEGAELIXIR,
-        ctenums.TreasureID.GENO_DOME_2F_3: 15000,
+        ctenums.TreasureID.GENO_DOME_2F_3: Gold(15000),
         ctenums.TreasureID.GENO_DOME_2F_4: ctenums.ItemID.LAPIS,
         ctenums.TreasureID.MYSTIC_MT_STREAM: ctenums.ItemID.BERSERKER,
         ctenums.TreasureID.FOREST_MAZE_1: ctenums.ItemID.MID_TONIC,
@@ -1815,7 +1872,7 @@ def get_vanilla_assignment() -> dict[ctenums.TreasureID, RewardType]:
         ctenums.TreasureID.TYRANO_LAIR_MAZE_3: ctenums.ItemID.REVIVE,
         ctenums.TreasureID.TYRANO_LAIR_MAZE_4: ctenums.ItemID.CERATOPPER,
         ctenums.TreasureID.BLACK_OMEN_AUX_COMMAND_MID: ctenums.ItemID.MEGAELIXIR,
-        ctenums.TreasureID.BLACK_OMEN_AUX_COMMAND_NE: 30000,
+        ctenums.TreasureID.BLACK_OMEN_AUX_COMMAND_NE: Gold(30000),
         ctenums.TreasureID.BLACK_OMEN_GRAND_HALL: ctenums.ItemID.MAGIC_SEAL,
         ctenums.TreasureID.BLACK_OMEN_NU_HALL_NW: ctenums.ItemID.MEGAELIXIR,
         ctenums.TreasureID.BLACK_OMEN_NU_HALL_W: ctenums.ItemID.NOVA_ARMOR,
@@ -1867,7 +1924,7 @@ def get_vanilla_assignment() -> dict[ctenums.TreasureID, RewardType]:
         ctenums.TreasureID.MAGUS_CASTLE_PIT_NE: ctenums.ItemID.LAPIS,
         ctenums.TreasureID.MAGUS_CASTLE_PIT_NW: ctenums.ItemID.BARRIER,
         ctenums.TreasureID.MAGUS_CASTLE_PIT_W: ctenums.ItemID.SHELTER,
-        ctenums.TreasureID.KINGS_TOWER_600: 100,
+        ctenums.TreasureID.KINGS_TOWER_600: Gold(100),
         ctenums.TreasureID.KINGS_TOWER_1000: ctenums.ItemID.ELIXIR,
         ctenums.TreasureID.QUEENS_TOWER_1000: ctenums.ItemID.HYPERETHER,
         ctenums.TreasureID.GUARDIA_COURT_TOWER: ctenums.ItemID.HYPERETHER,
@@ -1975,6 +2032,6 @@ def get_vanilla_assignment() -> dict[ctenums.TreasureID, RewardType]:
         ctenums.TreasureID.OCEAN_PALACE_ELEVATOR_MAGIC_TAB: ctenums.ItemID.MAGIC_TAB,
         ctenums.TreasureID.OZZIES_FORT_GUILLOTINES_TAB: ctenums.ItemID.MAGIC_TAB,
         ctenums.TreasureID.PROTO_DOME_PORTAL_TAB: ctenums.ItemID.POWER_TAB,
-        ctenums.TreasureID.CRONOS_MOM: 400,
-        ctenums.TreasureID.TRUCE_MAYOR_2F_OLD_MAN: 300,
+        ctenums.TreasureID.CRONOS_MOM: Gold(400),
+        ctenums.TreasureID.TRUCE_MAYOR_2F_OLD_MAN: Gold(300),
     }
