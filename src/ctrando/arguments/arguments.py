@@ -1,10 +1,12 @@
 """Commandline for CTRando"""
 from __future__ import annotations
 
+import gettext
 import argparse
 from dataclasses import dataclass
 import enum
 import random
+import sys
 import typing
 
 from pathlib import Path
@@ -170,10 +172,20 @@ class Settings:
         )
 
 
+class CTRandoArgumetnParser(argparse.ArgumentParser):
+
+    def error(self, message):
+        self.print_usage(sys.stderr)
+        args = {'prog': self.prog, 'message': message}
+        self._print_message(gettext.gettext('%(prog)s: error: %(message)s\n') % args, sys.stderr)
+
+        raise ValueError(message)
+
+
 def get_parser() -> argparse.ArgumentParser:
     """Returns the argument parser."""
 
-    parser = argparse.ArgumentParser()
+    parser = CTRandoArgumetnParser()
 
     GeneralOptions.add_group_to_parser(parser)
     battlerewards.BattleRewards.add_group_to_parser(parser)

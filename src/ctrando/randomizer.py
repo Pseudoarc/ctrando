@@ -456,10 +456,13 @@ def main():
 
     print("Getting Settings...(", end = "")
     a = time.time()
-    settings = extract_settings()
+    try:
+        settings = extract_settings()
+    except ValueError:
+        sys.exit(-2)
+
     list_type = settings.general_options.list_keys
 
-    print(list_type)
     if list_type is not None:
         list_keys(list_type)
         sys.exit()
