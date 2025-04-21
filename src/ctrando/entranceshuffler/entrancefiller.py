@@ -242,7 +242,6 @@ def verify_fill(
     total_regions = set(region_map.name_connector_dict.keys())
     missed_regions = total_regions.difference(traverser.reached_regions)
     if missed_regions:
-        pass
         # print("Missed:")
         # for region_name in missed_regions:
         #     print(f"\t{region_name}")
@@ -260,7 +259,7 @@ def verify_fill(
         # print("Remaining Connections")
         # for connection in traverser.available_connectors:
         #     print(f"\t{connection.link_name}")
-        # return False
+        return False
 
     return True
 
