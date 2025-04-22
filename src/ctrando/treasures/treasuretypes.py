@@ -21,7 +21,7 @@ class Gold(int):
         if self % 2 != 0:
             raise ValueError("Gold values must be even.")
 
-        if not self in range(0, 2**16):
+        if self not in range(0, 2**16):
             raise ValueError("Gold must be in range(0, 65353)")
 
 

@@ -9,10 +9,11 @@ from ctrando.locations.eventfunction import EventFunction as EF
 from ctrando.locations.locationevent import FunctionID as FID, LocationEvent as Event
 
 # This event uses storyline to compute a value in 0x7F0210
+# Storyline > 0xA5 --> 0xFF
 # 0xA5 <= Storyline < 0xA8 [Charged Pen, Captured) --> 3
 # 0xA2 <= Storyline < 0xA5 [Schala Opens, Charged Pen) --> 2
 # Storyline < 0xA2 and Shala's room scene seen --> 1
-# Otherwise --> 0
+# Storyline < 0xA2 and Shala's room scene not yet seen --> 0
 
 class EventMod(locationevent.LocEventMod):
     """EventMod for Zeal Palace Regal Hall"""
@@ -25,6 +26,7 @@ class EventMod(locationevent.LocEventMod):
         Update the Zeal Palace Regal Hall Event.
         - Trigger the sealed door with the PENDANT_CHARGED flag.
         - Change the fake exit to always go to the room with the golem.
+        - Enable the Save Point regardless of room status.
         """
 
         # Most generic commands are color commands that aren't implemented yet
@@ -73,5 +75,9 @@ class EventMod(locationevent.LocEventMod):
         )
         script.delete_jump_block(pos)
 
-
-
+        pos = script.find_exact_command(
+            EC.if_mem_op_value(0x7F0210, OP.EQUALS, 0xFF),
+            script.get_function_start(0x11, FID.STARTUP)
+        )
+        end = script.find_exact_command(EC.return_cmd(), pos)
+        script.delete_commands_range(pos, end)
