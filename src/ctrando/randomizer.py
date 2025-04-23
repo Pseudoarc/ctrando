@@ -254,7 +254,7 @@ def get_ctrom_from_config(
     basepatch.apply_openworld.apply_openworld(post_config.script_manager)
     basepatch.apply_openworld_ow.update_all_overworlds(post_config.overworld_manager)
     basepatch.apply_ow_warp_patch(ct_rom)
-    b=time.time()
+    b = time.time()
     print(f"({b-a})")
     ### Done with base patch
 
@@ -458,7 +458,8 @@ def main():
     a = time.time()
     try:
         settings = extract_settings()
-    except ValueError:
+    except ValueError as exc:
+        print(exc, file=sys.stderr)
         sys.exit(-2)
 
     list_type = settings.general_options.list_keys

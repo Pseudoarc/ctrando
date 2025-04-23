@@ -115,7 +115,7 @@ class LogicOptions:
 
         group.add_argument(
             "--additional-key-items",
-            nargs="+",
+            nargs="*",
             type=functools.partial(str_to_enum, enum_type=ctenums.ItemID),
             help="Extra (non-progression) items to add to the key item pool.",
             default=argparse.SUPPRESS
@@ -123,7 +123,7 @@ class LogicOptions:
 
         group.add_argument(
             "--forced-spots",
-            nargs="+",
+            nargs="*",
             type=functools.partial(str_to_enum, enum_type=ctenums.TreasureID),
             help="Spots forced to have key items.",
             default=argparse.SUPPRESS
@@ -131,7 +131,7 @@ class LogicOptions:
 
         group.add_argument(
             "--incentive-spots",
-            nargs="+",
+            nargs="*",
             type=functools.partial(str_to_enum, enum_type=ctenums.TreasureID),
             help="Spots with increased probability to have key items.",
             default=argparse.SUPPRESS

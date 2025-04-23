@@ -145,7 +145,9 @@ def get_trimmed_region_dict(
 
 
 def _get_random_group(
-        group_weights: dict[str, float]) -> str:
+        group_weights: dict[str, float],
+        rng: RNGType
+) -> str:
     """
         Returns group name chosen randomly according to weights.
         """
@@ -154,21 +156,22 @@ def _get_random_group(
     ]
 
     dist = distribution.Distribution(*group_weight_pairs)
-    return dist.get_random_item()
+    return dist.get_random_item(rng)
 
 
 def _get_random_tid_from_group(
         tids: list[ctenums.TreasureID],
         spot_weights: dict[ctenums.TreasureID, float],
         treasure_dict: dict[ctenums.TreasureID, ttypes.RewardType],
+        rng: RNGType
 ):
     weight_spot_pairs = [
         (spot_weights[spot], spot)
         for spot in tids
-        if treasure_dict[spot] == ctenums.ItemID.NONE
+        if spot in treasure_dict and treasure_dict[spot] == ctenums.ItemID.NONE
     ]
     dist = distribution.Distribution(*weight_spot_pairs)
-    tid = dist.get_random_item()
+    tid = dist.get_random_item(rng)
     return tid
 
 
@@ -208,7 +211,7 @@ def fill_weighted_random_decay(
         group_weights: dict[str: float] = dict()
         for name, tids in available_groups.items():
             trimmed_tids = [tid for tid in tids
-                            if ret_dict[tid] == ctenums.ItemID.NONE]
+                            if tid in ret_dict and ret_dict[tid] == ctenums.ItemID.NONE]
             weight = sum(spot_weights.get(tid, 0) for tid in trimmed_tids)
             if weight != 0:
                 group_weights[name] = weight
@@ -216,11 +219,11 @@ def fill_weighted_random_decay(
         for name, weight in group_weights.items():
             group_weights[name] = weight*(decay_factor**num_assignments[name])
 
-        group = _get_random_group(group_weights)
+        group = _get_random_group(group_weights, rng)
         tid = _get_random_tid_from_group(available_groups[group],
-                                         spot_weights, ret_dict)
-        print(f"Assign {next_item} to {tid} in group {group}")
-        input()
+                                         spot_weights, ret_dict, rng)
+        # print(f"Assign {next_item} to {tid} in group {group}")
+        # input()
         ret_dict[tid] = next_item
         num_assignments[group] += 1
 
