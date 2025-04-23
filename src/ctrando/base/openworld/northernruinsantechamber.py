@@ -37,7 +37,6 @@ class EventMod(locationevent.LocEventMod):
             script.insert_commands(
                 EC.assign_val_to_mem(item_id, 0x7F0200, 1)
                 .to_bytearray(), pos
-            # TODO: Check if there's a dangling set 0x7F0200
             )
 
         pos = script.get_function_start(0x10, FID.ACTIVATE)
@@ -66,10 +65,9 @@ class EventMod(locationevent.LocEventMod):
             item_id = cmd.args[0]
 
             script.data[pos : pos + 2] = EC.add_item_memory(0x7F0200).to_bytearray()
-            script.insert_commands(
-                EC.assign_val_to_mem(item_id, 0x7F0200, 1)
-                .to_bytearray(), pos
-            )
+            new_cmd = EC.assign_val_to_mem(item_id, 0x7F0200, 1)
+            script.insert_commands(new_cmd.to_bytearray(), pos)
+            pos += len(new_cmd)
 
             pos = script.find_exact_command(
                 EC.assign_val_to_mem(item_id, 0x7F0200, 1),
