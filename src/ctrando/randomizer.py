@@ -154,7 +154,8 @@ def get_random_config(
     )
 
     techdescriptions.update_all_tech_descs(config.pctech_manager,
-                                           settings.tech_options.black_hole_factor)
+                                           settings.tech_options.black_hole_factor,
+                                           settings.tech_options.black_hole_min)
     pctechrandomizer.randomize_tech_order(
         config.pctech_manager,
         settings.tech_options.tech_order,

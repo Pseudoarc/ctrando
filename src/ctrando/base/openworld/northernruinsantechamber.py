@@ -75,6 +75,5 @@ class EventMod(locationevent.LocEventMod):
             )
             script.delete_commands(pos)
 
-
             pos, _ = script.find_command([0xC1], pos)
             script.data[pos + 1] = normal_item_text

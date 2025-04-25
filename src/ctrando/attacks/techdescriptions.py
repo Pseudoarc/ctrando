@@ -165,7 +165,7 @@ def get_effect_string(effect: cttechtypes.EffectHeader):
         elif dmg_formula == DF.PC_AYLA:
             dmg_str = f'(Atk)({power*9/40:.4g})'
         elif dmg_formula == DF.MISSING_HP:
-            dmg_str = f'(St)(MissHP)/{70/power:.2g}'
+            dmg_str = f'(St)(MissHP)/{280/power:.2g}'
         else:
             dmg_str = ''
 
@@ -244,7 +244,7 @@ def get_single_tech_desc(
         elif dmg_formula == DF.PC_AYLA:
             dmg_str = f'(Atk)({power*9/40:.4g})'
         elif dmg_formula == DF.MISSING_HP:
-            dmg_str = f'(St)(MissHP)/{70/power:.2g}'
+            dmg_str = f'(St)(MissHP)/{280/power:.2g}'
         else:
             dmg_str = ''
 
@@ -278,12 +278,13 @@ def update_single_tech_descs(tech_man: PCTechManager):
 
 def update_black_hole_descs(
         tech_man: PCTechManager,
-        bh_death_rate: float
+        bh_death_rate: float,
+        bh_min: float
 ):
     for tech_id in range(1, 1+8*7):
         tech = tech_man.get_tech(tech_id)
         if "40% Death" in tech.desc:
-            new_percent = round(bh_death_rate*tech.effect_mps[0])
+            new_percent = round(bh_min+bh_death_rate*tech.effect_mps[0])
             new_percent = sorted([1, new_percent, 100])[1]
             tech.desc = tech.desc.replace("40% Death", f"{new_percent}% Death")
             tech_man.set_tech_by_id(tech, tech_id)
@@ -291,10 +292,11 @@ def update_black_hole_descs(
 
 def update_all_tech_descs(
         tech_man: PCTechManager,
-        black_hole_factor: float
+        black_hole_factor: float,
+        black_hole_min: float,
 ):
     update_single_tech_descs(tech_man)
-    update_black_hole_descs(tech_man, black_hole_factor)
+    update_black_hole_descs(tech_man, black_hole_factor, black_hole_min)
     update_combo_tech_descs(tech_man)
     # clean_up_desc_space(tech_db)
 
