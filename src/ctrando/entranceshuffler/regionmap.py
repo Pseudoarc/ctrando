@@ -1,6 +1,7 @@
 import typing
 from itertools import combinations, permutations
 
+from ctrando.arguments import logicoptions
 from ctrando.common import ctenums, memory
 from ctrando.common.ctenums import CharID, ItemID, RecruitID
 from ctrando.entranceshuffler import locregions, owregions
@@ -424,7 +425,8 @@ def get_default_exit_connectors() -> list[ExitConnector]:
 
 
 def get_default_region_connectors(
-        recruit_assign_dict: typing.Optional[dict[ctenums.RecruitID, typing.Optional[ctenums.CharID]]]
+        recruit_assign_dict: typing.Optional[dict[ctenums.RecruitID, typing.Optional[ctenums.CharID]]],
+        logic_options: logicoptions.LogicOptions
 ) -> list[RegionConnector]:
 
     if recruit_assign_dict is None:
@@ -461,6 +463,10 @@ def get_default_region_connectors(
     eot_portal_rule = logictypes.LogicRule(
         list(list(x) for x in combinations(CharID, 4))
     ) & logictypes.LogicRule([ItemID.GATE_KEY])
+
+    bb_rule = logictypes.LogicRule([memory.Flags.HAS_ALGETTY_PORTAL])
+    if logic_options.force_early_flight:
+        bb_rule = bb_rule & logictypes.LogicRule([ctenums.ItemID.JETSOFTIME])
 
     return [
         RegionConnector(
@@ -855,7 +861,7 @@ def get_default_region_connectors(
         RegionConnector(
             "last_village_commons", "blackbird",
             "get_captured_by_dalton",
-            rule=logictypes.LogicRule([memory.Flags.HAS_ALGETTY_PORTAL])
+            rule=bb_rule
         ),
         RegionConnector(
             "skyway_enhasa_south", "land_bridge_enhasa_south",

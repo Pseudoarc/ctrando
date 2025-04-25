@@ -82,6 +82,7 @@ class LogicOptions:
         ctenums.TreasureID.TYRANO_LAIR_MAZE_1, ctenums.TreasureID.TYRANO_LAIR_MAZE_2,
         ctenums.TreasureID.TYRANO_LAIR_MAZE_3, ctenums.TreasureID.TYRANO_LAIR_MAZE_4,
     )
+    _default_force_early_flight: typing.ClassVar[bool] = False
     _default_starter_rewards: typing.ClassVar[tuple[RewardType,...]] = (ScriptReward.EPOCH,)
 
     def __init__(
@@ -93,6 +94,7 @@ class LogicOptions:
             excluded_spots: Iterable[ctenums.TreasureID] = _default_excluded_spots,
             decay_factor: float = _default_decay_factor,
             hard_lavos_end_boss: bool = _default_hard_lavos_end_boss,
+            force_early_flight: bool = _default_force_early_flight,
             starter_rewards: Iterable[RewardType] = _default_starter_rewards
     ):
         self.additional_key_items = sorted(additional_key_items)
@@ -102,6 +104,7 @@ class LogicOptions:
         self.excluded_spots = excluded_spots
         self.decay_factor = decay_factor
         self.hard_lavos_final_boss = hard_lavos_end_boss
+        self.force_early_flight = force_early_flight
         self.starter_rewards = starter_rewards
 
     @classmethod
@@ -169,6 +172,12 @@ class LogicOptions:
         )
 
         group.add_argument(
+            "--force-early-flight", action="store_true",
+            help="The JetsOfTime will be guaranteed in a pre-flight locataion.",
+            default=argparse.SUPPRESS
+        )
+
+        group.add_argument(
             "--hard-lavos-end-boss",
             action="store_true",
             help="The game will end if Ocean Palace Lavos is defeated.",
@@ -180,7 +189,7 @@ class LogicOptions:
         attr_names = [
             "additional_key_items", "forced_spots", "incentive_spots",
             "incentive_factor", "excluded_spots", "decay_factor",
-            "hard_lavos_end_boss", "starter_rewards"
+            "hard_lavos_end_boss", "starter_rewards", "force_early_flight"
         ]
 
         init_dict: dict[str, typing.Any] = dict()
