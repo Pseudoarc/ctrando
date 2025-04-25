@@ -2,7 +2,7 @@
 
 from ctrando.common import ctenums, memory
 from ctrando.locations import locationevent
-from ctrando.locations.eventcommand import EventCommand as EC, FuncSync as FS
+from ctrando.locations.eventcommand import EventCommand as EC, FuncSync as FS, Facing
 from ctrando.locations.eventfunction import EventFunction as EF
 from ctrando.locations.locationevent import FunctionID as FID, LocationEvent as Event
 
@@ -29,6 +29,21 @@ class EventMod(locationevent.LocEventMod):
         cls.modify_storyline_triggers(script)
         cls.modify_pc_arbs(script)
         cls.modify_cutscenes(script)
+        cls.add_save_warp(script)
+
+    @classmethod
+    def add_save_warp(cls, script: Event):
+        """Saying no to being here for the Masamune returns to the save point."""
+        pos = script.find_exact_command(EC.play_sound(0x51),
+                                        script.get_function_start(0xD, FID.ARBITRARY_0))
+        warp_block = (
+            EF().add(EC.pause(1.0))
+            .add(EC.darken(0x1))
+            .add(EC.fade_screen())
+            .add(EC.change_location(ctenums.LocID.DENADORO_CAVE_OF_MASAMUNE_EXTERIOR,
+                                    0x03, 0x04, Facing.DOWN, 0, True))
+        )
+        script.insert_commands(warp_block.get_bytearray(), pos)
 
     @classmethod
     def modify_storyline_triggers(cls, script: Event):
