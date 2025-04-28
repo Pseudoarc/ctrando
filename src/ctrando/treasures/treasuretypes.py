@@ -668,17 +668,14 @@ class PrismShardTreasure(ScriptTreasure):
 
         pos, cmd = script.find_command([0xC0], pos)  # spoiler DecBox
 
-        str_ind = cmd.args[-1]
+        str_ind = cmd.args[0]
         string = script.strings[str_ind]
         py_string = ctstrings.CTString.ct_bytes_to_ascii(string)
 
-        if isinstance(self.reward, ctenums.ItemID):
-            if "cash" in py_string:
-                py_string.replace("cash", "{item}")
-        elif "{item}" in py_string:
-            py_string.replace("{item}", "cash")
-
-        script.strings[str_ind] = ctstrings.CTString.from_str(py_string)
+        if not isinstance(self.reward, ctenums.ItemID):
+            reward_str = f"{int(self.reward)}G"
+            py_string = py_string.replace("{item}", reward_str)
+            script.strings[str_ind] = ctstrings.CTString.from_str(py_string)
 
 
 class ChargeableTreasure(ScriptTreasure):
