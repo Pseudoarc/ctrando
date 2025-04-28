@@ -214,7 +214,12 @@ class EventMod(locationevent.LocEventMod):
             script.insert_commands(store_pc_gear_block.get_bytearray(), pos)
 
             pos = script.find_exact_command(
-                EC.if_mem_op_value(stored_pc_index, OP.EQUALS, 1)
+                EC.if_mem_op_value(stored_pc_index, OP.EQUALS, 5), pos
+            )
+            script.delete_jump_block(pos)
+
+            pos = script.find_exact_command(
+                EC.if_mem_op_value(stored_pc_index, OP.EQUALS, 1), pos
             )
 
             recover_pc_gear_block = EF()

@@ -11,6 +11,7 @@ from ctrando.items import itemdata
 def normalize_ayla_fist(ct_rom: ctrom.CTRom):
     """
     Do not auto-equip Ayla with a new fist depending on level.
+    Do not ignore equipping Ayla's fist in the Equip Item event command.
     """
 
     # There are many options for eliminating this check.
@@ -23,6 +24,10 @@ def normalize_ayla_fist(ct_rom: ctrom.CTRom):
     for write_addr in write_addrs:
         ct_rom.seek(write_addr)
         ct_rom.write(payload)
+
+    # There's a special case for Ayla so she never equips a fist. Remove it
+    ct_rom.seek(0x028DB6)
+    ct_rom.write(b'\x80')
 
 
 T5: typing.TypeAlias = itemdata.Type_05_Buffs

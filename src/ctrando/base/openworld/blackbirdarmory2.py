@@ -113,6 +113,13 @@ class EventMod(locationevent.LocEventMod):
         )
         script.insert_commands(store_gear_block.get_bytearray(), pos)
 
+        # Remove Ayla Special Case
+        pos = script.find_exact_command(
+            EC.if_mem_op_value(memory.Memory.BLACKBIRD_IMPRISONED_PC2,
+                               OP.EQUALS, ctenums.CharID.AYLA), pos
+        )
+        script.delete_jump_block(pos)
+
         # Equip saved gear.
         equip_gear_block = EF()
         for pc_id in (ctenums.CharID.CRONO, ctenums.CharID.MAGUS):

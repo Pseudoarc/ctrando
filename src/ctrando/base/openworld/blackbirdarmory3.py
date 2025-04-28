@@ -28,7 +28,7 @@ class EventMod(locationevent.LocEventMod):
         Modify Blackbird Armory 3 for an Open World.
         - Add Crono and Magus to the map.
         - Modify the gear restoration routine to use new flags
-        - Add cases for resturning Crono and Magus's gear.
+        - Add cases for restoring Crono and Magus's gear.
         """
         owu.insert_pc_object(script, ctenums.CharID.MAGUS, 1, 6)
         owu.insert_pc_object(script, ctenums.CharID.CRONO, 1, 1)
@@ -106,6 +106,13 @@ class EventMod(locationevent.LocEventMod):
             script.get_function_start(0, FID.ARBITRARY_1)
         )
         script.insert_commands(store_gear_block.get_bytearray(), pos)
+
+        # Remove Ayla Special Case
+        pos = script.find_exact_command(
+            EC.if_mem_op_value(memory.Memory.BLACKBIRD_IMPRISONED_PC3,
+                               OP.EQUALS, ctenums.CharID.AYLA), pos
+        )
+        script.delete_jump_block(pos)
 
         # Equip saved gear.
         equip_gear_block = EF()
