@@ -140,6 +140,7 @@ class PostConfigState:
         enemy_sprite_dict = enemystats.get_sprite_dict_from_ctrom(ct_rom)
         enemy_ai_manager = enemyaimanager.EnemyAIManager.read_from_ct_rom(ct_rom)
         vanillafixes.fix_son_of_sun_ai(enemy_ai_manager)
+        vanillafixes.fix_magus_masa2_ai(enemy_ai_manager)
 
         return cls(script_manager, overworld_manager, loc_exit_dict, loc_data_dict,
                    treasure_data_dict, enemy_sprite_dict, enemy_ai_manager)

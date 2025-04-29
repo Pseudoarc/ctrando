@@ -11,7 +11,6 @@ import typing
 from typing import Optional
 
 from ctrando.common import byteops, ctenums, ctrom, cttypes as cty, freespace
-from ctrando.common.cttypes import T
 
 
 class StatOffset(IntEnum):
@@ -325,6 +324,18 @@ class IfHitByTechID(_EnemyAICondition):
     tech_id = cty.byte_prop(2)
     is_not_equal = cty.byte_prop(3, ret_type=bool)
 
+    def __init__(self, *args,
+                 is_enemy_tech: bool | None = None,
+                 tech_id: int | None = None,
+                 is_not_equal: bool | None = None,
+                 **kwargs):
+        super().__init__(*args, **kwargs)
+        self._set_properties(
+            ("is_enemy_tech", is_enemy_tech),
+            ("tech_id", tech_id),
+            ("is_not_equal", is_not_equal)
+        )
+
     def __str__(self):
         tech_type_str = "Enemy Tech" if self.is_enemy_tech else "Player Tech"
         # comp_str = "Is Not" if self.is_not_equal else "Is"
@@ -389,6 +400,19 @@ class IfStatEqual(_EnemyAICondition):
     value = cty.byte_prop(1)
     target = cty.byte_prop(2, ret_type=Target)
     stat_offset = cty.byte_prop(3)
+
+    def __init__(self, *args,
+                 value: int | None = None,
+                 target: Target | None = None,
+                 stat_offset: int | None = None,
+                 **kwargs
+    ):
+        super().__init__(*args, **kwargs)
+        self._set_properties(
+            ("value", value),
+            ("target", target),
+            ("stat_offset", stat_offset)
+        )
 
     def __str__(self):
         return f"If stat {self.stat_offset:02X} of {self.target} equals {self.value}"

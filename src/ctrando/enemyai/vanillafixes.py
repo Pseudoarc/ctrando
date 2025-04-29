@@ -1,4 +1,4 @@
-from ctrando.common.ctenums import EnemyID
+from ctrando.common.ctenums import EnemyID, ItemID
 from ctrando.enemyai.enemyaimanager import EnemyAIManager
 import ctrando.enemyai.enemyaitypes as aitypes
 
@@ -31,3 +31,32 @@ def fix_son_of_sun_ai(
 
     script.action_script = [new_action] + script.action_script
     script.reaction_script = [new_reaction] + script.reaction_script
+
+
+def fix_magus_masa2_ai(
+        ai_manager: EnemyAIManager
+):
+    """Allow Masa2ne to reduce Magus's magic resistance."""
+    script = ai_manager.script_dict[EnemyID.MAGUS]
+
+    target_condition = aitypes.IfStatEqual(
+        value=ItemID.MASAMUNE_1,
+        target=aitypes.Target.ATTACKING_PC,
+        stat_offset=0x29
+    )
+
+    for ind, block in enumerate(script.reaction_script):
+        condition = block.condition_list[0]
+        if condition == target_condition:
+            new_condition = target_condition.get_copy()
+            new_condition.value = ItemID.MASAMUNE_2
+
+            new_block = aitypes.EnemyAIScriptBlock(
+                condition_list=[new_condition],
+                action_list=block.action_list.copy()
+            )
+
+            script.reaction_script.insert(ind, new_block)
+            break
+    else:
+        raise IndexError

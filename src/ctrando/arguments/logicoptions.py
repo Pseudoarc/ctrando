@@ -165,7 +165,7 @@ class LogicOptions:
 
         group.add_argument(
             "--starter-rewards",
-            nargs="+",
+            nargs="*",
             type=str_to_reward,
             help="Rewards to grant at game start.",
             default=argparse.SUPPRESS
