@@ -165,7 +165,7 @@ def get_effect_string(effect: cttechtypes.EffectHeader):
         elif dmg_formula == DF.PC_AYLA:
             dmg_str = f'(Atk)({power*9/40:.4g})'
         elif dmg_formula == DF.MISSING_HP:
-            dmg_str = f'(St)(MissHP)/{280/power:.2g}'
+            dmg_str = f'(St)(MissHP)/{round(280/power)}'
         else:
             dmg_str = ''
 
