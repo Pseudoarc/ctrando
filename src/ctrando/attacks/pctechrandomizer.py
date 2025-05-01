@@ -19,9 +19,16 @@ def randomize_tech_order(
     """
     Randomizer the single tech order of the tech_manager.
     Assumes a vanilla initial order.
+
+    Returns dict[CharID, tuple[int, ...]] of permutations
     """
+
+    ret_dict = {
+        char_id: tuple(range(8)) for char_id in ctenums.CharID
+    }
+
     if tech_order_scheme == TechOrder.VANILLA:
-        return
+        return ret_dict
 
     first_magic_tech_dict: dict[ctenums.CharID, ctenums.TechID] = {
         ctenums.CharID.CRONO: ctenums.TechID.LIGHTNING,
@@ -95,6 +102,9 @@ def randomize_tech_order(
                 permutation[first_magic_index], permutation[first_magic_index_new]
 
         tech_manager.reorder_single_techs(pc_id, permutation)
+        ret_dict[pc_id] = tuple(permutation)
+
+    return ret_dict
 
 
 # Sketchy math was performed to come up with these.

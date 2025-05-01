@@ -113,7 +113,14 @@ def set_element_safety_level(ai_man: aim.EnemyAIManager, safe_level: int):
         lit_cond = aity.IfAttackElement(element=aity.AIElement.LIGHTNING,
                                         is_not_equal=False)
 
-        ind, block = _get_block_with_cond(nizbel_script.reaction_script, lit_cond)
+        for ind, block in enumerate(nizbel_script.reaction_script):
+            if block.condition_list[0].COND_ID == aity.IfHitByTechID.COND_ID:
+                slash_ind = ind
+                break
+        else:
+            raise IndexError
+
+        _, block = _get_block_with_cond(nizbel_script.reaction_script, lit_cond)
         block_ind = block.condition_list.index(lit_cond)
         block.condition_list[block_ind: block_ind+1] = [
             aity.IfAttackElement(element=aity.AIElement.MAGICAL,
@@ -123,7 +130,7 @@ def set_element_safety_level(ai_man: aim.EnemyAIManager, safe_level: int):
                                      value=safe_level),
 
         ]
-        nizbel_script.reaction_script.insert(ind, block)
+        nizbel_script.reaction_script.insert(slash_ind, block)
 
     for enemy_id in (ctenums.EnemyID.RETINITE_TOP, ctenums.EnemyID.RETINITE_BOTTOM):
         retinite_script = ai_man.script_dict[enemy_id]

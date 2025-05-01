@@ -32,6 +32,9 @@ class ScriptManager:
     def get_ctrom(self) -> ctrom.CTRom:
         return self._ct_rom
 
+    def set_ctrom(self, ct_rom: ctrom.CTRom):
+        self._ct_rom = ct_rom
+
     def __getitem__(self, key: ctenums.LocID) -> LocationEvent:
         # print(f'Reading {key}')
         if key in self._script_dict:

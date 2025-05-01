@@ -569,7 +569,8 @@ def get_obj_keys(obj_str: str) -> list[ObjectiveType]:
         return [
             QuestID.MT_WOE, QuestID.FACTORY_RUINS, QuestID.ARRIS_DOME,
             QuestID.TYRANO_LAIR, QuestID.JERKY_TRADE, QuestID.ZENAN_BRIDGE,
-            QuestID.REPTITE_LAIR, QuestID.EPOCH_REBORN_BATTLE,
+            QuestID.REPTITE_LAIR, QuestID.EPOCH_REBORN_BATTLE, QuestID.ZEAL_PALACE_THRONE,
+            QuestID.KINGS_TRIAL,
         ]
     elif obj_str == "flight_gated_quest":
         return [
@@ -580,7 +581,8 @@ def get_obj_keys(obj_str: str) -> list[ObjectiveType]:
     elif obj_str == "very_gated_quest":
         return [
             QuestID.BLACKBIRD, QuestID.SUNKEN_DESERT, QuestID.FORGE_MASAMUNE,
-            QuestID.DEATH_PEAK,
+            QuestID.DEATH_PEAK, QuestID.MAGUS_CASTLE, QuestID.OCEAN_PALACE,
+            QuestID.SUNKEN_DESERT
         ]
     elif obj_str == "any_boss":
         return bty.get_assignable_bosses()

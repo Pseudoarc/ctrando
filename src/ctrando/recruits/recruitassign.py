@@ -2,6 +2,7 @@
 Module with some useful functions for generating recruit event code.
 """
 
+from ctrando.base import openworldutils as owu
 from ctrando.common import ctenums, memory
 from ctrando.common.ctenums import ItemID
 from ctrando.locations.eventcommand import EventCommand as EC, Operation as OP
@@ -48,6 +49,7 @@ def build_recruit_function(
         .add(EC.load_pc_in_party(char_id))
         .add(EC.set_flag(is_recruited_flag))
         .add(EC.name_pc(int(char_id)))
+        .append(owu.get_increment_addr(memory.Memory.RECRUITS_OBTAINED))
         .add(EC.set_explore_mode(True))
         # This will end execution, so it needs to be last.
         .add(EC.set_controllable_infinite())

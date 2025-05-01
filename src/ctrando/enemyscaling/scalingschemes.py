@@ -53,7 +53,6 @@ def get_progression_scaler(
     """
     Scale based on what the player has done.
     """
-
     temp_addr = 0x34
     levels_per_char = min(63, levels_per_char)
     levels_per_boss = min(63, levels_per_boss)

@@ -43,7 +43,7 @@ static PyObject* compress(PyObject* self, PyObject* args)
   source = buffer.buf;
   len_source = buffer.len;
 
-  for(i=0;i<2;i++){
+  for(i=0;i<1;i++){
     // i=0: use 0x07FF for the range, 0xF800 for the max copy length
     // i=1: use 0x0FFF for the range, 0xF000 for the max copy length
     lookback_range = 0x07FF | (i << 11);

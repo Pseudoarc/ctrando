@@ -1,6 +1,7 @@
 """The main randomizer."""
 import enum
 import pathlib
+import pickle
 import random
 import sys
 import time
@@ -20,6 +21,7 @@ from ctrando.bosses import staticbossscaling, bossrando, bosstypes
 from ctrando.characters import characterwriter
 from ctrando.common import ctrom, ctenums, randostate
 from ctrando.common.random import RNGType
+from ctrando.enemyai import randofixes
 from ctrando.enemyscaling import patchscaling
 from ctrando.entranceshuffler import entrancefiller, entranceassign, regionmap, maptraversal
 from ctrando.entranceshuffler.entrancefiller import update_starting_rewards
@@ -156,7 +158,7 @@ def get_random_config(
     techdescriptions.update_all_tech_descs(config.pctech_manager,
                                            settings.tech_options.black_hole_factor,
                                            settings.tech_options.black_hole_min)
-    pctechrandomizer.randomize_tech_order(
+    permutation_dict = pctechrandomizer.randomize_tech_order(
         config.pctech_manager,
         settings.tech_options.tech_order,
         settings.tech_options.preserve_magic,
@@ -219,7 +221,8 @@ def get_random_config(
 def get_ctrom_from_config(
         input_rom: ctrom.CTRom,
         settings: arguments.Settings,
-        config: randostate.ConfigState
+        config: randostate.ConfigState,
+        post_config_load_path: pathlib.Path | None = None
 ) -> ctrom.CTRom:
     """Generate the rom specified by the settings and config"""
 
@@ -230,37 +233,27 @@ def get_ctrom_from_config(
     print("Applying Base Patch...", end="")
     a=time.time()
     basepatch.base_patch_ct_rom(ct_rom)
+    basepatch.apply_ow_warp_patch(ct_rom)
     b=time.time()
     print(f"({b-a})")
     basepatch.add_set_level_command(ct_rom, config.pcstat_manager)
 
-    # Old randostate pieces
-    print("Genearating Base Config...", end="")
+    print("Applying Openworld Scripts...", end="")
     a = time.time()
-    post_config = randostate.PostConfigState.get_default_state_from_ctrom(ct_rom)
+    post_config = get_openworld_post_config(ct_rom, post_config_load_path)
     b = time.time()
     print(f"({b-a})")
-
-    # Location Data
-    post_config.loc_data_dict[ctenums.LocID.GUARDIA_BASEMENT].music = 0xFF
-    post_config.loc_data_dict[ctenums.LocID.GUARDIA_REAR_STORAGE].music = 0xFF
-
-    # Location Exits
-    exit_dict = post_config.loc_exit_dict
-    del exit_dict[ctenums.LocID.LAB_32_EAST][1]
-    exit_dict[ctenums.LocID.BLACK_OMEN_98F_OMEGA_DEFENSE][1].exit_y -= 1
-
-    print("Applying Openworld...", end="")
-    a = time.time()
-    basepatch.apply_openworld.apply_openworld(post_config.script_manager)
-    basepatch.apply_openworld_ow.update_all_overworlds(post_config.overworld_manager)
-    basepatch.apply_ow_warp_patch(ct_rom)
-    b = time.time()
-    print(f"({b-a})")
-    ### Done with base patch
 
     print("Setting Random Data...", end="")
     a = time.time()
+    # Slash AI
+    for tech_id in range(1, 9):
+        if config.pctech_manager.get_tech(tech_id).name == "Slash":
+            randofixes.fix_dino_slash_scripts(post_config.enemy_ai_manager, tech_id)
+            break
+    else:
+        raise IndexError
+
     modifymaps.make_heckran_boss_map(post_config.script_manager,
                                      post_config.loc_exit_dict,
                                      post_config.loc_data_dict)
@@ -455,7 +448,7 @@ def main():
     #     raise ValueError
     # builtins.print = f
 
-    print("Getting Settings...(", end = "")
+    print("Getting Settings...", end = "")
     a = time.time()
     try:
         settings = extract_settings()
@@ -480,7 +473,7 @@ def main():
             settings.general_options.input_file.parent
 
     ct_rom = ctrom.CTRom.from_file(str(settings.general_options.input_file))
-    print(f"{b - a}")
+    print(f"({b - a})")
 
     print("Getting Random Data...", end="")
     a = time.time()
@@ -490,7 +483,7 @@ def main():
 
     # import time
     # x = time.time()
-    out_rom = get_ctrom_from_config(ct_rom, settings, config)
+    out_rom = get_ctrom_from_config(ct_rom, settings, config, "./post_config.pkl")
     # y = time.time()
     # print(y-x)
 
@@ -499,6 +492,49 @@ def main():
 
     spoiler_path = settings.general_options.output_directory / "ct-mod-spoilers.txt"
     write_spoilers(settings, config, spoiler_path)
+
+
+def get_openworld_post_config(
+        cur_ct_rom: ctrom.CTRom,
+        load_path: pathlib.Path | None = None,
+) -> randostate.PostConfigState:
+
+    if load_path is not None:
+        with open(load_path, "rb") as infile:
+            post_config: randostate.PostConfigState = pickle.load(infile)
+
+        if not isinstance(post_config, randostate.PostConfigState):
+            raise TypeError
+
+        post_config.script_manager.set_ctrom(cur_ct_rom)
+        post_config.overworld_manager.set_ct_rom(cur_ct_rom)
+        return post_config
+
+    post_config = randostate.PostConfigState.get_default_state_from_ctrom(cur_ct_rom)
+    basepatch.apply_openworld.apply_openworld(post_config.script_manager)
+    basepatch.apply_openworld_ow.update_all_overworlds(post_config.overworld_manager)
+
+    # Location Data
+    post_config.loc_data_dict[ctenums.LocID.GUARDIA_BASEMENT].music = 0xFF
+    post_config.loc_data_dict[ctenums.LocID.GUARDIA_REAR_STORAGE].music = 0xFF
+
+    # Location Exits
+    exit_dict = post_config.loc_exit_dict
+    del exit_dict[ctenums.LocID.LAB_32_EAST][1]
+    exit_dict[ctenums.LocID.BLACK_OMEN_98F_OMEGA_DEFENSE][1].exit_y -= 1
+
+    return post_config
+
+
+def dump_openworld_post_config(
+        vanilla_rom: ctrom.CTRom,
+        dump_path: pathlib.Path
+):
+    post_config = get_openworld_post_config(vanilla_rom)
+
+    with open(dump_path, "wb") as outfile:
+        # noinspection PyTypeChecker
+        pickle.dump(post_config, outfile)
 
 
 if __name__ == "__main__":

@@ -149,3 +149,6 @@ class OWManager:
             self.write_overworld(overworld_id)
 
         self._write_exit_names_to_ctrom(self.name_dict, self._ct_rom)
+
+    def set_ct_rom(self, ct_rom: ctrom.CTRom):
+        self._ct_rom = ct_rom

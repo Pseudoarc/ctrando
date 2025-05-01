@@ -168,7 +168,6 @@ class FreeSpace():
             if ret is None:
                 # print("Error: Not enough free space.")
                 # print(f"size: {size:06X}, hint: {hint:06X}")
-                # self.print_blocks()
                 raise FreeSpaceError(
                     f'Not Enough Free Space.  Size: {size:06X}, '
                     f'hint: {hint:06X}'

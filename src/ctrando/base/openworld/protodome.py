@@ -29,6 +29,7 @@ class EventMod(locationevent.LocEventMod):
     loc_id = ctenums.LocID.PROTO_DOME
     pause_pc_addr = 0x7F0240
     time_gauge_eot_addr = 0x7F0242
+
     @classmethod
     def modify(cls, script: Event):
         """
@@ -41,6 +42,7 @@ class EventMod(locationevent.LocEventMod):
         cls.modify_pc_objects(script)
         cls.modify_intro_battle(script)
         cls.modify_portal_door(script)
+        cls.fix_enertron(script)
 
     @classmethod
     def modify_portal_door(cls, script: Event):
@@ -51,7 +53,6 @@ class EventMod(locationevent.LocEventMod):
 
         script.replace_jump_cmd(
             pos, EC.if_not_flag(memory.Flags.FACTORY_POWER_ACTIVATED))
-
 
     @classmethod
     def modify_startup(cls, script: Event):
@@ -127,3 +128,27 @@ class EventMod(locationevent.LocEventMod):
             EC.move_party(0x37, 0x2A, 0x36, 0x2B, 0x38, 0x2B).to_bytearray(),
             pos
         )
+
+    @classmethod
+    def fix_enertron(cls, script: Event):
+        """Allow the Enertron to work with non-max party size."""
+
+        temp_addr, num_pcs_addr = 0x7F0230, 0x7F0232
+        count_fn = owu.get_count_pcs_func(temp_addr, num_pcs_addr)
+
+        pos = script.find_exact_command(
+            EC.set_explore_mode(False),
+            script.get_function_start(0x0E, FID.ACTIVATE)
+        ) + 2
+
+        script.insert_commands(count_fn.get_bytearray(), pos)
+
+        for _ in range(2):
+            pos = script.find_exact_command(
+                EC.if_mem_op_value(0x7F021E, OP.LESS_THAN, 3),
+                pos
+            )
+            script.replace_jump_cmd(
+                pos,
+                EC.if_mem_op_mem(0x7F021E, OP.LESS_THAN, num_pcs_addr)
+            )
