@@ -483,7 +483,7 @@ def main():
 
     # import time
     # x = time.time()
-    out_rom = get_ctrom_from_config(ct_rom, settings, config, "./post_config.pkl")
+    out_rom = get_ctrom_from_config(ct_rom, settings, config)
     # y = time.time()
     # print(y-x)
 
