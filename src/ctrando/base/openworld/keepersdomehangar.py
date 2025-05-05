@@ -37,7 +37,12 @@ class EventMod(locationevent.LocEventMod):
             EC.if_storyline_counter_lt(0xAE),
             script.get_function_start(0xF, FID.ACTIVATE)
         )
+
         script.delete_jump_block(pos)
+        script.insert_commands(
+            EC.assign_val_to_mem(0, memory.Memory.FLYING_EPOCH_CUTSCENE_COUNTER, 1)
+            .to_bytearray(), pos
+        )
 
         pos = script.find_exact_command(
             EC.if_flag(memory.Flags.OBTAINED_EPOCH_FLIGHT),
