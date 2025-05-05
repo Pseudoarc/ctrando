@@ -2,7 +2,7 @@
 ### General Settings
 input_file="./ct.sfc"
 output_directory="./"  # If omitted, will be the directory of input_file
-seed="phonegonnadosomestuff-2"
+seed="phone-entrance-1"
 
 ### Battle Rewards
 xp_scale=3.0  # [default = 5.0]
@@ -122,6 +122,7 @@ forced_spots = [
 "lab_16_4"
 ]
 hard_lavos_end_boss=true
+force_early_flight=false
 
 # excluded_spots -- a list of spots which will never hold a key item
 # - Charged versions of chargable chests are never allowed

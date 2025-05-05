@@ -350,6 +350,27 @@ def write_test_objectives(
     script = script_manager[ctenums.LocID.LOAD_SCREEN]
     script.set_function(1, FID.TOUCH, add_items_func)
 
+    # Add a check right after waking up for 0-count rewards
+    script = script_manager[ctenums.LocID.CRONOS_ROOM]
+    obj_id = script.append_empty_object()
+    script.set_function(obj_id, FID.STARTUP,
+                        EF().add(EC.return_cmd()).add(EC.end_cmd()))
+    script.set_function(obj_id, FID.ACTIVATE, EF().add(EC.return_cmd()))
+    script.set_function(obj_id, FID.TOUCH, EF().add(EC.return_cmd()))
+    script.set_function(
+        obj_id, FID.ARBITRARY_0,
+        get_objective_count_checks(script, objective_settings)
+    )
+
+    pos = script.find_exact_command(
+        EC.call_pc_function(0, FID.ARBITRARY_6, 4, FS.CONT),
+        script.get_object_start(8)
+    )
+    script.insert_commands(
+        EC.call_obj_function(obj_id, FID.ARBITRARY_0, 4, FS.HALT).to_bytearray(),
+        pos
+    )
+
 
 def write_quest_counters(
         script_manager: scriptmanager.ScriptManager,
