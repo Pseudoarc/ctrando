@@ -23,7 +23,8 @@ from ctrando.arguments import (
     entranceoptions,
     recruitoptions,
     treasureoptions,
-    enemyoptions
+    enemyoptions,
+    postrandooptions
 )
 
 
@@ -139,7 +140,8 @@ class Settings:
             entrance_options: entranceoptions.EntranceShufflerOptions = entranceoptions.EntranceShufflerOptions(),
             recruit_options: recruitoptions.RecruitOptions =recruitoptions.RecruitOptions(),
             treasure_options: treasureoptions.TreasureOptions = treasureoptions.TreasureOptions(),
-            enemy_options: enemyoptions.EnemyOptions = enemyoptions.EnemyOptions()
+            enemy_options: enemyoptions.EnemyOptions = enemyoptions.EnemyOptions(),
+            post_rando_options: postrandooptions.PostRandoOptions = postrandooptions.PostRandoOptions()
     ):
         self.general_options = general_options
         self.battle_rewards = battle_rewards
@@ -153,6 +155,7 @@ class Settings:
         self.recruit_options = recruit_options
         self.treasure_options = treasure_options
         self.enemy_options = enemy_options
+        self.post_random_options = post_rando_options
 
     @classmethod
     def extract_from_namespace(cls, namespace: argparse.Namespace) -> typing.Self:
@@ -168,7 +171,8 @@ class Settings:
             entrance_options=entranceoptions.EntranceShufflerOptions.extract_from_namespace(namespace),
             recruit_options=recruitoptions.RecruitOptions.extract_from_namespace(namespace),
             treasure_options=treasureoptions.TreasureOptions.extract_from_namespace(namespace),
-            enemy_options=enemyoptions.EnemyOptions.extract_from_namespace(namespace)
+            enemy_options=enemyoptions.EnemyOptions.extract_from_namespace(namespace),
+            post_rando_options=postrandooptions.PostRandoOptions.extract_from_namespace(namespace)
         )
 
 
@@ -199,5 +203,6 @@ def get_parser() -> argparse.ArgumentParser:
     recruitoptions.RecruitOptions.add_group_to_parser(parser)
     treasureoptions.TreasureOptions.add_group_to_parser(parser)
     enemyoptions.EnemyOptions.add_group_to_parser(parser)
+    postrandooptions.PostRandoOptions.add_group_to_parser(parser)
 
     return parser

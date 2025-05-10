@@ -1135,7 +1135,7 @@ def base_patch_ct_rom(ct_rom: ctrom.CTRom):
 
     mark_initial_free_space(ct_rom)
     apply_tf_compressed_enemy_gfx_hack(ct_rom)
-    apply_fast_ow_movement(ct_rom)
+    # apply_fast_ow_movement(ct_rom)
     patch_blackbird(ct_rom)
     patch_timegauge_alt(ct_rom)
     patch_progressive_items(ct_rom)
@@ -1185,190 +1185,190 @@ def base_patch_ct_rom(ct_rom: ctrom.CTRom):
     ct_rom.write(b'\x10')  # Straight line to coords command
 
 
-def apply_base_patch_rom_only(rstate: randostate.RandoState):
-    """
-    Do the base patch, but only the part that messes with the rom/scripts.
-    Attempt to split configuration and writing of the configuration.
-    """
-    ct_rom = rstate.ct_rom
-    ct_rom.make_exhirom()
+# def apply_base_patch_rom_only(rstate: randostate.RandoState):
+#     """
+#     Do the base patch, but only the part that messes with the rom/scripts.
+#     Attempt to split configuration and writing of the configuration.
+#     """
+#     ct_rom = rstate.ct_rom
+#     ct_rom.make_exhirom()
+#
+#     mark_initial_free_space(ct_rom)
+#     apply_tf_compressed_enemy_gfx_hack(ct_rom)
+#     apply_fast_ow_movement(ct_rom)
+#     patch_blackbird(ct_rom)
+#     patch_timegauge_alt(ct_rom)
+#     patch_progressive_items(ct_rom)
+#     patch_division(ct_rom)
+#     add_key_item_count(ct_rom)
+#     alter_event_or_operation(ct_rom)
+#     set_storyline_thresholds(ct_rom)
+#     add_boss_counter_to_rewards(ct_rom)
+#     chesttext.add_get_desc_char(ct_rom, 0)
+#     # modifyitems.modify_item_stats(rstate.item_db)  # Note: State Only
+#     modifyitems.normalize_hp_accessories(ct_rom)
+#     modifyitems.normalize_mp_accessories(ct_rom)
+#
+#     expand_eventcommands(ct_rom)
+#     add_set_level_command(ct_rom, rstate.pcstat_manager)
+#
+#     # Debug
+#     ct_rom.seek(0x01FFFF)
+#     ct_rom.write(b"\x01")
+#
+#     ct_rom.seek(0x02E1F0)  # Always active/wait on first name
+#     ct_rom.write(b"\xEA\xEA")
+#
+#     script_manager = rstate.script_manager
+#     ow_manager = rstate.overworld_manager
+#
+#     apply_openworld.apply_openworld(script_manager)
+#     apply_openworld_ow.update_all_overworlds(ow_manager)
+#
+#     # Break into functions
+#
+#     # # Tech Limits -- Unneeded now?
+#     # ct_rom.seek(0x3FF951)
+#     # ct_rom.write(bytes.fromhex('03 03 03 FF 03 FF FF'))
+#
+#     # Location Data
+#     lddict = rstate.loc_data_dict
+#     lddict[ctenums.LocID.GUARDIA_BASEMENT].music = 0xFF
+#     lddict[ctenums.LocID.GUARDIA_REAR_STORAGE].music = 0xFF
+#
+#     # Location Exits
+#     exit_dict = rstate.loc_exit_dict
+#     del exit_dict[ctenums.LocID.LAB_32_EAST][1]
+#     exit_dict[ctenums.LocID.BLACK_OMEN_98F_OMEGA_DEFENSE][1].exit_y -= 1
+#
+#     # Out of Party XP
+#     nop_st = 0x01FA26
+#     # nop_end = 0x01FA41
+#     nop_end = 0x1FA4A
+#
+#     nop_opcode = inst.NOP().opcode
+#     payload = nop_opcode.to_bytes() * (nop_end - nop_st)
+#     ct_rom.seek(nop_st)
+#     ct_rom.write(payload)
+#
+#     AM = inst.AddressingMode
+#     new_level_rt: assemble.ASMList = [
+#         inst.LDX(0xB285, AM.ABS),
+#         inst.JSR(0xF90B, AM.ABS),
+#         "levelup",
+#         inst.JSR(0xF623, AM.ABS),
+#         inst.LDA(0xB28B, AM.ABS),
+#         inst.BEQ("levelup"),
+#     ]
+#     payload = assemble.assemble(new_level_rt)
+#     ct_rom.seek(nop_end - len(payload))
+#     ct_rom.write(payload)
+#
+#     # Elder Spawn Name -- Purely state.
+#     # rstate.enemy_data_dict[ctenums.EnemyID.ELDER_SPAWN_SHELL].name = "Elder Spawn"
 
-    mark_initial_free_space(ct_rom)
-    apply_tf_compressed_enemy_gfx_hack(ct_rom)
-    apply_fast_ow_movement(ct_rom)
-    patch_blackbird(ct_rom)
-    patch_timegauge_alt(ct_rom)
-    patch_progressive_items(ct_rom)
-    patch_division(ct_rom)
-    add_key_item_count(ct_rom)
-    alter_event_or_operation(ct_rom)
-    set_storyline_thresholds(ct_rom)
-    add_boss_counter_to_rewards(ct_rom)
-    chesttext.add_get_desc_char(ct_rom, 0)
-    # modifyitems.modify_item_stats(rstate.item_db)  # Note: State Only
-    modifyitems.normalize_hp_accessories(ct_rom)
-    modifyitems.normalize_mp_accessories(ct_rom)
 
-    expand_eventcommands(ct_rom)
-    add_set_level_command(ct_rom, rstate.pcstat_manager)
-
-    # Debug
-    ct_rom.seek(0x01FFFF)
-    ct_rom.write(b"\x01")
-
-    ct_rom.seek(0x02E1F0)  # Always active/wait on first name
-    ct_rom.write(b"\xEA\xEA")
-
-    script_manager = rstate.script_manager
-    ow_manager = rstate.overworld_manager
-
-    apply_openworld.apply_openworld(script_manager)
-    apply_openworld_ow.update_all_overworlds(ow_manager)
-
-    # Break into functions
-
-    # # Tech Limits -- Unneeded now?
-    # ct_rom.seek(0x3FF951)
-    # ct_rom.write(bytes.fromhex('03 03 03 FF 03 FF FF'))
-
-    # Location Data
-    lddict = rstate.loc_data_dict
-    lddict[ctenums.LocID.GUARDIA_BASEMENT].music = 0xFF
-    lddict[ctenums.LocID.GUARDIA_REAR_STORAGE].music = 0xFF
-
-    # Location Exits
-    exit_dict = rstate.loc_exit_dict
-    del exit_dict[ctenums.LocID.LAB_32_EAST][1]
-    exit_dict[ctenums.LocID.BLACK_OMEN_98F_OMEGA_DEFENSE][1].exit_y -= 1
-
-    # Out of Party XP
-    nop_st = 0x01FA26
-    # nop_end = 0x01FA41
-    nop_end = 0x1FA4A
-
-    nop_opcode = inst.NOP().opcode
-    payload = nop_opcode.to_bytes() * (nop_end - nop_st)
-    ct_rom.seek(nop_st)
-    ct_rom.write(payload)
-
-    AM = inst.AddressingMode
-    new_level_rt: assemble.ASMList = [
-        inst.LDX(0xB285, AM.ABS),
-        inst.JSR(0xF90B, AM.ABS),
-        "levelup",
-        inst.JSR(0xF623, AM.ABS),
-        inst.LDA(0xB28B, AM.ABS),
-        inst.BEQ("levelup"),
-    ]
-    payload = assemble.assemble(new_level_rt)
-    ct_rom.seek(nop_end - len(payload))
-    ct_rom.write(payload)
-
-    # Elder Spawn Name -- Purely state.
-    # rstate.enemy_data_dict[ctenums.EnemyID.ELDER_SPAWN_SHELL].name = "Elder Spawn"
-
-
-def apply_complete_base_patch(rstate: randostate.RandoState):
-    """
-    Apply all of the basic patches to a vanilla randostate
-    """
-    ct_rom = rstate.ct_rom
-    ct_rom.make_exhirom()
-
-    mark_initial_free_space(ct_rom)
-    apply_tf_compressed_enemy_gfx_hack(ct_rom)
-    apply_fast_ow_movement(ct_rom)
-    patch_blackbird(ct_rom)
-    patch_timegauge_alt(ct_rom)
-    patch_progressive_items(ct_rom)
-    patch_division(ct_rom)
-    add_key_item_count(ct_rom)
-    alter_event_or_operation(ct_rom)
-    set_storyline_thresholds(ct_rom)
-    add_boss_counter_to_rewards(ct_rom)
-    chesttext.add_get_desc_char(ct_rom, 0)
-    modifyitems.modify_item_stats(rstate.item_db)  # Note: State Only
-    modifyitems.normalize_hp_accessories(ct_rom)
-    modifyitems.normalize_mp_accessories(ct_rom)
-
-    expand_eventcommands(ct_rom)
-
-    # Note: Doesn't modify the pcstats, just uses them to write the level-up routine
-    add_set_level_command(ct_rom, rstate.pcstat_manager)
-
-    # Debug
-    ct_rom.seek(0x01FFFF)
-    ct_rom.write(b"\x01")
-
-    ct_rom.seek(0x02E1F0)  # Always active/wait on first name
-    ct_rom.write(b"\xEA\xEA")
-
-    script_manager = rstate.script_manager
-    ow_manager = rstate.overworld_manager
-
-    apply_openworld.apply_openworld(script_manager)
-    apply_openworld_ow.update_all_overworlds(ow_manager)
-
-    # Break into functions
-
-    # Tech Limits -- Unneeded now?
-    ct_rom.seek(0x3FF951)
-    ct_rom.write(bytes.fromhex('03 03 03 FF 03 FF FF'))
-
-    # Location Data
-    lddict = rstate.loc_data_dict
-    lddict[ctenums.LocID.GUARDIA_BASEMENT].music = 0xFF
-    lddict[ctenums.LocID.GUARDIA_REAR_STORAGE].music = 0xFF
-
-    # Location Exits
-    exit_dict = rstate.loc_exit_dict
-    del exit_dict[ctenums.LocID.LAB_32_EAST][1]
-
-    exit_dict[ctenums.LocID.BLACK_OMEN_98F_OMEGA_DEFENSE][1].exit_y -= 1
-
-    # Item Data -- Purely item state
-    item_db = rstate.item_db
-    data_dict: dict[ctenums.ItemID, tuple[str, str]] = {
-        ctenums.ItemID.PENDANT_CHARGE: (" PendantChg",
-                                        "The Pendant begins to glow..."),
-        ctenums.ItemID.RAINBOW_SHELL: (" Rbow Shell",
-                                       "Give to King in 600AD"),
-        ctenums.ItemID.JETSOFTIME: (" JetsOfTime",
-                                    " Use at Blacbird 12000BC")
-    }
-
-    for item_id, (name_str, desc_str) in data_dict.items():
-        item_db[item_id].set_name_from_str(name_str)
-        item_db[item_id].set_desc_from_str(desc_str)
-
-    # Techs -- Purely item state
-    pctech.fix_vanilla_techs(rstate.pctech_manager)
-
-    # Out of Party XP
-    nop_st = 0x01FA26
-    # nop_end = 0x01FA41
-    nop_end = 0x1FA4A
-
-    nop_opcode = inst.NOP().opcode
-    payload = nop_opcode.to_bytes() * (nop_end-nop_st)
-    ct_rom.seek(nop_st)
-    ct_rom.write(payload)
-
-    AM = inst.AddressingMode
-    new_level_rt: assemble.ASMList = [
-        inst.LDX(0xB285, AM.ABS),
-        inst.JSR(0xF90B, AM.ABS),
-        "levelup",
-        inst.JSR(0xF623, AM.ABS),
-        inst.LDA(0xB28B, AM.ABS),
-        inst.BEQ("levelup"),
-    ]
-    payload = assemble.assemble(new_level_rt)
-    ct_rom.seek(nop_end-len(payload))
-    ct_rom.write(payload)
-
-    # Elder Spawn Name -- Purely state.
-    rstate.enemy_data_dict[ctenums.EnemyID.ELDER_SPAWN_SHELL].name = "Elder Spawn"
+# def apply_complete_base_patch(rstate: randostate.RandoState):
+#     """
+#     Apply all of the basic patches to a vanilla randostate
+#     """
+#     ct_rom = rstate.ct_rom
+#     ct_rom.make_exhirom()
+#
+#     mark_initial_free_space(ct_rom)
+#     apply_tf_compressed_enemy_gfx_hack(ct_rom)
+#     apply_fast_ow_movement(ct_rom)
+#     patch_blackbird(ct_rom)
+#     patch_timegauge_alt(ct_rom)
+#     patch_progressive_items(ct_rom)
+#     patch_division(ct_rom)
+#     add_key_item_count(ct_rom)
+#     alter_event_or_operation(ct_rom)
+#     set_storyline_thresholds(ct_rom)
+#     add_boss_counter_to_rewards(ct_rom)
+#     chesttext.add_get_desc_char(ct_rom, 0)
+#     modifyitems.modify_item_stats(rstate.item_db)  # Note: State Only
+#     modifyitems.normalize_hp_accessories(ct_rom)
+#     modifyitems.normalize_mp_accessories(ct_rom)
+#
+#     expand_eventcommands(ct_rom)
+#
+#     # Note: Doesn't modify the pcstats, just uses them to write the level-up routine
+#     add_set_level_command(ct_rom, rstate.pcstat_manager)
+#
+#     # Debug
+#     ct_rom.seek(0x01FFFF)
+#     ct_rom.write(b"\x01")
+#
+#     ct_rom.seek(0x02E1F0)  # Always active/wait on first name
+#     ct_rom.write(b"\xEA\xEA")
+#
+#     script_manager = rstate.script_manager
+#     ow_manager = rstate.overworld_manager
+#
+#     apply_openworld.apply_openworld(script_manager)
+#     apply_openworld_ow.update_all_overworlds(ow_manager)
+#
+#     # Break into functions
+#
+#     # Tech Limits -- Unneeded now?
+#     ct_rom.seek(0x3FF951)
+#     ct_rom.write(bytes.fromhex('03 03 03 FF 03 FF FF'))
+#
+#     # Location Data
+#     lddict = rstate.loc_data_dict
+#     lddict[ctenums.LocID.GUARDIA_BASEMENT].music = 0xFF
+#     lddict[ctenums.LocID.GUARDIA_REAR_STORAGE].music = 0xFF
+#
+#     # Location Exits
+#     exit_dict = rstate.loc_exit_dict
+#     del exit_dict[ctenums.LocID.LAB_32_EAST][1]
+#
+#     exit_dict[ctenums.LocID.BLACK_OMEN_98F_OMEGA_DEFENSE][1].exit_y -= 1
+#
+#     # Item Data -- Purely item state
+#     item_db = rstate.item_db
+#     data_dict: dict[ctenums.ItemID, tuple[str, str]] = {
+#         ctenums.ItemID.PENDANT_CHARGE: (" PendantChg",
+#                                         "The Pendant begins to glow..."),
+#         ctenums.ItemID.RAINBOW_SHELL: (" Rbow Shell",
+#                                        "Give to King in 600AD"),
+#         ctenums.ItemID.JETSOFTIME: (" JetsOfTime",
+#                                     " Use at Blacbird 12000BC")
+#     }
+#
+#     for item_id, (name_str, desc_str) in data_dict.items():
+#         item_db[item_id].set_name_from_str(name_str)
+#         item_db[item_id].set_desc_from_str(desc_str)
+#
+#     # Techs -- Purely item state
+#     pctech.fix_vanilla_techs(rstate.pctech_manager)
+#
+#     # Out of Party XP
+#     nop_st = 0x01FA26
+#     # nop_end = 0x01FA41
+#     nop_end = 0x1FA4A
+#
+#     nop_opcode = inst.NOP().opcode
+#     payload = nop_opcode.to_bytes() * (nop_end-nop_st)
+#     ct_rom.seek(nop_st)
+#     ct_rom.write(payload)
+#
+#     AM = inst.AddressingMode
+#     new_level_rt: assemble.ASMList = [
+#         inst.LDX(0xB285, AM.ABS),
+#         inst.JSR(0xF90B, AM.ABS),
+#         "levelup",
+#         inst.JSR(0xF623, AM.ABS),
+#         inst.LDA(0xB28B, AM.ABS),
+#         inst.BEQ("levelup"),
+#     ]
+#     payload = assemble.assemble(new_level_rt)
+#     ct_rom.seek(nop_end-len(payload))
+#     ct_rom.write(payload)
+#
+#     # Elder Spawn Name -- Purely state.
+#     rstate.enemy_data_dict[ctenums.EnemyID.ELDER_SPAWN_SHELL].name = "Elder Spawn"
 
 
 # Notes on making eventcommands
