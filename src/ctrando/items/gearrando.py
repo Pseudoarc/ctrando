@@ -32,10 +32,10 @@ def normalize_ayla_fist(ct_rom: ctrom.CTRom):
     # Modify the empty weapon 00 to be a fist so that Ayla sounds normal
     # on Blackbird
     ct_rom.seek(0x0D6D4C)
-    ct_rom.write(b'\xE8')
+    ct_rom.write(b'\xE7')
 
     ct_rom.seek(0x0D6DAC)
-    ct_rom.write(b'\xE7')
+    ct_rom.write(b'\xE8')
 
 
 T5: typing.TypeAlias = itemdata.Type_05_Buffs
