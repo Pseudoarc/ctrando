@@ -31,7 +31,7 @@ def add_exploremode_to_partyfollows(script: Event):
     exploremode_cmd = EC.set_explore_mode(True)
     partyfollow_cmd = EC.party_follow()
 
-    cmd_bytes = exploremode_cmd.to_bytearray() + partyfollow_cmd.to_bytearray()
+    cmd_bytes = partyfollow_cmd.to_bytearray() + exploremode_cmd.to_bytearray()
 
     while True:
         prev_pos = pos
