@@ -407,6 +407,7 @@ def get_default_boss_assignment() -> dict[BossSpotID, BossID]:
         BSID.ZEAL_PALACE: BossID.GOLEM,
         BSID.ZENAN_BRIDGE: BossID.ZOMBOR,
         BSID.BLACK_OMEN_ZEAL: BossID.ZEAL,
+        BSID.OZZIES_FORT_TRIO: BossID.OZZIE_TRIO
     }
 
 
