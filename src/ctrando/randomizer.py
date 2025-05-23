@@ -219,11 +219,41 @@ def get_random_config(
     return config
 
 
+def clean_scripts_for_tf(
+        script_man: randostate.ScriptManager
+):
+    bad_locs = (
+        ctenums.LocID.LOAD_SCREEN,
+        ctenums.LocID.SPEKKIO,
+        ctenums.LocID.FROGS_BURROW,
+        ctenums.LocID.PRISON_SUPERVISORS_OFFICE, ctenums.LocID.PRISON_TORTURE_STORAGE_ROOM,
+        ctenums.LocID.LEENE_SQUARE,
+        ctenums.LocID.NORTH_CAPE,
+        ctenums.LocID.DEATH_PEAK_SUMMIT_AFTER,
+        ctenums.LocID.DACTYL_NEST_SUMMIT,
+        ctenums.LocID.MANORIA_SANCTUARY,
+        ctenums.LocID.PROTO_DOME,
+        ctenums.LocID.QUEENS_ROOM_600
+    )
+
+    for loc in bad_locs:
+        script = script_man[loc]
+        while True:
+            pos, _ = script.find_command_opt(
+                [0xFC, 0xFD]
+            )
+            if pos is None:
+                break
+
+            script.delete_commands(pos, 1)
+
+
 def get_ctrom_from_config(
         input_rom: ctrom.CTRom,
         settings: arguments.Settings,
         config: randostate.ConfigState,
-        post_config_load_path: pathlib.Path | None = None
+        post_config_load_path: pathlib.Path | None = None,
+        make_tf_friendly: bool = False
 ) -> ctrom.CTRom:
     """Generate the rom specified by the settings and config"""
 
@@ -358,14 +388,15 @@ def get_ctrom_from_config(
     b = time.time()
     print(f"({b-a})")
 
+    if make_tf_friendly:
+        clean_scripts_for_tf(post_config.script_manager)
+
     print("Writing to Rom...", end="")
     a = time.time()
     post_config.write_to_ctrom(ct_rom)
     b = time.time()
     print(f"({b-a})")
     ### End replace rstate.update_ct_rom()
-
-
     return ct_rom
 
 
