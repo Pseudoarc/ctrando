@@ -1,5 +1,5 @@
 import argparse
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 import functools
 import typing
 from ctrando.arguments.argumenttypes import str_to_enum, str_to_enum_dict
@@ -82,20 +82,28 @@ class LogicOptions:
         ctenums.TreasureID.TYRANO_LAIR_MAZE_1, ctenums.TreasureID.TYRANO_LAIR_MAZE_2,
         ctenums.TreasureID.TYRANO_LAIR_MAZE_3, ctenums.TreasureID.TYRANO_LAIR_MAZE_4,
     )
+    forced_excluded_spots: typing.ClassVar[tuple[ctenums.TreasureID]] = (
+        ctenums.TreasureID.GUARDIA_CASTLE_SEALED_1000,
+        ctenums.TreasureID.NORTHERN_RUINS_ANTECHAMBER_SEALED_1000,
+        ctenums.TreasureID.NORTHERN_RUINS_BACK_RIGHT_SEALED_1000,
+        ctenums.TreasureID.NORTHERN_RUINS_BACK_LEFT_SEALED_1000,
+        ctenums.TreasureID.TRUCE_INN_SEALED_1000,
+        ctenums.TreasureID.PORRE_MAYOR_SEALED_1, ctenums.TreasureID.PORRE_MAYOR_SEALED_2
+    )
     _default_force_early_flight: typing.ClassVar[bool] = False
     _default_starter_rewards: typing.ClassVar[tuple[RewardType,...]] = (ScriptReward.EPOCH,)
 
     def __init__(
             self,
-            additional_key_items: Iterable[ctenums.ItemID] = _default_additional_key_items,
-            forced_spots: Iterable[ctenums.TreasureID] = _default_forced_spots,
-            incentive_spots: Iterable[ctenums.TreasureID] = _default_incentive_spots,
+            additional_key_items: Sequence[ctenums.ItemID] = _default_additional_key_items,
+            forced_spots: Sequence[ctenums.TreasureID] = _default_forced_spots,
+            incentive_spots: Sequence[ctenums.TreasureID] = _default_incentive_spots,
             incentive_factor: float = _default_incentive_factor,
-            excluded_spots: Iterable[ctenums.TreasureID] = _default_excluded_spots,
+            excluded_spots: Sequence[ctenums.TreasureID] = _default_excluded_spots,
             decay_factor: float = _default_decay_factor,
             hard_lavos_end_boss: bool = _default_hard_lavos_end_boss,
             force_early_flight: bool = _default_force_early_flight,
-            starter_rewards: Iterable[RewardType] = _default_starter_rewards
+            starter_rewards: Sequence[RewardType] = _default_starter_rewards
     ):
         self.additional_key_items = sorted(additional_key_items)
         self.forced_spots = forced_spots

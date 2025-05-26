@@ -61,10 +61,11 @@ def get_key_item_fill(
             logic_options.starter_rewards
         )
         if entrancerandomizer.is_map_viable(region_map):
+            excluded_spots = list(set(logic_options.forced_excluded_spots).union(logic_options.excluded_spots))
             for _ in range(5):
                 treasure_assignment = fill_key_items(
                     region_map, initial_treasure_assignment, recruit_assignment, key_items,
-                    logic_options.excluded_spots, logic_options.forced_spots, logic_options.incentive_spots,
+                    excluded_spots,list(logic_options.forced_spots), list(logic_options.incentive_spots),
                     logic_options.incentive_factor, logic_options.decay_factor, rng
                 )
                 if verify_fill(region_map, treasure_assignment, recruit_assignment):
