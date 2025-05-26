@@ -15,7 +15,8 @@ class PostRandoOptions:
     attr_names: typing.ClassVar[tuple[str, ...]] = (
         "default_fast_loc_movement", "default_fast_ow_movement",
         "default_fast_epoch_movement", "battle_speed", "message_speed",
-        "battle_memory_cursor", "menu_memory_cursor"
+        "battle_memory_cursor", "menu_memory_cursor",
+        "window_background"
     )
     _default_fast_loc_movement: typing.ClassVar[bool] = False
     _default_fast_ow_movement: typing.ClassVar[bool] = False
@@ -26,6 +27,7 @@ class PostRandoOptions:
 
     _default_battle_memory_cursor: typing.ClassVar[bool] = False
     _default_menu_memory_cursor: typing.ClassVar[bool] = False
+    _default_window_background: typing.ClassVar[int] = 1
 
     default_fast_loc_movement: bool = _default_fast_loc_movement
     default_fast_ow_movement: bool = _default_fast_ow_movement
@@ -35,6 +37,7 @@ class PostRandoOptions:
     message_speed: int = _default_message_speed
     battle_memory_cursor: bool = _default_battle_memory_cursor
     menu_memory_cursor: bool = _default_menu_memory_cursor
+    window_background: int = _default_window_background
 
     def __post_init__(self):
         self.battle_speed = sorted([1, int(self.battle_speed), 8])[1]
@@ -97,6 +100,14 @@ class PostRandoOptions:
             "--menu-memory-cursor",
             action="store_true",
             help="By default turn menu memory cursor on",
+            default=argparse.SUPPRESS
+        )
+
+        group.add_argument(
+            "--window-background",
+            action="store",
+            type=lambda x: clip(int(x), 1, 8),
+            help="Default window background",
             default=argparse.SUPPRESS
         )
 

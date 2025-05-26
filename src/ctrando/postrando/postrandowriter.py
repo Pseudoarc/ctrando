@@ -52,5 +52,6 @@ def write_post_rando_options(
     default_opts.save_menu_cursor = post_rando_options.menu_memory_cursor
     default_opts.battle_speed = post_rando_options.battle_speed - 1
     default_opts.message_speed = post_rando_options.message_speed - 1
+    default_opts.menu_style = post_rando_options.window_background - 1
 
     default_opts.write_to_ctrom(ct_rom)
