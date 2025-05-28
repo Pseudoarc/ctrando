@@ -20,7 +20,6 @@ class EventMod(locationevent.LocEventMod):
     def modify(cls, script: Event):
         """
         Modify Castle Magus Hall of Doppelgangers for an Open World.
-        - Add some exploremode ons.
         - TODO: Get crazy and add some special fights for Magus (Schala) and
                 Ayla (Kino)
         """

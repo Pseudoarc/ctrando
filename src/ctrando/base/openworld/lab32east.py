@@ -31,7 +31,7 @@ class EventMod(locationevent.LocEventMod):
             .get_bytearray(), pos
         )
 
-        # Add a bike key requirment to the bike.  In vanilla, it's impossible to access
+        # Add a bike key requirement to the bike.  In vanilla, it's impossible to access
         # this side of the lab without the bike key.
         pos = script.get_function_start(9, FID.ACTIVATE)
         script.wrap_jump_cmd(pos, EC.if_has_item(ctenums.ItemID.BIKE_KEY))

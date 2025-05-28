@@ -22,7 +22,6 @@ class EventMod(locationevent.LocEventMod):
         """
         Modify Choras Cafe for an Open World.
         - Change the carpenter to check for tools rather than a flag.
-        - TODO: Remove Toma?
         """
         pos = script.find_exact_command(EC.add_item(ctenums.ItemID.TOMAS_POP),
                                         script.get_function_start(0xD, FID.ACTIVATE))

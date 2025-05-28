@@ -73,101 +73,101 @@ class OverWorldExitUnknownData(cttypes.BinaryData):
 
 
 # TODO: Put this thing in cttypes.py?
-class CompressedAbsPtrTableRW:
-    """
-    Class for reading/writing/freeing compressed data on a CTRom when the data
-    records are located by an absolute (3-byte) pointer table.
-    """
-    def __init__(self, ptr_table_ptr: int,
-                 num_pointers: Optional[int] = None):
-        """
-        Initialize the RW with a position on the ROM which contains the address
-        of an absolute (3-byte) pointer table.
+# class CompressedAbsPtrTableRW:
+#     """
+#     Class for reading/writing/freeing compressed data on a CTRom when the data
+#     records are located by an absolute (3-byte) pointer table.
+#     """
+#     def __init__(self, ptr_table_ptr: int,
+#                  num_pointers: Optional[int] = None):
+#         """
+#         Initialize the RW with a position on the ROM which contains the address
+#         of an absolute (3-byte) pointer table.
+#
+#         Example.
+#           The code "$C22A5D  BF C0 FF C6     LDA $C6FFC0,X" is a lookup into
+#           the location exit pointer table.  So we would provide ptr_table_ptr
+#           as 0x0C22A5E to read "C0 FF C6" (0x06FFC0) as the start of the
+#           pointer table.
+#
+#         Optionally, provide the number of pointers.  Will raise IndexError
+#         if a pointer outside of range(num_pointers) is accessed.
+#         """
+#         self.ptr_table_ptr = ptr_table_ptr
+#         self.num_pointers = num_pointers
+#
+#     def _get_ptr_addr(self, ct_rom: ctrom.CTRom, ptr_index: int):
+#         if (
+#                 self.num_pointers is not None and
+#                 ptr_index not in range(self.num_pointers)
+#         ):
+#             raise IndexError(f'{ptr_index} not in range({self.num_pointers})')
+#
+#         ptr_table_st = byteops.file_ptr_from_rom(
+#             ct_rom.getbuffer(), self.ptr_table_ptr)
+#
+#         # print(f'ptr table start: {ptr_table_st:06X}')
+#
+#         return ptr_table_st + 3*ptr_index
+#
+#     def _get_ptr(self, ct_rom: ctrom.CTRom, ptr_index: int) -> int:
+#         ptr_addr = self._get_ptr_addr(ct_rom, ptr_index)
+#         ptr = byteops.file_ptr_from_rom(
+#             ct_rom.getbuffer(), ptr_addr)
+#         return ptr
+#
+#     def read_data_from_ctrom(self,
+#                              ct_rom: ctrom.CTRom,
+#                              record_index: int = 0) -> bytes:
+#         """Reads a data record from the CTRom."""
+#         ptr = self._get_ptr(ct_rom, record_index)
+#
+#         # print(f'ptr: {ptr:06X}')
+#         data = ctcompression.decompress(ct_rom.getbuffer(), ptr)
+#
+#         return data
+#
+#
+#     def free_data_on_ct_rom(self, ct_rom: ctrom.CTRom,
+#                             record_index: int):
+#         """Frees the existing data record on the CTRom."""
+#         ptr = self._get_ptr(ct_rom, record_index)
+#         existing_size = ctcompression.get_compressed_length(
+#             ct_rom.getbuffer(), ptr
+#         )
+#
+#         mark_free = ctrom.freespace.FSWriteType.MARK_FREE
+#         ct_rom.space_manager.mark_block(
+#             (ptr, ptr+existing_size), mark_free
+#         )
+#
+#     def write_data_to_ct_rom(self,
+#                              ct_rom: ctrom.CTRom,
+#                              data: bytearray,
+#                              record_index: int,
+#                              free_existing: bool = True):
+#         """Writes a new data record to the CTRom."""
+#         if free_existing:
+#             self.free_data_on_ct_rom(ct_rom, record_index)
+#
+#         ptr_addr = self._get_ptr_addr(ct_rom, record_index)
+#         ptr = byteops.file_ptr_from_rom(ct_rom.getbuffer(), ptr_addr)
+#
+#         compressed_data = ctcompression.compress(data)
+#         new_ptr = ct_rom.space_manager.get_free_addr(
+#             len(compressed_data)
+#         )
+#
+#         mark_used = ctrom.freespace.FSWriteType.MARK_USED
+#         ct_rom.seek(new_ptr)
+#         ct_rom.write(compressed_data, mark_used)
+#
+#         ct_rom.seek(ptr_addr)
+#         new_rom_ptr_b = int.to_bytes(byteops.to_rom_ptr(new_ptr), 3, 'little')
+#         ct_rom.write(new_rom_ptr_b, mark_used)
 
-        Example.
-          The code "$C22A5D  BF C0 FF C6     LDA $C6FFC0,X" is a lookup into
-          the location exit pointer table.  So we would provide ptr_table_ptr
-          as 0x0C22A5E to read "C0 FF C6" (0x06FFC0) as the start of the
-          pointer table.
 
-        Optionally, provide the number of pointers.  Will raise IndexError
-        if a pointer outside of range(num_pointers) is accessed.
-        """
-        self.ptr_table_ptr = ptr_table_ptr
-        self.num_pointers = num_pointers
-
-    def _get_ptr_addr(self, ct_rom: ctrom.CTRom, ptr_index: int):
-        if (
-                self.num_pointers is not None and
-                ptr_index not in range(self.num_pointers)
-        ):
-            raise IndexError(f'{ptr_index} not in range({self.num_pointers})')
-
-        ptr_table_st = byteops.file_ptr_from_rom(
-            ct_rom.getbuffer(), self.ptr_table_ptr)
-
-        # print(f'ptr table start: {ptr_table_st:06X}')
-
-        return ptr_table_st + 3*ptr_index
-
-    def _get_ptr(self, ct_rom: ctrom.CTRom, ptr_index: int) -> int:
-        ptr_addr = self._get_ptr_addr(ct_rom, ptr_index)
-        ptr = byteops.file_ptr_from_rom(
-            ct_rom.getbuffer(), ptr_addr)
-        return ptr
-
-    def read_data_from_ctrom(self,
-                             ct_rom: ctrom.CTRom,
-                             record_index: int = 0) -> bytes:
-        """Reads a data record from the CTRom."""
-        ptr = self._get_ptr(ct_rom, record_index)
-
-        # print(f'ptr: {ptr:06X}')
-        data = ctcompression.decompress(ct_rom.getbuffer(), ptr)
-
-        return data
-
-
-    def free_data_on_ct_rom(self, ct_rom: ctrom.CTRom,
-                            record_index: int):
-        """Frees the existing data record on the CTRom."""
-        ptr = self._get_ptr(ct_rom, record_index)
-        existing_size = ctcompression.get_compressed_length(
-            ct_rom.getbuffer(), ptr
-        )
-
-        mark_free = ctrom.freespace.FSWriteType.MARK_FREE
-        ct_rom.space_manager.mark_block(
-            (ptr, ptr+existing_size), mark_free
-        )
-        
-    def write_data_to_ct_rom(self,
-                             ct_rom: ctrom.CTRom,
-                             data: bytearray,
-                             record_index: int,
-                             free_existing: bool = True):
-        """Writes a new data record to the CTRom."""
-        if free_existing:
-            self.free_data_on_ct_rom(ct_rom, record_index)
-
-        ptr_addr = self._get_ptr_addr(ct_rom, record_index)
-        ptr = byteops.file_ptr_from_rom(ct_rom.getbuffer(), ptr_addr)
-
-        compressed_data = ctcompression.compress(data)
-        new_ptr = ct_rom.space_manager.get_free_addr(
-            len(compressed_data)
-        )
-
-        mark_used = ctrom.freespace.FSWriteType.MARK_USED
-        ct_rom.seek(new_ptr)
-        ct_rom.write(compressed_data, mark_used)
-
-        ct_rom.seek(ptr_addr)
-        new_rom_ptr_b = int.to_bytes(byteops.to_rom_ptr(new_ptr), 3, 'little')
-        ct_rom.write(new_rom_ptr_b, mark_used)
-
-
-_owexitpacket_rw = CompressedAbsPtrTableRW(0x022A5E)
+_owexitpacket_rw = cttypes.CompressedAbsPtrTableRW(0x022A5E)
 class OverworldExitPacket:
     """
     Class to handle the entire overworld exit packet.  Includes exits, code

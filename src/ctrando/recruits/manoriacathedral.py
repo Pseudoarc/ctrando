@@ -99,10 +99,6 @@ def get_post_battle_scene() -> EF:
         .add(EC.call_obj_function(4, FID.ARBITRARY_0, 3, FS.HALT))
     )
 
-def assign_item_to_spot(item_id: ctenums.ItemID,
-                        script_man: ScriptManager):
-    """TODO: Put an item in the cathedral."""
-
 
 def get_recruit_startup(recruit_identity: ctenums.CharID) -> EF:
     """

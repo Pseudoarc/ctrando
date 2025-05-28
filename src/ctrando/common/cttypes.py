@@ -7,7 +7,7 @@ import typing
 from typing import Optional
 
 from ctrando.common import byteops, ctenums, ctrom
-from ctrando.compression import ctcompression as ctcomp
+from ctrando.compression import ctcompression
 
 ValFilter = typing.Callable[[typing.Any, int], int]
 # IntBase = typing.TypeVar('IntBase', bound=typing.Union[bool, int])
@@ -309,6 +309,7 @@ class CompressedAbsPtrTableRW:
     Class for reading/writing/freeing compressed data on a CTRom when the data
     records are located by an absolute (3-byte) pointer table.
     """
+
     def __init__(self, ptr_table_ptr: int,
                  num_pointers: Optional[int] = None):
         """
@@ -337,9 +338,9 @@ class CompressedAbsPtrTableRW:
         ptr_table_st = byteops.file_ptr_from_rom(
             ct_rom.getbuffer(), self.ptr_table_ptr)
 
-        print(f'ptr table start: {ptr_table_st:06X}')
+        # print(f'ptr table start: {ptr_table_st:06X}')
 
-        return ptr_table_st + 3*ptr_index
+        return ptr_table_st + 3 * ptr_index
 
     def _get_ptr(self, ct_rom: ctrom.CTRom, ptr_index: int) -> int:
         ptr_addr = self._get_ptr_addr(ct_rom, ptr_index)
@@ -353,8 +354,8 @@ class CompressedAbsPtrTableRW:
         """Reads a data record from the CTRom."""
         ptr = self._get_ptr(ct_rom, record_index)
 
-        print(f'ptr: {ptr:06X}')
-        data = ctcomp.decompress(ct_rom.getbuffer(), ptr)
+        # print(f'ptr: {ptr:06X}')
+        data = ctcompression.decompress(ct_rom.getbuffer(), ptr)
 
         return data
 
@@ -362,15 +363,15 @@ class CompressedAbsPtrTableRW:
                             record_index: int):
         """Frees the existing data record on the CTRom."""
         ptr = self._get_ptr(ct_rom, record_index)
-        existing_size = ctcomp.get_compressed_length(
+        existing_size = ctcompression.get_compressed_length(
             ct_rom.getbuffer(), ptr
         )
 
         mark_free = ctrom.freespace.FSWriteType.MARK_FREE
         ct_rom.space_manager.mark_block(
-            (ptr, ptr+existing_size), mark_free
+            (ptr, ptr + existing_size), mark_free
         )
-        
+
     def write_data_to_ct_rom(self,
                              ct_rom: ctrom.CTRom,
                              data: bytearray,
@@ -383,7 +384,7 @@ class CompressedAbsPtrTableRW:
         ptr_addr = self._get_ptr_addr(ct_rom, record_index)
         ptr = byteops.file_ptr_from_rom(ct_rom.getbuffer(), ptr_addr)
 
-        compressed_data = ctcomp.compress(data)
+        compressed_data = ctcompression.compress(data)
         new_ptr = ct_rom.space_manager.get_free_addr(
             len(compressed_data)
         )
@@ -395,7 +396,6 @@ class CompressedAbsPtrTableRW:
         ct_rom.seek(ptr_addr)
         new_rom_ptr_b = int.to_bytes(byteops.to_rom_ptr(new_ptr), 3, 'little')
         ct_rom.write(new_rom_ptr_b, mark_used)
-
 
 T = typing.TypeVar('T', bound='BinaryData')
 

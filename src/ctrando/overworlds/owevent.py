@@ -3,11 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional, Type, NamedTuple
 
-from ctrando.common import ctrom
-from ctrando.overworlds import oweventcommand as owc, owexits
+from ctrando.common import ctrom, cttypes
+from ctrando.overworlds import oweventcommand as owc
 
 
-_ow_event_rw = owexits.CompressedAbsPtrTableRW(0x022A30)
+_ow_event_rw = cttypes.CompressedAbsPtrTableRW(0x022A30)
 
 
 class InvalidOffsetException(Exception):
