@@ -1,6 +1,4 @@
 """Openworld Manoria Headquarters"""
-from cgitb import enable
-
 from ctrando.common import ctenums, memory
 from ctrando.locations import locationevent
 from ctrando.locations.eventcommand import EventCommand as EC, Operation as OP

@@ -188,8 +188,10 @@ def modify_all_single_tech_powers(
     for mp, tech_id in zip(heal_tech_mps+damage_tech_mps, heal_tech_ids+damage_tech_ids):
         modify_single_tech_power(tech_dict[tech_id], mp)
 
-    for tech_id in range(1+7*8, len(tech_dict.keys())):
+    for tech_id in range(1+7*8, len(tech_dict.keys())+1):
         tech = tech_dict[tech_id]
+        print(tech.name)
+        pass
         for ind, pc_id in enumerate(tech.battle_group):
             if pc_id == 0xFF:
                 continue
@@ -222,6 +224,14 @@ def modify_all_single_tech_powers(
                     # should get twice Kiss's power.  This is one where we'd like a higher max.
                     new_power = sorted([1, 2*base_effect.heal_power, 0x1F])[1]
                     tech.effect_headers[ind].heal_power = new_power
+                elif (
+                        base_effect.effect_type == ctt.EffectType.DAMAGE and
+                        base_effect.damage_formula_id == ctt.DamageFormula.MISSING_HP
+                ):
+                    # Trying to detect Frog Squash --> Grand Dream
+                    # Should get 2.4x Frog Squash's power.
+                    new_power = sorted([1, round(2.4*base_effect.power), 0xFF])[1]
+                    tech.effect_headers[ind].power = new_power
 
                 # Regardless, copy the new MP over.
                 tech.effect_mps[ind] = base_mp
