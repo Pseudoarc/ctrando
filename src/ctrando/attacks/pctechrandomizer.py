@@ -190,7 +190,6 @@ def modify_all_single_tech_powers(
 
     for tech_id in range(1+7*8, len(tech_dict.keys())+1):
         tech = tech_dict[tech_id]
-        print(tech.name)
         pass
         for ind, pc_id in enumerate(tech.battle_group):
             if pc_id == 0xFF:

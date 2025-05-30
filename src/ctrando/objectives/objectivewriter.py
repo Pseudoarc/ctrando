@@ -11,6 +11,7 @@ from ctrando.locations.locationevent import FunctionID as FID, LocationEvent
 from ctrando.locations.eventcommand import EventCommand as EC, FuncSync as FS, Operation as OP
 from ctrando.locations.eventfunction import EventFunction as EF
 from ctrando.objectives import objectivetypes as oty
+from ctrando.strings import ctstrings
 
 
 def get_objective_count_checks(
@@ -370,6 +371,55 @@ def write_test_objectives(
         EC.call_obj_function(obj_id, FID.ARBITRARY_0, 4, FS.HALT).to_bytearray(),
         pos
     )
+
+    # Modify Mom's text with objective thresholds.
+    obj_text = (
+        "MOM: Check your objectives in your{line break}"
+        "inventory.  Your completion rewards{line break}"
+        "are:{page break}"
+    )
+
+    obj_rewards = {
+        "Algetty Portal": objective_settings.num_algetty_portal_objectives,
+        "Bucket": objective_settings.num_bucket_objectives,
+        "Omen Boss": objective_settings.num_omen_objectives,
+        "1999 Time Gauge": objective_settings.num_timegauge_objectives,
+    }
+
+    items = sorted(
+        [(key, val) for key, val in obj_rewards.items() if val in range(1, 9)],
+        key=lambda x: x[1]
+    )
+    obj_rewards = dict(items)
+
+    reward_text = ""
+    for ind, (key, val) in enumerate(obj_rewards.items()):
+        count_str = "Objectives:" if val > 1 else "Objective:"
+        reward_text += f"{val} {count_str} {key}"
+        if ind + 1 == len(items):
+            end_str = "{null}"
+        elif (ind + 1) % 4 == 0:
+            end_str = "{page break}"
+        else:
+            end_str = "{line break}"
+        reward_text += end_str
+
+    obj_text += reward_text
+    script.strings[6] = ctstrings.CTString.from_ascii(obj_text)
+
+    # Repeat objective rewards in kitchen
+    # script = script_manager[ctenums.LocID.CRONOS_KITCHEN]
+    # pos = script.find_exact_command(
+    #     EC.if_pc_active(ctenums.CharID.CRONO),
+    #     script.get_function_start(0xF, FID.ACTIVATE)
+    # )
+    #
+    # obj_reminder_func = (
+    #     EF()
+    #     .add(EC.auto_text_box(
+    #         script.add_py_string()
+    #     ))
+    # )
 
 
 def write_quest_counters(

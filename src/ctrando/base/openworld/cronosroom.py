@@ -7,6 +7,7 @@ from ctrando.locations.eventfunction import EventFunction as EF
 from ctrando.locations.locationevent import FunctionID as FID, LocationEvent as Event
 
 from ctrando.base import openworldutils as owu
+from ctrando.strings import ctstrings
 
 class EventMod(locationevent.LocEventMod):
     """EventMod for Crono's Room """
@@ -22,6 +23,12 @@ class EventMod(locationevent.LocEventMod):
         cls.modify_pc_objs(script)
         cls.modify_wakeup_scene(script)
         cls.modify_clone_pickup(script)
+
+        # for ind, string in enumerate(script.strings):
+        #     py_str = ctstrings.CTString.ct_bytes_to_ascii(string)
+        #     print(f"{ind:02X}: {py_str}")
+        #
+        # input()
 
     @classmethod
     def modify_clone_pickup(cls, script: Event):
@@ -67,7 +74,8 @@ class EventMod(locationevent.LocEventMod):
     @classmethod
     def modify_wakeup_scene(cls, script: Event):
         """
-        Change Crono calls to first PC calls.
+        - Change Crono calls to first PC calls.
+        - Modify some intro text.
         """
         pos = script.find_exact_command(
             EC.call_obj_function(1, FID.ARBITRARY_0, 6, FS.CONT),
@@ -81,6 +89,18 @@ class EventMod(locationevent.LocEventMod):
         )
         new_cmd = EC.call_pc_function(0, FID.ARBITRARY_6, 4, FS.CONT)
         script.data[pos:pos+len(new_cmd)] = new_cmd.to_bytearray()
+
+        home_warp_text = (
+            "MOM: Press start and select on the{line break}"
+            "overworld to come straight home.{null}"
+        )
+        script.strings[7] = ctstrings.CTString.from_ascii(home_warp_text)
+
+        # for ind, string in enumerate(script.strings):
+        #     py_str = ctstrings.CTString.ct_bytes_to_ascii(string)
+        #     print(f"{ind:02X}: {py_str}")
+        #
+        # input()
 
     @classmethod
     def modify_pc_objs(cls, script: Event):
