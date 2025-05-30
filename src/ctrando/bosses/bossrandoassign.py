@@ -28,6 +28,20 @@ def _default_coordinate_finder(obj_id: int) -> bru.HookLocator:
     return find_coord
 
 
+def _strip_static_animations(
+        script: scriptmanager.LocationEvent,
+        start_pos: int,
+        end_pos: int
+):
+
+    while True:
+        start_pos, cmd = script.find_command_opt([0xAC], start_pos, end_pos)
+        if start_pos is None:
+            break
+
+        script.data[start_pos + 1] = 0
+        start_pos += len(cmd)
+
 def assign_cathedral_boss(
         script_manager: scriptmanager.ScriptManager,
         boss: bosstypes.BossScheme,
@@ -63,13 +77,18 @@ def assign_heckran_cave_boss(
 
     battle_x_px, battle_y_px = 0x340, 0x1A1
 
+    script = script_manager[loc_id]
+    pos, end = script.get_function_bounds(boss_obj, FID.TOUCH)
+    _strip_static_animations(script, pos, end)
+
     bru.assign_boss_to_one_spot_location_script(
-        script_manager[loc_id], boss,
+        script, boss,
         boss_load_finder=bru.CommandHookLocator(boss_obj, FID.STARTUP, [0x83]),
         show_pos_finder=bru.CommandHookLocator(boss_obj, FID.ACTIVATE, [EC.return_cmd()]),
         last_coord_finder=None,
         battle_x_px=battle_x_px, battle_y_px=battle_y_px
     )
+
 
 
 def assign_denadoro_boss(
