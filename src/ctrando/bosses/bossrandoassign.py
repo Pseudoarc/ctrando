@@ -102,7 +102,9 @@ def assign_denadoro_boss(
         script_manager[loc_id], boss,
         boss_load_finder=bru.CommandHookLocator(boss_obj, FID.STARTUP, [0x83]),
         show_pos_finder=bru.CommandHookLocator(boss_obj, FID.ARBITRARY_1, [EC.return_cmd()]),
-        last_coord_finder=bru.CommandHookLocator(boss_obj, FID.STARTUP, [0x8D])
+        battle_x_px=0x80,
+        battle_y_px=0xFC,
+        # last_coord_finder=bru.CommandHookLocator(boss_obj, FID.STARTUP, [0x8D])
     )
 
 
