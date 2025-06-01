@@ -21,6 +21,9 @@ from ctrando.bosses import staticbossscaling, bossrando, bosstypes
 from ctrando.characters import characterwriter
 from ctrando.common import ctrom, ctenums, randostate
 from ctrando.common.random import RNGType
+
+from ctrando import encounters
+
 from ctrando.enemyai import randofixes
 from ctrando.enemyscaling import patchscaling
 from ctrando.entranceshuffler import entrancefiller, entranceassign, regionmap, maptraversal
@@ -272,6 +275,7 @@ def get_ctrom_from_config(
     print("Applying Openworld Scripts...", end="")
     a = time.time()
     post_config = get_openworld_post_config(ct_rom, post_config_load_path)
+    encounters.apply_all_encounter_mods(post_config.script_manager)
     b = time.time()
     print(f"({b-a})")
 
@@ -520,7 +524,7 @@ def main():
 
     # import time
     # x = time.time()
-    out_rom = get_ctrom_from_config(ct_rom, settings, config)
+    out_rom = get_ctrom_from_config(ct_rom, settings, config, make_tf_friendly=True)
     # y = time.time()
     # print(y-x)
 
