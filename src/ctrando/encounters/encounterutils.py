@@ -26,7 +26,8 @@ def add_battle_object(
         flag_addr: Optional[int] = None, flag_bit: Optional[int] = None,
         x_tile: Optional[int] = None, y_tile: Optional[int] = None,
         npc_id: int = 0x72,  # small flame
-        replace_obj_id: int | None = None
+        replace_obj_id: int | None = None,
+        default_show: bool = True
 ) -> int:
     """
     Adds an object that removes itself after activate is called.
@@ -72,6 +73,9 @@ def add_battle_object(
         .add(EC.set_object_coordinates_tile(x_tile, y_tile))
         .add(EC.generic_command(0x84, 0x00))
     )
+
+    if not default_show:
+        startup_ef.add(EC.set_own_drawing_status(False))
 
     if flag_addr is not None and flag_bit is not None:
         startup_ef = (
