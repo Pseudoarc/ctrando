@@ -1,6 +1,7 @@
 """
 Module for assigning random treasure to RewardSpots
 """
+import collections.abc
 import typing
 from collections.abc import Sequence
 from dataclasses import dataclass, field
@@ -107,6 +108,7 @@ def fill_chargeable_chests(
 def default_assignment(
         existing_assignment: dict[ctenums.TreasureID, ctenums.ItemID],
         treasure_options: treasureoptions.TreasureOptions,
+        exclude_pool: collections.abc.Sequence[ctenums.ItemID],
         rng: RNGType
 ) -> dict[ctenums.TreasureID, ttypes.RewardType]:
     """
@@ -122,6 +124,9 @@ def default_assignment(
     # This should only
     assigned_spots, assigned_item_pool = zip(*{key: val for key, val in existing_assignment.items()
                                                if val != ctenums.ItemID.NONE}.items())
+
+    assigned_item_pool = assigned_item_pool + tuple(exclude_pool)
+
     final_assignment: dict[ctenums.TreasureID, ttypes.RewardType] = {}
     final_assignment.update(existing_assignment)
 
@@ -146,6 +151,10 @@ def default_assignment(
     fill_good_stuff(item_pool, spot_pool, treasure_options.good_loot_spots, treasure_options.good_loot,
                     treasure_options.good_loot_rate, final_assignment, rng)
     rng.shuffle(item_pool)
+
+    num_filler = max(0, len(spot_pool) - len(item_pool))
+    if num_filler > 0:
+        item_pool.extend([ctenums.ItemID.TONIC]*num_filler)
 
     for tid, reward in zip(spot_pool, item_pool):
         final_assignment[tid] = reward

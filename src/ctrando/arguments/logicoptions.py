@@ -33,10 +33,12 @@ def str_to_reward(string: str) -> RewardType:
 
     # For now very very limited.
     string = string.lower()
-    if string not in _reward_dict:
-        raise KeyError
+    if string in _reward_dict:
+        return _reward_dict[string]
+    if string in _item_id_str_dict:
+        return _item_id_str_dict[string]
 
-    return _reward_dict[string]
+    raise KeyError
 
 
 class LogicOptions:

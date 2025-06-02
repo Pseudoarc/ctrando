@@ -46,6 +46,10 @@ def get_key_item_fill(
         if item in key_items:
             key_items.remove(item)
 
+    for item in logic_options.starter_rewards:
+        if item in key_items:
+            key_items.remove(item)
+
     while True:
         exit_connectors = entrancerandomizer.get_random_exit_connectors(entrance_options, rng)
         # for x in exit_connectors:
@@ -58,7 +62,7 @@ def get_key_item_fill(
         )
 
         region_map.loc_region_dict["starting_rewards"].region_rewards.extend(
-            logic_options.starter_rewards
+            logic_options.  starter_rewards
         )
         if entrancerandomizer.is_map_viable(region_map):
             excluded_spots = list(set(logic_options.forced_excluded_spots).union(logic_options.excluded_spots))

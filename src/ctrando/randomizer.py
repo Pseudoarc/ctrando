@@ -203,8 +203,13 @@ def get_random_config(
     # input()
 
     ### Treasure Fill
+    exclude_pool = [
+        x for x in settings.logic_options.starter_rewards
+        if isinstance(x, ctenums.ItemID)
+    ]
     config.treasure_assignment = treasureassign.default_assignment(treasure_assignment,
                                                                    settings.treasure_options,
+                                                                   exclude_pool,
                                                                    rng)
 
     ### Gear Rando
@@ -524,7 +529,7 @@ def main():
 
     # import time
     # x = time.time()
-    out_rom = get_ctrom_from_config(ct_rom, settings, config, make_tf_friendly=True)
+    out_rom = get_ctrom_from_config(ct_rom, settings, config, make_tf_friendly=False)
     # y = time.time()
     # print(y-x)
 
