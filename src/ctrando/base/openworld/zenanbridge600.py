@@ -54,11 +54,13 @@ class EventMod(locationevent.LocEventMod):
         """
 
         # print('ZENAN STRINGS END')
+        # from ctrando.strings import ctstrings
         # for ind, ct_string in enumerate(script.strings):
         #     py_string = ctstrings.CTString.ct_bytes_to_ascii(ct_string)
         #     print(f"{ind:02X}: {py_string}")
-
+        #
         # input('ZENAN STRINGS END')
+
         
         cls.modify_startup_music(script)
         # cls.delete_unused_objects(script)
@@ -284,6 +286,9 @@ class EventMod(locationevent.LocEventMod):
 
         block = EF.from_bytearray(script.data[move_block_st:move_block_end])
         block.add(EC.set_flag(memory.Flags.OW_ZENAN_STARTED))
+
+        str_pos = script.find_exact_command(EC.auto_text_box(0x19), pos)
+        script.data[str_pos+1] = 2
 
         ins_pos = script.find_exact_command(EC.jump_forward(), pos)
         script.insert_commands(block.get_bytearray(), ins_pos)
