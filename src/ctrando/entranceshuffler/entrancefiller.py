@@ -56,6 +56,8 @@ def get_key_item_fill(
         #     if x.from_exit in entrance_options.preserve_spots:
         #     print(f"{x.from_exit} --> {x.to_exit}")
         # input()
+        # print(rng.__getstate__())
+        # input()
         region_connectors = regionmap.get_default_region_connectors(recruit_assignment, logic_options)
         region_map = entrancerandomizer.get_shuffled_map_from_connectors(
             exit_connectors, region_connectors

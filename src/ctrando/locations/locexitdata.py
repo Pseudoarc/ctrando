@@ -94,6 +94,7 @@ class LocOWExits(enum.Enum):
     PORRE_INN_600 = LocExitInfo(LocID.PORRE_INN_600)
     PORRE_MARKET_600 = LocExitInfo(LocID.PORRE_MARKET_600)
     FIONAS_VILLA = LocExitInfo(LocID.FIONAS_VILLA)
+    FIONAS_VILLA_TURN_IN = ScriptExitInfo(LocID.FIONAS_VILLA, 8, FID.ACTIVATE)
     CHORAS_OLD_RESIDENCE_600 = LocExitInfo(LocID.CHORAS_600_OLD_COUPLE_RESIDENCE)
     CHORAS_INN_600 = LocExitInfo(LocID.CHORAS_600_INN)
     CHORAS_CAFE_600 = LocExitInfo(LocID.CHORAS_CAFE)
@@ -202,7 +203,8 @@ _loc_exit_classes: tuple[set[LocOWExits], ...] = (
     {LocOWExits.DACTYL_NEST, LocOWExits.DACTYL_NEST_END_SCENE},
     {LocOWExits.ZENAN_BRIDGE_600_SOUTH, LocOWExits.ZENAN_BRIDGE_600_NORTH,
      LocOWExits.ZENAN_BRIDGE_600_SOUTH_BOSS, LocOWExits.ZENAN_BRIDGE_600_NORTH_BOSS},
-    {LocOWExits.OZZIES_FORT_END, LocOWExits.OZZIES_FORT}
+    {LocOWExits.OZZIES_FORT_END, LocOWExits.OZZIES_FORT},
+    {LocOWExits.FIONAS_VILLA, LocOWExits.FIONAS_VILLA_TURN_IN}
 )
 _exit_class_dict: dict[LocOWExits, set[LocOWExits]] = {
     loc_exit: loc_class

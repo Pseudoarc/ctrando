@@ -107,10 +107,10 @@ def is_map_viable(
     traverser.game.other_rewards.add(memory.Flags.OBTAINED_EPOCH_FLIGHT)
     traverser.maximize(fake_treasure_dict, fake_recruit_dict)
     if len(traverser.reached_regions) != len(region_map.name_connector_dict.keys()):
-        print("Failed Reachability")
-        for region in region_map.name_connector_dict:
-            if region not in traverser.reached_regions:
-                print(f"\t{region}")
+        # print("Failed Reachability")
+        # for region in region_map.name_connector_dict:
+        #     if region not in traverser.reached_regions:
+        #         print(f"\t{region}")
 
         return False
 
@@ -241,13 +241,10 @@ def get_shuffled_exit_connectors(
     if LocExit.CRONOS_HOUSE in usable_dead_ends:
         usable_dead_ends.remove(LocExit.CRONOS_HOUSE)
 
-    flag_ow_exits = {
+    flag_ow_exits = [
         x for x in (OWExit.SUNKEN_DESERT, OWExit.FIONAS_SHRINE, OWExit.GIANTS_CLAW)
         if x not in assign_dict.keys()
-    }
-    # flag_ow_exits = {
-    #     OWExit.SUNKEN_DESERT, OWExit.FIONAS_SHRINE, OWExit.GIANTS_CLAW
-    # }.difference(assign_dict.keys())
+    ]
 
     # Make sure flag exits can't be back doored by making them always dead ends
     for ow_exit in flag_ow_exits:
@@ -255,11 +252,6 @@ def get_shuffled_exit_connectors(
             pool = [x for x in usable_dead_ends
                     if x in dungeon_targets and x != LocExit.NORTHERN_RUINS_1000]
             target = rng.choice(pool)
-            # print(rng.__getstate__())
-            # input()
-            # print(ow_exit, target)
-            # print(pool)
-            # input()
             dungeon_exits.remove(ow_exit)
             dungeon_targets.remove(target)
         else:
