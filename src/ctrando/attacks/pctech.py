@@ -2080,3 +2080,11 @@ def fix_vanilla_techs(tech_man: PCTechManager):
         frog_bat_index = slurpcut_tech.battle_group.index(ctenums.CharID.FROG)
         slurpcut_tech.effect_headers[frog_bat_index].applies_on_hit_effects = True
         tech_man.set_tech_by_id(slurpcut_tech, tech_id)
+
+    # Same for confuse combo techs
+    tech_ids = (ctenums.TechID.ICE_SWORD_2, ctenums.TechID.FIRE_SWORD_2)
+    for tech_id in tech_ids:
+        confuse_tech = tech_man.get_tech(tech_id)
+        crono_bat_index = confuse_tech.battle_group.index(ctenums.CharID.CRONO)
+        confuse_tech.effect_headers[crono_bat_index].applies_on_hit_effects = True
+        tech_man.set_tech_by_id(confuse_tech, tech_id)
