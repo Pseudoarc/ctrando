@@ -2069,3 +2069,14 @@ def fix_vanilla_techs(tech_man: PCTechManager):
     cyclone = tech_man.get_tech(ctenums.TechID.CYCLONE)
     lifeline.effect_headers[crono_bat_index] = cyclone.effect_headers[0]
     lifeline.effect_mps[crono_bat_index] = cyclone.effect_mps[0]
+    tech_man.set_tech_by_id(lifeline, ctenums.TechID.LIFE_LINE)
+
+    # Slurpcut Combos - X-Strike, Blade Toss, 3D-Attack, Triple Raid
+    # Combo techs using slurp cut do not apply Frog Weapon effects.  Fix it.
+    tech_ids = (ctenums.TechID.X_STRIKE, ctenums.TechID.BLADE_TOSS,
+                ctenums.TechID.THREE_D_ATTACK, ctenums.TechID.TRIPLE_RAID)
+    for tech_id in tech_ids:
+        slurpcut_tech = tech_man.get_tech(tech_id)
+        frog_bat_index = slurpcut_tech.battle_group.index(ctenums.CharID.FROG)
+        slurpcut_tech.effect_headers[frog_bat_index].applies_on_hit_effects = True
+        tech_man.set_tech_by_id(slurpcut_tech, tech_id)
