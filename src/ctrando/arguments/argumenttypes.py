@@ -3,6 +3,7 @@ from __future__ import annotations
 import abc
 import argparse
 import enum
+import inspect
 from dataclasses import dataclass, fields
 from enum import Enum
 import typing
@@ -167,8 +168,7 @@ def add_dataclass_to_group(
             name_or_flags.append(short_flag)
 
         opt_dict: dict[str, typing.Any] = dict()
-
-        if issubclass(field.type, bool):
+        if inspect.isclass(field.type) and issubclass(field.type, bool):
             if field.default == True:
                 opt_dict['action'] = 'store_false'
             elif field.default == False:
