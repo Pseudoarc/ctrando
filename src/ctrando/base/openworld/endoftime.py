@@ -18,6 +18,9 @@ from ctrando.locations.locationevent import FunctionID as FID, LocationEvent as 
 class EventMod(locationevent.LocEventMod):
     """EventMod for End of Time"""
     loc_id = ctenums.LocID.END_OF_TIME
+    pc1_addr = 0x7F0222
+    pc2_addr = 0x7F0224
+    pc3_addr = 0x7F0226
 
     @classmethod
     def get_pc_switch_obj_id(cls, char_id: ctenums.CharID) -> int:
@@ -25,6 +28,40 @@ class EventMod(locationevent.LocEventMod):
         Returns the object id of the npc for a recruited but nonactive party member.
         """
         return char_id + 0x1D
+
+    @classmethod
+    def modify_jump_from_hangar(cls, script: Event):
+        """Fix jump animation for non-full parties"""
+
+        pos =  script.find_exact_command(
+            EC.call_pc_function(0, FID.ARBITRARY_7, 4, FS.SYNC)
+        )
+
+        script.delete_commands(pos, 5)
+
+        fid = FID.ARBITRARY_7
+        priority = 4
+        delay = 0.313
+
+        func = (
+            EF()
+            .add_if_else(
+                EC.if_mem_op_value(cls.pc2_addr, OP.GREATER_THAN, 7),
+                EF().add(EC.call_pc_function(0, fid, priority, FS.HALT)),
+                EF()
+                .add(EC.call_pc_function(0, fid, priority, FS.SYNC))
+                .add(EC.pause(delay))
+                .add_if_else(
+                    EC.if_mem_op_value(cls.pc3_addr, OP.GREATER_THAN, 7),
+                    EF().add(EC.call_pc_function(1, fid, priority, FS.HALT)),
+                    EF()
+                    .add(EC.call_pc_function(1, fid, priority, FS.CONT))
+                    .add(EC.pause(delay))
+                    .add(EC.call_pc_function(2, fid, priority, FS.HALT))
+                )
+            )
+        )
+        script.insert_commands(func.get_bytearray(), pos)
 
     @classmethod
     def modify(cls, script: Event):
@@ -35,6 +72,7 @@ class EventMod(locationevent.LocEventMod):
         - Modify triggers for party members being present.
         - Modify Gaspar to avoid irrelevant dialogue.
         - Modify the bucket (unsure what exactly b/c depends on objectives)
+        - Fix jumping from Epoch hangar for <  3 PCs.
         """
 
         pos = script.get_object_start(0)
@@ -60,6 +98,7 @@ class EventMod(locationevent.LocEventMod):
         cls.modify_storyline_checks(script)
         cls.modify_gaspar(script)
         cls.modify_npc_robo(script)
+        cls.modify_jump_from_hangar(script)
 
         owu.add_exploremode_to_partyfollows(script)
 
