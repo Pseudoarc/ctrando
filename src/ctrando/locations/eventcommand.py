@@ -293,7 +293,7 @@ class EventCommand:
         if set_bits:
             return EventCommand.generic_two_arg(0x69, bitmask, offset)
 
-        return EventCommand.generic_two_arg(0x67, bitmask, offset)
+        return EventCommand.generic_two_arg(0x67, 0xFF ^ bitmask, offset)
 
     @staticmethod
     def set_reset_bit(address: int, bit: int, set_bit: bool) -> EventCommand:

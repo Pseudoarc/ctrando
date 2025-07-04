@@ -55,7 +55,7 @@ class EventMod(locationevent.LocEventMod):
         script.insert_commands(
             EF().add(EC.assign_mem_to_mem(memory.Memory.EPOCH_STATUS, 0x7F0220, 1))
             .add(EC.set_reset_bits(0x7F0220, 0xD0, True))
-            .add(EC.set_reset_bits(0x7F0220, 0xFC, False))
+            .add(EC.set_reset_bits(0x7F0220, 0x02, False))
             .add(EC.add_mem(cls.num_pcs_addr, cls.temp_epoch_status))
             .add(EC.assign_mem_to_mem(0x7F0220, memory.Memory.EPOCH_STATUS, 1))
             .get_bytearray(), pos
