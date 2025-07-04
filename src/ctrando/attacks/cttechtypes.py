@@ -220,6 +220,7 @@ class PCTechEffectHeader(EffectHeader):
 
     has_slurpcut_restriction = ctt.byte_prop(0xA, 0x20)
     has_rockthrow_restriction = ctt.byte_prop(0xA, 0x40)
+    applies_on_hit_effects = ctt.byte_prop(8, 0x80)
 
 # https://www.chronocompendium.com/Term/Tech_Data_Notes.html#Targeting_Data
 class TargetType(ctenums.StrIntEnum):
