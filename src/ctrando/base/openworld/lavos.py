@@ -40,13 +40,16 @@ class EventMod(locationevent.LocEventMod):
         script.replace_jump_cmd(
             pos, EC.if_mem_op_value(memory.Memory.LAVOS_STATUS, OP.NOT_EQUALS, 8))
 
-        # Remove the possibility to go back to the Ocean Palace time freeze
-        # pos, _ = script.find_command([0xD8], script.get_function_start(0, FID.ARBITRARY_0))
-        # pos = script.find_exact_command(
-        #     EC.if_mem_op_value(memory.Memory.LAVOS_STATUS, OP.EQUALS, 7),
-        #     pos
-        # )
-        # script.delete_commands(pos, 1)
+
+        # Remove the possibility of triggering the Crono death scene
+        pos, _ = script.find_command([0xD8], script.get_function_start(0, FID.ARBITRARY_0))
+        pos = script.find_exact_command(
+            EC.if_mem_op_value(memory.Memory.LAVOS_STATUS, OP.EQUALS, 7),
+            pos
+        )
+        script.replace_jump_cmd(
+            pos, EC.if_mem_op_value(memory.Memory.LAVOS_STATUS, OP.NOT_EQUALS, 3)
+        )
 
         pos = script.find_exact_command(
             EC.if_flag(memory.Flags.LAVOS_FLAG_UNK_80),
