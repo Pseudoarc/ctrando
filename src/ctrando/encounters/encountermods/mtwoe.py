@@ -42,10 +42,10 @@ def get_loop_body(script: LocationEvent, obj_id: int):
 
 
 def apply_all_encounter_reduction(script_manager: ScriptManager):
-    script = script_manager[ctenums.LocID.MT_WOE_MIDDLE_EASTERN_FACE]
-    encounterutils.add_battle_object(
-        script, get_loop_body(script, 2), replace_obj_id=2, npc_id=ctenums.NpcID.CRONOS_MOM
-    )
+    # script = script_manager[ctenums.LocID.MT_WOE_MIDDLE_EASTERN_FACE]
+    # encounterutils.add_battle_object(
+    #     script, get_loop_body(script, 2), replace_obj_id=2, npc_id=ctenums.NpcID.CRONOS_MOM
+    # )
 
     script = script_manager[ctenums.LocID.MT_WOE_WESTERN_FACE]
     encounterutils.add_battle_object(
