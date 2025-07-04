@@ -38,7 +38,7 @@ def str_to_reward(string: str) -> RewardType:
     if string in _item_id_str_dict:
         return _item_id_str_dict[string]
 
-    raise KeyError
+    raise ValueError(string)
 
 
 class LogicOptions:
