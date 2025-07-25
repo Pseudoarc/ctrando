@@ -1,5 +1,6 @@
 """Walk through a Map and collect rewards."""
 import typing
+from collections.abc import Sequence
 from typing import Any
 
 from ctrando.common import ctenums, ctrom, randostate, memory
@@ -100,8 +101,14 @@ class MapTraverser:
             self,
             treasure_dict: dict[ctenums.TreasureID, ttypes.RewardType],
             recruit_dict: dict[ctenums.RecruitID, ctenums.CharID | None],
-            rewards_to_skip: set[Any] = None
+            rewards_to_skip: set[Any] = None,
+            regions_to_skip: set[str] = None
     ):
+        if regions_to_skip is None:
+            regions_to_skip = set()
+        if rewards_to_skip is None:
+            rewards_to_skip = set()
+
         sphere = 0
         while True:
             # header = f"Sphere {sphere}"
@@ -109,7 +116,7 @@ class MapTraverser:
             # print("-" * len(header))
             orig_reached = set(self.reached_regions)
             # print(len(orig_reached))
-            self.step(treasure_dict, recruit_dict, rewards_to_skip)
+            self.step(treasure_dict, recruit_dict, rewards_to_skip, rewards_to_skip)
             if self.reached_regions == orig_reached:
                 break
 
@@ -120,10 +127,12 @@ class MapTraverser:
             treasure_dict: dict[ctenums.TreasureID, ttypes.RewardType],
             recruit_dict: dict[ctenums.RecruitID, ctenums.CharID | None],
             rewards_to_skip: set[Any] = None,
+            regions_to_skip: set[str] = None,
             log_connectors: bool = False
     ) -> list[str]:
-        step_summary: list[str] = []
 
+
+        step_summary: list[str] = []
         step_regions: list[str] = []
 
         if not self.reached_regions:
@@ -140,7 +149,9 @@ class MapTraverser:
                 to_region_name = connector.to_region_name
                 has_region = to_region_name in self.reached_regions.union(new_regions)
 
-                if connector.rule(self.game):
+                if to_region_name in regions_to_skip:
+                    self.available_connectors.remove(connector)
+                elif connector.rule(self.game):
                     if not has_region:
                         new_regions.append(to_region_name)
                         if log_connectors:

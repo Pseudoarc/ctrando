@@ -2,6 +2,7 @@
 from ctrando.arguments import entranceoptions, logicoptions
 from ctrando.logic import logictypes
 
+from ctrando.bosses import bosstypes as bty
 from ctrando.common import ctenums, distribution, memory
 from ctrando.common.random import RNGType
 from ctrando.treasures import treasuretypes as ttypes
@@ -33,6 +34,7 @@ def update_starting_rewards(
 
 def get_key_item_fill(
         initial_treasure_assignment: dict[ctenums.TreasureID, ctenums.ItemID],
+        boss_assignment: dict[bty.BossSpotID, bty.BossID],
         recruit_assignment: dict[ctenums.RecruitID, ctenums.CharID],
         logic_options: logicoptions.LogicOptions,
         entrance_options: entranceoptions.EntranceShufflerOptions,
@@ -50,22 +52,52 @@ def get_key_item_fill(
         if item in key_items:
             key_items.remove(item)
 
+    # Precompute BossSpots which have Nizbel/II or Retinite
+    nizbel_spots = {
+        spot for spot, boss in boss_assignment.items()
+        if boss in (bty.BossID.NIZBEL, bty.BossID.NIZBEL_2)
+    }
+    nizbel_rule = logictypes.LogicRule([ctenums.CharID.CRONO])
+
+    retinite_spots = {
+        spot for spot, boss in boss_assignment.items()
+        if boss == bty.BossID.RETINITE
+    }
+    retinite_rule = logictypes.LogicRule([[ctenums.CharID.MARLE],
+                                          [ctenums.CharID.FROG]])
+
     while True:
+        # Build a candidate map
         exit_connectors = entrancerandomizer.get_random_exit_connectors(entrance_options, rng)
-        # for x in exit_connectors:
-        #     if x.from_exit in entrance_options.preserve_spots:
-        #     print(f"{x.from_exit} --> {x.to_exit}")
-        # input()
-        # print(rng.__getstate__())
-        # input()
         region_connectors = regionmap.get_default_region_connectors(recruit_assignment, logic_options)
         region_map = entrancerandomizer.get_shuffled_map_from_connectors(
             exit_connectors, region_connectors
         )
 
+        # Find Regions with Nizbel/Retinite
+        nizbel_regions = {
+            region_name for region_name, loc_region in region_map.loc_region_dict.items()
+            if nizbel_spots.intersection(loc_region.reward_spots)
+        }
+
+        retinite_regions = {
+            region_name for region_name, loc_region in region_map.loc_region_dict.items()
+            if retinite_spots.intersection(loc_region.reward_spots)
+        }
+
+        # Update Nizbel/Retinite Rules
+        for connector_list in region_map.name_connector_dict.values():
+            for connector in connector_list:
+                if connector.to_region_name in nizbel_regions:
+                    connector.rule &= nizbel_rule
+                elif connector.to_region_name in retinite_regions:
+                    connector.rule &= retinite_rule
+
+        # Starting Rewards
         region_map.loc_region_dict["starting_rewards"].region_rewards.extend(
-            logic_options.  starter_rewards
+            logic_options.starter_rewards
         )
+
         if entrancerandomizer.is_map_viable(region_map):
             excluded_spots = list(set(logic_options.forced_excluded_spots).union(logic_options.excluded_spots))
             for _ in range(5):

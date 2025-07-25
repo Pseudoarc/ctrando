@@ -55,7 +55,7 @@ class EventMod(locationevent.LocEventMod):
         )
         script.insert_commands(func.get_bytearray(), pos)
 
-        print(script.get_function(9, FID.STARTUP))
-        input()
+        # print(script.get_function(9, FID.STARTUP))
+        # input()
 
 

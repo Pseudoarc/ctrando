@@ -88,7 +88,7 @@ class RegionMap:
             for ow_exit in region.ow_exits:
                 self.ow_exit_dict[ow_exit] = region.name
 
-        self.loc_region_dict: dict[str: LocRegion] = dict()
+        self.loc_region_dict: dict[str, LocRegion] = dict()
         for region in loc_regions:
             if region.name in self.loc_region_dict or region.name in self.ow_region_dict:
                 raise ValueError("Duplicate Loc Region Name: " + region.name)

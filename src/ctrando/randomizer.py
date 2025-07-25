@@ -178,6 +178,15 @@ def get_random_config(
     midboss_assignment = bossrando.get_random_midboss_assignment(settings.boss_rando_options, rng)
     config.boss_assignment_dict.update(midboss_assignment)
 
+    ### Objectives
+    # After bosses to avoid double dipping.
+    # Before map to allow objectives in logic
+    config.objectives = objectivewriter.get_random_objectives_from_settings(
+        settings.objective_options,
+        config.boss_assignment_dict,
+        rng
+    )
+
     ### Enemy Charm/Drop
     rewardrando.apply_reward_rando(settings.battle_rewards, config.enemy_data_dict, rng)
 
@@ -194,7 +203,12 @@ def get_random_config(
     config.starting_rewards = list(settings.logic_options.starter_rewards)
     entrancefiller.update_starting_rewards(config.starting_rewards, settings.entrance_options)
     treasure_assignment, entrance_assignment = entrancefiller.get_key_item_fill(
-        dict(), config.recruit_dict, settings.logic_options, settings.entrance_options, rng
+        dict(),
+        config.boss_assignment_dict,
+        config.recruit_dict,
+        settings.logic_options,
+        settings.entrance_options,
+        rng
     )
 
     config.ow_exit_assignment_dict = entrance_assignment
@@ -217,12 +231,6 @@ def get_random_config(
     gearrando.randomize_weapons(config.item_db, rng)
     config.item_db.update_all_descriptions()
 
-    ### Objectives
-    config.objectives = objectivewriter.get_random_objectives_from_settings(
-        settings.objective_options,
-        config.boss_assignment_dict,
-        rng
-    )
 
     return config
 
@@ -532,6 +540,7 @@ def main():
     out_rom = get_ctrom_from_config(ct_rom, settings, config, make_tf_friendly=False)
     # y = time.time()
     # print(y-x)
+
 
     output_path = settings.general_options.output_directory / "ct-mod.sfc"
     output_path.write_bytes(out_rom.getbuffer())
