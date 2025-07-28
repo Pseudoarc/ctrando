@@ -9,7 +9,7 @@ from ctrando.asm import instructions as inst, assemble
 from ctrando.characters import ctpcstats
 from ctrando.common import byteops, ctrom, freespace, memory, ctenums, randostate, asmpatcher
 from ctrando.base import apply_openworld, apply_openworld_ow, chesttext, modifyitems
-
+from ctrando.base import decompressed_graphics
 
 def apply_tf_compressed_enemy_gfx_hack(ct_rom: ctrom.CTRom):
     '''
@@ -1134,8 +1134,8 @@ def base_patch_ct_rom(ct_rom: ctrom.CTRom):
     ct_rom.make_exhirom()
 
     mark_initial_free_space(ct_rom)
-    apply_tf_compressed_enemy_gfx_hack(ct_rom)
-    # apply_fast_ow_movement(ct_rom)
+    decompressed_graphics.apply_full_patch(ct_rom)
+    # apply_fast_ow_movement(ct_rom)  # Moved -- Uses settings for autorun
     patch_blackbird(ct_rom)
     patch_timegauge_alt(ct_rom)
     patch_progressive_items(ct_rom)

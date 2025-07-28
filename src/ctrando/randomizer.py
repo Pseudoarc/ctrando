@@ -173,6 +173,9 @@ def get_random_config(
     shoprando.apply_shop_settings(config.item_db, config.shop_manager,
                                   settings.shop_options, rng)
 
+    ### Recruits
+    config.recruit_dict = recruitwriter.get_random_recruit_assignment_dict(rng)
+
     ### Boss/Midboss
     config.boss_assignment_dict = bossrando.get_random_boss_assignment(settings.boss_rando_options, rng)
     midboss_assignment = bossrando.get_random_midboss_assignment(settings.boss_rando_options, rng)

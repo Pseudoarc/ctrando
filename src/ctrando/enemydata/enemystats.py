@@ -53,6 +53,15 @@ class EnemySpriteData:
         return EnemySpriteData(self._data)
 
     @property
+    def packet_id(self) -> int:
+        """Index of graphics packet"""
+        return self._data[0]
+
+    @packet_id.setter
+    def packet_id(self, val: int) -> int:
+        self._data[0] = val
+
+    @property
     def palette(self) -> int:
         """Index of this sprite data's palette."""
         return self._data[2]
