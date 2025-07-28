@@ -52,6 +52,7 @@ class EventMod(locationevent.LocEventMod):
             Flags.HAS_PREHISTORY_TIMEGAUGE_ACCESS,
             Flags.HAS_MIDDLE_AGES_TIMEGAUGE_ACCESS,
             Flags.EPOCH_OUT_OF_HANGAR,
+            Flags.MANORIA_SANCTUARY_ORGAN,
         )
 
         set_flags_block = EF()

@@ -70,6 +70,18 @@ class EnemySpriteData:
     def palette(self, val: int):
         self._data[2] = val
 
+    @property
+    def sprite_size(self) -> int:
+        return self._data[4] & 0x03
+
+    @sprite_size.setter
+    def sprite_size(self, val: int):
+        if not (0 <= val <= 2):
+            raise ValueError
+
+        self._data[4] &= 0xFC
+        self._data |= val
+
     def set_affect_layer_1(self, affects_layer_1: bool):
         """Will effects on this sprite also affect layer1 tiles."""
         if affects_layer_1:

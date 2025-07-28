@@ -242,6 +242,40 @@ def get_random_boss_assignment(
     return base_dict
 
 
+def resolve_character_conflicts(
+        boss_assign_dict: dict[bty.BossSpotID, bty.BossID],
+        recruit_assign_dict: dict[ctenums.RecruitID, ctenums.CharID | None],
+        boss_rando_options: bro.BossRandoOptions
+):
+    """
+    Prevent the cathedral boss from blocking access to magic required to defeat it.
+    """
+    vanilla_spots = boss_rando_options.vanilla_boss_spots
+    nizbel_ids = (bty.BossID.NIZBEL, bty.BossID.NIZBEL_2)
+
+    castle_recruit = recruit_assign_dict[ctenums.RecruitID.CASTLE]
+    cathedral_boss = boss_assign_dict[bty.BossSpotID.MANORIA_CATHERDAL]
+
+    # The general strategy is just find a random boss who is not a nizbel
+    # or retinite.  Then swap that with the cathedral boss if it's bad.
+    nizbel_locks_crono = cathedral_boss in nizbel_ids and castle_recruit == ctenums.CharID.CRONO
+    retinite_locks_water = (
+            cathedral_boss == bty.BossID.RETINITE and
+            castle_recruit in (ctenums.CharID.FROG, ctenums.CharID.MARLE)
+    )
+
+    if nizbel_locks_crono or retinite_locks_water:
+        spots = [x for x in boss_assign_dict.keys() if x not in vanilla_spots]
+        rng.shuffle(spots)
+        for spot in spots:
+            boss = boss_assign_dict[spot]
+            if boss not in nizbel_ids + (bty.BossID.RETINITE,):
+                boss_assign_dict[spot] = cathedral_boss
+                boss_assign_dict[bty.BossSpotID.MANORIA_CATHERDAL] = boss
+                break
+        else:
+            boss_assign_dict[bty.BossSpotID.MANORIA_CATHERDAL] = bty.BossID.YAKRA
+
 def fix_boss_sprites_given_assignment(
         boss_dict: dict[bty.BossSpotID, bty.BossID],
         enemy_sprite_dict: dict[ctenums.EnemyID, enemystats.EnemySpriteData]
@@ -281,30 +315,31 @@ def fix_boss_sprites_given_assignment(
         boss_dict[spot] for spot in bad_mud_imp_spots
     ]
 
-    if bty.BossID.MUD_IMP in bad_spots_assigned_bosses:
-        change_enemy_sprite(ctenums.EnemyID.RED_BEAST, ctenums.EnemyID.NU)
-        change_enemy_sprite(ctenums.EnemyID.BLUE_BEAST, ctenums.EnemyID.NU)
-
-    ozzie_spots = [
-        spot for spot, entry in boss_dict.items()
-        if entry == bty.BossID.OZZIE_TRIO
-    ]
-    if ozzie_spots != [bty.BossSpotID.OZZIES_FORT_TRIO]:
-        change_enemy_sprite(ctenums.EnemyID.FLEA_PLUS_TRIO, ctenums.EnemyID.R_SERIES, False)
-        enemy_sprite_dict[ctenums.EnemyID.FLEA_PLUS_TRIO].palette = enemy_sprite_dict[ctenums.EnemyID.ATROPOS_XR].palette
-        change_enemy_sprite(ctenums.EnemyID.SUPER_SLASH_TRIO, ctenums.EnemyID.R_SERIES, False)
-
-    if bty.BossSpotID.OZZIES_FORT_TRIO not in ozzie_spots:
-        ozzie_assign = boss_dict[bty.BossSpotID.OZZIES_FORT_TRIO]
-        ozzie_assign_id = bty.get_default_scheme(ozzie_assign).parts[0].enemy_id
-
-        # Ozzie can't do Slash's spincut (freezes)
-        # Really, this is OK for any small sprite.  Perhaps only force Ozzie for
-        # Nizbel, Golem, ???
-        if ozzie_assign_id not in (
-            ctenums.EnemyID.SLASH_SWORD, ctenums.EnemyID.FLEA, ctenums.EnemyID.DALTON_PLUS
-        ):
-            change_enemy_sprite(ozzie_assign_id, ctenums.EnemyID.GREAT_OZZIE, False)
+    # In theory, all of these other changes are obsolute with decompressed gfx
+    # if bty.BossID.MUD_IMP in bad_spots_assigned_bosses:
+    #     change_enemy_sprite(ctenums.EnemyID.RED_BEAST, ctenums.EnemyID.NU)
+    #     change_enemy_sprite(ctenums.EnemyID.BLUE_BEAST, ctenums.EnemyID.NU)
+    #
+    # ozzie_spots = [
+    #     spot for spot, entry in boss_dict.items()
+    #     if entry == bty.BossID.OZZIE_TRIO
+    # ]
+    # if ozzie_spots != [bty.BossSpotID.OZZIES_FORT_TRIO]:
+    #     change_enemy_sprite(ctenums.EnemyID.FLEA_PLUS_TRIO, ctenums.EnemyID.R_SERIES, False)
+    #     enemy_sprite_dict[ctenums.EnemyID.FLEA_PLUS_TRIO].palette = enemy_sprite_dict[ctenums.EnemyID.ATROPOS_XR].palette
+    #     change_enemy_sprite(ctenums.EnemyID.SUPER_SLASH_TRIO, ctenums.EnemyID.R_SERIES, False)
+    #
+    # if bty.BossSpotID.OZZIES_FORT_TRIO not in ozzie_spots:
+    #     ozzie_assign = boss_dict[bty.BossSpotID.OZZIES_FORT_TRIO]
+    #     ozzie_assign_id = bty.get_default_scheme(ozzie_assign).parts[0].enemy_id
+    #
+    #     # Ozzie can't do Slash's spincut (freezes)
+    #     # Really, this is OK for any small sprite.  Perhaps only force Ozzie for
+    #     # Nizbel, Golem, ???
+    #     if ozzie_assign_id not in (
+    #         ctenums.EnemyID.SLASH_SWORD, ctenums.EnemyID.FLEA, ctenums.EnemyID.DALTON_PLUS
+    #     ):
+    #         change_enemy_sprite(ozzie_assign_id, ctenums.EnemyID.GREAT_OZZIE, False)
 
 
 def fix_atropos_ribbon_buff(

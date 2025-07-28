@@ -44,6 +44,7 @@ class ConfigState:
     ow_exit_assignment_dict: dict[owexitdata.OWExitClass, owexitdata.OWExitClass]
     starting_rewards: list[logictypes.RewardType]
     objectives: list[objectivetypes.ObjectiveType]
+    enemy_assign_dict: dict[ctenums.EnemyID, ctenums.EnemyID]
 
     @classmethod
     def get_default_config_from_ctrom(cls, ct_rom: ctrom.CTRom):
@@ -105,12 +106,13 @@ class ConfigState:
         }
         starting_rewards = []
         objectives = [None for _ in range(8)]
+        enemy_assign_dict: dict[ctenums.EnemyID, ctenums.EnemyID] = dict()
 
         return cls(
             item_db, treasure_assignment, pcstat_manager,
             pctech_manager, enemy_data_dict, boss_assignment_dict,
             shop_manager, recruit_dict, ow_exit_assignment_dict,
-            starting_rewards, objectives
+            starting_rewards, objectives, enemy_assign_dict
         )
 
 

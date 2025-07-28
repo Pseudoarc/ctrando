@@ -11,7 +11,7 @@ from typing import TextIO
 from ctrando.arguments import (
     arguments, enemyscaling, techoptions, tomloptions
 )
-from ctrando.enemydata import enemystats, rewardrando
+from ctrando.enemydata import enemystats, rewardrando, enemyrando
 from ctrando.logic import logictweaks, logictypes
 from ctrando.shops import shoptypes, shoprando
 
@@ -181,6 +181,10 @@ def get_random_config(
     midboss_assignment = bossrando.get_random_midboss_assignment(settings.boss_rando_options, rng)
     config.boss_assignment_dict.update(midboss_assignment)
 
+    bossrando.resolve_character_conflicts(config.boss_assignment_dict,
+                                          config.recruit_dict,
+                                          settings.boss_rando_options)
+
     ### Objectives
     # After bosses to avoid double dipping.
     # Before map to allow objectives in logic
@@ -193,8 +197,8 @@ def get_random_config(
     ### Enemy Charm/Drop
     rewardrando.apply_reward_rando(settings.battle_rewards, config.enemy_data_dict, rng)
 
-    ### Recruits
-    config.recruit_dict = recruitwriter.get_random_recruit_assignment_dict(rng)
+    ### Enemy Reshuffle
+    config.enemy_assign_dict = enemyrando.get_enemy_shuffle(settings.enemy_options.shuffle_enemies, rng)
 
     ### XP/TP Mod
     characterwriter.scale_xp(
@@ -311,6 +315,11 @@ def get_ctrom_from_config(
     modifymaps.make_zenan_boss_map(post_config.script_manager,
                                    post_config.loc_exit_dict,
                                    post_config.loc_data_dict)
+
+    enemyrando.apply_enemy_shuffle(
+        config.enemy_assign_dict, post_config.script_manager, post_config.enemy_sprite_dict
+    )
+
     apply_dynamic_scaling(ct_rom, post_config.script_manager,
                           config.enemy_data_dict, settings)
 

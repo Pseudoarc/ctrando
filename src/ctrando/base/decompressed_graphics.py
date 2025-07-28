@@ -129,7 +129,6 @@ def patch_graphics_loading(ct_rom: ctrom.CTRom):
     jump_rt_b = assemble.assemble(jump_rt)
 
     payload = ptr_table + gfx_rt_b + jump_rt_b
-    print(len(ptr_table), len(gfx_rt_b), len(jump_rt_b))
     jump_rt_st = start_addr + len(ptr_table) + len(gfx_rt_b)
 
     ct_rom.seek(start_addr)
@@ -143,8 +142,6 @@ def patch_graphics_loading(ct_rom: ctrom.CTRom):
 
     ct_rom.seek(hook_addr)
     ct_rom.write(hook_b)
-
-    print(total_size, len(payload))
 
     # print(f"{total_size:06X}")
 
