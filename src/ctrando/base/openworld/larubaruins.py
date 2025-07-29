@@ -75,11 +75,14 @@ class EventMod(locationevent.LocEventMod):
                     .add(EC.auto_text_box(
                         script.add_py_string(
                             "OLD MAN: ...OK.{line break}"
-                            "Go to Dactyl's nest and keeper will{line break}"
-                            "help.{line break}"
-                            "Careful, {pc1}!{null}"
+                            "Will call for Dactyl.  Friend may still{line break}"
+                            "be at summit.  Careful, {pc1}!{null}"
                         )
-                    )).add(EC.set_flag(memory.Flags.HAS_DACYTL_PERMISSION))
+                    ))
+                    .add(EC.assign_val_to_mem(0x80, memory.Memory.DACTYL_STATUS, 1))
+                    .add(EC.assign_val_to_mem(0x0218, memory.Memory.DACTYL_X_COORD_LO, 2))
+                    .add(EC.assign_val_to_mem(0x0128, memory.Memory.DACTYL_Y_COORD_LO, 2))
+                    .add(EC.set_flag(memory.Flags.HAS_DACYTL_PERMISSION))
                     .add(EC.set_explore_mode(True)),
                     # Else, tell the player to bring dreamstone
                     EF()
