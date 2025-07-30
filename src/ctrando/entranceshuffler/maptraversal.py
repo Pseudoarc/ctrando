@@ -199,35 +199,7 @@ def is_map_traversable(
 
 
 def main():
-
-    ct_rom = ctrom.CTRom.from_file("../ct.sfc")
-    state = randostate.RandoState(ct_rom)
-
-    regionmap.get_shuffled_exit_connectors()
-    input("here")
-    region_map = regionmap.get_default_map()
-    # for name, tids in region_map.get_treasure_group_dict().items():
-    #     print(f"{name}:")
-    #     for tid in tids:
-    #         print(f"\t{tid}")
-    #
-    # input()
-    traverser = MapTraverser(region_map, "starting_rewards")
-    base_treasure_dict = {
-        tid: ctenums.ItemID.NONE for tid in state.treasure_data_dict.keys()
-    }
-    key_item_list = list(x for x in traverser.useful_items
-                         if isinstance(x, ctenums.ItemID))
-    key_item_list.append(ctenums.ItemID.JERKY)
-    spot_weights = {tid: 1 for tid in base_treasure_dict}
-
-    import entranceshuffler.entrancefiller as ef
-    assignment = ef.fill_weighted_random_decay(region_map,
-                                               key_item_list,
-                                               base_treasure_dict,
-                                               state.recruit_dict,
-                                               spot_weights)
-    print(ef.verify_fill(region_map, assignment, state.recruit_dict))
+    pass
 
 
 if __name__ == "__main__":

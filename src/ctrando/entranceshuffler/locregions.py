@@ -316,11 +316,14 @@ def get_all_loc_regions() -> list[LocRegion]:
 
     # TODO: Decide whether cathedral always dumps you into castle or not.
     #       Easier to not do castle warp and worry about softlock?
+    manoria_front = LocRegion(
+        "manoria_sanctuary",
+        loc_exits={LocExit.MANORIA_CATHEDRAL},
+        reward_spots={RecruitID.CATHEDRAL}
+    )
     manoria_cathedral = LocRegion(
         "manoria_cathedral",
-        loc_exits={LocExit.MANORIA_CATHEDRAL},
         reward_spots={
-            RecruitID.CATHEDRAL,
             TID.MANORIA_CATHEDRAL_1, TID.MANORIA_CATHEDRAL_2, TID.MANORIA_CATHEDRAL_3,
             TID.MANORIA_BROMIDE_1, TID.MANORIA_BROMIDE_2, TID.MANORIA_BROMIDE_3,
             TID.MANORIA_INTERIOR_1, TID.MANORIA_INTERIOR_2, TID.MANORIA_INTERIOR_3,
@@ -333,7 +336,7 @@ def get_all_loc_regions() -> list[LocRegion]:
         region_rewards=[memory.Flags.MANORIA_BOSS_DEFEATED,
                         memory.Flags.OBTAINED_NAGAETTE_BROMIDE]
     )
-    ret_list.append(manoria_cathedral)
+    ret_list.extend([manoria_front, manoria_cathedral])
 
     ret_list.append(
         LocRegion(
@@ -586,7 +589,11 @@ def get_all_loc_regions() -> list[LocRegion]:
         loc_exits={LocExit.LARUBA_RUINS},
         reward_spots={TID.LARUBA_ROCK}
     )
-    ret_list.append(laruba_ruins)
+    laruba_ruins_chief = LocRegion(
+        "laruba_ruins_chief",
+        region_rewards=[memory.Flags.OBTAINED_DACTYLS]
+    )
+    ret_list.extend([laruba_ruins, laruba_ruins_chief])
     ret_list.append(
         LocRegion(
             "ioka_meeting_site", {LocExit.IOKA_MEETING_NORTH, LocExit.IOKA_MEETING_SOUTH}

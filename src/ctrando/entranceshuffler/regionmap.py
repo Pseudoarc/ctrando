@@ -160,103 +160,6 @@ class RegionMap:
 _charge_rule = logicfactory.ProgressiveRule([ctenums.ItemID.PENDANT, ctenums.ItemID.PENDANT_CHARGE])
 
 
-def get_shuffled_exit_connectors() -> list[ExitConnector]:
-    vanilla_exit_connectors = get_default_exit_connectors()
-    ow_exit_pool = [connector.from_exit for connector in vanilla_exit_connectors]
-    loc_exit_pool = [connector.to_exit for connector in vanilla_exit_connectors]
-
-    # 1) Remove Tyrano Lair exit (always ruined)
-    ow_exit_pool.remove(OWExit.TYRANO_LAIR)
-    # 2) Remove the LV version of the portal area.
-    loc_exit_pool.remove(LocExit.DARK_AGES_PORTAL_LAST_VILLAGE)
-    empty_game = logictypes.Game()
-
-    # Should be Fiona's Shrine, Sunken Desert, Giant's Claw.
-    flag_exits = [
-        connector.from_exit for connector in vanilla_exit_connectors
-        if connector.rule(empty_game) is False
-    ]
-
-    known_dead_ends = [
-        LocExit.CRONOS_HOUSE, LocExit.TRUCE_MAYOR, LocExit.TRUCE_MARKET_1000,
-        LocExit.TRUCE_INN_1000, LocExit.PORRE_INN_1000,
-        LocExit.GUARDIA_CASTLE_1000, LocExit.PORRE_MAYOR_1000,
-        LocExit.PORRE_MARKET_1000, LocExit.SNAIL_STOP, LocExit.MEDINA_INN,
-        LocExit.MEDINA_SQUARE, LocExit.MEDINA_ELDER,
-        LocExit.FOREST_RUINS, LocExit.LUCCAS_HOUSE,
-        LocExit.GUARDIA_CASTLE_600, LocExit.MANORIA_CATHEDRAL,
-        LocExit.TRUCE_MARKET_600, LocExit.DENADORO_MTS, LocExit.DORINO_BROMIDE_RESIDENCE,
-        LocExit.DORINO_MARKET, LocExit.DORINO_INN, LocExit.FIONAS_VILLA,
-        LocExit.CURSED_WOODS, LocExit.PORRE_CAFE_600, LocExit.PORRE_INN_600,
-        LocExit.DEATH_PEAK, LocExit.ARRIS_DOME, LocExit.FACTORY_RUINS,
-        # LocExit.DACTYL_NEST  # ??
-        LocExit.HUNTING_RANGE, LocExit.LARUBA_RUINS,
-        LocExit.TRADING_POST, LocExit.CHIEFS_HUT, LocExit.IOKA_SW_HUT,
-        LocExit.IOKA_SWEET_WATER_HUT, LocExit.CHORAS_MAYOR_1000, LocExit.CHORAS_INN_1000,
-        LocExit.CHORAS_CARPTENTER_1000, LocExit.WEST_CAPE,
-        LocExit.NORTHERN_RUINS_1000, LocExit.PORRE_ELDER_600,
-        LocExit.MELCHIORS_HUT, LocExit.TRUCE_INN_600, LocExit.TRANN_DOME,
-        LocExit.ZENAN_BRIDGE_600_NORTH, LocExit.TATAS_HOUSE,
-        LocExit.SUN_KEEP_600, LocExit.CHORAS_CAFE_600, LocExit.CHORAS_MARKET_600,
-        LocExit.CHORAS_CARPTENTER_600, LocExit.NORTHERN_RUINS_600,
-        LocExit.GIANTS_CLAW, LocExit.OZZIES_FORT, LocExit.MAGUS_LAIR,
-        LocExit.MAGIC_CAVE_OPEN, LocExit.SUNKEN_DESERT_ENTRANCE,
-        LocExit.FIONAS_SHRINE, LocExit.SUN_KEEP_2300, LocExit.SUN_KEEP_PREHISTORY,
-        LocExit.SUN_PALACE, LocExit.GENO_DOME, LocExit.REPTITE_LAIR, LocExit.TYRANO_LAIR,
-        LocExit.NORTH_CAPE, LocExit.LAST_VILLAGE_SHOP, LocExit.LAST_VILLAGE_COMMNONS,
-        LocExit.BLACKBIRD,
-        # LocExit.ZEAL_PALACE  # ??
-        LocExit.ENHASA, LocExit.KAJAR,
-        LocExit.TERRA_CAVE,  # Eventually cut Woe from Beast Cave
-        LocExit.TRUCE_SINGLE_RESIDENCE, LocExit.TRUCE_SCREAMING_RESIDENCE,
-        LocExit.TRUCE_SMITH_RESIDENCE, LocExit.TRUCE_COUPLE_RESIDENCE_600,
-        LocExit.LAST_VILLAGE_RESIDENCE, LocExit.LAST_VILLAGE_EMPTY_HUT, LocExit.SUN_KEEP_LAST_VILLAGE
-    ]
-    known_dead_ends = [x for x in known_dead_ends if x in loc_exit_pool]
-    random.shuffle(known_dead_ends)
-
-    assign_dict: dict[OWExit, LocExit] = dict()
-
-    # Because of weird magic cave stuff, the Dorino side has to be vanilla.
-    assign_dict[OWExit.MAGIC_CAVE_CLOSED] = LocExit.MAGIC_CAVE_CLOSED
-    assign_dict[OWExit.MAGIC_CAVE_OPEN] = LocExit.MAGIC_CAVE_OPEN
-
-    ow_exit_pool.remove(OWExit.MAGIC_CAVE_CLOSED)
-    ow_exit_pool.remove(OWExit.MAGIC_CAVE_OPEN)
-    loc_exit_pool.remove(LocExit.MAGIC_CAVE_CLOSED)
-    loc_exit_pool.remove(LocExit.MAGIC_CAVE_OPEN)
-
-    for ow_exit, loc_exit in zip(flag_exits, known_dead_ends):
-        assign_dict[ow_exit] = loc_exit
-        ow_exit_pool.remove(ow_exit)
-        loc_exit_pool.remove(loc_exit)
-
-    random.shuffle(loc_exit_pool)
-    assign_dict.update(zip(ow_exit_pool, loc_exit_pool))
-
-    for exit_connector in vanilla_exit_connectors:
-        exit_connector.to_exit = assign_dict[exit_connector.from_exit]
-
-    return vanilla_exit_connectors
-
-
-def get_shuffled_map(max_iters: int = 1000) -> RegionMap:
-    num_iters = max(1, max_iters)
-    for iter_num in range(num_iters):
-        ow_regions = owregions.get_ow_regions()
-        loc_regions = locregions.get_all_loc_regions()
-        exit_connectors = get_shuffled_exit_connectors()
-        region_connectors = get_default_region_connectors()
-
-        region_map = RegionMap(ow_regions, loc_regions, exit_connectors, region_connectors)
-
-        num_iters += 1
-    else:
-        region_map = get_default_map()
-
-    return region_map
-
-
 def get_default_exit_connectors() -> list[ExitConnector]:
     return [
         # truce_1000_overworld
@@ -598,6 +501,11 @@ def get_default_region_connectors(
             "guardia_castle_600", "guardia_castle_600_shell",
             "shell_turn_in",
             rule=progressive_shell_rule(1)
+        ),
+        RegionConnector(
+            "manoria_sanctuary", "manoria_cathedral",
+            "pipe_organ_door",
+            rule=logictypes.LogicRule()
         ),
         RegionConnector(
             "guardia_castle_600", "guardia_castle_600_recruit",
@@ -1078,6 +986,12 @@ def get_default_region_connectors(
             "ioka_overworld", "lair_ruins_overworld",
             "flight_prehistory_dactyl",
             rule=logictypes.LogicRule([memory.Flags.OBTAINED_DACTYLS]),
+            reversible=False
+        ),
+        RegionConnector(
+            "laruba_ruins", "laruba_ruins_chief",
+            "dreamstone_to_laruba_chief",
+            rule=logictypes.LogicRule([ItemID.DREAMSTONE]),
             reversible=False
         ),
         RegionConnector(
