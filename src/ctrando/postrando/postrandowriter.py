@@ -1,8 +1,13 @@
 """Write Post-Randomization options to rom data"""
+from collections.abc import Callable
+
 from ctrando.arguments import postrandooptions
 from ctrando.base.basepatch import apply_fast_ow_movement
 from ctrando.common import ctrom
-from ctrando.postrando import gameoptions
+from ctrando.enemyscaling.patchscaling import patch_ai_scripts
+from ctrando.postrando import gameoptions, palettes
+from ctrando.treasures.treasureassign import default_assignment
+
 
 def set_auto_run(ct_rom: ctrom.CTRom):
     # Each direction (up, down, left, right, + 4 diags) has a block for
@@ -32,6 +37,57 @@ def set_auto_run(ct_rom: ctrom.CTRom):
         ct_rom.write(b'\xD0') # BNE instead of the 0xF0 BEQ
 
 
+def write_palettes(
+        ct_rom: ctrom.CTRom,
+        post_rando_options: postrandooptions.PostRandoOptions
+):
+    char_palettes = [
+        post_rando_options.crono_palette,
+        post_rando_options.marle_palette,
+        post_rando_options.lucca_palette,
+        post_rando_options.robo_palette,
+        post_rando_options.frog_palette,
+        post_rando_options.ayla_palette,
+        post_rando_options.magus_palette
+    ]
+
+    for ind, palette in enumerate(char_palettes):
+        palette.write_to_ctrom(ct_rom, ind)
+
+    ow_pc_palettes = palettes.OWPallete.read_from_ct_rom(ct_rom, 0)
+    # from ctrando.common import byteops
+    # byteops.print_bytes(ow_pc_palettes.to_bytes(), 0x10)
+    # input()
+
+
+    defaults = postrandooptions.PostRandoOptions()
+    default_palettes = [
+        defaults.crono_palette, defaults.marle_palette, defaults.lucca_palette,
+        defaults.robo_palette, defaults.frog_palette, defaults.ayla_palette,
+        defaults.magus_palette
+    ]
+
+    palette_builders: list[Callable[[palettes.SNESPalette], palettes.SinglePCOWPalette]] = [
+        palettes.build_crono_ow_palette,
+        palettes.build_marle_ow_palette,
+        palettes.build_lucca_ow_palette,
+        palettes.build_robo_ow_palette,
+        palettes.build_frog_ow_palette,
+        palettes.build_ayla_ow_palette,
+        palettes.build_magus_ow_palette,
+    ]
+
+    for ind, (new_palette, default_palette, palette_builder) in \
+            enumerate(zip(char_palettes, default_palettes, palette_builders)):
+
+        if new_palette != default_palette:
+            ow_palette = palette_builder(new_palette)
+            ow_pc_palettes.set_pc_palette(ind, ow_palette)
+
+    ow_pc_palettes.write_to_ctrom(ct_rom, 0)
+
+
+
 def write_post_rando_options(
         post_rando_options: postrandooptions.PostRandoOptions,
         ct_rom: ctrom.CTRom
@@ -55,3 +111,4 @@ def write_post_rando_options(
     default_opts.menu_style = post_rando_options.window_background - 1
 
     default_opts.write_to_ctrom(ct_rom)
+    write_palettes(ct_rom, post_rando_options)
