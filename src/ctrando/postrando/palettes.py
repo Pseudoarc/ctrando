@@ -57,6 +57,51 @@ class SNESColor(cty.SizedBinaryData):
 
         return ret_color
 
+    def complement(self) -> typing.Self:
+        red = 0x1F - self.red
+        green = 0x1F - self.green
+        blue = 0x1F - self.blue
+
+        ret_color = self.__class__()
+        ret_color.red = red
+        ret_color.green = green
+        ret_color.blue = blue
+
+        return ret_color
+
+    @classmethod
+    def black(cls) -> typing.Self:
+        return cls.from_rgb_255(0, 0, 0)
+
+    @classmethod
+    def white(cls) -> typing.Self:
+        return cls.from_rgb_255(255, 255, 255)
+
+
+
+
+def blend(color_1: SNESColor, color_2: SNESColor, t: float) -> SNESColor:
+    def blend_component(comp_1: int, comp_2: int) -> int:
+        return round(comp_1 + t*(comp_2-comp_1))
+
+    red = blend_component(color_1.red, color_2.red)
+    green = blend_component(color_1.green, color_2.green)
+    blue = blend_component(color_1.blue, color_2.blue)
+
+    ret_color = SNESColor()
+    ret_color.red = red
+    ret_color.green = green
+    ret_color.blue = blue
+
+    return ret_color
+
+
+def darken(color: SNESColor, t: float) -> SNESColor:
+    return blend(color, SNESColor.black(), t)
+
+
+def lighten(color: SNESColor, t: float) -> SNESColor:
+    return blend(color, SNESColor.white(), t)
 
 _loc_palette_rw = cty.AbsRomRW(0x240000)
 
@@ -130,6 +175,12 @@ class SNESPalette:
             for ind in range(cls.NUM_COLORS)
         )
         return cls(colors)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}.from_hex_sequence({self.to_hex_sequence()})"
+
+    def __str__(self):
+        return self.to_hex_sequence()
 
 
 class CronoPaletteIndex(enum.IntEnum):
@@ -375,14 +426,205 @@ class OWPallete(SNESPalette):
         self.colors[start:end] = palette.colors
 
 
+class PortraitPallete(SNESPalette):
+    NUM_COLORS = 16
+    ROM_RW = cty.AbsRomRW(0x3F1F80)
 
 
+def build_crono_portrait_palette(
+        loc_palette: SNESPalette,
+):
+    colors: list[SNESColor] = [
+        SNESColor(b'\x31\x46'),
+        blend(loc_palette[CronoPaletteIndex.WHITE], SNESColor.black(), 0.15),
+        blend(loc_palette[CronoPaletteIndex.WHITE], SNESColor.black(), 0.30),
+        loc_palette[CronoPaletteIndex.SKIN_LIGHTER],
+        loc_palette[CronoPaletteIndex.SKIN_DARKER],
+        blend(loc_palette[CronoPaletteIndex.SKIN_DARKER], SNESColor.black(), 0.15),
+        blend(loc_palette[CronoPaletteIndex.SKIN_DARKER], SNESColor.black(), 0.30),
+        blend(loc_palette[CronoPaletteIndex.SKIN_DARKER], SNESColor.black(), 0.45),
+        loc_palette[CronoPaletteIndex.HAIR_LIGHTER],
+        blend(loc_palette[CronoPaletteIndex.HAIR_LIGHTER], SNESColor.black(), 0.20),
+        loc_palette[CronoPaletteIndex.HAIR_DARKER].complement(),
+        loc_palette[CronoPaletteIndex.GI_DARK],
+        blend(loc_palette[CronoPaletteIndex.HAIR_LIGHTER], SNESColor.black(), 0.40),
+        loc_palette[CronoPaletteIndex.HAIR_DARKEST],
+        loc_palette[CronoPaletteIndex.OUTLINE],
+        SNESColor(b'\x03\x00')
+    ]
+
+    return PortraitPallete(colors)
 
 
+def build_marle_portrait_palette(
+        loc_palette: SNESPalette,
+):
+    eye_color = loc_palette[MarlePaletteIndex.HAIR_MID].complement()
+    colors: list[SNESColor] = [
+        SNESColor(b'\xB4\x68'),
+        loc_palette[MarlePaletteIndex.WHITE],
+        loc_palette[MarlePaletteIndex.SKIN_LIGHTER],
+        loc_palette[MarlePaletteIndex.SKIN_DARKER],
+        blend(loc_palette[MarlePaletteIndex.SKIN_DARKER], SNESColor.black(), 0.15),
+        blend(loc_palette[MarlePaletteIndex.SKIN_DARKER], SNESColor.black(), 0.30),
+        blend(loc_palette[MarlePaletteIndex.SKIN_DARKER], SNESColor.black(), 0.45),
+        blend(loc_palette[MarlePaletteIndex.SKIN_DARKER], SNESColor.black(), 0.60),
+        eye_color,
+        loc_palette[MarlePaletteIndex.HAIR_LIGHTER],
+        loc_palette[MarlePaletteIndex.HAIR_MID],
+        loc_palette[MarlePaletteIndex.HAIR_DARKER],
+        loc_palette[MarlePaletteIndex.HAIR_DARKEST],
+        darken(eye_color, 0.15),
+        darken(loc_palette[MarlePaletteIndex.HAIR_DARKEST], 0.3),
+        SNESColor(b'\x65\x00')
+    ]
+
+    return PortraitPallete(colors)
 
 
+def build_lucca_portrait_palette(
+        loc_palette: SNESPalette,
+):
+    eye_color = loc_palette[LuccaPaletteIndex.TUNIC_MID].complement()
+    colors: list[SNESColor] = [
+        SNESColor(b'\x31\x46'),
+        blend(loc_palette[LuccaPaletteIndex.WHITE],
+              loc_palette[LuccaPaletteIndex.TUNIC_DARKER],
+              0.05),  # Very slightly off white
+        blend(loc_palette[LuccaPaletteIndex.WHITE],
+              loc_palette[LuccaPaletteIndex.TUNIC_DARKER],
+              0.15),  # slightly off white
+        # Skin but also headband highlights
+        loc_palette[LuccaPaletteIndex.SKIN_LIGHTER],
+        loc_palette[LuccaPaletteIndex.SKIN_DARKER],
+        darken(loc_palette[LuccaPaletteIndex.SKIN_DARKER], 0.15),
+        darken(loc_palette[LuccaPaletteIndex.SKIN_DARKER], 0.30),
+        loc_palette[LuccaPaletteIndex.HAT_LIGHTER],
+        loc_palette[LuccaPaletteIndex.HAT_DARKER],
+        darken(loc_palette[LuccaPaletteIndex.HAT_DARKER], 0.3),
+        loc_palette[LuccaPaletteIndex.TUNIC_DARKER],
+        SNESColor(b'\x5C\x21'),
+        eye_color,
+        loc_palette[LuccaPaletteIndex.TUNIC_MID],
+        darken(loc_palette[LuccaPaletteIndex.HAT_LIGHTER], 0.3),
+        darken(loc_palette[LuccaPaletteIndex.HAIR_DARK], 0.8),
+    ]
+
+    return PortraitPallete(colors)
 
 
+def build_robo_portrait_palette(
+        loc_palette: SNESPalette,
+):
+    eye_color = loc_palette[LuccaPaletteIndex.TUNIC_MID].complement()
+    colors: list[SNESColor] = [
+        SNESColor(b'\x52\x4A'),
+        lighten(loc_palette[RoboPaletteIndex.EYE_DARK].complement(), 0.7),
+        loc_palette[RoboPaletteIndex.SKIN_LIGHTER],
+        blend(loc_palette[RoboPaletteIndex.SKIN_LIGHTER],
+              loc_palette[RoboPaletteIndex.SKIN_MID], 0.5),
+        loc_palette[RoboPaletteIndex.SKIN_MID],
+        blend(loc_palette[RoboPaletteIndex.SKIN_MID],
+              loc_palette[RoboPaletteIndex.SKIN_DARK], 0.5),
+        loc_palette[RoboPaletteIndex.SKIN_DARK],
+        blend(loc_palette[RoboPaletteIndex.SKIN_DARK],
+              loc_palette[RoboPaletteIndex.SKIN_DARKEST], 0.5),
+        loc_palette[RoboPaletteIndex.SKIN_DARKEST],
+        loc_palette[RoboPaletteIndex.JOINTS_LIGHT],
+        loc_palette[RoboPaletteIndex.JOINTS_MID],
+        loc_palette[RoboPaletteIndex.EYE_LIGHT],
+        loc_palette[RoboPaletteIndex.EYE_DARK],
+        blend(loc_palette[RoboPaletteIndex.SKIN_MID],
+              loc_palette[RoboPaletteIndex.JOINTS_MID], 0.5),
+        blend(loc_palette[RoboPaletteIndex.SKIN_DARK],
+              loc_palette[RoboPaletteIndex.JOINTS_MID], 0.5),
+        blend(loc_palette[RoboPaletteIndex.SKIN_DARKEST],
+              loc_palette[RoboPaletteIndex.JOINTS_MID], 0.5),
+    ]
+
+    return PortraitPallete(colors)
 
 
+def build_frog_portrait_palette(
+        loc_palette: SNESPalette,
+):
+    eye_color = loc_palette[LuccaPaletteIndex.TUNIC_MID].complement()
+    colors: list[SNESColor] = [
+        SNESColor(b'\x52\x4A'),
+        SNESColor(b'\x00\x00'),
+        SNESColor(b'\xFF\x7B'),
+        lighten(loc_palette[FrogPaletteIndex.ARMOR_LIGHT], 0.7),
+        lighten(loc_palette[FrogPaletteIndex.TONGUE], 0.5),
+        lighten(loc_palette[FrogPaletteIndex.SKIN_LIGHTER], 0.5),
+        loc_palette[FrogPaletteIndex.SKIN_LIGHTER],
+        # eye light
+        loc_palette[FrogPaletteIndex.ARMOR_LIGHT],
+        loc_palette[FrogPaletteIndex.TONGUE],
+        blend(loc_palette[FrogPaletteIndex.SKIN_MID],
+              loc_palette[FrogPaletteIndex.ARMOR_DARK], 0.5),
+        loc_palette[FrogPaletteIndex.ARMOR_DARK],
+        darken(loc_palette[FrogPaletteIndex.SKIN_MID], 0.3),
+        darken(loc_palette[FrogPaletteIndex.ARMOR_DARK], 0.5),
+        loc_palette[FrogPaletteIndex.CAPE_LIGHT],
+        loc_palette[FrogPaletteIndex.CAPE_MID],
+        loc_palette[FrogPaletteIndex.CAPE_DARK],
+    ]
 
+    return PortraitPallete(colors)
+
+
+def build_ayla_portrait_palette(
+        loc_palette: SNESPalette,
+):
+    hair_skin_blend = blend(
+        loc_palette[AylaPaletteIndex.HAIR_DARK],
+        loc_palette[AylaPaletteIndex.SKIN_DARKER], 0.5
+    )
+    colors: list[SNESColor] = [
+        SNESColor(b'\x31\x46'),
+        lighten(loc_palette[AylaPaletteIndex.SKIN_LIGHTER], 0.7),
+        loc_palette[AylaPaletteIndex.SKIN_LIGHTER],
+        loc_palette[AylaPaletteIndex.HAIR_LIGHT],
+        loc_palette[AylaPaletteIndex.HAIR_MID],
+        blend(loc_palette[AylaPaletteIndex.SKIN_LIGHTER],
+              loc_palette[AylaPaletteIndex.SKIN_DARKER], 0.5),
+        loc_palette[AylaPaletteIndex.SKIN_DARKER],
+        loc_palette[AylaPaletteIndex.HAIR_DARK],
+        hair_skin_blend,
+        darken(hair_skin_blend, 0.15),
+        darken(hair_skin_blend, 0.30),
+        darken(hair_skin_blend, 0.45),
+        darken(hair_skin_blend, 0.60),
+        loc_palette[AylaPaletteIndex.CLOTHES_LIGHT],
+        SNESColor(b'\x7D\x3D'),
+        loc_palette[AylaPaletteIndex.OUTLINE]
+    ]
+
+    return PortraitPallete(colors)
+
+
+def build_magus_portrait_palette(
+        loc_palette: SNESPalette,
+):
+    colors: list[SNESColor] = [
+        SNESColor(b'\xC4\x31'),
+        darken(loc_palette[MagusPaletteIndex.CAPE_MAIN], 0.5),
+        lighten(loc_palette[MagusPaletteIndex.SKIN_LIGHTER], 0.5),
+        loc_palette[MagusPaletteIndex.SKIN_LIGHTER],
+        loc_palette[MagusPaletteIndex.SKIN_DARKER],
+        darken(loc_palette[MagusPaletteIndex.SKIN_DARKER], 0.2),
+        darken(loc_palette[MagusPaletteIndex.SKIN_DARKER], 0.4),
+        blend(loc_palette[MagusPaletteIndex.VERY_LIGHT_GRAY],
+              loc_palette[MagusPaletteIndex.HAIR_LIGHT], 0.5),
+        loc_palette[MagusPaletteIndex.HAIR_LIGHT],
+        blend(loc_palette[MagusPaletteIndex.HAIR_MID],
+              loc_palette[MagusPaletteIndex.VERY_LIGHT_GRAY], 0.5),
+        loc_palette[MagusPaletteIndex.HAIR_MID],
+        darken(loc_palette[MagusPaletteIndex.HAIR_MID], 0.4),
+        loc_palette[MagusPaletteIndex.PANTS_MAIN],
+        loc_palette[MagusPaletteIndex.CAPE_MAIN],
+        darken(loc_palette[MagusPaletteIndex.SKIN_DARKER], 0.7),
+        loc_palette[MagusPaletteIndex.OUTLINE]
+    ]
+
+    return PortraitPallete(colors)

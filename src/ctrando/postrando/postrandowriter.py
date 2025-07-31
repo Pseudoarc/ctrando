@@ -42,12 +42,9 @@ def write_palettes(
         post_rando_options: postrandooptions.PostRandoOptions
 ):
     char_palettes = [
-        post_rando_options.crono_palette,
-        post_rando_options.marle_palette,
-        post_rando_options.lucca_palette,
-        post_rando_options.robo_palette,
-        post_rando_options.frog_palette,
-        post_rando_options.ayla_palette,
+        post_rando_options.crono_palette, post_rando_options.marle_palette,
+        post_rando_options.lucca_palette, post_rando_options.robo_palette,
+        post_rando_options.frog_palette, post_rando_options.ayla_palette,
         post_rando_options.magus_palette
     ]
 
@@ -67,25 +64,36 @@ def write_palettes(
         defaults.magus_palette
     ]
 
-    palette_builders: list[Callable[[palettes.SNESPalette], palettes.SinglePCOWPalette]] = [
-        palettes.build_crono_ow_palette,
-        palettes.build_marle_ow_palette,
-        palettes.build_lucca_ow_palette,
-        palettes.build_robo_ow_palette,
-        palettes.build_frog_ow_palette,
-        palettes.build_ayla_ow_palette,
+    ow_palette_builders: list[Callable[[palettes.SNESPalette], palettes.SinglePCOWPalette]] = [
+        palettes.build_crono_ow_palette, palettes.build_marle_ow_palette,
+        palettes.build_lucca_ow_palette, palettes.build_robo_ow_palette,
+        palettes.build_frog_ow_palette, palettes.build_ayla_ow_palette,
         palettes.build_magus_ow_palette,
     ]
 
-    for ind, (new_palette, default_palette, palette_builder) in \
-            enumerate(zip(char_palettes, default_palettes, palette_builders)):
+    portrait_palette_builders: list[Callable[[palettes.SNESPalette], palettes.PortraitPallete]] = [
+        palettes.build_crono_portrait_palette, palettes.build_marle_portrait_palette,
+        palettes.build_lucca_portrait_palette, palettes.build_robo_portrait_palette,
+        palettes.build_frog_portrait_palette, palettes.build_ayla_portrait_palette,
+        palettes.build_magus_portrait_palette,
+    ]
 
+    portait_ids = [3, 6, 5, 1, 2, 4, 0]
+
+    for ind, (
+            new_palette, default_palette, ow_palette_builder,
+            portrait_palette_builder, portrait_id
+    ) in \
+            enumerate(zip(char_palettes, default_palettes, ow_palette_builders,
+                    portrait_palette_builders, portait_ids)):
         if new_palette != default_palette:
-            ow_palette = palette_builder(new_palette)
+            ow_palette = ow_palette_builder(new_palette)
             ow_pc_palettes.set_pc_palette(ind, ow_palette)
 
-    ow_pc_palettes.write_to_ctrom(ct_rom, 0)
+            portait_palette = portrait_palette_builder(new_palette)
+            portait_palette.write_to_ctrom(ct_rom, portrait_id)
 
+    ow_pc_palettes.write_to_ctrom(ct_rom, 0)
 
 
 def write_post_rando_options(

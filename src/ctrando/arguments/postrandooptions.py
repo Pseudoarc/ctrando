@@ -169,7 +169,8 @@ class PostRandoOptions:
                                default=argparse.SUPPRESS)
 
     @classmethod
-    def extract_from_namespace(cls, namespace: argparse.Namespace):
+    def extract_from_namespace(cls, namespace: argparse.Namespace) -> typing.Self:
+
         ret = argumenttypes.extract_from_namespace(
             cls, cls.attr_names, namespace
         )
