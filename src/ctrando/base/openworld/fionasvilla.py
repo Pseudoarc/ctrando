@@ -62,6 +62,7 @@ class EventMod(locationevent.LocEventMod):
         )
 
         upgrade_bit = memory.Flags.EPOCH_CAN_FLY.value.bit
+        upgrade_bit = 0xFF ^ upgrade_bit
         # This if being True will cause the Epoch move to be skipped
         script.replace_jump_cmd(
             pos, EC.if_mem_op_value(cls.temp_epoch_status, OP.EQUALS, 0)

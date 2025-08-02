@@ -158,6 +158,9 @@ class XPTPGRewards:
     split_xp: bool = False
     split_tp: bool = False
     fix_tp_doubling: bool = False
+    xp_penalty_level: int = 99
+    xp_penalty_percent: int = 0
+    level_cap: int = 60
 
     @classmethod
     def add_group_to_parser(cls, parser: argparse.ArgumentParser):
@@ -172,7 +175,10 @@ class XPTPGRewards:
             'g_scale': "Factor by which to scale G earned in battle",
             'split_xp': "XP is split among living party members rather than shared evenly",
             'split_tp': "TP is split among living party members rather than shared evenly",
-            'fix_tp_doubling': "TP rewards are not duplicated for every gained tech level"
+            'fix_tp_doubling': "TP rewards are not duplicated for every gained tech level",
+            "xp_penalty_level": "Levels past this level become more difficult to obtain",
+            "xp_penalty_percent": "For each level beyond the penalty, the requirement grows by this percent",
+            "level_cap": "Levels beyond the level cap will have prohibitively large requirements."
         }
 
         argumenttypes.add_dataclass_to_group(

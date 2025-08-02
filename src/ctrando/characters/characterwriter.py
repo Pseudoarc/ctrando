@@ -49,3 +49,21 @@ def scale_xp(pc_stat_man: ctpcstats.PCStatsManager,
         pc_stat_man.xp_thresholds.set_xp_for_level(level, new_xp_req)
 
 
+def adaptive_scale_xp(pc_stat_man: ctpcstats.PCStatsManager,
+                      base_scale_factor: float,
+                      xp_penalty_level: int,
+                      xp_penalty_percent: float,
+                      level_cap: int
+                      ):
+    for level in range(99):
+        if level > level_cap:
+            new_xp_req = 0xFFFF
+        else:
+            xp_req = pc_stat_man.xp_thresholds.get_xp_for_level(level)
+            new_xp_req = round(xp_req / base_scale_factor)
+            if level > xp_penalty_level:
+                levels_over = level - xp_penalty_level
+                penalty = (1+(xp_penalty_percent/100))**(levels_over)
+                new_xp_req = round(new_xp_req*penalty) & 0xFFFF  #
+
+        pc_stat_man.xp_thresholds.set_xp_for_level(level, new_xp_req)

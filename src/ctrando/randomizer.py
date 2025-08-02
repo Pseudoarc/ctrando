@@ -201,8 +201,13 @@ def get_random_config(
     config.enemy_assign_dict = enemyrando.get_enemy_shuffle(settings.enemy_options.shuffle_enemies, rng)
 
     ### XP/TP Mod
-    characterwriter.scale_xp(
-        config.pcstat_manager, settings.battle_rewards.xp_tp_rewards.xp_scale)
+    characterwriter.adaptive_scale_xp(
+        config.pcstat_manager,
+        settings.battle_rewards.xp_tp_rewards.xp_scale,
+        settings.battle_rewards.xp_tp_rewards.xp_penalty_level,
+        settings.battle_rewards.xp_tp_rewards.xp_penalty_percent,
+        settings.battle_rewards.xp_tp_rewards.level_cap
+    )
     characterwriter.scale_tp(
         config.pcstat_manager, settings.battle_rewards.xp_tp_rewards.tp_scale)
 

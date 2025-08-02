@@ -1239,6 +1239,7 @@ def apply_full_scaling_patch(
     true_levels[ctenums.EnemyID.R_SERIES] = 5
     true_levels[ctenums.EnemyID.MOTHERBRAIN] = 0x26
     true_levels[ctenums.EnemyID.DALTON_PLUS] = 20
+    true_levels[ctenums.EnemyID.ROLY_BOMBER] = 0x15  # Match outlaw
 
     true_level_addr = ct_rom.space_manager.get_free_addr(
         len(true_levels), 0x410000
