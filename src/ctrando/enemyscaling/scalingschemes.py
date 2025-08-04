@@ -368,6 +368,7 @@ def get_slow_scale16_routine(
     dividend_lo, divisor_lo = 0x28, 0x2A  # 16-bit
     quotient_lo = 0x2C  # 16-bit
     remainder_lo = 0x32  # 16-bit
+    extra_lo = 0x2E
 
     routine: assemble.ASMList = [
         inst.PHA(),
@@ -386,45 +387,52 @@ def get_slow_scale16_routine(
         inst.STA(factor2_lo, AM.ABS),
         inst.PHX(),
         inst.JSL(slow_mult_long_rom_addr),
-        inst.REP(0x20),
+        # Eventually: If there's a high byte, do a longer procedure
+        # inst.LDA(product_lo+2, AM.ABS),
+        # inst.BEQ("16bit_div"),
+        # Store the low byte for later
         inst.LDA(product_lo, AM.ABS),
-        inst.STA(dividend_lo, AM.ABS),
+        inst.PHA(),
+        inst.REP(0x20),
         inst.LDA(memory.Memory.FROM_SCALE_TEMP, AM.LNG),
         inst.AND(0x00FF, AM.IMM16),
         inst.STA(divisor_lo, AM.ABS),
-        inst.JSL(slow_div_long_rom_addr, AM.LNG),
+        inst.LDA(product_lo+1, AM.ABS),  # mid-high bytes
+        inst.STA(dividend_lo, AM.ABS),
+        inst.STZ(extra_lo, AM.ABS),
+        inst.JSL(slow_div_long_rom_addr, AM.LNG),  # mid-high/from
+        inst.SEP(0x20),
+        inst.LDA(quotient_lo+1, AM.ABS),
+        # High byte from quotient means max value
+        inst.BEQ("normal_div"),
+        inst.PLA(),
         inst.REP(0x20),
+        inst.BRA("max_val"),
+        "normal_div",
+        # RR00 + stored low byte / from
+        inst.LDA(memory.Memory.FROM_SCALE_TEMP, AM.LNG),
+        inst.STA(divisor_lo, AM.ABS),
+        inst.STZ(divisor_lo+1, AM.ABS),
+        inst.LDA(remainder_lo, AM.ABS),
+        inst.STA(dividend_lo+1, AM.ABS),
+        inst.PLA(),
+        inst.STA(dividend_lo, AM.ABS),
         inst.LDA(quotient_lo, AM.ABS),
-        ### replacing
-        # inst.LDA(product_lo, AM.ABS),
-        # inst.AND(0x00FF, AM.IMM16),
-        # inst.STA(0x30, AM.ABS),  # Store the lo byte for later.
-        # inst.LDA(product_lo+1, AM.ABS),  # Get HH MM
-        # inst.STA(dividend_lo, AM.ABS),
-        # inst.LDA(memory.Memory.FROM_SCALE_TEMP, AM.LNG),
-        # inst.AND(0x00FF, AM.IMM16),
-        # inst.STA(divisor_lo, AM.ABS),
-        # inst.JSL(slow_div_long_rom_addr),  # Compute HHMM/FROM_SCALE
-        # inst.REP(0x20),
-        # inst.LDA(remainder_lo, AM.ABS),
-        # inst.XBA(),
-        # inst.CLC(),
-        # inst.ADC(0x30, AM.ABS),
-        # inst.STA(dividend_lo, AM.ABS),
-        # inst.LDA(quotient_lo, AM.ABS),
-        # inst.CMP(0x100, AM.IMM16),
-        # inst.BCS("max_value"),
-        # inst.XBA(),
-        # inst.STA(0x30, AM.ABS),
-        # inst.JSL(slow_div_long_rom_addr),
-        # inst.REP(0x20),
-        # inst.LDA(quotient_lo, AM.ABS),
-        # inst.CLC(),
-        # inst.ADC(0x30, AM.ABS),
-        # inst.BCC("end"),
-        # "max_value",
-        # inst.LDA(0xFFFF, AM.IMM16),
-        # "end",
+        inst.PHA(),
+        inst.JSL(slow_div_long_rom_addr, AM.LNG),
+        inst.SEP(0x20),
+        inst.PLA(),
+        inst.XBA(),
+        inst.LDA(0, AM.IMM8),
+        inst.REP(0x20),
+        inst.CLC(),
+        inst.ADC(quotient_lo, AM.ABS),
+        inst.BCC("end"),
+        "max_val",
+        inst.LDA(0xFFFF, AM.IMM16),
+        inst.BRA("end"),
+        inst.LDA(quotient_lo, AM.ABS),
+        "end",
         inst.PLX(),
         return_cmd
     ]
