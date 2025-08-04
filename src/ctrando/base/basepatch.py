@@ -1643,7 +1643,7 @@ def get_set_level_event_cmd_asm(
         inst.AND(0x00FF, AM.IMM16),
         inst.ASL(mode=AM.NO_ARG),
         inst.TAX(),
-        inst.LDA(xp_next_rom_start + 2, AM.LNG_X),
+        inst.LDA(xp_next_rom_start, AM.LNG_X),
         inst.LDX(temp_addr, AM.DIR),
         inst.STA(0x7E0000 + xp_next_offset, AM.LNG_X),
     ]

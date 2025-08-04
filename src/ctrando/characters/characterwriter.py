@@ -56,7 +56,7 @@ def adaptive_scale_xp(pc_stat_man: ctpcstats.PCStatsManager,
                       level_cap: int
                       ):
     for level in range(99):
-        if level > level_cap:
+        if level >= level_cap:
             new_xp_req = 0xFFFF
         else:
             xp_req = pc_stat_man.xp_thresholds.get_xp_for_level(level)
