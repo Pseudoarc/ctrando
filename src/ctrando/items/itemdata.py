@@ -715,6 +715,34 @@ class AccessoryStats(ItemData):
             self._data[2] = val
 
     @property
+    def has_critical_bonus(self) -> bool:
+        """Whether accessory grants +crit%"""
+        return bool(self._data[0] & 0x10)
+
+    @has_critical_bonus.setter
+    def has_critical_bonus(self, val: bool):
+        if val:
+            self._data[0] |= 0x10
+        else:
+            self._data[0] &= (0xFF - 0x10)
+
+    @property
+    def critical_bonus(self) -> int:
+        if not self.has_critical_bonus:
+            raise ValueError("Critical Bonus Not Set.")
+
+        return (self._data[1] & 0x0F) * 5
+
+    @critical_bonus.setter
+    def critical_bonus(self, val: int):
+        if not self.has_critical_bonus:
+            raise ValueError("Critical Bonus Not Set.")
+
+        val = sorted([0, round(val/5), 80])[1]
+        self._data[1] &= 0xF0
+        self._data[1] |= val
+
+    @property
     def has_counter_effect(self) -> bool:
         """Whether accessory grants a counter effect."""
         return bool(self._data[0] & 0x40)
@@ -821,7 +849,7 @@ def get_accessory_desc_str(
         stats: AccessoryStats,
         stat_boosts: Sequence[StatBoost],
 ) -> str:
-    buff_str = boost_str = hp_str = mp_str = counter_str = ""
+    buff_str = boost_str = hp_str = mp_str = counter_str = crit_str = ""
     if stats.has_battle_buff:
         buffs = stats.battle_buffs
         buff_str = get_buff_string(buffs)
@@ -842,7 +870,10 @@ def get_accessory_desc_str(
         rate = stats.counter_rate
         counter_str = f"{rate}% counter w/ {type_str}"
 
-    desc_parts = [buff_str, boost_str, hp_str, mp_str, counter_str]
+    if stats.has_critical_bonus:
+        crit_str = f"Cr+{stats.critical_bonus}"
+
+    desc_parts = [buff_str, boost_str, hp_str, mp_str, counter_str, crit_str]
     desc_str = " ".join(x for x in desc_parts if x)
 
     return desc_str

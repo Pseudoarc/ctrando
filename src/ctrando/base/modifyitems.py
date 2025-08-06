@@ -22,6 +22,61 @@ def modify_item_stats(
     item_man[ctenums.ItemID.GOLD_STUD].stats.mp_mod = 75
 
 
+def add_crit_accessories(ct_rom: ctrom.CTRom):
+    """
+    Add +crit accessories to the rom.
+
+    Notes
+    -----
+    - Byte0 & 0x10 for having +Crit
+    - Byte1 & 0x0F holds +crit amount /5 (max +80 crit)
+    """
+
+    acc_st_offset = 0x5E78
+    crit_bit = 0x10
+
+    weapon_st_offset = 0x5E70
+    crit_rate_offset = weapon_st_offset + 2
+    # FDB37B  E2 20          SEP #$20
+    hook_addr = 0x3DB37D
+    # ----- Hook here before battle buff check
+    # FDB37D  BD 79 5E       LDA $5E79,X
+    # FDB380  89 80          BIT #$80
+    # -----
+    return_addr = 0x3DB382
+    return_rom_addr = 0xFDB382
+    # FDB382  F0 1D          BEQ $FDB3A1  <--- Return point
+    # FDB384  7B             TDC
+    # FDB385  BD 7B 5E       LDA $5E7B,X
+
+    crit_rt: assemble.ASMList = [
+
+        inst.LDA(acc_st_offset, AM.ABS_X),
+        inst.BIT(crit_bit, AM.IMM8),
+        inst.BEQ("end"),
+        inst.LDA(acc_st_offset+1, AM.ABS_X),
+        inst.AND(0x0F, AM.IMM8),
+        inst.STA(0x00, AM.DIR),
+        inst.ASL(mode=AM.NO_ARG),
+        inst.ASL(mode=AM.NO_ARG),
+        inst.CLC(),
+        inst.ADC(0x00, AM.DIR),  # Total, x5
+        inst.ADC(crit_rate_offset, AM.ABS_X),
+        inst.CMP(100, AM.IMM8),
+        inst.BCC("store"),
+        inst.LDA(100, AM.IMM8),
+        "store",
+        inst.STA(crit_rate_offset, AM.ABS_X),
+        "end",
+        # Repeat overwritten hook code
+        inst.LDA(acc_st_offset+1, AM.ABS_X),
+        inst.BIT(0x80, AM.IMM8),
+        inst.JMP(return_rom_addr, AM.LNG)
+    ]
+
+    asmpatcher.apply_jmp_patch(crit_rt, hook_addr, ct_rom)
+
+
 def normalize_hp_accessories(ct_rom: ctrom.CTRom):
     """Actually read accessory data instead of hardcoded item_ids"""
 
