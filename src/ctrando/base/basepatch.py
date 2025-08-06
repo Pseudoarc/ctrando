@@ -1147,6 +1147,7 @@ def base_patch_ct_rom(ct_rom: ctrom.CTRom):
     chesttext.add_get_desc_char(ct_rom, 0)
     modifyitems.normalize_hp_accessories(ct_rom)
     modifyitems.normalize_mp_accessories(ct_rom)
+    modifyitems.add_crit_accessories(ct_rom)
 
     expand_eventcommands(ct_rom)
 
