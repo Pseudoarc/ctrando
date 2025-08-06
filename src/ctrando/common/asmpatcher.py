@@ -9,12 +9,13 @@ def apply_jmp_patch(
         patch: assemble.ASMList,
         hook_addr: int,
         ct_rom: ctrom.CTRom,
-        return_addr: Optional[int] = None
+        return_addr: Optional[int] = None,
+        hint: int = 0
 ):
     """Apply patch at position which jumps and jumps back."""
 
     routine_b = assemble.assemble(patch)
-    routine_addr = ct_rom.space_manager.get_free_addr(len(routine_b))
+    routine_addr = ct_rom.space_manager.get_free_addr(len(routine_b), hint)
 
     hook = [
         inst.JMP(byteops.to_rom_ptr(routine_addr), AM.LNG),
