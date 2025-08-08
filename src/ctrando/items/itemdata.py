@@ -42,7 +42,9 @@ _armor_status_abbrev_dict: dict[ArmorEffects, str] = {
     ArmorEffects.IMMUNE_ALL: 'P:All',
     ArmorEffects.BARRIER: 'Bar',
     ArmorEffects.CHAOS_HP_DOWN: 'Chaos/HP Dn',
-    ArmorEffects.HASTE: 'Haste'
+    ArmorEffects.HASTE: 'Haste',
+    ArmorEffects.BARRIER_SHIELD: "Bar/Shld",
+    ArmorEffects.IMMUNE_ELEMENTS: "Immune Elem"
 }
 
 
@@ -86,7 +88,9 @@ _weapon_effect_abbrev_dict: dict[WeaponEffects, str] = {
     WeaponEffects.CLEAR_IMMUNITY: 'Prot. Seal',
     WeaponEffects.RANDOM_STATUS: 'Random Status',
     WeaponEffects.SLEEP: 'Sleep',
-    WeaponEffects.CRIT_9999: '9,999 Crit'
+    WeaponEffects.CRIT_9999: '9,999 Crit',
+    WeaponEffects.VENUS_BOW: "777 DMG",
+    WeaponEffects.SPELLSLINGER: "CrisisMP",
 }
 
 
@@ -139,22 +143,77 @@ class BinaryData:
         return name_str + ': ' + data_str
 
 
+# StatBoost References
+# 1) During Equip Menu -- Maybe others?  Checks per frame.
+#    Also checked during shopping
+# C292C4  BD 00 7B       LDA $7B00,X
+# C292C7  29 FF 00       AND #$00FF
+# C292CA  F0 26          BEQ $C292F2
+# C292CC  0A             ASL
+# C292CD  AA             TAX
+# C292CE  BF D7 29 CC    LDA $CC29D7,X
+# C292D2  29 FE FF       AND #$FFFE
+
+# 2) Before Battle
+#      - Sets X to the bank $CC offset for the data
+# C1CED1  A2 D7 29       LDX #$29D7
+# C1CED4  86 0E          STX $0E
+# C1CED6  22 41 B1 FD    JSL $FDB141
+#      - The $FD8141 routine actually implements the stat boost.
+#      - It seems specific enough that it isn't used elsewhere.
+# FDB159  BF 01 00 CC    LDA $CC0001,X
+# FDB15D  85 0A          STA $0A
+# FDB15F  BF 00 00 CC    LDA $CC0000,X
+# FDB163  85 04          STA $04
+
+
+_stat_boost_start_ptr = 0x0292CF
+
+
+def repoint_stat_boosts(ct_rom: ctrom.CTRom, new_file_addr: int):
+    """Change all references to stat boosts to point to a new start on rom."""
+    new_rom_addr = byteops.to_rom_ptr(new_file_addr)
+    rom_bank_only = new_rom_addr & 0xFF0000
+
+    # C292CE  BF D7 29 CC    LDA $CC29D7,X
+    ct_rom.seek(0x0292CF)  # During menu
+    ct_rom.write(new_rom_addr.to_bytes(3, "little"))
+
+    # C1CED1  A2 D7 29       LDX #$29D7
+    ct_rom.seek(0x01CED2)
+    ct_rom.write(int.to_bytes(new_rom_addr & 0xFFFF, 2, "little"))
+
+    # FDB159  BF 01 00 CC    LDA $CC0001,X
+    ct_rom.seek(0x3DB15A)  # Before Battle
+    ct_rom.write(int.to_bytes(rom_bank_only+1, 3, "little"))
+
+    # FDB15F  BF 00 00 CC    LDA $CC0000,X
+    ct_rom.seek(0x3DB160)  # Before Battle
+    ct_rom.write(int.to_bytes(rom_bank_only, 3, "little"))
+
+
 class StatBoost(BinaryData):
     """Two byte gear stat boost data."""
     SIZE = 2
-    ROM_START = 0x0C29D7
+    ROM_START = None
+
+    @classmethod
+    def get_data_start(cls, rom: bytes):
+        addr = int.from_bytes(rom[_stat_boost_start_ptr: _stat_boost_start_ptr+3], "little")
+        return byteops.to_file_ptr(addr)
 
     @classmethod
     def from_rom(cls, rom: bytes, index: int):
         """Read StatBoost from a rom."""
-        start = cls.ROM_START + cls.SIZE*index
+        start = cls.get_data_start(rom) + index*cls.SIZE
         end = start + cls.SIZE
 
         return cls(bytes(rom[start:end]))
 
+
     def write_to_rom(self, rom: WritableBytes, index: int):
         """Write StatBoost to a rom."""
-        start = self.ROM_START + self.SIZE*index
+        start = self.get_data_start(rom) + self.SIZE*index
         end = start + self.SIZE
 
         rom[start:end] = self._data[:]
@@ -208,6 +267,14 @@ class StatBoost(BinaryData):
         ]
 
         return stat_list
+
+    @stats_boosted.setter
+    def stats_boosted(self, stat_bits: list[StatBit]):
+        new_byte = 0
+        for stat_bit in stat_bits:
+            new_byte |= stat_bit
+
+        self._data[0] = new_byte
 
     def stat_string(self) -> str:
         """Get an abbreviated string representing the StatBoost."""
@@ -1266,7 +1333,7 @@ class Item:
         self.desc = desc
 
     @classmethod
-    def get_desc_ptr_file_start_from_rom(cls, rom: bytes):
+    def get_desc_ptr_file_start_from_rom(cls, rom: typing.ByteString):
         # Putting item desc ptr start into memory
         # $C2/F317 A2 B1 2E    LDX #$2EB1
         # $C2/F31A 8E 0D 02    STX $020D  [$7E:020D]
@@ -1498,6 +1565,14 @@ class ItemDB:
 
     def write_to_ctrom(self, ct_rom: ctrom.CTRom):
 
+        # (0x0C0424, 0x0C047E),  # Reserved for Stat Boosts
+        # 90 bytes means 72 possible boosts
+        if len(self.stat_boosts) > 72:
+            raise ValueError("Max Num StatBoost Exceeded")
+        repoint_stat_boosts(ct_rom, 0x0C0424)
+        for ind, boost in enumerate(self.stat_boosts):
+            boost.write_to_rom(ct_rom.getbuffer(), ind)
+
         # Everything but the descs are easy
         rom = ct_rom.getbuffer()
         for item_id in self.item_dict:
@@ -1505,9 +1580,6 @@ class ItemDB:
             item.stats.write_to_rom(rom, item_id)
             item.secondary_stats.write_to_rom(rom, item_id)
             item.write_name_to_rom(rom, item_id)
-
-        for ind, boost in enumerate(self.stat_boosts):
-            boost.write_to_rom(rom, ind)
 
         desc_ptr_st = Item.get_desc_ptr_file_start_from_rom(rom)
         bank = desc_ptr_st & 0xFF0000

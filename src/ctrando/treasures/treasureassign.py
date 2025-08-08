@@ -143,6 +143,10 @@ def default_assignment(
     item_pool[item_pool.index(ctenums.ItemID.ELIXIR)] = ctenums.ItemID.IRON_FIST
     item_pool[item_pool.index(ctenums.ItemID.HYPERETHER)] = ctenums.ItemID.RUBY_ARMOR
 
+    if treasure_options.use_ds_items:
+        item_pool[item_pool.index(ctenums.ItemID.MEGAELIXIR)] = ctenums.ItemID.DRAGON_TEAR
+        item_pool[item_pool.index(ctenums.ItemID.ELIXIR)] = ctenums.ItemID.VALOR_CREST
+
     spot_pool = [
         tid for tid in base_assignment if tid not in assigned_spots
     ]

@@ -753,7 +753,9 @@ class ItemID(StrIntEnum):
     MAGIC_SEAL = 0xB6
     POWER_SEAL = 0xB7
     RELIC_UNUSED = 0xB8
+    VALOR_CREST = 0xB8
     SERAPHSONG = 0xB9
+    DRAGON_TEAR = 0xB9
     SUN_SHADES = 0xBA
     PRISMSPECS = 0xBB
     ACCESSORY_END_BC = 0xBC
@@ -1726,6 +1728,8 @@ class ArmorEffects(StrIntEnum):
     BARRIER = 0x31
     CHAOS_HP_DOWN = 0x32
     HASTE = 0x33
+    BARRIER_SHIELD = 0x3B
+    IMMUNE_ELEMENTS = 0x3C
 
 
 class WeaponEffects(StrIntEnum):
@@ -1771,6 +1775,9 @@ class WeaponEffects(StrIntEnum):
     RANDOM_STATUS = 0x36
     SLEEP = 0x37
     CRIT_9999 = 0x38
+    VENUS_BOW = 0x39
+    SPELLSLINGER = 0x3A
+
 
 class NpcID(StrIntEnum):
     """Graphics IDs for NPCs"""

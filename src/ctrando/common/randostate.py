@@ -50,6 +50,8 @@ class ConfigState:
     def get_default_config_from_ctrom(cls, ct_rom: ctrom.CTRom):
         item_db = itemdata.ItemDB.from_rom(ct_rom.getbuffer())
         basepatch.modifyitems.modify_item_stats(item_db)
+        basepatch.modifyitems.add_ds_accessories(item_db)
+        basepatch.modifyitems.update_boosts(item_db)
 
         data_dict: dict[ctenums.ItemID, tuple[str, str]] = {
             ctenums.ItemID.PENDANT_CHARGE: (" PendantChg",

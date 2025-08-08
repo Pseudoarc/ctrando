@@ -62,7 +62,8 @@ class ShopOptions:
         ctenums.ItemID.TOMAS_POP, ctenums.ItemID.PETALS_2, ctenums.ItemID.FANGS_2,
         ctenums.ItemID.HORNS_2, ctenums.ItemID.FEATHERS_2,
         ctenums.ItemID.PENDANT_CHARGE, ctenums.ItemID.RAINBOW_SHELL,
-        ctenums.ItemID.SCALING_LEVEL, ctenums.ItemID.JETSOFTIME
+        ctenums.ItemID.SCALING_LEVEL, ctenums.ItemID.JETSOFTIME,
+        ctenums.ItemID.DRAGON_TEAR, ctenums.ItemID.VALOR_CREST,
     ]
     forced_not_buyable: typing.ClassVar[tuple[ctenums.ItemID]] = (
         ctenums.ItemID.MASAMUNE_1, ctenums.ItemID.MASAMUNE_2,

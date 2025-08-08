@@ -3,7 +3,7 @@
 import typing
 
 from ctrando.common import ctenums, ctrom
-from ctrando.common.ctenums import WeaponEffects
+from ctrando.common.ctenums import ArmorEffects, WeaponEffects
 from ctrando.common.random import RNGType
 from ctrando.items import itemdata
 
@@ -59,14 +59,18 @@ class BoostID(ctenums.StrIntEnum):
     MDEF_10 = 0x0B
     POWER_4 = 0x0C
     SPEED_2 = 0x0D
-    MDEF_15 = 0x0E
+    # MDEF_15 = 0x0E
+    MDEF_20 = 0x0E
     STAMINA_6 = 0x0F
     MAGIC_4 = 0x10
     MDEF_12 = 0x11
     MAG_MDEF_5 = 0x12
     POWER_STAMINA_10 = 0x13
-    MDEF_5_DUP = 0x14
+    # MDEF_5_DUP = 0x14
+    MDEF_STAMINA_10 = 0x14
     MDEF_9 = 0x15
+    MAG_10 = 0x16
+    POW_10 = 0x17
 
 
 def get_random_good_accessory_effect(
@@ -180,8 +184,126 @@ def modify_equipability(
     pass
 
 
-def randomize_weapons(
-        item_db: itemdata.ItemDB,  # + Settings
+def make_ds_replacement_weapons(
+        item_db: itemdata.ItemDB,
+        replacement_chance: float,
+        rng: RNGType
+):
+    """Possibly replace weapons with ds-exclusive equivalents"""
+
+    # Rainbow to Dreamseeker
+    if rng.random() < replacement_chance:
+        rainbow = item_db[ctenums.ItemID.RAINBOW]
+        rainbow.stats.attack = 240
+        rainbow.stats.critical_rate = 90
+        rainbow.set_name_from_str("{blade}DreamSeekr")
+
+    # Valk to Venus
+    if rng.random() < replacement_chance:
+        valk = item_db[ctenums.ItemID.VALKERYE]
+        valk.stats.attack = 0
+        # valk.stats.critical_rate = 0
+        valk.stats.has_effect = True
+        valk.stats.effect_id = WeaponEffects.VENUS_BOW
+        valk.set_name_from_str("{bow}Venus Bow")
+
+    # Wondershot to SpellSlinger or Turboshot
+    if rng.random() < replacement_chance:
+        wondershot = item_db[ctenums.ItemID.WONDERSHOT]
+        if rng.random() < 0.5:  # To Spellslinger
+            wondershot.stats.effect_id = WeaponEffects.SPELLSLINGER
+            wondershot.stats.attack = 0
+            wondershot.set_name_from_str("{gun}Spellslngr")
+        else:
+            wondershot.stats.attack = 140
+            wondershot.stats.has_effect = False
+            wondershot.secondary_stats.has_stat_boost = True
+            wondershot.stats.stat_boost_index = BoostID.SPEED_3
+            wondershot.set_name_from_str("{gun}Turboshot")
+
+
+    # Doomsickle to Judgement/Reaper
+    if rng.random() < replacement_chance:
+        doomsickle = item_db[ctenums.ItemID.DOOMSICKLE]
+        if rng.random() < 0.5:  # Judgement Scythe
+            doomsickle.stats.has_effect = WeaponEffects.STOP_60
+            doomsickle.stats.attack = 155
+            doomsickle.set_name_from_str("{scythe}JudgeScyth")
+        else:
+            doomsickle.stats.has_effect = WeaponEffects.CRIT_4X
+            doomsickle.stats.attack = 180
+            doomsickle.set_name_from_str("{scythe}Dreamreapr")
+
+
+    # Demon hit to Dino Blade(ish)
+    if rng.random() < replacement_chance:
+        demon_hit = item_db[ctenums.ItemID.DEMON_HIT]
+        demon_hit.stats.attack = 160
+        demon_hit.stats.has_effect = False
+        demon_hit.secondary_stats.has_stat_boost = True
+        demon_hit.secondary_stats.stat_boost_index = BoostID.POWER_STAMINA_10
+        demon_hit.set_name_from_str("{sword}Dino Blade")
+
+
+def make_ds_replacement_armors(
+        item_db: itemdata.ItemDB,
+        replacement_chance: float,
+        rng: RNGType
+):
+    """Possibly replace weapons with ds-exclusive equivalents"""
+    # Gloom Cape -> Shadowplume Robe
+    if rng.random() < replacement_chance:
+        cape = item_db[ctenums.ItemID.GLOOM_CAPE]
+        cape.stats.defense = 90
+        cape.secondary_stats.stat_boost_index = BoostID.MDEF_20
+        cape.stats.has_effect = True
+        cape.stats.effect_id = ArmorEffects.BARRIER_SHIELD
+        cape.set_name_from_str("{armor}ShadowRobe")
+
+    # Moon Armor to Regal Plate
+    if rng.random() < replacement_chance:
+        item = item_db[ctenums.ItemID.MOON_ARMOR]
+        item.stats.defense = 88
+        item.secondary_stats.stat_boost_index = BoostID.MDEF_STAMINA_10
+        item.set_name_from_str("{armor}RegalPlate")
+
+    # Prism Dress to Regal Gown
+    if rng.random() < replacement_chance:
+        item = item_db[ctenums.ItemID.PRISMDRESS]
+        item.stats.defense = 90
+        item.stats.effect_id = ArmorEffects.BARRIER_SHIELD
+        item.set_name_from_str("{armor}Regal Gown")
+
+    # Nova Armor to Dragon Armor
+    if rng.random() < replacement_chance:
+        item = item_db[ctenums.ItemID.NOVA_ARMOR]
+        item.stats.defense = 83
+        item.secondary_stats.stat_boost_index = BoostID.POW_10
+        item.stats.has_effect = False
+        item.set_name_from_str("{armor}Drgn Armor")
+
+    # Zodiac Cape to Reptite Dress
+    if rng.random() < replacement_chance:
+        item = item_db[ctenums.ItemID.ZODIACCAPE]
+        item.stats.defense = 82
+        item.secondary_stats.stat_boost_index = BoostID.MAG_10
+        item.stats.has_effect = False
+        item.set_name_from_str("{armor}Rept Dress")
+
+    # Taban Suit to Elemental Aegis
+    if rng.random() < replacement_chance:
+        item = item_db[ctenums.ItemID.TABAN_SUIT]
+        item.stats.defense = 92
+        item.secondary_stats.stat_boost_index = BoostID.NOTHING
+        item.stats.has_effect = True
+        item.stats.effect_id = ArmorEffects.IMMUNE_ELEMENTS
+        item.set_name_from_str("{armor}Elem Aegis")
+
+
+def randomize_gear(
+        item_db: itemdata.ItemDB,
+        use_ds_items: bool,
+        ds_replacement_rate: float,
         rng: RNGType
 ):
 
@@ -196,12 +318,19 @@ def randomize_weapons(
         IID.DOOMSICKLE
     ]
 
+    if use_ds_items:
+        make_ds_replacement_weapons(item_db, ds_replacement_rate, rng)
+        make_ds_replacement_armors(item_db, ds_replacement_rate, rng)
+
     stats_pool = [
         (item_db[item_id].stats.get_copy(), item_db[item_id].secondary_stats.get_copy())
         for item_id in weapon_pool
     ]
 
     rng.shuffle(stats_pool)
+
+    special_atk_effects = (WeaponEffects.CRISIS, WeaponEffects.SPELLSLINGER,
+                           WeaponEffects.CRIT_9999, WeaponEffects.VENUS_BOW)
 
     for item_id, (stats, sec_stats) in zip(weapon_pool, stats_pool):
         cur_stats = item_db[item_id].stats
@@ -212,15 +341,27 @@ def randomize_weapons(
         if stats.has_effect:
             cur_stats.has_effect = True
             cur_stats.effect_id = stats.effect_id
-            if stats.effect_id == WeaponEffects.CRISIS:
-                stats.attack = 1
+            if stats.effect_id in special_atk_effects:
+                stats.attack = 0
 
         cur_secondary_stats.stat_boost_index = sec_stats.stat_boost_index
 
     # Do Ultimate weapon checks
     crisis_arm = item_db[ctenums.ItemID.CRISIS_ARM]
-    if crisis_arm.stats.effect_id != WeaponEffects.CRISIS:
+    if crisis_arm.stats.effect_id not in special_atk_effects and crisis_arm.stats.attack == 0:
         crisis_arm.stats.attack = 170
         crisis_arm.stats.critical_rate = 10
         crisis_arm.set_name_from_str("{arm}Dragon Arm")
+    if crisis_arm.stats.effect_id == WeaponEffects.CRIT_9999:
+        crisis_arm.set_desc_from_str("{arm}Apocal.Arm")
+
+    # If spellslinger gets moved, fix it
+    wondershot = item_db[ctenums.ItemID.WONDERSHOT]
+    if wondershot.stats.effect_id not in special_atk_effects and wondershot.stats.attack == 0:
+        wondershot.stats.attack = 250
+
+    # If Venus bow gets moved, fix it
+    valk = item_db[ctenums.ItemID.VALKERYE]
+    if valk.stats.effect_id not in special_atk_effects and valk.stats.attack == 0:
+        valk.stats.attack = 180
 

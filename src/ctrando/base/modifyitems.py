@@ -4,6 +4,73 @@ from ctrando.asm.instructions import AddressingMode as AM
 
 from ctrando.common import asmpatcher, ctenums, ctrom
 from ctrando.items import itemdata
+from ctrando.items.gearrando import BoostID
+
+
+def add_ds_accessories(
+        item_man: itemdata.ItemDB
+):
+    """Add Dragon Tear and Valor Crest"""
+    dragon_tear_stats = itemdata.AccessoryStats()
+    dragon_tear_stats.has_critical_bonus = True
+    dragon_tear_stats.critical_bonus = 20
+    dragon_tear_secondary_stats = itemdata.AccessorySecondaryStats()
+    dragon_tear_secondary_stats.set_equipable_by(list(ctenums.CharID))
+    dragon_tear_secondary_stats.is_key_item = False
+    dragon_tear_secondary_stats.price = 50000
+    dragon_tear_secondary_stats.ngplus_carryover = True
+    dragon_tear_secondary_stats.is_unsellable = True
+
+    item_man[ctenums.ItemID.DRAGON_TEAR].stats = dragon_tear_stats
+    item_man[ctenums.ItemID.DRAGON_TEAR].secondary_stats = dragon_tear_secondary_stats
+    item_man[ctenums.ItemID.DRAGON_TEAR].set_name_from_str("{acc}DragonTear")
+    item_man[ctenums.ItemID.DRAGON_TEAR].set_desc_from_str("Crit+20%")
+
+    crest_stats = itemdata.AccessoryStats()
+    crest_stats.has_critical_bonus = True
+    crest_stats.critical_bonus = 20
+    crest_stats.has_counter_effect = True
+    crest_stats.counter_rate = 50
+    crest_stats.has_normal_counter_mode = True
+
+    crest_secondary = itemdata.AccessorySecondaryStats()
+    crest_secondary.set_equipable_by([ctenums.CharID.AYLA]),
+    crest_secondary.is_key_item = False
+    crest_secondary.price = 65000
+    crest_secondary.ngplus_carryover = True
+    crest_secondary.is_unsellable = True
+
+    item_man[ctenums.ItemID.VALOR_CREST].stats = crest_stats
+    item_man[ctenums.ItemID.VALOR_CREST].secondary_stats = crest_secondary
+    item_man[ctenums.ItemID.VALOR_CREST].set_name_from_str("{acc}ValorCrest")
+    item_man[ctenums.ItemID.VALOR_CREST].set_desc_from_str("Crit+20, 50% counter")
+
+
+def update_boosts(item_db: itemdata.ItemDB):
+    """
+    Add New boosts to DB: +10 Mag,
+    Add Regal Plate +10Mdef/Stm.  Shadowplume 20 MDEF
+    """
+    mag_10 = itemdata.StatBoost()
+    mag_10.stats_boosted = [itemdata.StatBit.MAGIC]
+    mag_10.magnitude = 10
+
+    item_db.stat_boosts.append(mag_10)
+
+    pow_10 = itemdata.StatBoost()
+    pow_10.stats_boosted = [itemdata.StatBit.POWER]
+    pow_10.magnitude = 10
+
+    item_db.stat_boosts.append(pow_10)
+
+    boost = item_db.stat_boosts[BoostID.MDEF_STAMINA_10]
+    boost.stats_boosted = [itemdata.StatBit.MDEF, itemdata.StatBit.STAMINA]
+    boost.magnitude = 10
+
+    boost = item_db.stat_boosts[BoostID.MDEF_20]
+    boost.magnitude = 20
+
+
 
 
 def modify_item_stats(
@@ -14,12 +81,15 @@ def modify_item_stats(
     modifications needed to interact properly with the new item handling code.
     - Modify how HP accessories store their hp% mod
     - Modify how MP accessories store their mp% mod
+    - Give Dark Mail the standard mdef+5 boost, note a duplicate ID
     """
 
     item_man[ctenums.ItemID.SILVERERNG].stats.hp_mod = 25
     item_man[ctenums.ItemID.GOLD_ERNG].stats.hp_mod = 50
     item_man[ctenums.ItemID.SILVERSTUD].stats.mp_mod = 50
     item_man[ctenums.ItemID.GOLD_STUD].stats.mp_mod = 75
+
+    item_man[ctenums.ItemID.DARK_MAIL].secondary_stats.stat_boost_index = BoostID.MDEF_5
 
 
 def add_crit_accessories(ct_rom: ctrom.CTRom):

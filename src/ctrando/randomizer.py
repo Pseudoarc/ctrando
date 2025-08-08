@@ -36,6 +36,8 @@ from ctrando.recruits import recruitwriter
 from ctrando.strings import ctstrings
 from ctrando.treasures import treasureassign
 
+from ctrando.effects import effecttypes
+
 
 # Should move this into patchscaling
 def apply_dynamic_scaling(
@@ -171,7 +173,9 @@ def get_random_config(
 
     ### Shops
     shoprando.apply_shop_settings(config.item_db, config.shop_manager,
-                                  settings.shop_options, rng)
+                                  settings.shop_options,
+                                  settings.treasure_options.use_ds_items,
+                                  rng)
 
     ### Recruits
     config.recruit_dict = recruitwriter.get_random_recruit_assignment_dict(rng)
@@ -240,7 +244,8 @@ def get_random_config(
 
     ### Gear Rando
     gearrando.randomize_good_accessory_effects(config.item_db, rng)
-    gearrando.randomize_weapons(config.item_db, rng)
+    gearrando.randomize_gear(config.item_db, settings.treasure_options.use_ds_items,
+                             settings.treasure_options.ds_replacement_chance/100, rng)
     config.item_db.update_all_descriptions()
 
 
@@ -296,6 +301,8 @@ def get_ctrom_from_config(
     b=time.time()
     print(f"({b-a})")
     basepatch.add_set_level_command(ct_rom, config.pcstat_manager)
+
+    effecttypes.expand_effect_mods(ct_rom)
 
     print("Applying Openworld Scripts...", end="")
     a = time.time()

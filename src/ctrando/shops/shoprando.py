@@ -90,6 +90,8 @@ _item_dist_dict: dict[ItemTier, ItemDist] = {
         (1, IID.DASH_RING),
         (1, IID.AMULET),
         (2, IID.FLEA_VEST),
+        (1, IID.DRAGON_TEAR),
+        (1, IID.VALOR_CREST),
     ),
     ItemTier.WEAPON_D: distribution.Distribution[IID](
         (1, [IID.WOOD_SWORD, IID.IRON_BLADE, IID.STEELSABER, IID.LODE_SWORD, IID.BOLT_SWORD,
@@ -274,6 +276,7 @@ def shop_item_sort_index(item_id: ctenums.ItemID):
 def randomize_shop_inventory(
         shop_manager: shoptypes.ShopManager,
         shop_options: shopoptions.ShopOptions,
+        use_ds_items: bool,
         rng: RNGType
 ):
 
@@ -313,6 +316,8 @@ def randomize_shop_inventory(
 
         item_pool = list(ctenums.ItemID)
         removed_items = shop_options.not_buyable_items + shopoptions.ShopOptions.unused_items
+        if not use_ds_items:
+            removed_items += [IID.DRAGON_TEAR, IID.VALOR_CREST]
         item_pool = [
             item_id for item_id in item_pool
             if item_id not in removed_items and item_id not in shop_options.not_buyable_items
@@ -473,9 +478,10 @@ def apply_shop_settings(
         item_man: itemdata.ItemDB,
         shop_man: shoptypes.ShopManager,
         shop_options: shopoptions.ShopOptions,
+        use_ds_items: bool,
         rng: RNGType
 ):
     update_unsellable_prices(item_man)
     update_unsellable(item_man, shop_options)
     randomize_item_prices(item_man, shop_options, rng)
-    randomize_shop_inventory(shop_man, shop_options, rng)
+    randomize_shop_inventory(shop_man, shop_options, use_ds_items, rng)
