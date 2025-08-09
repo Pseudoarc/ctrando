@@ -53,6 +53,43 @@ def gather_new_effects_and_rts() -> tuple[list[EffectMod], list[assemble.ASMList
     return effects, routines
 
 
+def add_independent_sunshades_effect(ct_rom: ctrom.CTRom):
+    """
+    Adds an additional effect which grants +25% damage but is independent of
+    the status granted by the sunshades.
+
+    Notes
+    -----
+    Byte $5E51, X in player battle data is unused and unread/unwritten during
+    battle.  We will make bit 0x80 of this data hook give the damage boost.
+    """
+
+    # After damage calc:
+    # - 8-bit A, 16-bit X/Y
+    # - The damage is held in $2C.
+    # The primspecs effect is here:
+    #     C1E592  BD 4E 5E       LDA $5E4E,X
+    #     C1E595  1D 53 5E       ORA $5E53,X
+    #     C1E598  89 08          BIT #$08
+    #     C1E59A  F0 1A          BEQ $C1E5B6
+    #     C1E59C  A6 2C          LDX $2C
+    #     C1E59E  86 28          STX $28
+    #     C1E5A0  A2 02 00       LDX #$0002
+    #     C1E5A3  86 2A          STX $2A
+    #     C1E5A5  20 2A C9       JSR $C92A
+    #     C1E5A8  A6 2C          LDX $2C
+    #     C1E5AA  86 28          STX $28
+    #     C1E5AC  A2 03 00       LDX #$0003
+    #     C1E5AF  86 2A          STX $2A
+    #     C1E5B1  20 0B C9       JSR $C90B
+    #     C1E5B4  80 22          BRA $C1E5D8
+    # --- Sunshades routine ---
+    # Checking for poison status to reduce damage.  Hook here.
+    #     C1E5D8  AE F4 B1       LDX $B1F4
+    #     C1E5DB  BD 4B 5E       LDA $5E4B,X
+    #     C1E5DE  89 40          BIT #$40
+    #
+
 def patch_additional_armor_effects(ct_rom: ctrom.CTRom,
                                    effect_mod_start_file: int ):
     """
