@@ -262,7 +262,8 @@ def get_random_objectives_from_settings(
                     pool.remove(obj)
                 break
         else:
-            pool.remove(new_obj)
+            if new_obj is not None:
+                pool.remove(new_obj)
 
     return ret_list
 
