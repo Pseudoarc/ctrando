@@ -197,7 +197,6 @@ class EventMod(locationevent.LocEventMod):
         Add cases for Magus and Crono to the gear returning script.
         """
 
-        pos = script.get_function_start(0, FID.ARBITRARY_0)
         for party_pos in range(3):
             local_pc_addr = cls.pc1_addr + party_pos*2
             stored_pc_index = memory.Memory.BLACKBIRD_IMPRISONED_PC1 + party_pos
@@ -207,7 +206,14 @@ class EventMod(locationevent.LocEventMod):
                 store_pc_gear_block.append(
                     get_gear_store_fn(pc_id, local_pc_addr, cls.cur_gear_start )
                 )
-
+            pos = script.get_function_start(0, FID.ARBITRARY_0 + party_pos)
+            script.insert_commands(
+                EF()
+                .add_if(
+                    EC.if_mem_op_value(local_pc_addr, OP.GREATER_THAN, 6),
+                    EF().add(EC.return_cmd())
+                ).get_bytearray(), pos
+            )
             pos = script.find_exact_command(
                 EC.if_mem_op_value(local_pc_addr, OP.EQUALS, 1), pos
             )
@@ -229,6 +235,7 @@ class EventMod(locationevent.LocEventMod):
                 )
 
             script.insert_commands(recover_pc_gear_block.get_bytearray(), pos)
+
 
 def get_gear_store_fn(
         pc_id: ctenums.CharID,
