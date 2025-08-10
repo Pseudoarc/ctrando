@@ -291,7 +291,7 @@ def expand_effect_mods(
     real_bank_switch_rt_b = assemble.assemble(real_bank_switch_rt)
 
     if additional_effect_routines:
-        first_ptr = (payload_addr + len(additional_effects) * 2) & 0xFFFF
+        first_ptr = (payload_addr + len(additional_effect_routines) * 2) & 0xFFFF
         rt_b = b''.join(rt for rt in effect_rts)
         ptrs = [first_ptr]
         for length in effect_rt_lens[:-1]:
