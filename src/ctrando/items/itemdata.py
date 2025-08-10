@@ -1489,7 +1489,7 @@ class ItemDB:
                 elif item_id == IID.HERO_MEDAL:
                     # start_str = 'Masa C:50%'
                     pass
-                elif item_id in (IID.SIGHTSCOPE, IID.RELIC_UNUSED):
+                elif item_id in (IID.SIGHTSCOPE,):
                     start_str = 'Show HP'
 
                 desc_str = ' '.join(x for x in (start_str, main_desc) if x) + '{null}'

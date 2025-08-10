@@ -89,8 +89,7 @@ class ShopOptions:
         ctenums.ItemID.UNUSED_59, ctenums.ItemID.UNUSED_EC,
         ctenums.ItemID.UNUSED_ED, ctenums.ItemID.UNUSED_EE,
         ctenums.ItemID.UNUSED_EF, ctenums.ItemID.UNUSED_F0,
-        ctenums.ItemID.UNUSED_F1, ctenums.ItemID.RELIC_UNUSED,
-        ctenums.ItemID.SERAPHSONG,
+        ctenums.ItemID.UNUSED_F1,
         # maybe put these in a different category
         ctenums.ItemID.FIST, ctenums.ItemID.FIST_2, ctenums.ItemID.FIST_3,
         ctenums.ItemID.IRON_FIST, ctenums.ItemID.BRONZEFIST,

@@ -752,9 +752,9 @@ class ItemID(StrIntEnum):
     FLEA_VEST = 0xB5
     MAGIC_SEAL = 0xB6
     POWER_SEAL = 0xB7
-    RELIC_UNUSED = 0xB8
+    # RELIC_UNUSED = 0xB8
     VALOR_CREST = 0xB8
-    SERAPHSONG = 0xB9
+    # SERAPHSONG = 0xB9
     DRAGON_TEAR = 0xB9
     SUN_SHADES = 0xBA
     PRISMSPECS = 0xBB

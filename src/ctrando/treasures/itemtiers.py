@@ -59,7 +59,6 @@ _gear_tier_0 = [
     IID.TITAN_VEST,
     # Accessories
     IID.RIBBON, IID.POWERGLOVE, IID.DEFENDER, IID.MAGICSCARF, IID.SIGHTSCOPE,
-    IID.SERAPHSONG,
 ]
 _gear_tier_1 = [
     # Crono Gear
