@@ -348,7 +348,7 @@ def randomize_gear(
 
     # Do Ultimate weapon checks
     crisis_arm = item_db[ctenums.ItemID.CRISIS_ARM]
-    if crisis_arm.stats.effect_id not in special_atk_effects and crisis_arm.stats.attack == 0:
+    if crisis_arm.stats.effect_id not in special_atk_effects and crisis_arm.stats.attack <= 1:
         crisis_arm.stats.attack = 170
         crisis_arm.stats.critical_rate = 10
         crisis_arm.set_name_from_str("{arm}Dragon Arm")
