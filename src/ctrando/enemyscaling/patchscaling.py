@@ -474,6 +474,7 @@ def patch_enemy_stat_loads(
         inst.LDA(hp_ram_offset, AM.ABS_Y),
         "scale_hp",
         inst.JSL(byteops.to_rom_ptr(scale16_addr)),
+        inst.CMP(0x0000, AM.IMM16),
         inst.BNE("nonzero_hp"),
         inst.INC(mode=AM.NO_ARG),
         inst.BRA("no_overflow"),
