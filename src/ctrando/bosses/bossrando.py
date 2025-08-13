@@ -34,6 +34,7 @@ _default_assignment_dict: dict[bty.BossSpotID, bty.BossID] = {
     bty.BossSpotID.MILLENNIAL_FAIR_GATO: bty.BossID.GATO,
     bty.BossSpotID.MT_WOE: bty.BossID.GIGA_GAIA,
     bty.BossSpotID.OCEAN_PALACE_TWIN_GOLEM: bty.BossID.GOLEM,
+    bty.BossSpotID.OCEAN_PALACE_TWIN_GOLEM_ALT: bty.BossID.GOLEM,
     bty.BossSpotID.OZZIES_FORT_FLEA_PLUS: bty.BossID.FLEA_PLUS,
     bty.BossSpotID.OZZIES_FORT_SUPER_SLASH: bty.BossID.SUPER_SLASH,
     bty.BossSpotID.OZZIES_FORT_TRIO: bty.BossID.OZZIE_TRIO,
@@ -188,19 +189,30 @@ def get_random_boss_assignment(
     ]
 
     boss_pool: list[bty.BossID] = []
+    twin_spots = (bty.BossSpotID.OCEAN_PALACE_TWIN_GOLEM,
+                  bty.BossSpotID.OCEAN_PALACE_TWIN_GOLEM_ALT)
     if boss_rando_options.boss_randomization_type == bro.BossRandoType.SHUFFLE:
         boss_pool = [base_dict[spot] for spot in available_spots]
 
         temp_boss_pool = list(boss_pool)
         temp_available_spots = list(available_spots)
 
-        twin_spot = bty.BossSpotID.OCEAN_PALACE_TWIN_GOLEM
-        if twin_spot in available_spots:
-            twin_assign = get_twin_spot_assignment(boss_pool, rng)
-            base_dict[twin_spot] = twin_assign
+        for twin_spot in twin_spots:
+            if twin_spot in available_spots:
+                twin_assign = get_twin_spot_assignment(boss_pool, rng)
+                temp_available_spots.remove(twin_spot)
 
-            temp_available_spots.remove(twin_spot)
-            temp_boss_pool.remove(twin_assign)
+                base_dict[twin_spot] = twin_assign
+
+                if twin_spot == bty.BossSpotID.OCEAN_PALACE_TWIN_GOLEM:
+                    temp_boss_pool.remove(twin_assign)
+
+
+        # if twin_spot in available_spots:
+        #     twin_assign = get_twin_spot_assignment(boss_pool, rng)
+        #     base_dict[twin_spot] = twin_assign
+        #
+        #     temp_available_spots.remove(twin_spot)
 
         if bty.BossSpotID.OZZIES_FORT_TRIO in available_spots:
             ozzie_boss = get_ozzies_fort_assignment(temp_boss_pool, available_spots, rng)
@@ -215,11 +227,19 @@ def get_random_boss_assignment(
     elif boss_rando_options.boss_randomization_type == bro.BossRandoType.RANDOM:
         boss_pool = list(boss_rando_options.boss_pool)
 
-        twin_spot = bty.BossSpotID.OCEAN_PALACE_TWIN_GOLEM
-        if twin_spot in available_spots:
-            twin_assign = get_twin_spot_assignment(boss_pool, rng)
-            base_dict[twin_spot] = twin_assign
-            available_spots.remove(twin_spot)
+        for twin_spot in twin_spots:
+            if twin_spot in available_spots:
+                twin_assign = get_twin_spot_assignment(boss_pool, rng)
+                temp_boss_pool.remove(twin_assign)
+
+                if twin_spot == bty.BossSpotID.OCEAN_PALACE_TWIN_GOLEM:
+                    available_spots.remove(twin_spot)
+
+        # twin_spot = bty.BossSpotID.OCEAN_PALACE_TWIN_GOLEM
+        # if twin_spot in available_spots:
+        #     twin_assign = get_twin_spot_assignment(boss_pool, rng)
+        #     base_dict[twin_spot] = twin_assign
+        #     available_spots.remove(twin_spot)
 
         if bty.BossSpotID.OZZIES_FORT_TRIO in available_spots:
             ozzie_boss = get_ozzies_fort_assignment(boss_pool, available_spots, rng)
@@ -275,6 +295,7 @@ def resolve_character_conflicts(
                 break
         else:
             boss_assign_dict[bty.BossSpotID.MANORIA_CATHERDAL] = bty.BossID.YAKRA
+
 
 def fix_boss_sprites_given_assignment(
         boss_dict: dict[bty.BossSpotID, bty.BossID],
@@ -358,6 +379,28 @@ def fix_atropos_ribbon_buff(
         bass.add_ribbon_buff_to_spot(script_manager, spot)
 
 
+def determine_twin_scheme(
+        boss_assign_dict: dict[bty.BossSpotID, bty.BossID]
+) -> bty.BossScheme:
+    main_id =  boss_assign_dict[bty.BossSpotID.OCEAN_PALACE_TWIN_GOLEM]
+    main_scheme = bty.get_default_scheme(main_id)
+    main_part = main_scheme.parts[0]
+
+    main_slot, alt_slot = bass.get_base_alt_slots(main_part)
+    main_slot = 3
+    main_part.slot = main_slot
+
+    second_id = boss_assign_dict[bty.BossSpotID.OCEAN_PALACE_TWIN_GOLEM_ALT]
+    second_scheme = bty.get_default_scheme(second_id)
+
+    second_part =  second_scheme.parts[0]
+    main_slot, alt_slot = bass.get_base_alt_slots(second_part)
+    second_part.slot = alt_slot
+    new_scheme = bty.BossScheme(main_part, second_part)
+
+    return new_scheme
+
+
 def determine_trio_scheme(
         boss_assign_dict: dict[bty.BossSpotID, bty.BossID]
 ) -> bty.BossScheme:
@@ -401,13 +444,16 @@ def write_bosses_to_ct_rom(
     for boss_spot, boss_id in boss_assign_dict.items():
         if boss_id == _default_assignment_dict[boss_spot]:
             continue
+        if boss_spot == bty.BossSpotID.OCEAN_PALACE_TWIN_GOLEM_ALT:
+            continue  # handled by main spot
 
         assign_func = _assign_function_dict[boss_spot]
-        # print(boss_spot, boss_id)
-        if boss_spot != bty.BossSpotID.OZZIES_FORT_TRIO:
-            scheme = bty.get_default_scheme(boss_id)
-        else:
+        if boss_spot == bty.BossSpotID.OZZIES_FORT_TRIO:
             scheme = determine_trio_scheme(boss_assign_dict)
+        elif boss_spot == bty.BossSpotID.OCEAN_PALACE_TWIN_GOLEM:
+            scheme = determine_twin_scheme(boss_assign_dict)
+        else:
+            scheme = bty.get_default_scheme(boss_id)
 
         assign_func(script_manager, scheme)
 

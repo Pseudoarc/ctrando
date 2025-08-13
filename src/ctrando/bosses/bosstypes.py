@@ -35,6 +35,7 @@ class BossSpotID(enum.StrEnum):
     SUN_PALACE = enum.auto()
     SUNKEN_DESERT = enum.auto()
     OCEAN_PALACE_TWIN_GOLEM = enum.auto()
+    OCEAN_PALACE_TWIN_GOLEM_ALT =  enum.auto()
 
     GENO_DOME_FINAL = enum.auto()
     BEAST_CAVE = enum.auto()
@@ -80,6 +81,7 @@ _boss_spot_names: dict[BossSpotID, str] = {
     BossSpotID.SUN_PALACE: 'Sun Palace',
     BossSpotID.SUNKEN_DESERT: 'Sunken Desert',
     BossSpotID.OCEAN_PALACE_TWIN_GOLEM: 'Ocean Palace Twin Boss',
+    BossSpotID.OCEAN_PALACE_TWIN_GOLEM_ALT: 'Ocean Palace Twin Boss (Twin)',
     BossSpotID.GENO_DOME_MID: 'Geno Dome (Mid)',
     BossSpotID.GENO_DOME_FINAL: 'Geno Dome (Final)',
     BossSpotID.BEAST_CAVE: 'Beast Cave',

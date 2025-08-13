@@ -276,6 +276,17 @@ def assign_blackbird_left_wing_boss(
     )
 
 
+def get_base_alt_slots(
+        boss_part: bosstypes.BossPart
+):
+    base_slot = boss_part.slot
+    base_id = boss_part.enemy_id
+
+    alt_slot = get_twin_slot(boss_part)
+
+    return tuple(sorted([base_slot, alt_slot]))
+
+
 def get_twin_slot(
         boss_part: bosstypes.BossPart
 ):
@@ -300,6 +311,8 @@ def get_twin_slot(
     elif base_id in (ctenums.EnemyID.NIZBEL, ctenums.EnemyID.NIZBEL_II,
                      ctenums.EnemyID.RUST_TYRANO):
         alt_slot = 6
+    elif base_id == ctenums.EnemyID.ZEAL:
+        alt_slot = 3
 
     return alt_slot
 
@@ -310,16 +323,16 @@ def assign_twin_boss(
 ):
     loc_id = ctenums.LocID.OCEAN_PALACE_REGAL_ANTECHAMBER
 
-    if len(boss.parts) != 1:
+    if len(boss.parts) !=2 :
         raise ValueError
 
     main_part = boss.parts[0]
+    alt_part = boss.parts[1]
     part1_locator = _default_boss_load_finder(0xF)
     part2_locator = _default_boss_load_finder(0x10)
 
     part1_load = EC.load_enemy(main_part.enemy_id, main_part.slot)
-    part2_slot = get_twin_slot(main_part)
-    part2_load = EC.load_enemy(main_part.enemy_id, part2_slot)
+    part2_load = EC.load_enemy(alt_part.enemy_id, alt_part.slot)
 
     script = script_manager[loc_id]
     pos = part1_locator(script)
