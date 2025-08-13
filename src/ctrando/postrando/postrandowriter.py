@@ -6,7 +6,6 @@ from ctrando.base.basepatch import apply_fast_ow_movement
 from ctrando.common import ctrom
 from ctrando.enemyscaling.patchscaling import patch_ai_scripts
 from ctrando.postrando import gameoptions, palettes
-from ctrando.treasures.treasureassign import default_assignment
 
 
 def set_auto_run(ct_rom: ctrom.CTRom):

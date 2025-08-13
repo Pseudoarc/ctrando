@@ -3,44 +3,39 @@
 seed="CTRandoLearningSeed-2"
 
 ### Battle Rewards
-xp_scale=4.0  # [default = 5.0]
-tp_scale=4.0  # [default = 4.0]
-g_scale=1.0  # Not implemented yet
-split_xp=true  # TP is split among living party members rather than shared evenly
+xp_scale=4.0  # Factor by which to scale XP earned in battle
+tp_scale=4.0  # Factor by which to scale TP earned in battle
+# g_scale=1.0  # Not implemented yet
+split_xp=true  # XP is split among living party members rather than shared evenly
 split_tp=true  # TP is split among living party members rather than shared evenly
 fix_tp_doubling=true  # TP rewards are not duplicated for every gained tech level
 
+xp_penalty_level=45      # Levels past this level become more difficult to obtain
+xp_penalty_percent=15    # For each level beyond the penalty, the requirement grows by this percent
+level_cap=55             # Levels beyond the level cap will have prohibitively large requirements.
+
+
 ### Tech Options
-# tech_order -- the order in which techs are learned.
+tech_order="mp_type"  # Order in which techs are learned
 # - "vanilla": Techs are learned in their vanilla order [default]
 # - "random": Techs are learned in a random order
 # - "mp": Techs are learned in order of how much mp they cost
 # - "mp_type": Techs are learned in order of how much mp they cost.  But the tech list will
 #              be in the same type order (damage, healing, other) as the vanilla tech list.
-tech_order="mp_type"
 
 # tech_damage -- A tech's damage varies dependin on its mp usage
 # - "vanilla": A tech's base power (mp) is its vanilla power [default]
 # - "shuffle": Tech mps are shuffled (damage and healing separately).
 # - "random": Tech mps are assigned randomly according to the vanilla
 #             distribution of mps.
-tech_damage="shuffle"
+tech_damage="shuffle"  # {vanilla,shuffle,random}
+tech_damage_random_factor_min=0.75  # Minimum percent (as decimal, default 1.0) which MP costs may shift
+                                    # (ignored if vanilla damage)
+tech_damage_random_factor_max=1.25  # Same, but for maximum
+preserve_magic=false  # Keep each PC's first magic tech in its vanilla location (may break specified order)
 
-# tech_damage_random_factor_min
-# tech_damage_random_factor_max  -- After base assignment, perturb tech mps by some percentage.
-#                                   A value of 1.00 would mean no change.
-tech_damage_random_factor_min=0.75
-tech_damage_random_factor_max=1.25
-
-# preserve_magic -- A player's first magic tech will be in the same position as vanilla.
-preserve_magic=false
-
-# black_hole_factor -- Magus's tech Black Hole gains this much percent changes to insta-kill
-#                      per MP it costs.
-# black-hole-min -- Minimum percent insta-kill on black hole.  total = min + mp*factor.
-black_hole_min=40
-black_hole_factor=3.0  # so 20mp Black Hole is 100% insant death.
-
+black_hole_factor=3.0   # Base percent kill chance for black hole. Total is base + mp*factor.
+black_hole_min=40       # Base percent kill chance for black hole. Total is base + mp*factor.
 
 ### Scaling Options
 dynamic_scaling_scheme = "progression"  # Options: "none", "progression"
@@ -48,13 +43,13 @@ dynamic_scaling_scheme = "progression"  # Options: "none", "progression"
 ## Dynamic Scaling Options (Only if dynamic scaling is not none)
 max_scaling_level=50
 dynamic_scale_lavos=true
-# defense_safety_min_level -- If the scaling is below this level, defense cannot exceed 50% reduction(usual)
-defense_safety_min_level=10
-# defense_safety_max_level -- Enemies have vanilla defense at this level.
-#                             Between min and max, linearly scale if defense would exceed 50% reduction
-defense_safety_max_level=30
+defense_safety_min_level=10     # If the scaling is below this level, defense cannot exceed 50% reduction(usual)
+defense_safety_max_level=30     # Enemies have vanilla defense at this level.
+                                # Between min and max, linearly scale if defense would exceed 50% reduction
+obstacle-safety-level=30        # Below this scaliing level, obstacle will be single target
 
 ## Settings for dynamic_scaling_scheme="progression"
+# Scaling levels granted when events occur:
 levels_per_boss=2.0
 levels_per_quest=0.0
 levels_per_key_item=1.0
@@ -70,24 +65,17 @@ static_hp_scale_lavos=false
 element_safety_level=30
 
 ### Logic Options
-# additional_key_items -- Items beyond the required to add to the pool.
-# - Use --list-keys items to see all valid item keys
-# - The forced key items are:
+# The forced key items are:
 # [
-#   "c_trigger", "clone", "pendant", "pendant_charge", "dreamstone",
-#   "ruby_knife", "jetsoftime", "tools", "rainbow_shell", "prismshard",
-#   "jerky", "jerky",  # (Yes, two)
+#   "c_trigger", "clone", "pendant", "pendant_charge", "dreamstone", "ruby_knife", "jetsoftime",
+#   "tools", "rainbow_shell", "prismshard", "jerky", "jerky",  # (Yes, two)
 #   "bent_hilt", "bent_sword", "hero_medal", "masamune_1", # (not "masamune_2")
 #   "tomas_pop", "moon_stone", "sun_stone", "bike_key",  "seed", "gate_key"
 # ]
 # - Use this options to guarantee the presence of gear in key item spots
-additional_key_items=["masamune_2"]
+additional_key_items=["masamune_2"]  # Extra (non-progression) items to add to the key item pool.
 
-# forced_spots -- Items guaranteed to have a key item
-# - If there are more forced spots than key items, some forced spots may get normal loot
-# - If there are fewer forced spots than key items, some key items will be placed randomly
-# - Use --list-keys spots to get a list of spots.
-# - Uncomment the next block for a reasonable set of forced spots.
+# forced_spots -- Treasure spots guaranteed to have a key item
 forced_spots = [
     # "eot_gaspar_reward",
     "death_peak_south_face_summit",
@@ -140,11 +128,9 @@ excluded_spots=[
     "tyrano_lair_maze_3", "tyrano_lair_maze_4",
 ]
 
-# incentive_spots -- A list of spots with increased chance of having a key item
-# incentive_spots=[]
-
+# incentive_spots=[]    # A list of spots with increased chance of having a key item
 # incentive_factor=5.0  # 5x more weight for incentive spots.
-# decay_factor = 0.7  # How much the weight decays each time a key item is put into a region
+# decay_factor = 0.7    # How much the weight decays each time a key item is put into a region
 
 # starter_rewards -- A list of rewards to be granted at game start
 #  - "dark_ages", "future", "end_of_time", "apocalypse": Epoch time gauge access
@@ -158,6 +144,7 @@ excluded_spots=[
 #  - "truce_pillar", "bangor_pillar", "dark_ages_pillar": Give EoT pillars for warping.
 #  - "desert": Put the Sunken Desert on the 600AD map at the start.
 starter_rewards = ["epoch"]
+hard_lavos_end_boss=true  # The game will end if Ocean Palace Lavos is defeated.
 
 ### Boss Rando Options
 # boss_randomization scheme
@@ -294,43 +281,25 @@ num_timegauge_objectives = 5
 
 ### Enemy Drop Settings:
 #  Settings which modify enemy drops.
-#
-#  --drop-enemy-pool {vanilla,all}
-#                        Pool of enemies which can have a dropped item
-drop_enemy_pool = "vanilla"
-#  --drop-reward-pool {vanilla,shuffle,random}
-#                        Method of choosing enemy dropped items
-drop_reward_pool = "shuffle"
-#  --drop-rate DROP_RATE
-#                        Percentage of enemies in the drop pool which have a
-#                        dropped item
-drop_rate=1.0
-#  --mark-dropping-enemies
-#                        Alter enemy names to indicate a dropped item
-mark_dropping_enemies = true
+drop_enemy_pool = "vanilla"   # {vanilla,all} Pool of enemies which can have a dropped item
+drop_reward_pool = "shuffle"  # {vanilla,shuffle,random} Method of choosing enemy dropped items
+drop_rate=1.0                 # Percentage of enemies (1.0 is 100%) in the drop pool which have a dropped item
+mark_dropping_enemies = true  # Alter enemy names to indicate a dropped item
 
 ### Enemy Charm Settings:
 #  Settings which modify enemy charms.
-#  --charm-enemy-pool {vanilla,all}
-#                        Pool of enemies which can have a charmable item
-charm_enemy_pool="vanilla"
+#  --charm-enemy-pool
+charm_enemy_pool="vanilla"  # {vanilla,all} Pool of enemies which can have a charmable item
+charm_reward_pool="shuffle" # {vanilla,shuffle,random} Method of choosing enemy charmable items
+charm_rate = 1.0            # Percentage of enemies (1 is 100%) in the charm pool which have a charmable item
+mark_charmable_enemies=true # Alter enemy names to indicate a charmable item
 
-#  --charm-reward-pool {vanilla,shuffle,random}
-#                        Method of choosing enemy charmable items
-charm_reward_pool="shuffle"
+# Entrance Shuffler Options: Options for how overworld entrances are shuffled.
+shuffle_entrances = false   # Shuffle the target of overworld entrances
+# preserve_spots = [PRESERVE_SPOTS ...]   # Spots which are to be shuffled among themselves.
+# rest_vanilla = false                    # Only shuffle locations specified by preserve_spots
+# vanilla_spots [VANILLA_SPOTS ...]       # Spots which are not shuffled.  Will take precedence over preserve_spots
 
-#  --charm-rate CHARM_RATE
-#                        Percentage of enemies in the charm pool which have a
-#                        charmable item
-charm_rate = 1.0  # 100%
-
-#  --mark-charmable-enemies
-#                        Alter enemy names to indicate a charmable item
-mark_charmable_enemies=true
-
-### Entrance Options
-#shuffle_entrances=true
-#preserve_dungeons=true
 
 ### Recruit Options
 #  starter_min_level=STARTER_MIN_LEVEL
@@ -382,7 +351,8 @@ mark_charmable_enemies=true
 scale_level_to_leader=true
 scale_techlevel_to_leader=true
 
-good_loot = [
+# Treasure Options: Options for how non-progression treasures are distributed
+good_loot = [  # loot which counts as a good item
     "megaelixir", "hyperether", "elixir", "speed_tab",  # consumables
     "rainbow", "shiva_edge", "swallow",  # Crono gear
     "valkerye", "siren",  # Marle gear
@@ -400,8 +370,30 @@ good_loot = [
     "blue_rock", "gold_rock", "black_rock", "white_rock", "silverrock",  #rocks
 ]
 
-#  --good-loot-spots GOOD_LOOT_SPOTS [GOOD_LOOT_SPOTS ...]
-#                        Spots which will be given a random good reward.
+good_loot_spots = []  # Spots which will be given a random good reward.
+good_loot_rate=0.5    # Proportion (between 0 and 1) of good loot spots which receive good loot.
 
-# The list below contains most spots of interest
-good_loot_spots = []  # Full random treasure distribution
+# Enemy Options: Options relating to Enemies
+sightscope_all=true     # Enable sightscope usage on all enemies.
+forced_sightscope=true  # Sightscope effect will be present without the item equipped.
+shuffle_enemies=false   # Normal enemy types are shuffled (respects enemy size)
+
+# Gear Randomization Options: Options for how the stats of weapons may be randomized
+ds_item_pool =  [   # DS Items which may appear.
+    "dreamseeker", "venus_bow", "turboshot", "spellslinger", "dragon_arm", "apocalypse_arm",
+    "dinoblade", "judgement_scythe", "dreamreaper",
+    "reptite_dress", "dragon_armor", "regal_plate", "regal_gown", "shadowplume_robe",
+    "elemental_aegis", "saurian_leathers",
+    "dragonhead", "reptite_tiara", "masters_crown", "angels_tiara",
+    "valor_crest", "dragons_tear"
+]
+ds_replacement_chance = 50  # Percent chance (e.g. 10 for 10 percent) to replace an item with a ds counterpart.
+weapon_rando_pool = [  # Weapons whose effects should be shuffled
+    "rainbow", "shiva_edge", "swallow", "red_katana", "slasher",
+    "valkerye", "siren", "sonicarrow",
+    "terra_arm", "crisis_arm",
+    "masamune_1", "masamune_2", "bravesword", "rune_blade", "demon_hit",
+    "iron_fist", "bronzefist",
+    "doomsickle"
+]
+bronze_fist_policy = "vanilla"  # {vanilla,remove,4x_crit,random_other} How to modify BronzeFist pre-shuffle

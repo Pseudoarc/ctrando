@@ -41,8 +41,8 @@ class EntranceShufflerOptions:
     def __init__(
             self,
             shuffle_entrances: bool = _default_shuffle_entrances,
-            preserve_spots: tuple[OWExit] = _default_preserve_spots,
-            vanilla_spots: tuple[OWExit] = _default_vanilla_spots,
+            preserve_spots: tuple[OWExit, ...] = _default_preserve_spots,
+            vanilla_spots: tuple[OWExit, ...] = _default_vanilla_spots,
             rest_vanilla: bool = False,
     ):
         self.shuffle_entrances = shuffle_entrances
@@ -98,8 +98,7 @@ class EntranceShufflerOptions:
             "--vanilla-spots",
             nargs="*",
             type=functools.partial(aty.str_to_enum, enum_type=OWExit),
-            help="Spots which are to be shuffled among themselves. "
-            "Will take precedence over --preserve-spots",
+            help="Spots which are not shuffled.  Will take precedence over --preserve-spots",
             default=argparse.SUPPRESS
         )
 
