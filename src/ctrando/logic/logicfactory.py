@@ -34,7 +34,8 @@ _fair_recruit_item: dict[CharID, ItemID] = {
     CharID.ROBO: ItemID.SEED,
     CharID.FROG: ItemID.HERO_MEDAL,
     CharID.AYLA: ItemID.DREAMSTONE,
-    CharID.MAGUS: ItemID.PENDANT_CHARGE
+    # CharID.MAGUS: ItemID.PENDANT_CHARGE
+    CharID.MAGUS: ItemID.RUBY_KNIFE
 }
 
 

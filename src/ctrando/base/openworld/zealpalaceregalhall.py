@@ -25,13 +25,24 @@ class EventMod(locationevent.LocEventMod):
         """
         Update the Zeal Palace Regal Hall Event.
         - Trigger the sealed door with the PENDANT_CHARGED flag.
+        - Also trigger it with Magus active.
         - Change the fake exit to always go to the room with the golem.
         - Enable the Save Point regardless of room status.
         """
 
         # Most generic commands are color commands that aren't implemented yet
         new_activate = (
-            EF().add_if(
+            EF()
+            .add_if(
+                EC.if_pc_active(ctenums.CharID.MAGUS),
+                EF()
+                .add(EC.auto_text_box(
+                    script.add_py_string("{magus}: Hmph.{null}")
+                ))
+                .add(EC.set_own_drawing_status(False))
+                .jump_to_label(EC.jump_forward(), "door_opening")
+            )
+            .add_if(
                 EC.if_has_item(ctenums.ItemID.PENDANT_CHARGE),
                 EF().add(EC.set_explore_mode(False))
                 .add(EC.move_party(0x07, 0x0B, 0x06, 0x0C, 0x09, 0x0C))
@@ -41,6 +52,7 @@ class EventMod(locationevent.LocEventMod):
                 .add(EC.set_own_drawing_status(False))
                 .add(EC.set_object_script_processing(0xB, True))
                 .add(EC.call_obj_function(0xB, FID.ARBITRARY_0, 4, FS.HALT))
+                .set_label("door_opening")
                 .add(EC.pause(0.5))
                 .add(EC.generic_command(0xF1, 0x9F, 0x02))  # Color math
                 .add(EC.generic_command(0xF3))
@@ -61,7 +73,7 @@ class EventMod(locationevent.LocEventMod):
                 .add(EC.return_cmd())
             ).add(EC.play_sound(1))
             .add(EC.auto_text_box(
-                script.add_py_string("Charged Pendant is required.{null}")
+                script.add_py_string("Charged Pendant or {magus} is required.{null}")
             )).add(EC.return_cmd())
         )
 

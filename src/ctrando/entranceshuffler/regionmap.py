@@ -1107,7 +1107,7 @@ def get_default_region_connectors(
         RegionConnector(
             "zeal_palace", "ocean_palace",
             "zeal_palace_pendant_charge",
-            rule=charge_rule(2)
+            rule=charge_rule(2) | logictypes.LogicRule([CharID.MAGUS])
         ),
         RegionConnector(
             "ocean_palace", "ocean_palace_mammon_m",
