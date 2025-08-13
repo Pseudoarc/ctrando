@@ -1730,6 +1730,8 @@ class ArmorEffects(StrIntEnum):
     HASTE = 0x33
     BARRIER_SHIELD = 0x3B
     IMMUNE_ELEMENTS = 0x3C
+    MASTERS_CROWN = 0x3D  # +25% dmg, status
+    ANGEL_TIARA = 0x3E    # haste, status
 
 
 class WeaponEffects(StrIntEnum):

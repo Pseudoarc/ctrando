@@ -54,14 +54,27 @@ def update_boosts(item_db: itemdata.ItemDB):
     mag_10 = itemdata.StatBoost()
     mag_10.stats_boosted = [itemdata.StatBit.MAGIC]
     mag_10.magnitude = 10
-
     item_db.stat_boosts.append(mag_10)
 
     pow_10 = itemdata.StatBoost()
     pow_10.stats_boosted = [itemdata.StatBit.POWER]
     pow_10.magnitude = 10
-
     item_db.stat_boosts.append(pow_10)
+
+    spd_pow_3 = itemdata.StatBoost()
+    spd_pow_3.stats_boosted = [itemdata.StatBit.POWER, itemdata.StatBit.SPEED]
+    spd_pow_3.magnitude = 3
+    item_db.stat_boosts.append(spd_pow_3)
+
+    pow_5 = itemdata.StatBoost()
+    pow_5.stats_boosted = [itemdata.StatBit.POWER]
+    pow_5.magnitude = 5
+    item_db.stat_boosts.append(pow_5)
+
+    mag_5 = itemdata.StatBoost()
+    mag_5.stats_boosted = [itemdata.StatBit.MAGIC]
+    mag_5.magnitude = 5
+    item_db.stat_boosts.append(mag_5)
 
     boost = item_db.stat_boosts[BoostID.MDEF_STAMINA_10]
     boost.stats_boosted = [itemdata.StatBit.MDEF, itemdata.StatBit.STAMINA]

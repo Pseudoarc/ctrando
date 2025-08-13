@@ -5,7 +5,7 @@ import typing
 
 from ctrando.items import itemdata
 from ctrando.shops import shoptypes
-from ctrando.arguments import shopoptions
+from ctrando.arguments import shopoptions, gearrandooptions
 from ctrando.common import ctenums, distribution
 from ctrando.common.ctenums import ItemID as IID
 from ctrando.common.random import RNGType
@@ -276,7 +276,7 @@ def shop_item_sort_index(item_id: ctenums.ItemID):
 def randomize_shop_inventory(
         shop_manager: shoptypes.ShopManager,
         shop_options: shopoptions.ShopOptions,
-        use_ds_items: bool,
+        ds_item_pool: list[gearrandooptions.DSItem],
         rng: RNGType
 ):
 
@@ -316,8 +316,11 @@ def randomize_shop_inventory(
 
         item_pool = list(ctenums.ItemID)
         removed_items = shop_options.not_buyable_items + shopoptions.ShopOptions.unused_items
-        if not use_ds_items:
-            removed_items += [IID.DRAGON_TEAR, IID.VALOR_CREST]
+        if gearrandooptions.DSItem.DRAGONS_TEAR not in ds_item_pool:
+            removed_items += ctenums.ItemID.DRAGON_TEAR
+        if gearrandooptions.DSItem.VALOR_CREST not in ds_item_pool:
+            removed_items += ctenums.ItemID.VALOR_CREST
+
         item_pool = [
             item_id for item_id in item_pool
             if item_id not in removed_items and item_id not in shop_options.not_buyable_items
@@ -478,10 +481,10 @@ def apply_shop_settings(
         item_man: itemdata.ItemDB,
         shop_man: shoptypes.ShopManager,
         shop_options: shopoptions.ShopOptions,
-        use_ds_items: bool,
+        ds_item_pool: list[gearrandooptions.DSItem],
         rng: RNGType
 ):
     update_unsellable_prices(item_man)
     update_unsellable(item_man, shop_options)
     randomize_item_prices(item_man, shop_options, rng)
-    randomize_shop_inventory(shop_man, shop_options, use_ds_items, rng)
+    randomize_shop_inventory(shop_man, shop_options, ds_item_pool, rng)

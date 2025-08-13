@@ -9,10 +9,11 @@ from enum import auto, Enum
 from ctrando.locations.scriptmanager import ScriptManager
 
 
-from ctrando.arguments import treasureoptions
+from ctrando.arguments import treasureoptions, gearrandooptions
 from ctrando.common import ctenums, ctrom
 from ctrando.common.ctenums import TreasureID as TID
 from ctrando.common.random import RNGType
+from ctrando.entranceshuffler import entrancefiller
 from ctrando.treasures import treasuretypes as ttypes, itemtiers, treasurespottiers
 
 
@@ -108,6 +109,7 @@ def fill_chargeable_chests(
 def default_assignment(
         existing_assignment: dict[ctenums.TreasureID, ctenums.ItemID],
         treasure_options: treasureoptions.TreasureOptions,
+        extra_ds_items: Sequence[gearrandooptions.DSItem],
         exclude_pool: collections.abc.Sequence[ctenums.ItemID],
         rng: RNGType
 ) -> dict[ctenums.TreasureID, ttypes.RewardType]:
@@ -130,10 +132,19 @@ def default_assignment(
     final_assignment: dict[ctenums.TreasureID, ttypes.RewardType] = {}
     final_assignment.update(existing_assignment)
 
+    forced_keys = entrancefiller.get_forced_key_items()
     item_pool = list(base_assignment.values())
+    if gearrandooptions.DSItem.DRAGONS_TEAR in extra_ds_items:
+        item_pool[item_pool.index(ctenums.ItemID.MEGAELIXIR)] = ctenums.ItemID.DRAGON_TEAR
+    if gearrandooptions.DSItem.VALOR_CREST in extra_ds_items:
+        item_pool[item_pool.index(ctenums.ItemID.ELIXIR)] = ctenums.ItemID.VALOR_CREST
+
     for item in assigned_item_pool:
         # By default there are 2x Moonstone (SoS and Porre Mayor).
-        while item in item_pool:
+        if item in forced_keys:
+            while item in item_pool:
+                item_pool.remove(item)
+        elif item in item_pool:
             item_pool.remove(item)
         # else:
         #     print(f"MISSING: {item}")
@@ -143,17 +154,13 @@ def default_assignment(
     item_pool[item_pool.index(ctenums.ItemID.ELIXIR)] = ctenums.ItemID.IRON_FIST
     item_pool[item_pool.index(ctenums.ItemID.HYPERETHER)] = ctenums.ItemID.RUBY_ARMOR
 
-    if treasure_options.use_ds_items:
-        item_pool[item_pool.index(ctenums.ItemID.MEGAELIXIR)] = ctenums.ItemID.DRAGON_TEAR
-        item_pool[item_pool.index(ctenums.ItemID.ELIXIR)] = ctenums.ItemID.VALOR_CREST
-
     spot_pool = [
         tid for tid in base_assignment if tid not in assigned_spots
     ]
 
-    fill_chargeable_chests(final_assignment, item_pool, spot_pool, rng)
     fill_good_stuff(item_pool, spot_pool, treasure_options.good_loot_spots, treasure_options.good_loot,
                     treasure_options.good_loot_rate, final_assignment, rng)
+    fill_chargeable_chests(final_assignment, item_pool, spot_pool, rng)
     rng.shuffle(item_pool)
 
     num_filler = max(0, len(spot_pool) - len(item_pool))
@@ -184,18 +191,12 @@ def fill_good_stuff(
     ]
     available_good_stuff = [x for x in item_pool if x in good_stuff_rewards]
 
-    # print(len(available_good_stuff_spots))
-    # print(len(available_good_stuff))
-    # input()
-
     rng.shuffle(available_good_stuff)
     rng.shuffle(available_good_stuff_spots)
     num_spots = round(len(available_good_stuff_spots) * good_stuff_rate)
     for spot, reward in zip(available_good_stuff_spots[:num_spots], available_good_stuff):
         assignment_dict[spot] = reward
         item_pool.remove(reward)
-        #
-        # print(spot)
         spot_pool.remove(spot)
 
 

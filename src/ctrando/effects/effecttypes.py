@@ -20,6 +20,9 @@ _current_damage_offset = 0xAD89
 _current_attack_status_offset = 0xAE9B
 _current_attacker_offset = 0xB1F4
 
+_crown_offset = 0x5E51
+_crown_bit = 0x80
+
 
 def get_spellslinger_effect(effect_id: int, damage_divisor: int) -> EffectMod:
     if not 1 <= damage_divisor < 0xFF:
@@ -48,6 +51,8 @@ def gather_new_effects_and_rts() -> tuple[list[EffectMod], list[assemble.ASMList
         # Armor
         EffectMod(bytes([0x26, 0x44, 0])),  # Shield + Barrier
         EffectMod(bytes([0, 0, 0])),        # Weird elem aegis exception
+        EffectMod(bytes([0, 1, 0])),        # Crown
+        EffectMod(bytes([0, 2, 0])),        # Tiara
     ]
 
     return effects, routines
@@ -63,6 +68,9 @@ def add_independent_sunshades_effect(ct_rom: ctrom.CTRom):
     Byte $5E51, X in player battle data is unused and unread/unwritten during
     battle.  We will make bit 0x80 of this data hook give the damage boost.
     """
+
+    slow_mult_rom_addr = 0xC1FDBF
+    slow_div_rom_addr = 0xC1FDD3
 
     # After damage calc:
     # - 8-bit A, 16-bit X/Y
@@ -85,10 +93,35 @@ def add_independent_sunshades_effect(ct_rom: ctrom.CTRom):
     #     C1E5B4  80 22          BRA $C1E5D8
     # --- Sunshades routine ---
     # Checking for poison status to reduce damage.  Hook here.
+    hook_rom_addr = 0xC1E5D8
+    hook_file_addr = byteops.to_file_ptr(hook_rom_addr)
     #     C1E5D8  AE F4 B1       LDX $B1F4
     #     C1E5DB  BD 4B 5E       LDA $5E4B,X
+    return_rom_addr = 0xC1E5DE
     #     C1E5DE  89 40          BIT #$40
-    #
+
+    # Coming in with 8-bit A and 16-bit X/Y
+    rt: assemble.ASMList = [
+        inst.LDA(_crown_offset, AM.ABS_X),
+        inst.BIT(_crown_bit, AM.IMM8),
+        inst.BEQ("end"),
+        inst.LDX(0x2C, AM.DIR),
+        inst.STX(0x28, AM.DIR),
+        inst.LDX(0x0004, AM.IMM16),
+        inst.STX(0x2A, AM.DIR),
+        inst.JSL(slow_div_rom_addr, AM.LNG),
+        inst.LDX(0x2C, AM.DIR),
+        inst.STX(0x28, AM.DIR),
+        inst.LDX(0x0005, AM.IMM16),
+        inst.STX(0x2A, AM.DIR),
+        inst.JSL(slow_mult_rom_addr, AM.LNG),
+        "end",
+        inst.LDX(0xB1F4, AM.ABS),
+        inst.LDA(0x5E4B, AM.ABS_X),
+        inst.JMP(return_rom_addr, AM.LNG)
+    ]
+
+    asmpatcher.apply_jmp_patch(rt, hook_file_addr, ct_rom, None, 0x410000)
 
 def patch_additional_armor_effects(ct_rom: ctrom.CTRom,
                                    effect_mod_start_file: int ):
@@ -135,6 +168,9 @@ def patch_additional_armor_effects(ct_rom: ctrom.CTRom,
         # - 8 bit A, 16-bit X/Y
         # - Byte0 of EffectMod in A
         pc_stat_base = 0x5E2D + 0x80*battle_index
+        local_crown_offset = _crown_offset - 0x5E2D
+        local_status_offset = 0x5E50 - 0x5E2D
+        local_haste_offset = local_status_offset + 2
         element_offset = 0x3F
         early_return_rom_addr = hook_rom_addr + 4
         late_return_rom_addr = hook_rom_addr + 15
@@ -145,12 +181,33 @@ def patch_additional_armor_effects(ct_rom: ctrom.CTRom,
             inst.JMP(early_return_rom_addr, AM.LNG),
             "new_rt",
             # For now only aegis
+            inst.LDA(effect_mod_start_rom+1, AM.LNG_X),
+            inst.CMP(0x00, AM.IMM8),
+            inst.BNE("crown"),
             inst.LDA(0x00, AM.IMM8),
             inst.STA(pc_stat_base + element_offset, AM.ABS),
             inst.STA(pc_stat_base + element_offset + 1, AM.ABS),
             inst.STA(pc_stat_base + element_offset + 2, AM.ABS),
             inst.STA(pc_stat_base + element_offset + 3, AM.ABS),
-            inst.JMP(late_return_rom_addr, AM.LNG)
+            inst.JMP(late_return_rom_addr, AM.LNG),
+            "crown",
+            inst.DEC(mode=AM.NO_ARG),
+            inst.BNE("tiara"),
+            inst.LDA(0x80, AM.IMM8),
+            inst.TSB(pc_stat_base+local_crown_offset, AM.ABS),
+            inst.LDA(0xFF, AM.IMM8),
+            inst.TSB(pc_stat_base+local_status_offset, AM.ABS),
+            inst.JMP(late_return_rom_addr, AM.LNG),
+            "tiara",
+            inst.DEC(mode=AM.NO_ARG),
+            inst.BNE("end"),
+            inst.LDA(0x80, AM.IMM8),
+            inst.TSB(pc_stat_base + local_haste_offset, AM.ABS),
+            inst.LDA(0xFF, AM.IMM8),
+            inst.TSB(pc_stat_base + local_status_offset, AM.ABS),
+            "end",
+            inst.JMP(late_return_rom_addr, AM.LNG),
+
         ]
         return rt
 
@@ -320,6 +377,7 @@ def expand_effect_mods(
     ct_rom.write(hook_b)
 
     patch_additional_armor_effects(ct_rom, new_eff_start)
+    add_independent_sunshades_effect(ct_rom)
 
 
 def get_venus_bow_rt() -> assemble.ASMList:

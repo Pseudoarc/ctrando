@@ -66,21 +66,16 @@ class TreasureOptions:
         TID.CRONOS_MOM,
     )
     _default_good_loot_rate = 0.75
-    _default_ds_replacement_rate = 50
 
     def __init__(
             self,
             good_loot_spots: Iterable[TID] = _default_good_loot_spots,
             good_loot: Iterable[RewardType] = _default_good_loot,
             good_loot_rate: float = _default_good_loot_rate,
-            use_ds_items: bool = False,
-            ds_replacement_chance: int = _default_ds_replacement_rate
     ):
         self.good_loot_spots = tuple(set(good_loot_spots))
         self.good_loot = tuple(good_loot)
         self.good_loot_rate = good_loot_rate
-        self.use_ds_items = use_ds_items
-        self.ds_replacement_chance = ds_replacement_chance
 
     @classmethod
     def add_group_to_parser(cls, parser: argparse.ArgumentParser):
@@ -113,25 +108,11 @@ class TreasureOptions:
             default=argparse.SUPPRESS
         )
 
-        group.add_argument(
-            "--use-ds-items",
-            action="store_true",
-            help="Allow items from DS to appear",
-            default=argparse.SUPPRESS
-        )
-
-        group.add_argument(
-            "--ds-replacement-chance",
-            # type=lambda val: float(sorted([0, float(val/100), 1.0])[1]),
-            action="store", type=int,
-            help="Percent chance (e.g. 10 for 10%) to replace an item with a ds counterpart.",
-            default=argparse.SUPPRESS
-        )
 
     @classmethod
     def extract_from_namespace(cls, namespace: argparse.Namespace):
         attr_names = [
-            "good_loot", "good_loot_spots", "good_loot_rate", "use_ds_items", "ds_replacement_chance"
+            "good_loot", "good_loot_spots", "good_loot_rate"
         ]
 
         init_dict = {

@@ -81,7 +81,7 @@ def assign_rewards(
         ctenums.ItemID.UNUSED_56, ctenums.ItemID.UNUSED_57, ctenums.ItemID.UNUSED_58,
         ctenums.ItemID.UNUSED_59, ctenums.ItemID.WEAPON_END_5A, ctenums.ItemID.ARMOR_END_7B,
         ctenums.ItemID.HELM_END_94, # Rocks?
-        ctenums.ItemID.RELIC_UNUSED, ctenums.ItemID.SERAPHSONG, ctenums.ItemID.HERO_MEDAL,
+        ctenums.ItemID.HERO_MEDAL,
         ctenums.ItemID.ACCESSORY_END_BC,
         ctenums.ItemID.SEED,
         ctenums.ItemID.BIKE_KEY, ctenums.ItemID.PENDANT, ctenums.ItemID.GATE_KEY,

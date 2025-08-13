@@ -24,7 +24,8 @@ from ctrando.arguments import (
     recruitoptions,
     treasureoptions,
     enemyoptions,
-    postrandooptions
+    postrandooptions,
+    gearrandooptions
 )
 
 
@@ -141,7 +142,8 @@ class Settings:
             recruit_options: recruitoptions.RecruitOptions =recruitoptions.RecruitOptions(),
             treasure_options: treasureoptions.TreasureOptions = treasureoptions.TreasureOptions(),
             enemy_options: enemyoptions.EnemyOptions = enemyoptions.EnemyOptions(),
-            post_rando_options: postrandooptions.PostRandoOptions = postrandooptions.PostRandoOptions()
+            post_rando_options: postrandooptions.PostRandoOptions = postrandooptions.PostRandoOptions(),
+            gear_rando_options: gearrandooptions.GearRandoOptions = gearrandooptions.GearRandoOptions()
     ):
         self.general_options = general_options
         self.battle_rewards = battle_rewards
@@ -156,6 +158,7 @@ class Settings:
         self.treasure_options = treasure_options
         self.enemy_options = enemy_options
         self.post_random_options = post_rando_options
+        self.gear_rando_options = gear_rando_options
 
     @classmethod
     def extract_from_namespace(cls, namespace: argparse.Namespace) -> typing.Self:
@@ -172,11 +175,12 @@ class Settings:
             recruit_options=recruitoptions.RecruitOptions.extract_from_namespace(namespace),
             treasure_options=treasureoptions.TreasureOptions.extract_from_namespace(namespace),
             enemy_options=enemyoptions.EnemyOptions.extract_from_namespace(namespace),
-            post_rando_options=postrandooptions.PostRandoOptions.extract_from_namespace(namespace)
+            post_rando_options=postrandooptions.PostRandoOptions.extract_from_namespace(namespace),
+            gear_rando_options=gearrandooptions.GearRandoOptions.extract_from_namespace(namespace)
         )
 
 
-class CTRandoArgumetnParser(argparse.ArgumentParser):
+class CTRandoArgumentParser(argparse.ArgumentParser):
 
     def error(self, message):
         self.print_usage(sys.stderr)
@@ -189,7 +193,7 @@ class CTRandoArgumetnParser(argparse.ArgumentParser):
 def get_parser() -> argparse.ArgumentParser:
     """Returns the argument parser."""
 
-    parser = CTRandoArgumetnParser()
+    parser = CTRandoArgumentParser()
 
     GeneralOptions.add_group_to_parser(parser)
     battlerewards.BattleRewards.add_group_to_parser(parser)
@@ -204,5 +208,6 @@ def get_parser() -> argparse.ArgumentParser:
     treasureoptions.TreasureOptions.add_group_to_parser(parser)
     enemyoptions.EnemyOptions.add_group_to_parser(parser)
     postrandooptions.PostRandoOptions.add_group_to_parser(parser)
+    gearrandooptions.GearRandoOptions.add_group_to_parser(parser)
 
     return parser

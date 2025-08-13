@@ -9,7 +9,7 @@ import tomllib
 from typing import TextIO
 
 from ctrando.arguments import (
-    arguments, enemyscaling, techoptions, tomloptions
+    arguments, enemyscaling, techoptions, tomloptions, gearrandooptions
 )
 from ctrando.enemydata import enemystats, rewardrando, enemyrando
 from ctrando.logic import logictweaks, logictypes
@@ -174,7 +174,7 @@ def get_random_config(
     ### Shops
     shoprando.apply_shop_settings(config.item_db, config.shop_manager,
                                   settings.shop_options,
-                                  settings.treasure_options.use_ds_items,
+                                  settings.gear_rando_options.ds_item_pool,
                                   rng)
 
     ### Recruits
@@ -237,15 +237,19 @@ def get_random_config(
         x for x in settings.logic_options.starter_rewards
         if isinstance(x, ctenums.ItemID)
     ]
-    config.treasure_assignment = treasureassign.default_assignment(treasure_assignment,
-                                                                   settings.treasure_options,
-                                                                   exclude_pool,
-                                                                   rng)
+    if settings.gear_rando_options.bronze_fist_policy == gearrandooptions.BronzeFistPolicy.REMOVE:
+        exclude_pool += ctenums.ItemID.BRONZEFIST
+
+    config.treasure_assignment = treasureassign.default_assignment(
+        treasure_assignment,
+        settings.treasure_options,
+        settings.gear_rando_options.ds_item_pool,
+        exclude_pool,
+        rng)
 
     ### Gear Rando
     gearrando.randomize_good_accessory_effects(config.item_db, rng)
-    gearrando.randomize_gear(config.item_db, settings.treasure_options.use_ds_items,
-                             settings.treasure_options.ds_replacement_chance/100, rng)
+    gearrando.randomize_gear(config.item_db, settings.gear_rando_options, rng)
     config.item_db.update_all_descriptions()
 
 

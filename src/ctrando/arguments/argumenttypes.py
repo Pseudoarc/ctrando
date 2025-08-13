@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import abc
 import argparse
+from collections.abc import Iterable
 import enum
 import inspect
 from dataclasses import dataclass, fields
@@ -29,7 +29,7 @@ _T = typing.TypeVar('_T')
 
 def extract_from_namespace(
         return_type: typing.Type[_T],
-        arg_names: list[str],
+        arg_names: Iterable[str],
         namespace: argparse.Namespace
 ) -> _T:
     opt_dict: dict[str, typing.AnyStr] = {

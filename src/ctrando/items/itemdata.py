@@ -44,7 +44,9 @@ _armor_status_abbrev_dict: dict[ArmorEffects, str] = {
     ArmorEffects.CHAOS_HP_DOWN: 'Chaos/HP Dn',
     ArmorEffects.HASTE: 'Haste',
     ArmorEffects.BARRIER_SHIELD: "Bar/Shld",
-    ArmorEffects.IMMUNE_ELEMENTS: "Immune Elem"
+    ArmorEffects.IMMUNE_ELEMENTS: "Immune Elem",
+    ArmorEffects.MASTERS_CROWN: "+25% Dmg, P:All",
+    ArmorEffects.ANGEL_TIARA: "Haste, P:All"
 }
 
 
@@ -1006,10 +1008,24 @@ class GearSecondaryStats(ItemSecondaryData):
         self._data[5] &= 0xF0
         self._data[5] |= val
 
+        if val == 0:
+            self.set_protected_elements([])
+
     @classmethod
     def prot_mag_to_percent(cls, prot_mag: int):
         """Get the protection magnitude as a percentage reduction."""
         return round(100 - 400/(4+prot_mag))
+
+
+    def set_protected_elements(self, elements: Iterable[ctenums.Element]):
+        bit_mask = 0
+
+        for element in elements:
+            bit_mask |= self.elem_bit_dict[element]
+
+        self._data[5] &= 0x0F
+        self._data[5] |= bit_mask
+
 
     def set_protect_element(self, element: ctenums.Element,
                             has_protection: bool):
