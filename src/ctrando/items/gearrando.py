@@ -477,9 +477,9 @@ def randomize_gear(
             cur_stats.has_effect = True
             cur_stats.effect_id = stats.effect_id
             if stats.effect_id in special_atk_effects:
-                stats.attack = 0
+                cur_stats.attack = 0
                 if stats.effect_id == WeaponEffects.CRIT_9999:
-                    stats.critical_rate = 10
+                    cur_stats.critical_rate = 10
 
         cur_secondary_stats.stat_boost_index = sec_stats.stat_boost_index
 

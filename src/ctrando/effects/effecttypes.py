@@ -17,11 +17,16 @@ _vanilla_effect_count = 0x39
 _max_vanilla_routine_index = 0x42
 
 _current_damage_offset = 0xAD89
+_current_element_offset = 0xB190
 _current_attack_status_offset = 0xAE9B
 _current_attacker_offset = 0xB1F4
 
 _crown_offset = 0x5E51
 _crown_bit = 0x80
+
+_local_status_offset = 0x5E50 - 0x5E2D
+_local_haste_offset = _local_status_offset + 2
+
 
 
 def get_spellslinger_effect(effect_id: int, damage_divisor: int) -> EffectMod:
@@ -43,6 +48,7 @@ def gather_new_effects_and_rts() -> tuple[list[EffectMod], list[assemble.ASMList
     routines = [
         get_venus_bow_rt(),
         get_spellslinger_rt(),
+        get_add_element_effect(),
     ]
 
     effects = [
@@ -53,6 +59,10 @@ def gather_new_effects_and_rts() -> tuple[list[EffectMod], list[assemble.ASMList
         EffectMod(bytes([0, 0, 0])),        # Weird elem aegis exception
         EffectMod(bytes([0, 1, 0])),        # Crown
         EffectMod(bytes([0, 2, 0])),        # Tiara
+        EffectMod(bytes([_max_vanilla_routine_index + 3, 0x80, 0])),  # Add lit
+        EffectMod(bytes([_max_vanilla_routine_index + 3, 0x40, 0])),  # Add shadow
+        EffectMod(bytes([_max_vanilla_routine_index + 3, 0x20, 0])),  # Add water
+        EffectMod(bytes([_max_vanilla_routine_index + 3, 0x10, 0])),  # Add fire
     ]
 
     return effects, routines
@@ -169,8 +179,6 @@ def patch_additional_armor_effects(ct_rom: ctrom.CTRom,
         # - Byte0 of EffectMod in A
         pc_stat_base = 0x5E2D + 0x80*battle_index
         local_crown_offset = _crown_offset - 0x5E2D
-        local_status_offset = 0x5E50 - 0x5E2D
-        local_haste_offset = local_status_offset + 2
         element_offset = 0x3F
         early_return_rom_addr = hook_rom_addr + 4
         late_return_rom_addr = hook_rom_addr + 15
@@ -196,15 +204,15 @@ def patch_additional_armor_effects(ct_rom: ctrom.CTRom,
             inst.LDA(0x80, AM.IMM8),
             inst.TSB(pc_stat_base+local_crown_offset, AM.ABS),
             inst.LDA(0xFF, AM.IMM8),
-            inst.TSB(pc_stat_base+local_status_offset, AM.ABS),
+            inst.TSB(pc_stat_base+_local_status_offset, AM.ABS),
             inst.JMP(late_return_rom_addr, AM.LNG),
             "tiara",
             inst.DEC(mode=AM.NO_ARG),
             inst.BNE("end"),
             inst.LDA(0x80, AM.IMM8),
-            inst.TSB(pc_stat_base + local_haste_offset, AM.ABS),
+            inst.TSB(pc_stat_base + _local_haste_offset, AM.ABS),
             inst.LDA(0xFF, AM.IMM8),
-            inst.TSB(pc_stat_base + local_status_offset, AM.ABS),
+            inst.TSB(pc_stat_base + _local_status_offset, AM.ABS),
             "end",
             inst.JMP(late_return_rom_addr, AM.LNG),
 
@@ -473,6 +481,42 @@ def get_on_crit_rt() -> assemble.ASMList:
         "end",
         inst.RTS()
     ]
+
+
+def get_add_element_effect() -> assemble.ASMList:
+    """
+    Adds a routine which adds an element to an attack.
+    Does not currently work except to trigger AI.
+
+    Notes
+    -----
+    Effectmod is XX YY ZZ
+    - YY is element bit, ZZ Unused
+    - YY is in $1C
+
+    Will create shadow if multiple elements are combined
+    """
+
+    rt: assemble.ASMList = [
+        inst.LDA(_current_element_offset, AM.ABS),
+        inst.BIT(0xF0, AM.IMM8),  # Check if any element bits set
+        inst.BNE("test_same_elem"),
+        # No element, set to weapon element
+        inst.ORA(0x1C, AM.DIR),
+        inst.BRA("end"),
+        "test_same_elem",
+        inst.BIT(0x1C, AM.DIR),   # Check if element is the weapon's
+        inst.BEQ("set_shadow"),
+        # Same element, do nothing
+        inst.BRA("end"),
+        "set_shadow",
+        inst.AND(0x0F, AM.IMM8),
+        inst.ORA(0x40, AM.IMM8),
+        "end",
+        inst.STA(_current_element_offset, AM.ABS),
+        inst.RTS()
+    ]
+    return rt
 
 
 if __name__ == "__main__":

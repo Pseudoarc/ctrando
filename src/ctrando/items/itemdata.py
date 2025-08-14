@@ -93,6 +93,10 @@ _weapon_effect_abbrev_dict: dict[WeaponEffects, str] = {
     WeaponEffects.CRIT_9999: '9,999 Crit',
     WeaponEffects.VENUS_BOW: "777 DMG",
     WeaponEffects.SPELLSLINGER: "CrisisMP",
+    WeaponEffects.ADD_LIT: "+Lit",
+    WeaponEffects.ADD_SHADOW: "+Shd",
+    WeaponEffects.ADD_WATER: "+Wat",
+    WeaponEffects.ADD_FIRE: "+Fir"
 }
 
 
