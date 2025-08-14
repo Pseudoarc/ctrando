@@ -255,29 +255,27 @@ not_sellable_items = [
 #  - "random": Randomize prices uniformly randomly
 #  - "random_multiplier": Randomize prices relative to their original price (eventually configure range)
 item_price_randomization = "random_multiplier"
+item_price_min_multiplier = 0.25  # Only for use with "random_multiplier" prices
+item_price_max_multiplier = 4.00  # Only for use with "random_multiplier" prices
 
-# item_price_min_multiplier -- Only for use with "random percent" prices
-item_price_min_multiplier = 0.25
+### Objective Options
+num_algetty_portal_objectives = 2  # Number of objectives needed to unlock the portal in Algetty's entrance
+num_omen_objectives = 2            # Number of objectives needed to unlock the final door in the Black Omen
+num_bucket_objectives = 4          # Number of objectives needed to unlock the bucket in the End of Time.
+num_timegauge_objectives = 5       # Number of objectives needed to unlock 1999 on the time gauge.
 
-# item_price_max_multiplier -- Only for use with "random percent" prices
-item_price_max_multiplier = 4.00
-
-# item_price_randomization_exclusions -- Items to ignore for price randomization.
-# item_price_randomization_exclusions = []
-
-### Objective Reward Options
-# num_algetty_portal_objectives -- Number of objectives needed to unlock the portal in Algetty's entrance
-num_algetty_portal_objectives = 2
-
-# num_omen_objectives -- Number of objectives needed to unlock the final door in the Black Omen
-num_omen_objectives = 2
-
-# num_bucket_objectives --Number of objectives needed to unlock the bucket in the End of Time.
-num_bucket_objectives = 4
-
-# num_timegauge_objectives -- Number of objectives needed to unlock 1999 on the time gauge.
-num_timegauge_objectives = 5
-
+# Objective specifications are complicated
+# Special Markers: "any_boss", "any_miniboss", "any_quest", "open_quest", "gated_quest",
+#                  "flight_gated_quest", "very_gated_quest"
+# Can specify boss name or quest name individually
+objective_1 = "any_quest"
+objective_2 = "any_quest"
+objective_3 = "any_quest"
+objective_4 = "any_quest"
+objective_5 = "any_quest"
+objective_6 = "any_quest"
+objective_7 = "any_quest"
+objective_8 = "any_quest"
 
 ### Enemy Drop Settings:
 #  Settings which modify enemy drops.
