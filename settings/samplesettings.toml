@@ -302,45 +302,45 @@ shuffle_entrances = false   # Shuffle the target of overworld entrances
 ### Recruit Options
 #  starter_min_level=STARTER_MIN_LEVEL
 #                      Minimum level at which the starter recruit can join (deafult: 1)
-#  starter_min_tech_level=STARTER_MIN_TECH_LEVEL
+#  starter_min_techlevel=STARTER_MIN_TECHLEVEL
 #                      Minimum tech level at which the starter recruit can
 #                      join (default: 0)
 #  fair_min_level=FAIR_MIN_LEVEL
 #                      Minimum level at which the fair recruit can join (deafult: 1)
-#  fair_min_tech_level=FAIR_MIN_TECH_LEVEL
+#  fair_min_tech_level=FAIR_MIN_TECHLEVEL
 #                      Minimum tech level at which the fair recruit can join
 #                      (default: 0)
 #  cathedral_min_level=CATHEDRAL_MIN_LEVEL
 #                      Minimum level at which the cathedral recruit can join (deafult: 5)
-#  cathedral_min_tech_level=CATHEDRAL_MIN_TECH_LEVEL
+#  cathedral_min_techlevel=CATHEDRAL_MIN_TECHLEVEL
 #                      Minimum tech level at which the cathedral recruit can join (default: 0)
 #  castle_min_level=CASTLE_MIN_LEVEL
 #                      Minimum level at which the castle recruit can join (deafult: 5)
-#  castle_min_tech_level=CASTLE_MIN_TECH_LEVEL
+#  castle_min_techlevel=CASTLE_MIN_TECHLEVEL
 #                      Minimum tech level at which the castle recruit can join (default: 1)
 #  trial_min_level=TRIAL_MIN_LEVEL
 #                      Minimum level at which the trial recruit can join (deafult: 7)
-#  trial_min_tech_level=TRIAL_MIN_TECH_LEVEL
+#  trial_min_techlevel=TRIAL_MIN_TECHLEVEL
 #                      Minimum tech level at which the trial recruit can join (default: 1)
 #  proto_min_level=PROTO_MIN_LEVEL
 #                      Minimum level at which the proto recruit can join (deafult: 1)
-#  proto_min_tech_level=PROTO_MIN_TECH_LEVEL
+#  proto_min_techlevel=PROTO_MIN_TECHLEVEL
 #                      Minimum tech level at which the proto recruit can join (default: 0)
 #  north_cape_min_level=NORTH_CAPE_MIN_LEVEL
 #                      Minimum level at which the north_cape recruit can join (deafult: 37)
-#  north_cape_min_tech_level=NORTH_CAPE_MIN_TECH_LEVEL
+#  north_cape_min_techlevel=NORTH_CAPE_MIN_TECHLEVEL
 #                      Minimum tech level at which the north_cape recruit can join (default: 3)
 #  burrow_min_level=BURROW_MIN_LEVEL
 #                      Minimum level at which the burrow recruit can join (deafult: 18)
-#  burrow_min_tech_level=BURROW_MIN_TECH_LEVEL
+#  burrow_min_techlevel=BURROW_MIN_TECHLEVEL
 #                      Minimum tech level at which the burrow recruit can join (default: 2)
 #  dactyl_min_level=DACTYL_MIN_LEVEL
 #                      Minimum level at which the dactyl recruit can join (deafult: 20)
-#  dactyl_min_tech_level=DACTYL_MIN_TECH_LEVEL
+#  dactyl_min_techlevel=DACTYL_MIN_TECHLEVEL
 #                      Minimum tech level at which the dactyl recruit can join (default: 2)
 #  death_peak_min_level=DEATH_PEAK_MIN_LEVEL
 #                      Minimum level at which the death_peak recruit can join (deafult: 37)
-#  death_peak_min_tech_level=DEATH_PEAK_MIN_TECH_LEVEL
+#  death_peak_min_techlevel=DEATH_PEAK_MIN_TECHLEVEL
 #                      Minimum tech level at which the death_peak recruit can join (default: 8)
 #  minimum-recruits    All recruits are given a min level of 1 and min tech
 #                      level of 0. Overrides other min settings.
