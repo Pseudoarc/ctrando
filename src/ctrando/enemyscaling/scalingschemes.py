@@ -20,6 +20,7 @@ from ctrando.asm import instructions as inst
 from ctrando.asm.instructions import AddressingMode as AM, SpecialRegister as SR
 from ctrando.common import memory
 
+
 # Notes:
 #  - 0x01FDFB can be called as a long subroutine for the multiplication.
 #    - Does not play nicely with X
@@ -201,7 +202,7 @@ def get_affine_scale_values_routine(
     """
     Scale using ax+b as a scale function.  Normalized to x+b.
     """
-    routine = [
+    routine: assemble.ASMList = [
         inst.LDA(memory.Memory.ORIGINAL_LEVEL_TEMP, AM.LNG),
         inst.CLC(),
         inst.ADC(constant_part, AM.IMM8),
@@ -218,7 +219,7 @@ def get_affine_scale_values_routine(
         inst.STA(memory.Memory.TO_SCALE_TEMP, AM.LNG),
     ]
 
-    assemble.assemble(routine)
+    # assemble.assemble(routine)
 
     return routine
 

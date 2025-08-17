@@ -23,6 +23,8 @@ class DynamicScalingOptions:
     defense_safety_min_level: int = 10
     defense_safety_max_level: int = 30
     obstacle_safety_level: int = 30
+    scale_hp_correction: int = 0
+    scale_hp_quadratic: bool = False
 
     def __post_init__(self):
         if self.max_scaling_level < 0:

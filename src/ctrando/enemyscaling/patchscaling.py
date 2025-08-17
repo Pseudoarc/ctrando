@@ -348,7 +348,9 @@ def patch_enemy_stat_loads(
         scale16_addr: int,
         scale_def_addr: int,
         scaling_exclusion_list: list[ctenums.EnemyID],
-        true_levels_addr: int
+        true_levels_addr: int,
+        hp_quadratic_scale: bool = False,
+        hp_correction: int = 0,
 ):
     """
     After an enemy's stats are loaded, scale them using the enemy's level and
@@ -437,6 +439,12 @@ def patch_enemy_stat_loads(
             inst.BEQ("skip_scaling")
         ]
 
+    hp_scale_part = [
+        inst.JSL(byteops.to_rom_ptr(scale16_addr), AM.LNG)
+    ]
+    if hp_quadratic_scale:
+        hp_scale_part += [inst.JSL(byteops.to_rom_ptr(scale16_addr), AM.LNG)]
+
     true_levels_rom_addr = byteops.to_rom_ptr(true_levels_addr)
     scale_part += [
         inst.CMP(0xFF, AM.IMM8),  # placeholder empty enemy
@@ -454,13 +462,14 @@ def patch_enemy_stat_loads(
         # inst.LDA(lvl_ram_offset, AM.ABS_Y),
         inst.STA(memory.Memory.ORIGINAL_LEVEL_TEMP, AM.LNG),
         inst.STA(index_offset + 1, AM.ABS_Y),  # Store original level after index
-        inst.STA(memory.Memory.FROM_SCALE_TEMP, AM.LNG),
-        inst.LDA(memory.Memory.SCALING_LEVEL, AM.LNG),
-        inst.STA(memory.Memory.TO_SCALE_TEMP, AM.LNG),
+        # inst.STA(memory.Memory.FROM_SCALE_TEMP, AM.LNG),
+        # inst.LDA(memory.Memory.SCALING_LEVEL, AM.LNG),
+        #inst.STA(memory.Memory.TO_SCALE_TEMP, AM.LNG),
         inst.LDA(lvl_ram_offset, AM.ABS_Y),
         inst.JSL(byteops.to_rom_ptr(scale8_addr), AM.LNG),
         inst.STA(lvl_ram_offset, AM.ABS_Y),
-        # HP exception for SoS: Subtract 10k, then readd after scaling.
+        #
+    ] + scalingschemes.get_affine_scale_values_routine(hp_correction, "hp") + [
         inst.LDA(index_offset, AM.ABS_Y),
         inst.CMP(ctenums.EnemyID.SON_OF_SUN_EYE, AM.IMM8),
         inst.BNE("normal_load"),
@@ -473,7 +482,8 @@ def patch_enemy_stat_loads(
         inst.REP(0x20),
         inst.LDA(hp_ram_offset, AM.ABS_Y),
         "scale_hp",
-        inst.JSL(byteops.to_rom_ptr(scale16_addr)),
+    ] + hp_scale_part + [
+        # inst.JSL(byteops.to_rom_ptr(scale16_addr)),
         inst.CMP(0x0000, AM.IMM16),
         inst.BNE("nonzero_hp"),
         inst.INC(mode=AM.NO_ARG),
@@ -499,11 +509,10 @@ def patch_enemy_stat_loads(
         inst.SEP(0x20),
         "end_hp",
         inst.TDC(),
-        # Already set from hp scaling.
-        # inst.LDA(memory.Memory.ORIGINAL_LEVEL_TEMP, AM.LNG),
-        # inst.STA(memory.Memory.FROM_SCALE_TEMP, AM.LNG),
-        # inst.LDA(memory.Memory.SCALING_LEVEL, AM.LNG),
-        # inst.STA(memory.Memory.TO_SCALE_TEMP, AM.LNG),
+        inst.LDA(memory.Memory.ORIGINAL_LEVEL_TEMP, AM.LNG),
+        inst.STA(memory.Memory.FROM_SCALE_TEMP, AM.LNG),
+        inst.LDA(memory.Memory.SCALING_LEVEL, AM.LNG),
+        inst.STA(memory.Memory.TO_SCALE_TEMP, AM.LNG),
     ]
     scale_part.extend(
         make_scale_block(mag_ram_offset)
@@ -1058,7 +1067,9 @@ def patch_ai_multi_stat_math_15(
 
 def patch_ai_cond_hp_lte_08(
         ct_rom: ctrom.CTRom,
-        scale16_rom_addr: int
+        scale16_rom_addr: int,
+        scale_hp_quadratic: bool,
+        scale_hp_correction: int = 0
 ):
     """
     Patch ai condition 0x08 - Check if enemy HP <= target
@@ -1083,6 +1094,10 @@ def patch_ai_cond_hp_lte_08(
     # C190F3  F0 02          BEQ $C190F7
     # C190F5  B0 0E          BCS $C19105
 
+    scale_hp_part = [inst.JSL(scale16_rom_addr, AM.LNG)]
+    if scale_hp_quadratic:
+        scale_hp_part += [inst.JSL(scale16_rom_addr, AM.LNG)]
+
     orig_level_offset = 0x01
     new_rt: assemble.ASMList = [
         inst.SEP(0x20),
@@ -1093,16 +1108,18 @@ def patch_ai_cond_hp_lte_08(
         inst.BRA("skip_scale"),
         inst.LDA(0x08, AM.DIR),
         "normal_scaling",
-        inst.LDA(orig_level_offset, AM.ABS_X),
-        # inst.STA(memory.Memory.ORIGINAL_LEVEL_TEMP & 0xFFFF, AM.ABS),
-        # inst.LDA(memory.Memory.FROM_SCALE_TEMP & 0xFFFF, AM.ABS),
+    ] + scalingschemes.get_affine_scale_values_routine(scale_hp_correction) + [
+        # inst.LDA(orig_level_offset, AM.ABS_X),
+        # inst.STA(memory.Memory.FROM_SCALE_TEMP & 0xFFFF, AM.ABS),
+        # inst.LDA(memory.Memory.SCALING_LEVEL & 0xFFFF, AM.ABS),
         # inst.STA(memory.Memory.TO_SCALE_TEMP & 0xFFFF, AM.ABS),
-        inst.STA(memory.Memory.FROM_SCALE_TEMP & 0xFFFF, AM.ABS),
-        inst.LDA(memory.Memory.SCALING_LEVEL & 0xFFFF, AM.ABS),
-        inst.STA(memory.Memory.TO_SCALE_TEMP & 0xFFFF, AM.ABS),
         inst.REP(0x20),
-        inst.LDA(0x08, AM.DIR),
-        inst.JSL(scale16_rom_addr, AM.LNG),
+        inst.LDA(0x08, AM.DIR)
+    ] + scale_hp_part + [
+        inst.BIT(0x8000, AM.IMM16),
+        inst.BEQ("no_overflow"),
+        inst.LDA(0x7FFF, AM.IMM16),
+        "no_overflow",
         inst.STA(0x08, AM.DIR),
         "skip_scale",
         inst.LDA(0x0003, AM.ABS_X),
@@ -1118,6 +1135,8 @@ def patch_ai_scripts(
         scale8_rom_addr: int,
         scale16_rom_addr: int,
         scale_def_rom_addr: int,
+        scale_hp_quadratic: bool = False,
+        scale_hp_correction: int = 0,
 ):
     """
     Some AI scripts set stats.  We need to apply scaling routines to this.
@@ -1139,7 +1158,7 @@ def patch_ai_scripts(
     patch_ai_multi_stat_math_14(ct_rom, ai_stat_scale_rom_addr, scale_def_rom_addr)
     patch_ai_multi_stat_math_15(ct_rom, ai_stat_scale_rom_addr, scale_def_rom_addr)
 
-    patch_ai_cond_hp_lte_08(ct_rom, scale16_rom_addr)
+    patch_ai_cond_hp_lte_08(ct_rom, scale16_rom_addr, scale_hp_quadratic, scale_hp_correction)
 
 
 def get_scaling_scheme(
@@ -1254,12 +1273,17 @@ def apply_full_scaling_patch(
 
     patch_scaling_inventory(ct_rom, script_manager, byteops.to_rom_ptr(set_scale_addr))
     patch_pre_battle_level_setting(ct_rom, scaling_scheme)
-    patch_enemy_stat_loads(ct_rom, slow_scale8_addr, slow_scale16_addr, scale_def_addr, scaling_exclusion_list, true_level_addr)
+    patch_enemy_stat_loads(
+        ct_rom, slow_scale8_addr, slow_scale16_addr, scale_def_addr, scaling_exclusion_list, true_level_addr,
+        scaling_general_options.scale_hp_quadratic, scaling_general_options.scale_hp_correction
+    )
     patch_enemy_rewards(ct_rom, scaling_exclusion_list, slow_scale8_addr, slow_scale16_addr)
     patch_enemy_tech_power(ct_rom, byteops.to_rom_ptr(slow_scale8_addr))
     patch_enemy_attack_power(ct_rom, byteops.to_rom_ptr(slow_scale8_addr))
     patch_ai_scripts(ct_rom, byteops.to_rom_ptr(slow_scale8_addr),
                      byteops.to_rom_ptr(slow_scale16_addr),
-                     byteops.to_rom_ptr(scale_def_addr))
+                     byteops.to_rom_ptr(scale_def_addr),
+                     scaling_general_options.scale_hp_quadratic,
+                     scaling_general_options.scale_hp_correction)
 
 

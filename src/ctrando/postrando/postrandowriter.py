@@ -4,7 +4,6 @@ from collections.abc import Callable
 from ctrando.arguments import postrandooptions
 from ctrando.base.basepatch import apply_fast_ow_movement
 from ctrando.common import ctrom
-from ctrando.enemyscaling.patchscaling import patch_ai_scripts
 from ctrando.postrando import gameoptions, palettes
 
 
