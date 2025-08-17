@@ -430,7 +430,7 @@ def get_spellslinger_rt() -> assemble.ASMList:
     slow_mult_rom_addr = 0xC1FDBF
     slow_div_rom_addr = 0xC1FDD3
 
-    mp_offset = 0x5E36
+    mp_offset = 0x5E34
 
     rt: assemble.ASMList = [
         inst.TDC(),
