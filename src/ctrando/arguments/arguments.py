@@ -97,8 +97,8 @@ class GeneralOptions:
             if not input_file.is_file() and input_file.exists():
                 raise ValueError("Input file does not exist")
 
-            output_directory: Path = getattr(namespace, "output_directory")
-            if output_directory is None:
+            # output_directory: Path = getattr(namespace, "output_directory")
+            if not hasattr(namespace, "output_directory"):
                 output_directory = input_file.parent
 
 
@@ -135,7 +135,7 @@ class Settings:
             tech_options: techoptions.TechOptions = techoptions.TechOptions(),
             scaling_options: enemyscaling.ScalingOptions = enemyscaling.ScalingOptions(),
             logic_options: logicoptions.LogicOptions = logicoptions.LogicOptions(),
-            boss_rando_options: bossrandooptions = bossrandooptions.BossRandoOptions(),
+            boss_rando_options: bossrandooptions.BossRandoOptions = bossrandooptions.BossRandoOptions(),
             shop_options: shopoptions.ShopOptions = shopoptions.ShopOptions(),
             objective_options: objectiveoptions.ObjectiveOptions = objectiveoptions.ObjectiveOptions(),
             entrance_options: entranceoptions.EntranceShufflerOptions = entranceoptions.EntranceShufflerOptions(),
