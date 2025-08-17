@@ -2,6 +2,7 @@
 Module for assembling instructions into binary
 """
 from dataclasses import dataclass
+import typing
 
 from ctrando.asm import instructions as inst
 from ctrando.asm.instructions import _BranchInstruction, _NormalInstruction
@@ -9,7 +10,9 @@ from ctrando.asm.instructions import _BranchInstruction, _NormalInstruction
 from ctrando.common import byteops
 
 Instruction = _BranchInstruction | _NormalInstruction
-ASMList = list[Instruction | str]
+
+_T = typing.TypeVar("_T", bound=Instruction | str)
+ASMList: typing.TypeAlias = list[_T]
 _AM = inst.AddressingMode
 
 
