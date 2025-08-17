@@ -111,6 +111,7 @@ def randomize_tech_order(
 _scale_dict: dict[ctt.DamageFormula, Callable[[int], Union[int, float]]] = {
     ctt.DamageFormula.MAGIC: lambda mp: 1.88*mp+4.34,
     ctt.DamageFormula.PC_MELEE: lambda mp: math.sqrt(55.6*mp + 65.8),
+    ctt.DamageFormula.PC_RANGED: lambda mp: math.sqrt(55.6*mp + 65.8),
     ctt.DamageFormula.PC_AYLA: lambda mp: math.sqrt(62.6*mp + 134),
     ctt.DamageFormula.MISSING_HP: lambda mp: mp+3
 }

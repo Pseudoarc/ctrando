@@ -149,11 +149,6 @@ def apply_mauron_player_tech_patch(
         # We really only need 0x1FE bytes because tech 0xFF isn't allowed.
         local_ptr_addr = space_man.get_free_addr(0x200)
 
-    if bank_table_addr is None:
-        # Allocate 1 byte per tech for banks.
-        # We really only need 0xFF bytes because tech 0xFF isn't allowed.
-        bank_table_addr = space_man.get_free_addr(0x100)
-
     ct_rom.seek(0x0D5EF0)
     script_local_ptrs = ct_rom.read(0x80 * 2)
     script_local_ptrs += b"\x00\x00" * 0x80
@@ -161,9 +156,14 @@ def apply_mauron_player_tech_patch(
     ct_rom.seek(local_ptr_addr)
     ct_rom.write(script_local_ptrs, FSW.MARK_USED)
 
+    if bank_table_addr is None:
+        # Allocate 1 byte per tech for banks.
+        # We really only need 0xFF bytes because tech 0xFF isn't allowed.
+        bank_table_addr = space_man.get_free_addr(0x100)
+
     bank_table_b = (b"\xCE" * 0x80) + (b"\x00" * 0x80)
     ct_rom.seek(bank_table_addr)
-    ct_rom.write(bank_table_b)
+    ct_rom.write(bank_table_b, FSW.MARK_USED)
 
     local_ptr_addr_hex = int.to_bytes(
         byteops.to_rom_ptr(local_ptr_addr), 3, "little"
@@ -1149,6 +1149,7 @@ def base_patch_ct_rom(ct_rom: ctrom.CTRom):
     modifyitems.normalize_mp_accessories(ct_rom)
     modifyitems.add_crit_accessories(ct_rom)
 
+    apply_mauron_player_tech_patch(ct_rom)
     expand_eventcommands(ct_rom)
 
     # Debug

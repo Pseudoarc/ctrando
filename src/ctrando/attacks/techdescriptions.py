@@ -241,6 +241,8 @@ def get_single_tech_desc(
             dmg_str = f'(Lv+Mg)({(power*power_mult)/10:.4g})'
         elif dmg_formula == DF.PC_MELEE:
             dmg_str = f'(Atk)({power/4:.4g})'
+        elif dmg_formula == DF.PC_RANGED:
+            dmg_str = f"(Atk)({power/6:.4g})"
         elif dmg_formula == DF.PC_AYLA:
             dmg_str = f'(Atk)({power*9/40:.4g})'
         elif dmg_formula == DF.MISSING_HP:
@@ -358,6 +360,8 @@ _single_tech_abbrev = {
     '*Dark Mist': 'DkMi',
     '*Black Hole': 'BlHole',
     '*DarkMatter': 'DkMa',
+    "Arrow Hail": "ArrHa",
+    "*Haste All": "HstAll"
 }
 
 

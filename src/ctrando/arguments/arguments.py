@@ -25,7 +25,8 @@ from ctrando.arguments import (
     treasureoptions,
     enemyoptions,
     postrandooptions,
-    gearrandooptions
+    gearrandooptions,
+    characteroptions
 )
 
 
@@ -143,7 +144,8 @@ class Settings:
             treasure_options: treasureoptions.TreasureOptions = treasureoptions.TreasureOptions(),
             enemy_options: enemyoptions.EnemyOptions = enemyoptions.EnemyOptions(),
             post_rando_options: postrandooptions.PostRandoOptions = postrandooptions.PostRandoOptions(),
-            gear_rando_options: gearrandooptions.GearRandoOptions = gearrandooptions.GearRandoOptions()
+            gear_rando_options: gearrandooptions.GearRandoOptions = gearrandooptions.GearRandoOptions(),
+            character_options: characteroptions.CharacterOptions = characteroptions.CharacterOptions()
     ):
         self.general_options = general_options
         self.battle_rewards = battle_rewards
@@ -159,6 +161,7 @@ class Settings:
         self.enemy_options = enemy_options
         self.post_random_options = post_rando_options
         self.gear_rando_options = gear_rando_options
+        self.character_options = character_options
 
     @classmethod
     def extract_from_namespace(cls, namespace: argparse.Namespace) -> typing.Self:
@@ -176,7 +179,8 @@ class Settings:
             treasure_options=treasureoptions.TreasureOptions.extract_from_namespace(namespace),
             enemy_options=enemyoptions.EnemyOptions.extract_from_namespace(namespace),
             post_rando_options=postrandooptions.PostRandoOptions.extract_from_namespace(namespace),
-            gear_rando_options=gearrandooptions.GearRandoOptions.extract_from_namespace(namespace)
+            gear_rando_options=gearrandooptions.GearRandoOptions.extract_from_namespace(namespace),
+            character_options=characteroptions.CharacterOptions.extract_from_namespace(namespace)
         )
 
 
@@ -209,5 +213,6 @@ def get_parser() -> argparse.ArgumentParser:
     enemyoptions.EnemyOptions.add_group_to_parser(parser)
     postrandooptions.PostRandoOptions.add_group_to_parser(parser)
     gearrandooptions.GearRandoOptions.add_group_to_parser(parser)
+    characteroptions.CharacterOptions.add_group_to_parser(parser)
 
     return parser

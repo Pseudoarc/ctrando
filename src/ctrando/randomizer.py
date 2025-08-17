@@ -15,10 +15,10 @@ from ctrando.enemydata import enemystats, rewardrando, enemyrando
 from ctrando.logic import logictweaks, logictypes
 from ctrando.shops import shoptypes, shoprando
 
-from ctrando.attacks import pctechrandomizer, techdescriptions, pctech
+from ctrando.attacks import pctechrandomizer, techdescriptions, pctech, animationscript
 from ctrando.base import basepatch, xptpmod, modifymaps, chesttext
 from ctrando.bosses import staticbossscaling, bossrando, bosstypes
-from ctrando.characters import characterwriter
+from ctrando.characters import characterwriter, charactermods
 from ctrando.common import ctrom, ctenums, randostate
 from ctrando.common.random import RNGType
 
@@ -155,6 +155,11 @@ def get_random_config(
     # noinspection PyTypeChecker
     rng: RNGType = random.Random()
     rng.seed(settings.general_options.seed, version=2)
+
+    if settings.character_options.use_phys_marle:
+        charactermods.make_phys_marle(config.pcstat_manager, config.pctech_manager)
+    if settings.character_options.use_haste_all:
+        charactermods.make_haste_all(config.pctech_manager)
 
     ### Techs
     pctechrandomizer.modify_all_single_tech_powers(
@@ -307,6 +312,7 @@ def get_ctrom_from_config(
     basepatch.add_set_level_command(ct_rom, config.pcstat_manager)
 
     effecttypes.expand_effect_mods(ct_rom)
+    animationscript.write_scripts_to_ct_rom(ct_rom)
 
     print("Applying Openworld Scripts...", end="")
     a = time.time()

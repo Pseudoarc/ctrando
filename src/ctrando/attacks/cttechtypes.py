@@ -281,6 +281,11 @@ class TechGfxHeader(SizedBinaryData):
     SIZE = 7
 
     script_id = byte_prop(0, 0xFF)
+    sprite_packet_1 = byte_prop(1)
+    sprite_packet_2 = byte_prop(2)
+    assembly_packet_1 = byte_prop(3)
+    palette = byte_prop(4)
+    assembly_packet_2 = byte_prop(5)
     layer3_packet_id = byte_prop(6, 0xFF)
 
 
