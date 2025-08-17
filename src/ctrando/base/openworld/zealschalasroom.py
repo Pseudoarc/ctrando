@@ -17,17 +17,17 @@ class EventMod(locationevent.LocEventMod):
     def modify(cls, script: Event):
         """
         Update the Zeal Palace Schala's Room Event.
-        - Pre-set the flag that says the scene has been viewed.  This also avoids the
-          storyline being set.
-        - Note: This eliminates Schala's theme from being played.  We need to find a
-          place for this to go!
+        - Eliminate the cutscene that plays on first entry.
+        - Notably, do not set the flag for having viewed or it will trigger Schala
+          later and set the storyline.
         """
 
-        pos = script.get_object_start(0)
-        script.insert_commands(
-            EC.set_flag(memory.Flags.HAS_VIEWED_SCHALAS_ROOM_SCENE).to_bytearray(),
-            pos
-        )
+        # Don't do this or it will trigger Schala in Regal Hall
+        # pos = script.get_object_start(0)
+        # script.insert_commands(
+        #     EC.set_flag(memory.Flags.HAS_VIEWED_SCHALAS_ROOM_SCENE).to_bytearray(),
+        #     pos
+        # )
 
         pos = script.find_exact_command(EC.if_storyline_counter_lt(0xA8))
         end = script.find_exact_command(EC.play_song(0x14), pos)

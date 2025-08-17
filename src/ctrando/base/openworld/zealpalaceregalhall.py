@@ -28,6 +28,7 @@ class EventMod(locationevent.LocEventMod):
         - Also trigger it with Magus active.
         - Change the fake exit to always go to the room with the golem.
         - Enable the Save Point regardless of room status.
+        - Delete some storyline checks.
         """
 
         # Most generic commands are color commands that aren't implemented yet
@@ -92,4 +93,14 @@ class EventMod(locationevent.LocEventMod):
             script.get_function_start(0x11, FID.STARTUP)
         )
         end = script.find_exact_command(EC.return_cmd(), pos)
+        script.delete_commands_range(pos, end)
+
+        # Delete storyline checks just in case.
+        pos = script.find_exact_command(
+            EC.assign_val_to_mem(0xFF, 0x7F0210, 1),
+            script.get_object_start(0)
+        )
+        end = script.find_exact_command(
+            EC.reset_byte(0x7F0210), pos
+        )
         script.delete_commands_range(pos, end)
