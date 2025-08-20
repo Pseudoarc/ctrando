@@ -242,7 +242,7 @@ def get_single_tech_desc(
         elif dmg_formula == DF.PC_MELEE:
             dmg_str = f'(Atk)({power/4:.4g})'
         elif dmg_formula == DF.PC_RANGED:
-            dmg_str = f"(Atk)({power/6:.4g})"
+            dmg_str = f"(Atk)({power/3:.4g})"
         elif dmg_formula == DF.PC_AYLA:
             dmg_str = f'(Atk)({power*9/40:.4g})'
         elif dmg_formula == DF.MISSING_HP:
