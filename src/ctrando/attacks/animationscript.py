@@ -16,6 +16,12 @@ ObjectScript = list[_T]
 class NewScriptID(enum.IntEnum):
     ARROW_HAIL = 0x80
     HASTE_ALL = 0x81
+    PROTECT_ALL = 0x82
+    MAGUS_LUCCA_ANTI2 = 0x83
+    MAGUS_LUCCA_ANTI3 = 0x84
+    MAGUS_MARLE_ANTI2 = 0x85
+    MAGUS_CRONO_ICESWORD2 = 0x86
+
 
 
 def extract_object_script_from_buffer(
@@ -41,6 +47,11 @@ def extract_object_script(ct_rom: ctrom.CTRom, start_addr: int) -> ObjectScript:
 
 def object_script_to_bytes(script: ObjectScript) -> bytes:
     return b''.join(x for x in script)
+
+
+def print_object_script(script: ObjectScript):
+    for x in script:
+        print(x)
 
 
 class AnimationScriptHeader(cty.BinaryData):
@@ -154,9 +165,9 @@ class SingleAnimationScript:
         header.num_targets = len(target_objects)
         header.num_effects = len(effect_objects)
 
-        self.caster_objects = list(caster_objects)
-        self.target_objects = list(target_objects)
-        self.effect_objects = list(effect_objects)
+        self.caster_objects: list[ObjectScript] = list(caster_objects)
+        self.target_objects: list[ObjectScript] = list(target_objects)
+        self.effect_objects: list[ObjectScript] = list(effect_objects)
 
     def get_object_list(self) -> list[ObjectScript]:
         return self.caster_objects + self.target_objects + self.effect_objects
@@ -274,7 +285,7 @@ class AnimationScript:
         )
         ct_rom.seek(new_addr)
         ct_rom.write(payload, ctrom.freespace.FSWriteType.MARK_USED)
-
+        print(f"{new_addr:06X}")
         bank_table_st = self.FINDER.get_bank_table_start(ct_rom)
         ct_rom.seek(bank_table_st + index)
         ct_rom.write(rom_bank.to_bytes(1))
@@ -427,6 +438,210 @@ def make_arrow_rain_script(ct_rom: ctrom.CTRom) -> AnimationScript:
     return basic_script
 
 
+def make_single_lucca_prot_all_script(ct_rom: ctrom.CTRom):
+
+    prot_scr = AnimationScript.read_from_ctrom(ct_rom, ctenums.TechID.PROTECT)
+    cast_0 = [
+        ac.SetObjectFacing(facing=0x01),
+        ac.PlayAnimationOnce(animation_id=0x10),
+        ac.IncrementCounter1D(),
+        # ac.WaitForCounter1DValue(value=3),
+        ac.WaitForCounter1CValue(value=0),
+        ac.Unknown2E(),
+        ac.EndTech(),
+        ac.ReturnCommand()
+    ]
+
+    target_0 = [
+        ac.IncrementCounter1C(),
+        ac.PlayAnimationFirstFrame06(animation_id=3),
+        ac.WaitForCounter1DValue(value=2),
+        ac.PlayAnimationOnce(animation_id=0x24),
+        ac.PlayAnimationFirstFrame06(animation_id=3),
+        ac.Pause(duration=5),
+        ac.IncrementCounter1D(),
+        ac.ReturnIfTargetAbsent(target=1),
+        ac.IncrementCounter1C(),
+        ac.ReturnCommand()
+    ]
+    target_1 = [
+        ac.IncrementCounter1C(),
+        ac.PlayAnimationFirstFrame06(animation_id=3),
+        ac.WaitForCounter1DValue(value=4),
+        ac.PlayAnimationOnce(animation_id=0x24),
+        ac.PlayAnimationFirstFrame06(animation_id=3),
+        ac.Pause(duration=0x5),
+        # ac.IncrementCounter1D(),
+        ac.ReturnCommand()
+    ]
+
+
+    effect_0 = [
+        ac.TeleportToTarget(target=0),
+        ac.SetObjectFacing(facing=3),
+        ac.SetPriority(priority=3),
+        ac.Unknown61([0x61, 0x02, 0x00]),
+        ac.PlayAnimationFirstFrame(animation_id=0x1B),
+        ac.SetSpeedFastest(),
+        ac.WaitForCounter1DValue(value=1),  # When caster has animated
+        ac.PlaySound7A(sound=0xEA, unknown=0x0C),
+        ac.PlayAnimationOnce(animation_id=1),
+        ac.IncrementCounter1D(),
+        ac.SetAngle(angle=0x20),
+        ac.PlaySound7A(sound=0xF0, unknown=0xC),
+        ac.PerformSuperCommand(super_command=0x25),
+        ac.HideEffect(),
+        ac.Pause(duration=1),
+        ac.DecrementCounter1C(),
+        ac.IncrementCounter1D(),
+        ac.ReturnIfTargetAbsent(target=1),
+        ac.TeleportToTarget(target=0x0E),
+        ac.PlaySound7A(sound=0xEA, unknown=0x0E),
+        ac.PlayAnimationOnce(animation_id=1),
+        ac.WaitForCounter1DValue(value=5),
+        ac.SetAngle(angle=0x20),
+        ac.PlaySound7A(sound=0xF0, unknown=0xE),
+        ac.PerformSuperCommand(super_command=0x25),
+        ac.HideEffect(),
+        ac.Pause(duration=1),
+        ac.DecrementCounter1C(),
+        ac.ReturnCommand()
+    ]
+
+    effect_1 = [
+        ac.TeleportToTarget(target=0),
+        ac.SetObjectFacing(facing=3),
+        ac.SetPriority(priority=3),
+        ac.TeleportToTarget(target=0x0C),
+        ac.SetSpeedFastest(),
+        ac.SetAngle(angle=0x60),
+        ac.WaitForCounter1DValue(value=2),  # When caster has animated
+        ac.PerformSuperCommand(super_command=0x25),
+        ac.HideEffect(),
+        ac.ReturnIfTargetAbsent(target=1),
+        ac.TeleportToTarget(target=0x0E),
+        ac.WaitForCounter1DValue(value=5),
+        ac.SetAngle(angle=0x60),
+        ac.PerformSuperCommand(super_command=0x25),
+        ac.HideEffect(),
+        ac.ReturnCommand()
+    ]
+
+    effect_2 = [
+        ac.TeleportToTarget(target=0),
+        ac.SetObjectFacing(facing=3),
+        ac.SetPriority(priority=3),
+        ac.TeleportToTarget(target=0x0C),
+        ac.SetSpeedFastest(),
+        ac.SetAngle(angle=0xA0),
+        ac.WaitForCounter1DValue(value=2),  # When caster has animated
+        ac.PerformSuperCommand(super_command=0x25),
+        ac.HideEffect(),
+        ac.ReturnIfTargetAbsent(target=1),
+        ac.TeleportToTarget(target=0x0E),
+        ac.WaitForCounter1DValue(value=5),
+        ac.SetAngle(angle=0xA0),
+        ac.PerformSuperCommand(super_command=0x25),
+        ac.HideEffect(),
+        ac.ReturnCommand()
+    ]
+
+    effect_3 = [
+        ac.TeleportToTarget(target=0),
+        ac.SetObjectFacing(facing=3),
+        ac.SetPriority(priority=3),
+        ac.TeleportToTarget(target=0x0C),
+        ac.SetSpeedFastest(),
+        ac.SetAngle(angle=0xE0),
+        ac.WaitForCounter1DValue(value=2),  # When caster has animated
+        ac.PerformSuperCommand(super_command=0x25),
+        ac.HideEffect(),
+        ac.ReturnIfTargetAbsent(target=1),
+        ac.TeleportToTarget(target=0x0E),
+        ac.DrawEffect(),
+        ac.WaitForCounter1DValue(value=5),
+        ac.SetAngle(angle=0xE0),
+        ac.PerformSuperCommand(super_command=0x25),
+        ac.HideEffect(),
+        ac.ReturnCommand()
+    ]
+
+    effect_4 = [
+        ac.SetObjectFacing(facing=3),
+        ac.SetPriority(priority=3),
+        ac.ReturnIfTargetAbsent(target=0),
+        ac.PlayAnimationFirstFrame(animation_id=0x1B),
+        ac.SetSpeedFastest(),
+        ac.TeleportToTarget(target=0x0D),
+        ac.WaitForCounter1DValue(value=4),
+        ac.PlaySound7A(sound=0xEA, unknown=0x0D),
+        ac.PlayAnimationOnce(animation_id=1),
+        ac.IncrementCounter1D(),
+        ac.SetAngle(angle=0x20),
+        ac.PlaySound7A(sound=0xF0, unknown=0xD),
+        ac.PerformSuperCommand(super_command=0x25),
+        ac.HideEffect(),
+        ac.Pause(duration=2),
+        ac.DecrementCounter1C(),
+        ac.ReturnCommand()
+    ]
+
+    effect_5 = [
+        ac.SetObjectFacing(facing=3),
+        ac.SetPriority(priority=3),
+        ac.ReturnIfTargetAbsent(target=0),
+        ac.TeleportToTarget(target=0x0D),
+        ac.SetSpeedFastest(),
+        ac.WaitForCounter1DValue(value=5),
+        ac.SetAngle(angle=0x60),
+        ac.PerformSuperCommand(super_command=0x25),
+        ac.HideEffect(),
+        ac.ReturnCommand()
+    ]
+
+    effect_6 = [
+        ac.SetObjectFacing(facing=3),
+        ac.SetPriority(priority=3),
+        ac.ReturnIfTargetAbsent(target=0),
+        ac.TeleportToTarget(target=0x0D),
+        ac.SetSpeedFastest(),
+        ac.WaitForCounter1DValue(value=5),
+        ac.SetAngle(angle=0xA0),
+        ac.PerformSuperCommand(super_command=0x25),
+        ac.HideEffect(),
+        ac.ReturnCommand()
+    ]
+
+    effect_7 = [
+        ac.SetObjectFacing(facing=3),
+        ac.SetPriority(priority=3),
+        ac.ReturnIfTargetAbsent(target=0),
+        ac.TeleportToTarget(target=0x0D),
+        ac.SetSpeedFastest(),
+        ac.WaitForCounter1DValue(value=5),
+        ac.SetAngle(angle=0xE0),
+        ac.PerformSuperCommand(super_command=0x25),
+        ac.HideEffect(),
+        ac.ReturnCommand()
+    ]
+
+    obj = extract_object_script_from_buffer(
+        bytearray.fromhex('06 03' +
+                          '24 02'  # Wait for 1D to hit 2 (from shld_eff)
+                          '03 24' +
+                          '06 03' +
+                          '20 05' +
+                          '36' +  # Increment counter 1D (to 3)
+                          '00')
+    )
+    prot_scr.main_script.caster_objects = [cast_0]
+    prot_scr.main_script.target_objects = [target_0, target_1]
+    prot_scr.main_script.effect_objects = [effect_0, effect_1, effect_2, effect_3,
+                                           effect_4, effect_5, effect_6, effect_7]
+
+    return prot_scr
+
+
 def make_single_marle_haste_all_script(ct_rom: ctrom.CTRom):
 
     haste_scr = AnimationScript.read_from_ctrom(ct_rom, 0xD)
@@ -571,43 +786,51 @@ def main():
     basepatch.base_patch_ct_rom(ct_rom)
 
     tech_man = pctech.PCTechManager.read_from_ctrom(ct_rom)
-    cyclone = tech_man.get_tech(0x1)
-    provoke = tech_man.get_tech(0xA)
-    provoke.target_data = pctech.ctt.PCTechTargetData(b'\x08\x00')
-    provoke.control_header[1:] = cyclone.control_header[1:]
-    provoke.effect_headers[0] = cyclone.effect_headers[0]
-    provoke.effect_headers[0].damage_formula_id = pctech.ctt.DamageFormula.PC_RANGED
-    provoke.name = "ArrowThing"
-    # provoke.graphics_header.palette = 0x10
-    # print(provoke.graphics_header)
-    #provoke.graphics_header[:] = [0xA, 0xA, 0xE, 0xE, 0x19, 0x19, 0xFF]
+    prot = tech_man.get_tech(ctenums.TechID.PROTECT)
+    prot.target_data = pctech.ctt.PCTechTargetData(b'\x81\x00')
+    tech_man.set_tech_by_id(prot, ctenums.TechID.PROTECT)
 
-    haste = tech_man.get_tech(0xD)
-    haste.target_data = pctech.ctt.PCTechTargetData(b'\x81\x00')
-    haste.name = "*Haste All"
-    haste.graphics_header.layer3_packet_id = 0x15
-    tech_man.set_tech_by_id(haste, 0xD)
+    prot_all_scr = make_single_lucca_prot_all_script(ct_rom)
+    prot_all_scr.write_to_ctrom(ct_rom, ctenums.TechID.PROTECT)
 
-    random.seed("asdfasFD")
-    for _ in range(0x10):
-        while True:
-            x = random.randrange(0x20, 0xD1, 0x08)
-            y = random.randrange(0x60, 0xA1, 0x08)
 
-            if (x-0x80)**2/(0x60**2) + (y-0x80)**2/(0x20**2) <= 1:
-                print(f"{x:02X}, {y:02X}")
-                break
-
-    tech_man.set_tech_by_id(provoke, 0xA)
+    # cyclone = tech_man.get_tech(0x1)
+    # provoke = tech_man.get_tech(0xA)
+    # provoke.target_data = pctech.ctt.PCTechTargetData(b'\x08\x00')
+    # provoke.control_header[1:] = cyclone.control_header[1:]
+    # provoke.effect_headers[0] = cyclone.effect_headers[0]
+    # provoke.effect_headers[0].damage_formula_id = pctech.ctt.DamageFormula.PC_RANGED
+    # provoke.name = "ArrowThing"
+    # # provoke.graphics_header.palette = 0x10
+    # # print(provoke.graphics_header)
+    # #provoke.graphics_header[:] = [0xA, 0xA, 0xE, 0xE, 0x19, 0x19, 0xFF]
+    #
+    # haste = tech_man.get_tech(0xD)
+    # haste.target_data = pctech.ctt.PCTechTargetData(b'\x81\x00')
+    # haste.name = "*Haste All"
+    # haste.graphics_header.layer3_packet_id = 0x15
+    # tech_man.set_tech_by_id(haste, 0xD)
+    #
+    # random.seed("asdfasFD")
+    # for _ in range(0x10):
+    #     while True:
+    #         x = random.randrange(0x20, 0xD1, 0x08)
+    #         y = random.randrange(0x60, 0xA1, 0x08)
+    #
+    #         if (x-0x80)**2/(0x60**2) + (y-0x80)**2/(0x20**2) <= 1:
+    #             print(f"{x:02X}, {y:02X}")
+    #             break
+    #
+    # tech_man.set_tech_by_id(provoke, 0xA)
     tech_man.write_to_ctrom(ct_rom, 5, 5)
+    #
+    # script = make_arrow_rain_script(ct_rom)
+    # script.write_to_ctrom(ct_rom, 0xA)
+    #
+    # script = make_single_marle_haste_all_script(ct_rom)
+    # script.write_to_ctrom(ct_rom, 0xD)
 
-    script = make_arrow_rain_script(ct_rom)
-    script.write_to_ctrom(ct_rom, 0xA)
-
-    script = make_single_marle_haste_all_script(ct_rom)
-    script.write_to_ctrom(ct_rom, 0xD)
-
-    with open("/home/ross/Documents/ctrando/ct-mod.sfc", "wb") as outfile:
+    with open("/home/ross/Documents/ct-mod.sfc", "wb") as outfile:
         outfile.write(ct_rom.getvalue())
 
 
