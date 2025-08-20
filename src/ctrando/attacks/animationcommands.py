@@ -845,7 +845,7 @@ class SetObjectPalette(AnimationCommand):
 
     palette = cty.byte_prop(1)
 
-    def __init__(self, *args, palette: int = 0, **kwargs):
+    def __init__(self, *args, palette: int = None, **kwargs):
         AnimationCommand.__init__(self, *args, **kwargs)
         self._set_properties(
             ("palette", palette)
@@ -974,7 +974,7 @@ class AddToCurrentAngle(AnimationCommand):
 
     add_amount = cty.byte_prop(1)
 
-    def __init__(self, *args, add_amount: int = 0, **kwargs):
+    def __init__(self, *args, add_amount: int = None, **kwargs):
         AnimationCommand.__init__(self, *args, **kwargs)
         self._set_properties(
             ("add_amount", add_amount)
@@ -987,7 +987,7 @@ class PlaySound(AnimationCommand):
 
     sound = cty.byte_prop(1)
 
-    def __init__(self, *args, sound: int = 0, **kwargs):
+    def __init__(self, *args, sound: int = None, **kwargs):
         AnimationCommand.__init__(self, *args, **kwargs)
         self._set_properties(
             ("sound", sound)
