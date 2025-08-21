@@ -773,9 +773,11 @@ def make_single_marle_haste_all_script(ct_rom: ctrom.CTRom):
 def write_scripts_to_ct_rom(ct_rom: ctrom.CTRom):
     arrow_hail_script = make_arrow_rain_script(ct_rom)
     haste_all_script = make_single_marle_haste_all_script(ct_rom)
+    prot_all_script = make_single_lucca_prot_all_script(ct_rom)
 
     arrow_hail_script.write_to_ctrom(ct_rom, NewScriptID.ARROW_HAIL)
     haste_all_script.write_to_ctrom(ct_rom, NewScriptID.HASTE_ALL)
+    prot_all_script.write_to_ctrom(ct_rom, NewScriptID.PROTECT_ALL)
 
 
 def main():

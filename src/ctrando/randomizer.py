@@ -160,6 +160,10 @@ def get_random_config(
         charactermods.make_phys_marle(config.pcstat_manager, config.pctech_manager)
     if settings.character_options.use_haste_all:
         charactermods.make_haste_all(config.pctech_manager)
+    if settings.character_options.use_phys_lucca:
+        charactermods.make_phys_lucca(config.pcstat_manager, config.pctech_manager)
+    if settings.character_options.use_protect_all:
+        charactermods.make_prot_all(config.pctech_manager)
 
     ### Techs
     pctechrandomizer.modify_all_single_tech_powers(

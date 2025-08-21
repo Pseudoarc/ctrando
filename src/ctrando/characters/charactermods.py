@@ -10,6 +10,7 @@ class BlessingID(enum.Enum):
     LUCCA_PHYS_TEH = enum.auto()
     MARLE_PHYS_TECH = enum.auto()
     MARLE_HASTE_ALL = enum.auto()
+    LUCCA_PROT_ALL = enum.auto()
 
 
 def make_phys_marle(
@@ -61,4 +62,15 @@ def make_haste_all(
     haste.name = "*Haste All"
     haste.graphics_header.layer3_packet_id = 0x15
     haste.graphics_header.script_id = animationscript.NewScriptID.HASTE_ALL
+    haste.effect_mps[0] = 15
     tech_man.set_tech_by_id(haste, ctenums.TechID.HASTE)
+
+
+def make_prot_all(
+        tech_man: pctech.PCTechManager
+):
+    protect = tech_man.get_tech(ctenums.TechID.PROTECT)
+    protect.target_data = pctech.ctt.PCTechTargetData(b'\x81\x00')
+    protect.effect_mps[0] = 12
+    protect.graphics_header.script_id = animationscript.NewScriptID.PROTECT_ALL
+    tech_man.set_tech_by_id(protect, ctenums.TechID.PROTECT)
