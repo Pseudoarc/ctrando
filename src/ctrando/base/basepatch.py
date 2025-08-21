@@ -1150,6 +1150,7 @@ def base_patch_ct_rom(ct_rom: ctrom.CTRom):
     modifyitems.add_crit_accessories(ct_rom)
 
     apply_mauron_player_tech_patch(ct_rom)
+    patch_max_tech_count(ct_rom)
     expand_eventcommands(ct_rom)
 
     # Debug
@@ -1187,190 +1188,149 @@ def base_patch_ct_rom(ct_rom: ctrom.CTRom):
     ct_rom.write(b'\x10')  # Straight line to coords command
 
 
-# def apply_base_patch_rom_only(rstate: randostate.RandoState):
-#     """
-#     Do the base patch, but only the part that messes with the rom/scripts.
-#     Attempt to split configuration and writing of the configuration.
-#     """
-#     ct_rom = rstate.ct_rom
-#     ct_rom.make_exhirom()
-#
-#     mark_initial_free_space(ct_rom)
-#     apply_tf_compressed_enemy_gfx_hack(ct_rom)
-#     apply_fast_ow_movement(ct_rom)
-#     patch_blackbird(ct_rom)
-#     patch_timegauge_alt(ct_rom)
-#     patch_progressive_items(ct_rom)
-#     patch_division(ct_rom)
-#     add_key_item_count(ct_rom)
-#     alter_event_or_operation(ct_rom)
-#     set_storyline_thresholds(ct_rom)
-#     add_boss_counter_to_rewards(ct_rom)
-#     chesttext.add_get_desc_char(ct_rom, 0)
-#     # modifyitems.modify_item_stats(rstate.item_db)  # Note: State Only
-#     modifyitems.normalize_hp_accessories(ct_rom)
-#     modifyitems.normalize_mp_accessories(ct_rom)
-#
-#     expand_eventcommands(ct_rom)
-#     add_set_level_command(ct_rom, rstate.pcstat_manager)
-#
-#     # Debug
-#     ct_rom.seek(0x01FFFF)
-#     ct_rom.write(b"\x01")
-#
-#     ct_rom.seek(0x02E1F0)  # Always active/wait on first name
-#     ct_rom.write(b"\xEA\xEA")
-#
-#     script_manager = rstate.script_manager
-#     ow_manager = rstate.overworld_manager
-#
-#     apply_openworld.apply_openworld(script_manager)
-#     apply_openworld_ow.update_all_overworlds(ow_manager)
-#
-#     # Break into functions
-#
-#     # # Tech Limits -- Unneeded now?
-#     # ct_rom.seek(0x3FF951)
-#     # ct_rom.write(bytes.fromhex('03 03 03 FF 03 FF FF'))
-#
-#     # Location Data
-#     lddict = rstate.loc_data_dict
-#     lddict[ctenums.LocID.GUARDIA_BASEMENT].music = 0xFF
-#     lddict[ctenums.LocID.GUARDIA_REAR_STORAGE].music = 0xFF
-#
-#     # Location Exits
-#     exit_dict = rstate.loc_exit_dict
-#     del exit_dict[ctenums.LocID.LAB_32_EAST][1]
-#     exit_dict[ctenums.LocID.BLACK_OMEN_98F_OMEGA_DEFENSE][1].exit_y -= 1
-#
-#     # Out of Party XP
-#     nop_st = 0x01FA26
-#     # nop_end = 0x01FA41
-#     nop_end = 0x1FA4A
-#
-#     nop_opcode = inst.NOP().opcode
-#     payload = nop_opcode.to_bytes() * (nop_end - nop_st)
-#     ct_rom.seek(nop_st)
-#     ct_rom.write(payload)
-#
-#     AM = inst.AddressingMode
-#     new_level_rt: assemble.ASMList = [
-#         inst.LDX(0xB285, AM.ABS),
-#         inst.JSR(0xF90B, AM.ABS),
-#         "levelup",
-#         inst.JSR(0xF623, AM.ABS),
-#         inst.LDA(0xB28B, AM.ABS),
-#         inst.BEQ("levelup"),
-#     ]
-#     payload = assemble.assemble(new_level_rt)
-#     ct_rom.seek(nop_end - len(payload))
-#     ct_rom.write(payload)
-#
-#     # Elder Spawn Name -- Purely state.
-#     # rstate.enemy_data_dict[ctenums.EnemyID.ELDER_SPAWN_SHELL].name = "Elder Spawn"
+def patch_max_tech_count(ct_rom: ctrom.CTRom):
+    """Allow more than 0x7F techs on the rom."""
+
+    # One issue is when building the battle menu.  The game wants to test if
+    # a value is 0xFF but instead checks if a value is negative so it catches
+    # 0x80 and up.
+
+    # $CC/E75B BF 95 F3 CC LDA $CCF395,x
+    # $CC/E75F 85 80       STA $80
+    # $CC/E761 BF 96 F3 CC LDA $CCF396,x
+    # $CC/E765 85 81       STA $81
+    # $CC/E767 A6 80       LDX $80
+    # $CC/E769 BD C6 1A    LDA $1AC6,x
+    # $CC/E76C 30 05       BMI $05    [$E773]
+    # $CC/E76E A9 01       LDA #$01
+    # $CC/E770 99 25 9F    STA $9F25,y
+    # $CC/E773 BD FE 1A    LDA $1AFE,x  # Trip tech spot of menu
+    # $CC/E776 30 05       BMI $05      # should be CMP #$FF, BEQ
+    # $CC/E778 A9 01       LDA #$01
+    # $CC/E77A 99 28 9F    STA $9F28,y
+    # $CC/E77D 88          DEY          # Should return here
+
+    hook_pos = 0x0CE75B
+    return_pos = 0x0CE77D
+    return_rom_pos = byteops.to_rom_ptr(return_pos)
+
+    AM = inst.AddressingMode
+    rt = [
+        inst.LDA(0xCCF395, AM.LNG_X),
+        inst.STA(0x80, AM.DIR),
+        inst.LDA(0xCCF396, AM.LNG_X),
+        inst.STA(0x81, AM.DIR),
+        inst.LDX(0x80, AM.DIR),
+        inst.LDA(0x1AC6, AM.ABS_X),
+        inst.BMI("triple"),
+        inst.LDA(0x01, AM.IMM8),
+        inst.STA(0x9F25, AM.ABS_Y),
+        "triple",
+        inst.LDA(0x1AFE, AM.ABS_X),
+        inst.CMP(0xFF, AM.IMM8),
+        inst.BEQ("end"),
+        inst.LDA(0x01, AM.IMM8),
+        inst.STA(0x9F28, AM.ABS_Y),
+        "end",
+        inst.JMP(0xCCE77D, AM.LNG)
+    ]
+
+    asmpatcher.apply_jmp_patch(rt, hook_pos, ct_rom, hint=0x410000)
+
+    # Same story as above
+    #     $CC/E887 BF 95 F3 CC LDA $CCF395,x
+    #     $CC/E88B 85 84       STA $84
+    #     $CC/E88D BF 96 F3 CC LDA $CCF396,x
+    #     $CC/E891 85 85       STA $85
+    #     $CC/E893 A6 84       LDX $84
+    #     $CC/E895 BD FE 1A    LDA $1AFE,x
+    #     $CC/E898 99 D0 94    STA $94D0,y
+    #     $CC/E89B 30 05       BMI $05    [$E8A2]
+    #     $CC/E89D A9 12       LDA #$12
+    #     $CC/E89F 99 51 95    STA $9551,y
+    #     $CC/E8A2 E6 83       INC $83
+
+    hook_addr = 0x0CE887
+    return_rom_addr = 0xCCE8A2
+    return_addr = byteops.to_file_ptr(return_rom_addr)
+    rt2 = [
+        inst.LDA(0xCCF395, AM.LNG_X),
+        inst.STA(0x84, AM.DIR),
+        inst.LDA(0xCCF396, AM.LNG_X),
+        inst.STA(0x85, AM.DIR),
+        inst.LDX(0x84, AM.DIR),
+        inst.LDA(0x1AFE, AM.ABS_X),
+        inst.STA(0x94D0, AM.ABS_Y),
+        inst.CMP(0xFF, AM.IMM8),
+        inst.BEQ("end"),
+        inst.LDA(0x12, AM.IMM8),
+        inst.STA(0x9551, AM.ABS_Y),
+        "end",
+        inst.JMP(return_rom_addr, AM.LNG)
+    ]
 
 
-# def apply_complete_base_patch(rstate: randostate.RandoState):
-#     """
-#     Apply all of the basic patches to a vanilla randostate
-#     """
-#     ct_rom = rstate.ct_rom
-#     ct_rom.make_exhirom()
-#
-#     mark_initial_free_space(ct_rom)
-#     apply_tf_compressed_enemy_gfx_hack(ct_rom)
-#     apply_fast_ow_movement(ct_rom)
-#     patch_blackbird(ct_rom)
-#     patch_timegauge_alt(ct_rom)
-#     patch_progressive_items(ct_rom)
-#     patch_division(ct_rom)
-#     add_key_item_count(ct_rom)
-#     alter_event_or_operation(ct_rom)
-#     set_storyline_thresholds(ct_rom)
-#     add_boss_counter_to_rewards(ct_rom)
-#     chesttext.add_get_desc_char(ct_rom, 0)
-#     modifyitems.modify_item_stats(rstate.item_db)  # Note: State Only
-#     modifyitems.normalize_hp_accessories(ct_rom)
-#     modifyitems.normalize_mp_accessories(ct_rom)
-#
-#     expand_eventcommands(ct_rom)
-#
-#     # Note: Doesn't modify the pcstats, just uses them to write the level-up routine
-#     add_set_level_command(ct_rom, rstate.pcstat_manager)
-#
-#     # Debug
-#     ct_rom.seek(0x01FFFF)
-#     ct_rom.write(b"\x01")
-#
-#     ct_rom.seek(0x02E1F0)  # Always active/wait on first name
-#     ct_rom.write(b"\xEA\xEA")
-#
-#     script_manager = rstate.script_manager
-#     ow_manager = rstate.overworld_manager
-#
-#     apply_openworld.apply_openworld(script_manager)
-#     apply_openworld_ow.update_all_overworlds(ow_manager)
-#
-#     # Break into functions
-#
-#     # Tech Limits -- Unneeded now?
-#     ct_rom.seek(0x3FF951)
-#     ct_rom.write(bytes.fromhex('03 03 03 FF 03 FF FF'))
-#
-#     # Location Data
-#     lddict = rstate.loc_data_dict
-#     lddict[ctenums.LocID.GUARDIA_BASEMENT].music = 0xFF
-#     lddict[ctenums.LocID.GUARDIA_REAR_STORAGE].music = 0xFF
-#
-#     # Location Exits
-#     exit_dict = rstate.loc_exit_dict
-#     del exit_dict[ctenums.LocID.LAB_32_EAST][1]
-#
-#     exit_dict[ctenums.LocID.BLACK_OMEN_98F_OMEGA_DEFENSE][1].exit_y -= 1
-#
-#     # Item Data -- Purely item state
-#     item_db = rstate.item_db
-#     data_dict: dict[ctenums.ItemID, tuple[str, str]] = {
-#         ctenums.ItemID.PENDANT_CHARGE: (" PendantChg",
-#                                         "The Pendant begins to glow..."),
-#         ctenums.ItemID.RAINBOW_SHELL: (" Rbow Shell",
-#                                        "Give to King in 600AD"),
-#         ctenums.ItemID.JETSOFTIME: (" JetsOfTime",
-#                                     " Use at Blacbird 12000BC")
-#     }
-#
-#     for item_id, (name_str, desc_str) in data_dict.items():
-#         item_db[item_id].set_name_from_str(name_str)
-#         item_db[item_id].set_desc_from_str(desc_str)
-#
-#     # Techs -- Purely item state
-#     pctech.fix_vanilla_techs(rstate.pctech_manager)
-#
-#     # Out of Party XP
-#     nop_st = 0x01FA26
-#     # nop_end = 0x01FA41
-#     nop_end = 0x1FA4A
-#
-#     nop_opcode = inst.NOP().opcode
-#     payload = nop_opcode.to_bytes() * (nop_end-nop_st)
-#     ct_rom.seek(nop_st)
-#     ct_rom.write(payload)
-#
-#     AM = inst.AddressingMode
-#     new_level_rt: assemble.ASMList = [
-#         inst.LDX(0xB285, AM.ABS),
-#         inst.JSR(0xF90B, AM.ABS),
-#         "levelup",
-#         inst.JSR(0xF623, AM.ABS),
-#         inst.LDA(0xB28B, AM.ABS),
-#         inst.BEQ("levelup"),
-#     ]
-#     payload = assemble.assemble(new_level_rt)
-#     ct_rom.seek(nop_end-len(payload))
-#     ct_rom.write(payload)
-#
-#     # Elder Spawn Name -- Purely state.
-#     rstate.enemy_data_dict[ctenums.EnemyID.ELDER_SPAWN_SHELL].name = "Elder Spawn"
+
+    asmpatcher.apply_jmp_patch(rt2, hook_addr, ct_rom, return_addr, hint=0x410000)
+
+    # $C2/BD9A E2 20       SEP #$20
+    # $C2/BD9C AD 4C 0F    LDA $0F4C
+    # $C2/BD9F 30 05       BMI $05    [$BDA6]  <-- change to BEQ
+    hook_addr = 0x02BD9A
+    return_rom_addr = 0xC2BD9F
+    return_addr = byteops.to_file_ptr(return_rom_addr)
+    rt3 = [
+        inst.SEP(0x20),
+        inst.LDA(0x0F4C, AM.ABS),
+        inst.CMP(0xFF, AM.IMM8),
+        inst.JMP(return_rom_addr, AM.LNG)
+    ]
+
+    ct_rom.getbuffer()[return_addr] = inst.BEQ(5, AM.REL_8).opcode
+    asmpatcher.apply_jmp_patch(rt3, hook_addr, ct_rom, return_addr)
+
+    # There's a very weird bug where if there are too many techs the menu
+    # reqs will write over graphics pointers in memory.  We are going to
+    # expand the list and shift it backwards.
+    #
+    # Set the start of the menu reqs 7*0x40 back.  Somehow this is all free
+    # at the time we need it to be.
+
+    rom = ct_rom.getbuffer()
+    # $FF/F8C1 A9 40 16    LDA #$1640
+    rom[0x3FF8C2:0x3FF8C2 + 2] = int.to_bytes(0x1480, 2, "little")
+
+    # Originally pc-id was obtained as 0xID00 and then LSR'd twice to
+    # get an index into the 0x40 byte range for each PC.  We're doubling it
+    # so remove one LSR.
+    # $FF/F8E9 4A          LSR A
+    rom[0x3FF8E9] = 0xEA  # NOP
+
+    # $FF/F8DE 4A          LSR A
+    rom[0x3FF8DE] = 0xEA
+
+    # $FF/F941 4A          LSR A
+    rom[0x3FF941] = 0xEA
+
+    # Now when reading.
+    # $C2/BC3A 4A          LSR A
+    rom[0x02BC3A] = 0xEA  # NOP
+
+    # $C2/BC46 BD 07 16    LDA $1607,x[$7E:1640]   A:0000 X:0039 Y:0001
+    # Note X has an absolute tech_id in it, so we need to go 0x39 spots
+    # before the new start (0x1480)
+    rom[0x02BC47:0x02BC47 + 2] = int.to_bytes(0x1480 - 0x39, 2, "little")
+
+    # Last random thing:  Junk data in the range that could be used for learning techs
+    # C29583  A2 00 00       LDX #$0000
+    # C29586  A0 00 26       LDY #$2600
+    # C29589  A9 7F 02       LDA #$027F
+    # C2958C  54 7E CC       MVN $CC,$7E
+    # C2958F  9C 53 2C       STZ $2C53
+
+    # We really only need the first 7*50 + 0xE bytes (next tech level, techs learned)
+    # The rest are already zeroed out
+    rom[0x02958A:0x02958A+2] = int.to_bytes(7*0x50 + 0x0D, 2, "little")
 
 
 # Notes on making eventcommands

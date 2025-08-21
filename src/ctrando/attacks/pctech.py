@@ -1028,7 +1028,8 @@ class PCTechManager:
         for bitmask in self._bitmasks:
             for tech in self._bitmask_group_dict[bitmask].get_all_techs():
                 if tech is None:
-                    raise ValueError(f"Unset tech in group {bitmask:02X}")
+                    continue
+                    # raise ValueError(f"Unset tech in group {bitmask:02X}")
 
                 if tech.battle_group != \
                    battle_groups[tech.control_header.battle_group_id]:
@@ -1061,7 +1062,9 @@ class PCTechManager:
                 self._bitmask_group_dict[bitmask].get_all_techs()
             for tech in group_techs:
                 if tech is None:
-                    raise ValueError(f"Undefined Tech in group {bitmask:02X}")
+                    tech = copy.deepcopy(group_techs[0])
+                    tech.control_header[0] |= 0x80
+                    # raise ValueError(f"Undefined Tech in group {bitmask:02X}")
 
                 if tech.battle_group == battle_groups[bitmask_ind]:
                     new_battle_index = bitmask_ind
@@ -1557,7 +1560,7 @@ class PCTechManager:
 
         # $FF/F936 C9 0F       CMP #$0F
         # This is the same but for triple techs.
-        ct_rom.getbuffer()[0x3FF937] = self.num_triple_techs
+        ct_rom.getbuffer()[0x3FF937] = self.num_triple_techs + self.num_rock_techs
 
         # These two need more care since the relative location of trip/rock
         # will vary depending on the reassignment
@@ -1586,14 +1589,14 @@ class PCTechManager:
         ct_rom.getbuffer()[0x02BD69] = first_trip_group
 
         # The menu will bug if the number of triple groups is 0.
-        num_triple_groups = max(self.num_triple_techs, 1)
+        num_triple_groups = max(self.num_triple_techs + self.num_rock_techs, 1)
         ct_rom.getbuffer()[0x02BD6A] = num_triple_groups
 
         # Ranges for battle menu to pick up techs
         # The battle menu will always be broken when there are too many techs.
 
         # $C1/CA37 A9 66       LDA #$66 <--- loading first triple tech id
-        first_triple_id = 7*8 + self.num_dual_techs
+        first_triple_id = 1+7*8 + self.num_dual_techs
         ct_rom.getbuffer()[0x01CA38] = first_triple_id
 
         # $C1/CCE5 A9 66       LDA #$66   <--- first triple tech id
@@ -1601,7 +1604,7 @@ class PCTechManager:
         # $C1/CCE9 A9 75       LDA #$75   <--- last triple tech id+1
         # $C1/CCEB 85 0E       STA $0E
         ct_rom.getbuffer()[0x01CCE6] = first_triple_id
-        ct_rom.getbuffer()[0x01CCEA] = first_triple_id + self.num_triple_techs + 1
+        ct_rom.getbuffer()[0x01CCEA] = first_triple_id + self.num_triple_techs + self.num_rock_techs
 
         # These are loading the techs-learned from ram.
         # When we change the number of dual groups, this has to change.
@@ -1613,6 +1616,8 @@ class PCTechManager:
         ct_rom.write(trip_start_addr)
         ct_rom.seek(0x01CDEF)
         ct_rom.write(trip_start_addr)
+
+        ct_rom.getbuffer()[0x3FF9B5] = self.num_rock_techs
 
     def _write_menu_usability(self, ct_rom: ctrom.CTRom, hint: int = 0x5F0000):
         """
@@ -1802,6 +1807,14 @@ class PCTechManager:
 
         # Now it's safe to wipe the old data
 
+        for bitmask in self._bitmasks:
+            group = self._bitmask_group_dict[bitmask]
+            first_tech = copy.deepcopy(group.get_tech(0))
+            first_tech.control_header[0] |= 0x80
+
+            while group.has_free_space():
+                group.add_tech(copy.deepcopy(first_tech))
+
         battle_group_bytes = self._collect_update_battle_groups()
         bat_group_start = self._write_block_to_ct_rom(battle_group_bytes, ct_rom, hint)
         pctechrefs.fix_bat_grp_refs(ct_rom.getbuffer(), bat_group_start)
@@ -1815,6 +1828,7 @@ class PCTechManager:
         pctechrefs.fix_mp_refs(ct_rom.getbuffer(), mp_start)
 
         self._write_control_headers_to_ct_rom(ct_rom, hint)
+        self._write_menu_groups_to_ct_rom(ct_rom, hint)
         self._write_gfx_headers_to_ct_rom(ct_rom, extra_gfx, hint)
         self._write_target_data_to_ct_rom(ct_rom, hint)
         self._write_tech_names_to_ct_rom(ct_rom, hint)
@@ -1824,6 +1838,8 @@ class PCTechManager:
         self._write_menu_mps_to_ct_rom(ct_rom, hint)
         self._write_menu_usability(ct_rom, hint)
 
+        self._write_tech_ranges_to_ct_rom(ct_rom)
+        self._update_rock_techs(ct_rom)
         self._write_blackhole_exceptions(ct_rom, black_hole_factor, black_hole_min)
 
 
@@ -1881,6 +1897,218 @@ class PCTechManager:
 
         cls._free_block_on_ct_rom_rw(ct_rom, rom_rw, data_type.SIZE, num_records,
                                      overwrite_byte)
+
+    def _build_rock_ptrs(self) -> tuple[list[int], list[int]]:
+        """
+        builds a list of each character's rock techs as well as a pointer table to
+        find the appropriate char/rock combo
+        """
+        ptrs = [0]
+        tech_ids = []
+
+        for pc in range(0, 7):
+            rock_ids = [[], [], [], [], []]
+            pc_bitmask = 0x80 >> pc
+
+            start_index =  len(self._bitmasks) - self.__num_rock_groups
+            first_rock_id = ctenums.ItemID.BLACK_ROCK
+            first_rock_tech_id =  self.num_techs - self.num_rock_techs + 1
+
+            for ind, bitmask in enumerate(self._bitmasks[start_index:]):
+                if bitmask & pc_bitmask:
+                    rock = self._bitmask_group_dict[bitmask].rock_used
+                    if rock is None:
+                        raise ValueError
+                    rock_offset = rock - first_rock_id
+                    tech_id = ind # first_rock_tech_id + ind
+                    rock_ids[rock_offset].append(tech_id)
+
+            for ind in range(5):
+                ptrs.append(ptrs[-1] + len(rock_ids[ind]) + 1)
+                tech_ids.extend(rock_ids[ind] + [0xFF])
+
+
+            # for grp_id in range(db.first_rock_grp, len(db.menu_grps)):
+            #     grp = db.menu_grps[grp_id]
+            #     if grp & pc_bitmask != 0:
+            #         offset = grp_id - db.first_rock_grp
+            #         rock = db.rock_types[offset]
+            #         tech = db.first_rock_tech + offset
+            #         rock_ids[rock].append(tech)
+            #
+            # for i in range(0, 5):
+            #     ptrs.append(ptrs[-1] + len(rock_ids[i]) + 1)
+            #     techs.extend(rock_ids[i] + [0xFF])
+
+        return ptrs, tech_ids
+
+    def _update_rock_techs(self, ct_rom: ctrom.CTRom, ):
+        """Modify the code on the rom which handles rock tech availability."""
+
+        # --- Zeros out the part of ram for rock techs being learned
+        # C282E1  08             PHP
+        # C282E2  C2 30          REP #$30
+        # C282E4  9C 57 28       STZ $2857
+        # C282E7  A2 57 28       LDX #$2857
+        # C282EA  A0 59 28       LDY #$2859
+        # C282ED  A9 02 00       LDA #$0002
+        # C282F0  54 7E 7E       MVN $7E,$7E
+        # --- hook here for updated SR --
+        # C282F3  A2 00 26       LDX #$2600
+        # C282F6  A9 00 00       LDA #$0000
+        # C282F9  E2 20          SEP #$20
+
+        # --- Copies rocks learned into another place for ???
+        # C2B9AF  A2 57 28       LDX #$2857
+        # C2B9B2  A0 20 7F       LDY #$7F20
+        # C2B9B5  A9 04          LDA #$04
+        # C2B9B7  54 7E 7E       MVN $7E,$7E
+
+        # 1) The three references to $2857 need to be the address of the first rock
+        #    group in the techs-learned ram: 0x2837 + number of non-rock groups
+        first_rock_group = len(self._bitmasks) - self.num_rock_techs
+        rock_learn_start = 0x2837 + first_rock_group
+
+        ct_rom.seek(0x0282E5)
+        ct_rom.write(rock_learn_start.to_bytes(2, "little"))
+
+        ct_rom.seek(0x0282E8)
+        ct_rom.write(rock_learn_start.to_bytes(2, "little"))
+
+        ct_rom.seek(0x02B9B0)
+        ct_rom.write(rock_learn_start.to_bytes(2, "little"))
+
+        rock_copy_start = 0x7F00 + first_rock_group
+        ct_rom.seek(0x02B9B3)
+        ct_rom.write(rock_copy_start.to_bytes(2, "little"))
+
+        # 2) The "# C282EA  A0 59 28       LDY #$2859" should be two bytes after the rock start
+        ct_rom.seek(0x0282EB)
+        ct_rom.write(int.to_bytes(rock_learn_start + 2, 2, "little"))
+
+        # 3) The "C282ED  A9 02 00       LDA #$0002" should be num rocks - 3 (unless negative)
+        clear_num = 0 if self.num_rock_techs < 3 else self.num_rock_techs-3
+        ct_rom.seek(0x0282EE)
+        ct_rom.write(clear_num.to_bytes(2, "little"))
+
+        # Now hook at:
+        #   C282F3  A2 00 26       LDX #$2600
+        #   C282F6  A9 00 00       LDA #$0000
+        #   C282F9  E2 20          SEP #$20
+        # and write a new subroutine for enabling rock techs.
+        hook_addr = 0x0282F3
+
+        ptrs, tech_ids = self._build_rock_ptrs()
+        print(ptrs, tech_ids)
+        payload = bytes(ptrs) + bytes(tech_ids)
+        ptr_addr = ct_rom.space_manager.get_free_addr(len(payload), 0x410000)
+        ptr_rom_addr = byteops.to_rom_ptr(ptr_addr)
+        tech_id_addr = ptr_addr + len(ptrs)
+        tech_id_rom_addr = byteops.to_rom_ptr(tech_id_addr)
+
+        ct_rom.seek(ptr_addr)
+        ct_rom.write(payload, ctrom.freespace.FSWriteType.MARK_USED)
+
+        # $4F/2000	 A2 00 26    LDX #$2600
+        #     $4F/2003	 A0 00 00    LDY #$0000
+        #     $4F/2006	 A9 00 00    LDA #$0000
+        #     $4F/2009	 E2 20       SEP #$20   #8 bit A
+        #     $4F/200B	 BD 2A 00    LDA $002A,x[$7E:FC4D]
+        #     $4F/200E	 C9 AE       CMP #$AE
+        #     $4F/2010	 90 37 	     BCC $37  #to rep #$20
+        #     $4F/2012	 C9 B3       CMP #$B3
+        #     $4F/2014	 B0 33       BCS $33
+        #     OK.  Now get the pointer
+        #     $4F/2016  	 38		SEC
+        #     $4F/2017	 E9 AE		SBC #$AE
+        #     # We have a rock, rock_id (in A) equipped to pc_id (in Y)
+        #     $4F/2019	 8D 90 04	STA $TEMP
+        #     $4F/201C	 98		TYA
+        #     $4F/201D	 8D 92 04	STA $TEMPY
+        #     $4F/2020	 0A		ASL         # ASL should CLC
+        #     $4F/2021	 0A		ASL
+        #     $4F/2022     6D 92 04       ADC $TEMPY  # 5*pc_id
+        #     $4F/2025     6D 90 04       ADC $TEMP   # 5*pc_id + rock_id
+        #     $4F/2028	 DA		PHX
+        #     $4F/2029	 AA		TAX
+        #     $4F/202A	 BF 00 12 4F	LDA $4F1200,x  #ptr to rock refs
+        #     $4F/202E	 AA		TAX
+        #     $4F/202F	 BF 00 13 4F	LDA $4F1300,x  .loop1
+        #     $4F/2033	 C9 FF		CMP #$FF
+        #     $4F/2035	 F0 0E		BEQ to the LDY
+        #     $4F/2037     A8             TAY
+        #     $4F/2038	 B9 A4 04	LDA $04A4, y
+        #     $4F/203B	 F0 05		BEQ $05            # to INY and loop again
+        #     $4F/203D	 A9 80		LDA #$80
+        #     $4F/203F	 99 XX XX	STA $ROCKSTART, 9  # addr depends on num rocks
+        #     $4F/2042	 E8		INY
+        #     $4F/2043	 80 EA		BRA to .loop1 (-$20)
+        #     $4F/2045     AC 92 04       LDY $TEMPY
+        #     $4F/2048	 FA		PLX	.outloop1
+        #     $4F/2049	 C2 20 		REP #$20
+        #     $4F/204B     8A             TXA
+        #     $4F/204C	 18		CLC
+        #     $4F/204D	 69 50 00	ADC #$0050
+        #     $4F/2050	 AA		TAX
+        #     $4F/2051	 C8		INY
+        #     $4F/2052	 C9 30 28	CMP #$2830
+        #     $4F/2055	 90 AF		BCC $AF**    		# to LDA #$0000
+        #     $4F/2057	 5C 1E 83 C2	JMP back to orig to end
+        temp_addr = 0x0490
+        temp_addr_y = 0x0492
+        rt: assemble.ASMList = [
+            inst.LDX(0x2600, AM.IMM16),
+            inst.LDY(0x0000, AM.IMM16),
+            "begin",
+            inst.LDA(0x0000, AM.IMM16),
+            inst.SEP(0x20),
+            # Skip a PC if they aren't wearing a rock.
+            inst.LDA(0x002A, AM.ABS_X),
+            inst.CMP(ctenums.ItemID.BLACK_ROCK, AM.IMM8),
+            inst.BCC("next_pc"),
+            inst.CMP(ctenums.ItemID.GOLD_ROCK+1, AM.IMM8),
+            inst.BCS("next_pc"),
+            inst.SEC(),
+            inst.SBC(ctenums.ItemID.BLACK_ROCK, AM.IMM8),
+            # rock_offset in A, pc_id in Y
+            inst.STA(temp_addr, AM.ABS),
+            inst.TYA(),
+            inst.STA(temp_addr_y, AM.ABS),  # Why didn't I STY?
+            inst.ASL(mode=AM.NO_ARG),
+            inst.ASL(mode=AM.NO_ARG),       # ASL will CLC
+            inst.ADC(temp_addr_y, AM.ABS),  # 5*pc_id in A
+            inst.ADC(temp_addr, AM.ABS),    # 5*pc_id + rock_offset
+            inst.PHX(),
+            inst.TAX(),
+            inst.LDA(ptr_rom_addr, AM.LNG_X),
+            inst.TAX(),
+            "loop1",
+            inst.LDA(tech_id_rom_addr, AM.LNG_X),
+            inst.CMP(0xFF, AM.IMM8),
+            inst.BEQ("after_loop1"),
+            inst.TAY(),
+            inst.LDA(0x04A4, AM.ABS_Y), # Range recording learnability of rock tech
+            inst.BEQ("continue_loop1"),
+            inst.LDA(0x80, AM.IMM8),
+            inst.STA(rock_learn_start, AM.ABS_Y),
+            "continue_loop1",
+            inst.INX(),
+            inst.BRA("loop1"),
+            "after_loop1",
+            inst.LDY(temp_addr_y, AM.ABS),
+            inst.PLX(),
+            "next_pc",
+            inst.REP(0x20),
+            inst.TXA(),
+            inst.CLC(),
+            inst.ADC(0x0050, AM.IMM16),
+            inst.TAX(),
+            inst.INY(),
+            inst.CMP(0x2830, AM.IMM16),
+            inst.BCC("begin"),
+            inst.JMP(0xC2831E, AM.LNG)
+        ]
+        asmpatcher.apply_jmp_patch(rt, hook_addr, ct_rom, hint = 0x410000)
 
     @classmethod
     def free_existing_tech_data_on_ct_rom(
