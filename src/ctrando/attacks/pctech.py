@@ -1999,7 +1999,6 @@ class PCTechManager:
         hook_addr = 0x0282F3
 
         ptrs, tech_ids = self._build_rock_ptrs()
-        print(ptrs, tech_ids)
         payload = bytes(ptrs) + bytes(tech_ids)
         ptr_addr = ct_rom.space_manager.get_free_addr(len(payload), 0x410000)
         ptr_rom_addr = byteops.to_rom_ptr(ptr_addr)

@@ -285,7 +285,6 @@ class AnimationScript:
         )
         ct_rom.seek(new_addr)
         ct_rom.write(payload, ctrom.freespace.FSWriteType.MARK_USED)
-        print(f"{new_addr:06X}")
         bank_table_st = self.FINDER.get_bank_table_start(ct_rom)
         ct_rom.seek(bank_table_st + index)
         ct_rom.write(rom_bank.to_bytes(1))
