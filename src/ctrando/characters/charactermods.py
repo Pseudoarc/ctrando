@@ -1,7 +1,16 @@
 """Implement character buff/debuffs"""
+import enum
+
 from ctrando.common import ctenums
 from ctrando.characters import ctpcstats
 from ctrando.attacks import pctech, animationscript
+
+
+class BlessingID(enum.Enum):
+    LUCCA_PHYS_TEH = enum.auto()
+    MARLE_PHYS_TECH = enum.auto()
+    MARLE_HASTE_ALL = enum.auto()
+
 
 def make_phys_marle(
         stat_man: ctpcstats.PCStatsManager,
@@ -23,6 +32,27 @@ def make_phys_marle(
     tech_man.set_tech_by_id(provoke, ctenums.TechID.PROVOKE)
 
 
+def make_phys_lucca(
+        stat_man: ctpcstats.PCStatsManager,
+        tech_man: pctech.PCTechManager
+):
+    """Lucca improved HIT growth and physical formula bombs/flametoss."""
+    stat_man.set_stat_growth(ctenums.CharID.LUCCA, ctpcstats.PCStat.HIT, 140)
+
+    tech_power_dict: dict[ctenums.TechID, int] = {
+        ctenums.TechID.FLAME_TOSS: 7,   # basic * 7/6
+        ctenums.TechID.NAPALM: 9,       # 1.5x basic
+        ctenums.TechID.MEGABOMB: 18     # 3x basic
+    }
+
+    for tech_id, power in tech_power_dict.items():
+        tech = tech_man.get_tech(tech_id)
+        tech.effect_headers[0].damage_formula_id = pctech.ctt.DamageFormula.PC_RANGED
+        tech.effect_headers[0].applies_on_hit_effects = True
+        tech.effect_headers[0].power = power
+        tech_man.set_tech_by_id(tech, tech_id)
+
+
 def make_haste_all(
         tech_man: pctech.PCTechManager
 ):
@@ -32,4 +62,3 @@ def make_haste_all(
     haste.graphics_header.layer3_packet_id = 0x15
     haste.graphics_header.script_id = animationscript.NewScriptID.HASTE_ALL
     tech_man.set_tech_by_id(haste, ctenums.TechID.HASTE)
-
