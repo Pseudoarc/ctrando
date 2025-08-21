@@ -462,9 +462,9 @@ def patch_enemy_stat_loads(
         # inst.LDA(lvl_ram_offset, AM.ABS_Y),
         inst.STA(memory.Memory.ORIGINAL_LEVEL_TEMP, AM.LNG),
         inst.STA(index_offset + 1, AM.ABS_Y),  # Store original level after index
-        # inst.STA(memory.Memory.FROM_SCALE_TEMP, AM.LNG),
-        # inst.LDA(memory.Memory.SCALING_LEVEL, AM.LNG),
-        #inst.STA(memory.Memory.TO_SCALE_TEMP, AM.LNG),
+        inst.STA(memory.Memory.FROM_SCALE_TEMP, AM.LNG),
+        inst.LDA(memory.Memory.SCALING_LEVEL, AM.LNG),
+        inst.STA(memory.Memory.TO_SCALE_TEMP, AM.LNG),
         inst.LDA(lvl_ram_offset, AM.ABS_Y),
         inst.JSL(byteops.to_rom_ptr(scale8_addr), AM.LNG),
         inst.STA(lvl_ram_offset, AM.ABS_Y),
