@@ -2,7 +2,7 @@
 Randomize which enemies appear in each dungeon.
 """
 
-from ctrando.common import ctenums, random
+from ctrando.common import ctenums, ctrom, random
 from ctrando.common.ctenums import EnemyID as EID
 from ctrando.enemydata import enemystats
 from ctrando.locations import scriptmanager
@@ -254,7 +254,6 @@ _relevant_loc_ids = [
     ctenums.LocID.OCEAN_PALACE_FORWARD_AREA, ctenums.LocID.OCEAN_PALACE_B3_LANDING,
     ctenums.LocID.OCEAN_PALACE_GRAND_STAIRWELL, # Remove masa
     ctenums.LocID.OCEAN_PALACE_ELEVATOR_BATTLES,
-    ctenums.LocID.OCEAN_PALACE_SIDE_ROOMS,
     ctenums.LocID.OCEAN_PALACE_B20_LANDING, ctenums.LocID.OCEAN_PALACE_SOUTHERN_ACCESS_LIFT,
     ctenums.LocID.LAST_VILLAGE_COMMONS,
     ctenums.LocID.TYRANO_LAIR_MAIN_CELL,
@@ -267,7 +266,6 @@ _relevant_loc_ids = [
     ctenums.LocID.BLACK_OMEN_98F_OMEGA_DEFENSE,
     ctenums.LocID.MAGUS_CASTLE_CORRIDOR_OF_COMBAT,
     ctenums.LocID.MAGUS_CASTLE_HALL_OF_AMBUSH, ctenums.LocID.MAGUS_CASTLE_DUNGEON,
-    ctenums.LocID.LAST_VILLAGE_COMMONS, # Scout the BB enemies
 ]
 
 
@@ -315,3 +313,17 @@ def apply_enemy_shuffle(
             if enemy_id in assign_dict:
                 script.data[pos+1] = assign_dict[enemy_id]
             pos += len(cmd)
+
+
+def fix_npc_graphics(
+        ct_rom: ctrom.CTRom,
+        assign_dict: dict[EID, EID],
+        sprite_data_dict: dict[EID, enemystats.EnemySpriteData]
+):
+    robot_id = 0xAA
+    proto_3_assign = assign_dict[ctenums.EnemyID.PROTO_3]
+    new_data = sprite_data_dict[proto_3_assign]
+
+    robot_data_st = 0x24F023 + robot_id*5
+    ct_rom.seek(robot_data_st)
+    ct_rom.write(new_data.get_as_bytearray()[:5])

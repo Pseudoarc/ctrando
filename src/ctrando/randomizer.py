@@ -261,7 +261,6 @@ def get_random_config(
     gearrando.randomize_gear(config.item_db, settings.gear_rando_options, rng)
     config.item_db.update_all_descriptions()
 
-
     return config
 
 
@@ -345,6 +344,8 @@ def get_ctrom_from_config(
     enemyrando.apply_enemy_shuffle(
         config.enemy_assign_dict, post_config.script_manager, post_config.enemy_sprite_dict
     )
+    enemyrando.fix_npc_graphics(ct_rom, config.enemy_assign_dict,
+                                post_config.enemy_sprite_dict)
 
     apply_dynamic_scaling(ct_rom, post_config.script_manager,
                           config.enemy_data_dict, settings)
