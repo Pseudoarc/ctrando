@@ -88,6 +88,12 @@ class EventMod(locationevent.LocEventMod):
         end = pos + 2 + jump_bytes
         script.delete_commands_range(pos, end)
 
+        pos, _ = script.find_command([0xBB], pos)
+        script.data[pos+1] = script.add_py_string(
+            "DALTON: It's not CTRando!{line break}"
+            "It's the Rando-Dalton Imperial!{null}"
+        )
+
         new_block = (
             EF().add(EC.call_pc_function(2, FID.ARBITRARY_5, 4, FS.SYNC))
             .add(EC.call_pc_function(1, FID.ARBITRARY_5, 4, FS.CONT))
