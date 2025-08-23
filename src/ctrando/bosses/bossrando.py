@@ -265,7 +265,8 @@ def get_random_boss_assignment(
 def resolve_character_conflicts(
         boss_assign_dict: dict[bty.BossSpotID, bty.BossID],
         recruit_assign_dict: dict[ctenums.RecruitID, ctenums.CharID | None],
-        boss_rando_options: bro.BossRandoOptions
+        boss_rando_options: bro.BossRandoOptions,
+        rng: random.RNGType
 ):
     """
     Prevent the cathedral boss from blocking access to magic required to defeat it.

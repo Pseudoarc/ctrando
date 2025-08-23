@@ -196,7 +196,8 @@ def get_random_config(
 
     bossrando.resolve_character_conflicts(config.boss_assignment_dict,
                                           config.recruit_dict,
-                                          settings.boss_rando_options)
+                                          settings.boss_rando_options,
+                                          rng)
 
     ### Objectives
     # After bosses to avoid double dipping.
