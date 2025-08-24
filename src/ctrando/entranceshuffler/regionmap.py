@@ -693,7 +693,7 @@ def get_default_region_connectors(
         RegionConnector(
             "fiona_shrine", "fiona_campfire",
             "fiona_shrine_fix_robo",
-            rule=logictypes.LogicRule([CharID.LUCCA])
+            rule=logictypes.LogicRule([CharID.LUCCA, memory.Flags.ROBO_HELPS_FIONA])
         ),
         RegionConnector(
             "sun_keep_2300", "moonstone_quest",
