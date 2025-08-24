@@ -145,7 +145,8 @@ class Settings:
             enemy_options: enemyoptions.EnemyOptions = enemyoptions.EnemyOptions(),
             post_rando_options: postrandooptions.PostRandoOptions = postrandooptions.PostRandoOptions(),
             gear_rando_options: gearrandooptions.GearRandoOptions = gearrandooptions.GearRandoOptions(),
-            character_options: characteroptions.CharacterOptions = characteroptions.CharacterOptions()
+            character_options: characteroptions.CharacterOptions = characteroptions.CharacterOptions(),
+            boss_scaling_options: enemyoptions.BossScalingOptions = enemyoptions.BossScalingOptions()
     ):
         self.general_options = general_options
         self.battle_rewards = battle_rewards
@@ -162,6 +163,7 @@ class Settings:
         self.post_random_options = post_rando_options
         self.gear_rando_options = gear_rando_options
         self.character_options = character_options
+        self.boss_scaling_options = boss_scaling_options
 
     @classmethod
     def extract_from_namespace(cls, namespace: argparse.Namespace) -> typing.Self:
@@ -180,7 +182,8 @@ class Settings:
             enemy_options=enemyoptions.EnemyOptions.extract_from_namespace(namespace),
             post_rando_options=postrandooptions.PostRandoOptions.extract_from_namespace(namespace),
             gear_rando_options=gearrandooptions.GearRandoOptions.extract_from_namespace(namespace),
-            character_options=characteroptions.CharacterOptions.extract_from_namespace(namespace)
+            character_options=characteroptions.CharacterOptions.extract_from_namespace(namespace),
+            boss_scaling_options=enemyoptions.BossScalingOptions.extract_from_namespace(namespace)
         )
 
 
@@ -214,5 +217,6 @@ def get_parser() -> argparse.ArgumentParser:
     postrandooptions.PostRandoOptions.add_group_to_parser(parser)
     gearrandooptions.GearRandoOptions.add_group_to_parser(parser)
     characteroptions.CharacterOptions.add_group_to_parser(parser)
+    enemyoptions.BossScalingOptions.add_group_to_parser(parser)
 
     return parser

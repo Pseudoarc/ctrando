@@ -76,6 +76,7 @@ def apply_dynamic_scaling(
         scaling_scheme_options=settings.scaling_options.dynamic_scaling_scheme_options,
         script_manager=script_manager,
         enemy_stat_dict=enemy_data_dict,
+        boss_scaling_settings=settings.boss_scaling_options.boss_level_dict,
     )
 
 

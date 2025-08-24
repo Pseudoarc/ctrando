@@ -3,6 +3,42 @@ import argparse
 import typing
 
 from ctrando.arguments import argumenttypes
+from ctrando.bosses import bosstypes as bty
+
+class BossScalingOptions:
+    """Special Scaling for bosses"""
+
+    def __init__(self, boss_powers: dict[bty.BossID, int | None] = None):
+        if boss_powers is None:
+            boss_powers = {}
+        self.boss_level_dict: dict[bty.BossID, int | None] = {}
+        self.boss_level_dict.update(boss_powers)
+
+    @classmethod
+    def add_group_to_parser(cls, parser: argparse.ArgumentParser):
+
+        group = parser.add_argument_group(
+            "Boss Level Settings",
+            "Adjust internal level of bosses (lower = harder)"
+        )
+        for boss_id in bty.BossID:
+            boss_name = f"{boss_id.lower().replace("_", "-")}"
+            group.add_argument(
+                f"--{boss_name}-level",
+                action="store", type=int,
+                help=f"The internal level of {boss_id}",
+                default=argparse.SUPPRESS
+            )
+
+    @classmethod
+    def extract_from_namespace(cls, namespace: argparse.Namespace):
+        boss_level_dict: dict[bty.BossID, int | None] = {}
+        for boss_id in bty.BossID:
+            arg_name = f"{boss_id.lower()}_level"
+            if hasattr(namespace, arg_name):
+                boss_level_dict[boss_id] = getattr(namespace, arg_name)
+
+        return BossScalingOptions(boss_level_dict)
 
 
 class EnemyOptions:

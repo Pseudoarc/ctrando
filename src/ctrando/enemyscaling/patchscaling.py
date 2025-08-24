@@ -3,6 +3,7 @@ import typing
 from typing import Optional
 
 from ctrando.arguments import enemyscaling
+from ctrando.bosses import bosstypes as bty
 from ctrando.locations import scriptmanager
 from ctrando.locations.locationevent import FunctionID as FID
 from ctrando.locations.eventcommand import EventCommand as EC
@@ -1185,6 +1186,7 @@ def apply_full_scaling_patch(
         scaling_scheme_options: enemyscaling.DyanamicScaleSchemeOptions,
         script_manager: scriptmanager.ScriptManager,
         enemy_stat_dict: dict[ctenums.EnemyID, EnemyStats],
+        boss_scaling_settings: dict[bty.BossID, int| None],
 ):
     if scaling_scheme_type == enemyscaling.DynamicScalingScheme.NONE:
         return
@@ -1264,6 +1266,12 @@ def apply_full_scaling_patch(
     true_levels[ctenums.EnemyID.MOTHERBRAIN] = 0x26
     true_levels[ctenums.EnemyID.DALTON_PLUS] = 20
     true_levels[ctenums.EnemyID.ROLY_BOMBER] = 0x15  # Match outlaw
+
+    for boss_id, level in boss_scaling_settings.items():
+        scheme = bty.get_default_scheme(boss_id)
+        enemy_ids = [part.enemy_id for part in scheme.parts]
+        for enemy_id in enemy_ids:
+            true_levels[enemy_id] = level
 
     true_level_addr = ct_rom.space_manager.get_free_addr(
         len(true_levels), 0x410000
