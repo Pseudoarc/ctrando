@@ -141,8 +141,8 @@ class RecruitOptions:
                 if hasattr(namespace, f"{name}_min_level"):
                     min_level = getattr(namespace, f"{name}_min_level")
 
-                if hasattr(namespace, f"{name}_min_tech_level"):
-                    min_tech_level = getattr(namespace, f"{name}_min_tech_level")
+                if hasattr(namespace, f"{name}_min_techlevel"):
+                    min_tech_level = getattr(namespace, f"{name}_min_techlevel")
 
             kwarg_dict[f"{name}_data"] = RecruitData(min_level, min_tech_level)
 
