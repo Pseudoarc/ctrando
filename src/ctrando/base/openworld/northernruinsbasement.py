@@ -28,19 +28,16 @@ class EventMod(locationevent.LocEventMod):
         item_str_ind = owu.add_default_treasure_string(script)
 
         for _ in range(2):
-
             pos, cmd = script.find_command([0xCA], pos)
             item_id = cmd.args[0]
 
             script.data[pos:pos+2] = EC.add_item_memory(0x7F0200).to_bytearray()
-            script.insert_commands(
-                EC.assign_val_to_mem(item_id, 0x7F0200, 1)
-                .to_bytearray(), pos
-            )
+            new_cmd = EC.assign_val_to_mem(item_id, 0x7F0200, 1)
+            script.insert_commands(new_cmd.to_bytearray(), pos)
+            pos += len(new_cmd)
+
             pos, _ = script.find_command([0x4F], pos)
             script.delete_commands(pos)
 
             pos, _ = script.find_command([0xC1], pos)
             script.data[pos+1] = item_str_ind
-
-

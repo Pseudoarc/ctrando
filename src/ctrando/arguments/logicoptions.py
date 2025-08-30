@@ -89,8 +89,10 @@ class LogicOptions:
         ctenums.TreasureID.NORTHERN_RUINS_ANTECHAMBER_SEALED_1000,
         ctenums.TreasureID.NORTHERN_RUINS_BACK_RIGHT_SEALED_1000,
         ctenums.TreasureID.NORTHERN_RUINS_BACK_LEFT_SEALED_1000,
+        ctenums.TreasureID.NORTHERN_RUINS_BASEMENT_1000,
+        ctenums.TreasureID.NORTHERN_RUINS_ANTECHAMBER_LEFT_1000,
         ctenums.TreasureID.TRUCE_INN_SEALED_1000,
-        ctenums.TreasureID.PORRE_MAYOR_SEALED_1, ctenums.TreasureID.PORRE_MAYOR_SEALED_2
+        ctenums.TreasureID.PORRE_MAYOR_SEALED_1, ctenums.TreasureID.PORRE_MAYOR_SEALED_2,
     )
     _default_force_early_flight: typing.ClassVar[bool] = False
     _default_starter_rewards: typing.ClassVar[tuple[RewardType,...]] = (ScriptReward.EPOCH,)
