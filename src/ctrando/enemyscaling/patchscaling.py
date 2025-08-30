@@ -1244,7 +1244,8 @@ def apply_full_scaling_patch(
 
     scale_def_addr = asmpatcher.add_jsl_routine(
         scalingschemes.get_scale_def_routine(
-            10, 20,
+            scaling_general_options.defense_safety_min_level,
+            scaling_general_options.defense_safety_max_level,
             byteops.to_rom_ptr(slow_scale8_addr)
         ), ct_rom
     )
