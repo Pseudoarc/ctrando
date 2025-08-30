@@ -14,6 +14,9 @@ class EnumTarget(enum.IntEnum):
     CASTER_0 = 0
     CASTER_1 = 1
 
+    TARGET_0 = 0xC
+    TARGET_1 = 0xD
+
 
 
 class AnimationCommand(oweventcommand.OverworldEventCommand):

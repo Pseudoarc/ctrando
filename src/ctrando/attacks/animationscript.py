@@ -5,6 +5,7 @@ import typing
 from collections.abc import Sequence
 
 from ctrando.attacks import animationcommands as ac
+from ctrando.attacks.animationcommands import EnumTarget
 from ctrando.common import byteops, cttypes as cty, ctrom, ctenums
 from ctrando.attacks import pctech
 
@@ -21,6 +22,7 @@ class NewScriptID(enum.IntEnum):
     MAGUS_LUCCA_ANTI3 = 0x84
     MAGUS_MARLE_ANTI2 = 0x85
     MAGUS_CRONO_ICESWORD2 = 0x86
+    RERAISE = 0x87
 
 
 
@@ -641,7 +643,7 @@ def make_single_lucca_prot_all_script(ct_rom: ctrom.CTRom):
     return prot_scr
 
 
-def make_single_marle_haste_all_script(ct_rom: ctrom.CTRom):
+def make_single_marle_haste_all_script(ct_rom: ctrom.CTRom) -> AnimationScript:
 
     haste_scr = AnimationScript.read_from_ctrom(ct_rom, 0xD)
     caster_0 = [
@@ -769,14 +771,142 @@ def make_single_marle_haste_all_script(ct_rom: ctrom.CTRom):
     return haste_scr
 
 
+def make_marle_reraise_script(ct_rom: ctrom.CTRom):
+    reraise_scr = AnimationScript.read_from_ctrom(ct_rom, ctenums.TechID.LIFE)
+
+    caster_0: ObjectScript = [
+        ac.SetObjectFacing(facing=ac.EnumTarget.TARGET_0),
+        ac.PlayAnimationLoop(animation_id=0x36),
+        ac.Pause(duration=0x78),
+        ac.PlayAnimationLoop(animation_id=0x35),
+        ac.PlaySound(sound=0x89),
+        ac.Pause(duration=0x15),
+        ac.IncrementCounter1D(),
+        # ac.LoadSpriteAtTarget(target=3),
+        ac.Pause(duration=0x90),
+        ac.PlayAnimationFirstFrame06(animation_id=3),
+        ac.Pause(duration=0x10),
+        ac.IncrementCounter1D(),
+        # ac.WaitForCounter1DValue(value=2),
+        ac.Pause(duration=0x14),
+        ac.IncrementCounter1D(),
+        ac.Unknown2E(),
+        ac.EndTech(),
+        ac.ReturnCommand()
+    ]
+
+    target_0 = [
+        ac.WaitForCounter1DValue(value=2),
+        ac.PlayAnimationLoop(animation_id=0x24),
+        ac.WaitForCounter1DValue(value=3),
+        ac.PlayAnimationFirstFrame06(animation_id=3),
+        ac.ReturnCommand()
+    ]
+
+    # Sparkles
+    effect_0 = [
+        ac.TeleportToTarget(target=9),
+        ac.SetObjectFacing(facing=3),
+        ac.SetPriority(priority=0),
+        ac.SwitchToPalette(palette=0),
+        ac.PlayAnimationLoop(animation_id=0),
+        ac.SetSpeedFastestShort(),
+        ac.DrawEffect(),
+        ac.PlaySound7A(sound=0x7C, unknown=0),
+        ac.PerformSuperCommand(super_command=0x1C),
+        ac.HideEffect(),
+        ac.SetPriority(priority=3),
+        ac.WaitForCounter1DValue(value=1),
+        ac.SwitchToPalette(palette=2),
+        ac.TeleportToTarget(target=3),
+        ac.PlayAnimationLoop(animation_id=1),
+        ac.PlaySound(sound=0xAD),
+        ac.DrawEffect(),
+        ac.WaitForCounter1DValue(value=2),
+        ac.HideAllEffects(),
+        ac.ReturnCommand()
+    ]
+
+    effect_1 = [
+        ac.TeleportToTarget(target=9),
+        ac.SetObjectFacing(facing=3),
+        ac.SetPriority(priority=0),
+        ac.Pause(duration=0x02),
+        ac.PlayAnimationLoop(animation_id=0),
+        ac.SetSpeedFastestShort(),
+        ac.Pause(duration=8),
+        ac.DrawEffect(),
+        ac.PerformSuperCommand(super_command=0x1C),
+        ac.HideEffect(),
+        ac.SetPriority(priority=3),
+        ac.SwitchToPalette(palette=1),
+        ac.WaitForCounter1DValue(value=1),
+        ac.Pause(duration=0x3C),
+        ac.TeleportToTarget(target=3),
+        ac.PlayAnimationOnce(animation_id=2),
+        ac.ReturnCommand()
+    ]
+
+    effect_2 = [
+        ac.TeleportToTarget(target=9),
+        ac.SetObjectFacing(facing=3),
+        ac.SetPriority(priority=0),
+        ac.Pause(duration=5),
+        ac.PlayAnimationLoop(animation_id=0),
+        ac.SetSpeedFastestShort(),
+        ac.Pause(duration=0x10),
+        ac.DrawEffect(),
+        ac.PerformSuperCommand(super_command=0x1C),
+        ac.HideEffect(),
+        ac.SetPriority(priority=3),
+        ac.SwitchToPalette(palette=1),
+        ac.WaitForCounter1DValue(value=1),
+        ac.Pause(duration=0x5A),
+        ac.TeleportToTarget(target=3),
+        ac.PlayAnimationOnce(animation_id=2),
+        ac.ReturnCommand()
+    ]
+
+    test = extract_object_script_from_buffer(bytearray.fromhex(
+        '1B09' +
+        '7203' +
+        '7300' +
+        '2005' +
+        '0200' +
+        '0D' +
+        '2010' +
+        '70' +
+        '1E1C' +
+        '71' +
+        '7303' +
+        '2401' +
+        '205A' +
+        '1B03' +
+        '0302' +
+        '00'
+    )
+    )
+
+    # print_object_script(test)
+    # input()
+
+    reraise_scr.main_script.caster_objects = [caster_0]
+    reraise_scr.main_script.target_objects = [target_0]
+    reraise_scr.main_script.effect_objects = [effect_0, effect_1, effect_2]
+
+    return  reraise_scr
+
+
 def write_scripts_to_ct_rom(ct_rom: ctrom.CTRom):
     arrow_hail_script = make_arrow_rain_script(ct_rom)
     haste_all_script = make_single_marle_haste_all_script(ct_rom)
     prot_all_script = make_single_lucca_prot_all_script(ct_rom)
+    reraise_script = make_marle_reraise_script(ct_rom)
 
     arrow_hail_script.write_to_ctrom(ct_rom, NewScriptID.ARROW_HAIL)
     haste_all_script.write_to_ctrom(ct_rom, NewScriptID.HASTE_ALL)
     prot_all_script.write_to_ctrom(ct_rom, NewScriptID.PROTECT_ALL)
+    reraise_script.write_to_ctrom(ct_rom, NewScriptID.RERAISE)
 
 
 def main():
@@ -786,13 +916,16 @@ def main():
     ct_rom = ctrom.CTRom.from_file("/home/ross/Documents/ct.sfc")
     basepatch.base_patch_ct_rom(ct_rom)
 
+    reraise_scr = make_marle_reraise_script(ct_rom)
+    reraise_scr.write_to_ctrom(ct_rom, ctenums.TechID.LIFE_2_M)
     tech_man = pctech.PCTechManager.read_from_ctrom(ct_rom)
-    prot = tech_man.get_tech(ctenums.TechID.PROTECT)
-    prot.target_data = pctech.ctt.PCTechTargetData(b'\x81\x00')
-    tech_man.set_tech_by_id(prot, ctenums.TechID.PROTECT)
+    lifeline = tech_man.get_tech(ctenums.TechID.LIFE_LINE)
 
-    prot_all_scr = make_single_lucca_prot_all_script(ct_rom)
-    prot_all_scr.write_to_ctrom(ct_rom, ctenums.TechID.PROTECT)
+    life2 = tech_man.get_tech(ctenums.TechID.LIFE_2_M)
+    life2.effect_mps[0] = 1
+    life2.target_data = pctech.ctt.PCTechTargetData(b'\x80\x00')
+    life2.effect_headers[0] = copy.deepcopy(lifeline.effect_headers[0])
+    tech_man.set_tech_by_id(life2, ctenums.TechID.LIFE_2_M)
 
 
     # cyclone = tech_man.get_tech(0x1)

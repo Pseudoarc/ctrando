@@ -165,6 +165,8 @@ def get_random_config(
         charactermods.make_phys_lucca(config.pcstat_manager, config.pctech_manager)
     if settings.character_options.use_protect_all:
         charactermods.make_prot_all(config.pctech_manager)
+    if settings.character_options.use_reraise:
+        charactermods.make_reraise(config.pctech_manager)
 
     ### Techs
     pctechrandomizer.modify_all_single_tech_powers(

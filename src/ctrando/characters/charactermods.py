@@ -1,4 +1,5 @@
 """Implement character buff/debuffs"""
+import copy
 import enum
 
 from ctrando.common import ctenums
@@ -74,3 +75,17 @@ def make_prot_all(
     protect.effect_mps[0] = 12
     protect.graphics_header.script_id = animationscript.NewScriptID.PROTECT_ALL
     tech_man.set_tech_by_id(protect, ctenums.TechID.PROTECT)
+
+
+def make_reraise(
+        tech_man: pctech.PCTechManager
+):
+    lifeline = tech_man.get_tech(ctenums.TechID.LIFE_LINE)
+    life2 = tech_man.get_tech(ctenums.TechID.LIFE_2_M)
+
+    life2.effect_mps[0] = 1
+    life2.target_data = pctech.ctt.PCTechTargetData(b'\x80\x00')
+    life2.effect_headers[0] = copy.deepcopy(lifeline.effect_headers[0])
+    life2.graphics_header.script_id = animationscript.NewScriptID.RERAISE
+    tech_man.set_tech_by_id(life2, ctenums.TechID.LIFE_2_M)
+
