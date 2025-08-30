@@ -230,7 +230,6 @@ def get_random_boss_assignment(
         for twin_spot in twin_spots:
             if twin_spot in available_spots:
                 twin_assign = get_twin_spot_assignment(boss_pool, rng)
-                temp_boss_pool.remove(twin_assign)
 
                 if twin_spot == bty.BossSpotID.OCEAN_PALACE_TWIN_GOLEM:
                     available_spots.remove(twin_spot)
