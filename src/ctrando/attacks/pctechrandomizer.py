@@ -145,8 +145,7 @@ def modify_all_single_tech_powers(
 
     heal_tech_ids: list[int] = [
         ind for ind, tech in tech_dict.items()
-        if is_non_revive_heal(tech.effect_headers[0])
-        and ind < 1+7*8
+        if ind < 1 + 7*8 and is_non_revive_heal(tech.effect_headers[0])
     ]
     heal_tech_mps: list[int] = [tech_dict[ind].effect_mps[0] for ind in heal_tech_ids]
 
@@ -190,8 +189,9 @@ def modify_all_single_tech_powers(
         modify_single_tech_power(tech_dict[tech_id], mp)
 
     for tech_id in range(1+7*8, len(tech_dict.keys())+1):
+        if tech_id not in tech_dict:
+            continue
         tech = tech_dict[tech_id]
-        pass
         for ind, pc_id in enumerate(tech.battle_group):
             if pc_id == 0xFF:
                 continue

@@ -341,6 +341,9 @@ class PCTechBattleGroup(SizedBinaryData):
 
         return bitmask
 
+    def to_char_ids(self) -> tuple[ctenums.CharID, ...]:
+        return tuple(ctenums.CharID(x) for x in self[:self.number_of_pcs])
+
     @property
     def number_of_pcs(self) -> int:
         return 3 - self.count(0xFF)

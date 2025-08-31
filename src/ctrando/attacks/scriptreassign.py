@@ -48,13 +48,17 @@ _magus_duals = [
 
 
 def add_all_magus_reassign_techs(
-        tech_man: pctech.PCTechManager
+        tech_man: pctech.PCTechManager,
+        allowed_partners: set[ctenums.CharID] = None,
 ):
+    if allowed_partners is None:
+        allowed_partners = set(ctenums.CharID)
+
     for tech_id in _magus_duals:
         tech =  tech_man.get_tech(tech_id)
         possible_reassigns = get_magus_reassigns(tech)
 
-        for reassign in possible_reassigns:
+        for reassign in allowed_partners.intersection(possible_reassigns):
             new_tech = copy.deepcopy(tech)
             new_tech = reassign_tech_to_magus(new_tech, reassign)
             if (tech_id, reassign) in _script_reassign_id_dict:
@@ -78,6 +82,10 @@ def reassign_tech_to_magus(
     else:
         raise ValueError
 
+    pcs = tech.battle_group.to_char_ids()
+    other_pc = next((x for x in pcs if x != from_pcid))
+    other_learn_req = tech.get_learn_requirement(other_pc)
+
     to_learn_req = ((to_effect_id - 1) % ctenums.CharID.MAGUS) + 1
 
     from_index = tech.battle_group.index(from_pcid)
@@ -87,6 +95,7 @@ def reassign_tech_to_magus(
     tech.menu_mp_reqs[from_mmp_index] = to_effect_id
 
     tech.set_learn_requirement(ctenums.CharID.MAGUS, to_learn_req)
+    tech.set_learn_requirement(other_pc, other_learn_req)
 
     return tech
 

@@ -10,7 +10,7 @@ from ctrando.arguments import argumenttypes as aty
 class CharacterOptions:
     attr_names: typing.ClassVar[tuple[str, ...]] = (
         "use_phys_marle", "use_haste_all", "use_phys_lucca", "use_protect_all",
-        "use_reraise"
+        "use_reraise", "use_magus_dual_techs"
     )
 
     use_phys_marle: bool = False
@@ -18,6 +18,7 @@ class CharacterOptions:
     use_phys_lucca: bool = False
     use_protect_all: bool = False
     use_reraise: bool = False
+    use_magus_dual_techs: bool = False
 
     @classmethod
     def add_group_to_parser(cls, parser: argparse.ArgumentParser):
@@ -30,7 +31,8 @@ class CharacterOptions:
             "use_haste_all": "AoE Haste, 15 MP cost",
             "use_phys_lucca": "+Hit. Physical Flame Toss + Bombs",
             "use_protect_all": "AoE Protect, 2x MP cost",
-            "use_reraise": "Life2 gives greendream effect"
+            "use_reraise": "Life2 gives greendream effect",
+            "use_magus_dual_techs": "Magus can perform dual techs with fire/ice/lit2."
         }
         aty.add_dataclass_to_group(cls, group, help_dict)
 

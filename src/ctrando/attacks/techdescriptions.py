@@ -11,7 +11,7 @@ from ctrando.common.ctenums import Element
 from ctrando.strings import ctstrings
 
 from ctrando.attacks import cttechtypes
-from ctrando.attacks.pctech import PCTechManager
+from ctrando.attacks.pctech import PCTechManager, TechNotFoundException
 
 from ctrando.items import itemdata
 
@@ -397,7 +397,11 @@ def update_combo_tech_descs(tech_man: PCTechManager):
     eff_name_dict = build_effect_name_dict(tech_man)
 
     for tech_id in range(1+8*7, num_techs+1):
-        tech = tech_man.get_tech(tech_id)
+
+        try:
+            tech = tech_man.get_tech(tech_id)
+        except TechNotFoundException:
+            continue
 
         control = tech.control_header
         effects = tech.effect_headers

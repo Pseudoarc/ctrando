@@ -857,6 +857,8 @@ class PCTechManager:
                 continue
 
             for tech in self._bitmask_group_dict[bitmask].get_all_techs():
+                if tech is None:
+                    continue
                 pc_index = tech.battle_group.index(pc_id)
                 effect_index = tech.control_header.get_effect_index(pc_index)
                 new_effect_index = get_reindexed_value(effect_index)
@@ -933,7 +935,8 @@ class PCTechManager:
         tech_id = 1
         for bitmask in self._bitmasks:
             for tech in self._bitmask_group_dict[bitmask].get_all_techs():
-                ret_dict[tech_id] = copy.deepcopy(tech)
+                if tech is not None:
+                    ret_dict[tech_id] = copy.deepcopy(tech)
                 tech_id += 1
 
         return ret_dict

@@ -4,7 +4,7 @@ import enum
 
 from ctrando.common import ctenums
 from ctrando.characters import ctpcstats
-from ctrando.attacks import pctech, animationscript
+from ctrando.attacks import pctech, animationscript, scriptreassign
 
 
 class BlessingID(enum.Enum):
@@ -89,3 +89,7 @@ def make_reraise(
     life2.graphics_header.script_id = animationscript.NewScriptID.RERAISE
     tech_man.set_tech_by_id(life2, ctenums.TechID.LIFE_2_M)
 
+def add_magus_duals(
+        tech_man: pctech.PCTechManager
+):
+    scriptreassign.add_all_magus_reassign_techs(tech_man)
