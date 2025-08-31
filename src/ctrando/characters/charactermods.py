@@ -83,9 +83,9 @@ def make_reraise(
     lifeline = tech_man.get_tech(ctenums.TechID.LIFE_LINE)
     life2 = tech_man.get_tech(ctenums.TechID.LIFE_2_M)
 
-    life2.effect_mps[0] = 1
     life2.target_data = pctech.ctt.PCTechTargetData(b'\x80\x00')
     life2.effect_headers[0] = copy.deepcopy(lifeline.effect_headers[0])
+    life2.name = "*Reraise"
     life2.graphics_header.script_id = animationscript.NewScriptID.RERAISE
     tech_man.set_tech_by_id(life2, ctenums.TechID.LIFE_2_M)
 

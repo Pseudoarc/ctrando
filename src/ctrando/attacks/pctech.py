@@ -2279,19 +2279,10 @@ def fix_vanilla_techs(tech_man: PCTechManager):
     # However it uses Effect 0x10 (Marle’s Life2) for effect/mp for Crono
     # The result is that Crono ends up using 15 MP for lifeline (not one of his tech mp values)
     #   and the menu shows it costing only 2.
-    # Fix: Give Marle the unique effect and have Crono use cyclone
+    # Fix: Have Crono use cyclone
     lifeline = tech_man.get_tech(ctenums.TechID.LIFE_LINE)
     crono_bat_index = lifeline.battle_group.index(ctenums.CharID.CRONO)
     marle_bat_index = lifeline.battle_group.index(ctenums.CharID.MARLE)
-
-    # Copy Crono's current effect to Marle's spot
-    lifeline.control_header.set_effect_index(
-        marle_bat_index,
-        lifeline.control_header.get_effect_index(crono_bat_index)
-    )
-    lifeline.control_header.set_effect_mp_only(marle_bat_index, False)
-    lifeline.effect_mps[marle_bat_index] = lifeline.effect_mps[crono_bat_index]
-    lifeline.effect_headers[marle_bat_index] = lifeline.effect_headers[crono_bat_index]
 
     # Copy Cyclone in for Crono's spot
     lifeline.control_header.set_effect_index(crono_bat_index, ctenums.TechID.CYCLONE)

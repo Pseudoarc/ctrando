@@ -361,7 +361,8 @@ _single_tech_abbrev = {
     '*Black Hole': 'BlHole',
     '*DarkMatter': 'DkMa',
     "Arrow Hail": "ArrHa",
-    "*Haste All": "HstAll"
+    "*Haste All": "HstAll",
+    "*Reraise": "Reraise"
 }
 
 
