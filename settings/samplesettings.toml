@@ -307,7 +307,7 @@ shuffle_entrances = false   # Shuffle the target of overworld entrances
 #                      join (default: 0)
 #  fair_min_level=FAIR_MIN_LEVEL
 #                      Minimum level at which the fair recruit can join (deafult: 1)
-#  fair_min_tech_level=FAIR_MIN_TECHLEVEL
+#  fair_min_techlevel=FAIR_MIN_TECHLEVEL
 #                      Minimum tech level at which the fair recruit can join
 #                      (default: 0)
 #  cathedral_min_level=CATHEDRAL_MIN_LEVEL

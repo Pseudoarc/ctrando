@@ -1267,6 +1267,7 @@ def apply_full_scaling_patch(
     true_levels[ctenums.EnemyID.MOTHERBRAIN] = 0x26
     true_levels[ctenums.EnemyID.DALTON_PLUS] = 20
     true_levels[ctenums.EnemyID.ROLY_BOMBER] = 0x15  # Match outlaw
+    true_levels[ctenums.EnemyID.DEFUNCT] = 0x28  # Match departed
 
     for boss_id, level in boss_scaling_settings.items():
         scheme = bty.get_default_scheme(boss_id)
