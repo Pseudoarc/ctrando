@@ -15,7 +15,7 @@ from ctrando.enemydata import enemystats, rewardrando, enemyrando
 from ctrando.logic import logictweaks, logictypes
 from ctrando.shops import shoptypes, shoprando
 
-from ctrando.attacks import pctechrandomizer, techdescriptions, pctech, animationscript
+from ctrando.attacks import pctechrandomizer, techdescriptions, pctech, animationscript, scriptreassign
 from ctrando.base import basepatch, xptpmod, modifymaps, chesttext
 from ctrando.bosses import staticbossscaling, bossrando, bosstypes
 from ctrando.characters import characterwriter, charactermods
@@ -322,6 +322,8 @@ def get_ctrom_from_config(
 
     effecttypes.expand_effect_mods(ct_rom)
     animationscript.write_scripts_to_ct_rom(ct_rom)
+    scriptreassign.write_magus_animation_scripts(config.pctech_manager, ct_rom)
+
 
     print("Applying Openworld Scripts...", end="")
     a = time.time()

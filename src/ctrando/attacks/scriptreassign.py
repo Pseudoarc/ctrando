@@ -100,6 +100,25 @@ def reassign_tech_to_magus(
     return tech
 
 
+def write_magus_animation_scripts(
+        tech_man: pctech.PCTechManager,
+        ct_rom: ctrom.CTRom
+):
+
+    for (tech_id, repl_char), new_script_id in _script_reassign_id_dict.items():
+        tech = tech_man.get_tech(tech_id)
+        orig_script_id = tech.graphics_header.script_id
+        script = animationscript.AnimationScript.read_from_ctrom(ct_rom, orig_script_id)
+        caster_obj_id = tech.battle_group.index(repl_char)
+        caster_obj = script.main_script.caster_objects[caster_obj_id]
+
+        repl_dict = _magus_repl_anim[repl_char]
+        for cmd in caster_obj:
+            if isinstance(cmd, ac._PlayAnimationBase):
+                cmd.animation_id = repl_dict.get(cmd.animation_id, cmd.animation_id)
+        script.write_to_ctrom(ct_rom, new_script_id)
+
+
 def main():
     from ctrando.base import basepatch
 
