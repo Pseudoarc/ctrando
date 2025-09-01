@@ -26,7 +26,7 @@ from ctrando import encounters
 
 from ctrando.enemyai import randofixes
 from ctrando.enemyscaling import patchscaling
-from ctrando.entranceshuffler import entrancefiller, entranceassign, regionmap, maptraversal
+from ctrando.entranceshuffler import entrancefiller, entranceassign, regionmap, maptraversal, locregions
 from ctrando.entranceshuffler.entrancefiller import update_starting_rewards
 from ctrando.items import gearrando, itemdata
 from ctrando.locations.scriptmanager import ScriptManager
@@ -464,28 +464,68 @@ def get_ctrom_from_config(
     return ct_rom
 
 
+def write_rjust_dict(
+            in_dict: dict,
+            heading: str | None,
+            outfile: TextIO,
+            padding: int = 0
+    ):
+        max_spot = max(in_dict.keys(), key=lambda x: len(str(x)))
+        max_len = len(str(max_spot))
+
+        if heading is not None:
+            outfile.write(heading+"\n")
+            outfile.write("-"*len(heading) + "\n")
+
+        for key, val in in_dict.items():
+            outfile.write(f"{str(key).rjust(max_len+padding)}: {str(val)}\n")
+
+
+def write_treasure_spoilers(
+        treasure_str_dict: dict[ctenums.TreasureID, str],
+        outfile: TextIO
+):
+
+    regions = locregions.get_all_loc_regions()
+    for region in regions:
+        treasure_ids = [x for x in region.reward_spots if isinstance(x, ctenums.TreasureID)]
+        if treasure_ids:
+            region_name = " ".join(x.capitalize() for x in region.name.split("_"))
+            outfile.write(region_name + ":\n")
+            region_dict = {x: treasure_str_dict[x] for x in treasure_ids}
+            write_rjust_dict(region_dict, None, outfile, padding=4)
+            outfile.write("\n")
+
+
+def write_character_spoilers(
+        config: randostate.ConfigState,
+        outfile: TextIO
+):
+    for char_id in ctenums.CharID:
+        outfile.write(char_id.name.capitalize() +":\n")
+        tech_start = 1+char_id*8
+        tech_dict: dict[str, str] = {}
+        for ind in range(tech_start, tech_start+8):
+            tech = config.pctech_manager.get_tech(ind)
+            tech_dict[tech.name] = f"{tech.effect_mps[0]} MP".rjust(6) + f"    {tech.desc[:-6]}"
+
+        write_rjust_dict(tech_dict, None, outfile, 4)
+        outfile.write("\n")
+
+
 def write_spoilers(
         settings: arguments.Settings,
         config: randostate.ConfigState,
         path: pathlib.Path
 ):
 
-    def write_rjust_dict(
-            in_dict: dict,
-            heading: str,
-            outfile: TextIO
-    ):
-        max_spot = max(in_dict.keys(), key=lambda x: len(str(x)))
-        max_len = len(str(max_spot))
-        outfile.write(heading+"\n")
-        outfile.write("-"*len(heading) + "\n")
-
-        for key, val in in_dict.items():
-            outfile.write(f"{str(key).rjust(max_len)}: {str(val)}\n")
-
     with open(path, "w") as outfile:
         write_rjust_dict(config.recruit_dict, "Recruit Spots", outfile)
         outfile.write("\n")
+
+        outfile.write("Tech Lists\n")
+        outfile.write("----------\n")
+        write_character_spoilers(config, outfile)
 
         key_items = (
                 entrancefiller.get_forced_key_items() +
@@ -509,9 +549,26 @@ def write_spoilers(
         write_rjust_dict(ki_dict, "Key Items", outfile)
         outfile.write("\n")
 
-        write_rjust_dict(treasure_str_dict, "Full Treasure Assignment", outfile)
+        outfile.write("Full Treasure Assignment\n")
+        outfile.write("------------------------\n\n")
+        write_treasure_spoilers(treasure_str_dict, outfile)
+        outfile.write("\n")
+
+        # write_rjust_dict(treasure_str_dict, "Full Treasure Assignment", outfile)
+
+        def make_printable(in_str: str) -> str:
+            parts = in_str.split("_")
+            return " ".join(x.capitalize() for x in parts)
+
 
         write_rjust_dict(config.boss_assignment_dict, "Bosses", outfile)
+        if settings.entrance_options.shuffle_entrances:
+
+            printable_entrance_dict: dict[str, str] = {
+                make_printable(key.name): make_printable(val.name)
+                for key, val in  config.ow_exit_assignment_dict.items()
+            }
+            write_rjust_dict(printable_entrance_dict, "Entrance Assignment", outfile)
         # get_proof(
         #     config.ow_exit_assignment_dict,
         #     config.recruit_dict,

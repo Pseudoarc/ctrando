@@ -57,7 +57,7 @@ def get_all_loc_regions() -> list[LocRegion]:
     truce_mayor_1000 = LocRegion(
         "truce_mayor_1000",
         loc_exits={LocExit.TRUCE_MAYOR},
-        reward_spots={TID.TRUCE_MAYOR_1F, TID.TRUCE_MAYOR_2F},
+        reward_spots={TID.TRUCE_MAYOR_1F, TID.TRUCE_MAYOR_2F, TID.TRUCE_MAYOR_2F_OLD_MAN},
     )
     ret_list.append(truce_mayor_1000)
 

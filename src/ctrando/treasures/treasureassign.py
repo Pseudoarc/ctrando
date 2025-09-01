@@ -161,11 +161,11 @@ def default_assignment(
     fill_good_stuff(item_pool, spot_pool, treasure_options.good_loot_spots, treasure_options.good_loot,
                     treasure_options.good_loot_rate, final_assignment, rng)
     fill_chargeable_chests(final_assignment, item_pool, spot_pool, rng)
-    rng.shuffle(item_pool)
 
     num_filler = max(0, len(spot_pool) - len(item_pool))
     if num_filler > 0:
         item_pool.extend([ctenums.ItemID.TONIC]*num_filler)
+    rng.shuffle(item_pool)
 
     for tid, reward in zip(spot_pool, item_pool):
         final_assignment[tid] = reward
