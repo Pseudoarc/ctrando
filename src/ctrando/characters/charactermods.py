@@ -89,7 +89,108 @@ def make_reraise(
     life2.graphics_header.script_id = animationscript.NewScriptID.RERAISE
     tech_man.set_tech_by_id(life2, ctenums.TechID.LIFE_2_M)
 
+
 def add_magus_duals(
         tech_man: pctech.PCTechManager
 ):
     scriptreassign.add_all_magus_reassign_techs(tech_man)
+
+
+def make_gale_slash(
+        tech_man: pctech.PCTechManager,
+        replace_id: int
+):
+    # Just get some physical tech as a base
+    base_tech = tech_man.get_tech(ctenums.TechID.SPINCUT)
+    base_tech.battle_group = pctech.ctt.PCTechBattleGroup.from_charids([ctenums.CharID.MAGUS])
+    base_tech.name = "Gale Slash"
+    base_tech.target_data = pctech.ctt.PCTechTargetData(b'\x0B\x01')  # Line (Slash)
+    base_tech.graphics_header = pctech.ctt.PCTechGfxHeader(
+        bytes.fromhex("34 E8 EC 21 98 98 FF")  # Copied with +0x80 for some indices
+    )
+    base_tech.effect_mps[0] = 6
+    base_tech.graphics_header.script_id = animationscript.NewScriptID.GALE_SLASH
+
+    tech_man.set_tech_by_id(base_tech, replace_id)
+
+
+def make_blurp(
+        tech_man: pctech.PCTechManager,
+        replace_id: int
+):
+    # Get some AoE Magic tech as a base
+    base_tech = tech_man.get_tech(ctenums.TechID.LIGHTNING_2_M)
+    effect = base_tech.effect_headers[0]
+    effect.status_effect = ctenums.StatusEffect.POISON
+    effect.status_effect_chance = 80
+    effect.power = 0xC  # maybe too low
+    effect.inflicts_status = True
+
+    base_tech.control_header.element = ctenums.Element.NONELEMENTAL
+    base_tech.graphics_header = pctech.ctt.PCTechGfxHeader(
+        bytes.fromhex("5D 00 00 00 00 00 2B")
+    )
+    base_tech.graphics_header.script_id = animationscript.NewScriptID.BLURP
+    base_tech.name = "*Bluuurp!"
+
+    tech_man.set_tech_by_id(base_tech, replace_id)
+
+
+def make_iron_orb(
+        tech_man: pctech.PCTechManager,
+        replace_id: int
+):
+    # Use black hole as a base
+    base_tech = tech_man.get_tech(ctenums.TechID.BLACK_HOLE)
+    script_id = base_tech.graphics_header.script_id
+    base_tech.control_header.element = ctenums.Element.NONELEMENTAL
+    # tech.effect_headers[0] = pctech.ctt.PCTechEffectHeader(gale_slash_effect)
+    # tech.effect_headers[0].damage_formula_id = pctech.ctt.DamageFormula.PC_MELEE
+    base_tech.target_data = pctech.ctt.PCTechTargetData(b'\x07\x00')
+    base_tech.control_header.set_effect_mod(0, ctenums.WeaponEffects.HP_50_100)
+    base_tech.control_header.element = ctenums.Element.NONELEMENTAL
+    base_tech.effect_headers[0].power = 0
+    base_tech.graphics_header = pctech.ctt.PCTechGfxHeader(
+        bytes.fromhex("41 C0 00 09 95 95 FF")
+    )
+
+    base_tech.graphics_header.script_id = animationscript.NewScriptID.IRON_ORB
+    base_tech.name = "Iron Orb"
+
+    tech_man.set_tech_by_id(base_tech, replace_id)
+
+
+def make_burst_ball(
+        tech_man: pctech.PCTechManager,
+        replace_id: int
+):
+    base_tech = tech_man.get_tech(ctenums.TechID.LIGHTNING_2_M)
+    base_tech.control_header.element = ctenums.Element.NONELEMENTAL
+    base_tech.target_data = pctech.ctt.PCTechTargetData(b'\x07\x00')
+    base_tech.effect_headers[0].power = 0x2A
+    base_tech.graphics_header = pctech.ctt.PCTechGfxHeader(
+        bytes.fromhex("88 CE 0B 35 A9 A9 4A")
+    )
+    base_tech.graphics_header.script_id = animationscript.NewScriptID.BURST_BALL
+    base_tech.name = "*Burst Ball"
+
+    tech_man.set_tech_by_id(base_tech, replace_id)
+
+
+def add_daltonized_magus_techs(tech_man: pctech.PCTechManager):
+    make_gale_slash(tech_man, ctenums.TechID.DARK_BOMB)
+    make_blurp(tech_man, ctenums.TechID.DARK_MIST)
+    make_iron_orb(tech_man, ctenums.TechID.BLACK_HOLE)
+    make_burst_ball(tech_man, ctenums.TechID.DARK_MATTER)
+
+    bitmask = pctech.ctt.PCTechBattleGroup.from_charids(
+        [ctenums.CharID.MAGUS, ctenums.CharID.MARLE, ctenums.CharID.LUCCA]
+    ).to_bitmask()
+    tech_man.remove_bitmask(bitmask)
+
+    bitmask = pctech.ctt.PCTechBattleGroup.from_charids(
+        [ctenums.CharID.MAGUS, ctenums.CharID.LUCCA, ctenums.CharID.ROBO]
+    ).to_bitmask()
+    tech_man.remove_bitmask(bitmask)
+
+

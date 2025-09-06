@@ -169,6 +169,8 @@ def get_random_config(
         charactermods.make_reraise(config.pctech_manager)
     if settings.character_options.use_magus_dual_techs:
         charactermods.add_magus_duals(config.pctech_manager)
+    if settings.character_options.use_daltonized_magus:
+        charactermods.add_daltonized_magus_techs(config.pctech_manager)
 
     ### Techs
     pctechrandomizer.modify_all_single_tech_powers(

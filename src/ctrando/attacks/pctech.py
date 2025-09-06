@@ -736,6 +736,23 @@ class PCTechManager:
 
         return self._get_tech_id(bitmask_index, tech_index)
 
+    def remove_bitmask(self, bitmask: int):
+        if bitmask not in self._bitmasks:
+            raise ValueError
+
+        group = self._bitmask_group_dict[bitmask]
+        if group.num_pcs == 1:
+            raise ValueError("Can not remove a single tech group.")
+        elif group.num_pcs == 2:
+            self.__num_dual_groups -= 1
+        elif group.num_pcs == 3 and group.rock_used is None:
+            self.__num_triple_groups -= 1
+        else:
+            self.__num_rock_groups -= 1
+
+        self._bitmasks.remove(bitmask)
+        del self._bitmask_group_dict[bitmask]
+
     def test_effect_dependencies(self, effect_index):
         pc_id = ctenums.CharID((effect_index-1) // 8)
         tech_num = (effect_index - 1) % 8

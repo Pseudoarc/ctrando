@@ -362,7 +362,11 @@ _single_tech_abbrev = {
     '*DarkMatter': 'DkMa',
     "Arrow Hail": "ArrHa",
     "*Haste All": "HstAll",
-    "*Reraise": "Reraise"
+    "*Reraise": "Reraise",
+    "Gale Slash": "GaleSl",
+    "*Bluuurp!": "Blrp",
+    "Iron Orb": "Orb",
+    "*Burst Ball": "BBall"
 }
 
 

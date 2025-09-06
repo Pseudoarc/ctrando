@@ -144,6 +144,10 @@ class PCTechControlHeader(ControlHeader):
     battle_group_id = byte_prop(0, 0x7F)
 
 
+class EnemyTechControlHeader(ControlHeader):
+    ROM_RW = ctt.AbsRomRW(0x0C6FC9)
+
+
 class EffectHeader(SizedBinaryData):
     """
     A class for representing an effect header.  Effect headers can be used for
@@ -154,6 +158,8 @@ class EffectHeader(SizedBinaryData):
     damage_formula_id = byte_prop(5, 0xFF, ret_type=DamageFormula)
     effect_type = byte_prop(0, 0xFF, ret_type=EffectType)
     power = byte_prop(9, 0xFF)
+
+    inflicts_status = byte_prop(7, 0x04)
 
     @property
     def heal_power(self) -> int:
@@ -176,6 +182,19 @@ class EffectHeader(SizedBinaryData):
             raise ValueError('Effect Type does not support healing')
 
     @property
+    def status_effect_chance(self) -> int:
+        if self.effect_type != EffectType.DAMAGE:
+            raise ValueError("Effect type does not support status effects")
+
+        return self[1]
+
+    @status_effect_chance.setter
+    def status_effect_chance(self, val: int):
+        if self.effect_type != EffectType.DAMAGE:
+            raise ValueError("Effect type does not support status effects")
+        self[1] = val
+
+    @property
     def will_revive(self):
         if self.effect_type == EffectType.HEALSTATUS:
             return bool(self[1] & 0x80)
@@ -190,6 +209,9 @@ class EffectHeader(SizedBinaryData):
 
     @property
     def status_effect(self) -> list[ctenums.StatusEffect]:
+        if self.effect_type != EffectType.DAMAGE:
+            raise ValueError("Effect type does not support status effects")
+
         status_byte = self[2]
         statuses = []
         for x in list(ctenums.StatusEffect):
@@ -203,6 +225,9 @@ class EffectHeader(SizedBinaryData):
             statuses: typing.Union[typing.Iterable[ctenums.StatusEffect],
                                    ctenums.StatusEffect]
     ):
+        if self.effect_type != EffectType.DAMAGE:
+            raise ValueError("Effect type does not support status effects")
+
         if isinstance(statuses, ctenums.StatusEffect):
             status_byte = int(statuses)
         else:
@@ -221,6 +246,11 @@ class PCTechEffectHeader(EffectHeader):
     has_slurpcut_restriction = ctt.byte_prop(0xA, 0x20)
     has_rockthrow_restriction = ctt.byte_prop(0xA, 0x40)
     applies_on_hit_effects = ctt.byte_prop(8, 0x80)
+
+
+class EnemyTechEffectHeader(EffectHeader):
+    ROM_RW = ctt.AbsRomRW(0x0C7AC9)
+
 
 # https://www.chronocompendium.com/Term/Tech_Data_Notes.html#Targeting_Data
 class TargetType(ctenums.StrIntEnum):
@@ -291,6 +321,10 @@ class TechGfxHeader(SizedBinaryData):
 
 class PCTechGfxHeader(TechGfxHeader):
     ROM_RW = ctt.AbsPointerRW(0x0145BC)
+
+
+class EnemyTechGfxHeader(TechGfxHeader):
+    ROM_RW = ctt.AbsPointerRW(0x014694)
 
 
 class PCTechBattleGroup(SizedBinaryData):

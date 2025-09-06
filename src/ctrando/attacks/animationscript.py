@@ -23,6 +23,10 @@ class NewScriptID(enum.IntEnum):
     MAGUS_MARLE_ANTI2 = 0x85
     MAGUS_CRONO_ICESWORD2 = 0x86
     RERAISE = 0x87
+    GALE_SLASH = 0x88
+    BLURP = 0x89
+    IRON_ORB = 0x8A
+    BURST_BALL = 0x8B
 
 
 
@@ -295,6 +299,17 @@ class AnimationScript:
         ct_rom.seek(offset_table_st + 2*index)
         ct_rom.write(offset.to_bytes(2, "little"))
 
+
+def read_enemy_tech_script_from_ctrom(ct_rom: ctrom.CTRom, index: int) -> AnimationScript:
+    """
+    Read an enemy script.  May need to change if a Mauron-style patch is applied.
+    """
+    ptr_table_st = 0x0D61F0
+    ct_rom.seek(ptr_table_st + 2*index)
+    ptr = int.from_bytes(ct_rom.read(2), "little")
+
+    script_addr = 0x0D0000 + ptr
+    return AnimationScript.read_from_ctrom_addr(ct_rom, script_addr)
 
 
 def make_arrow_rain_script(ct_rom: ctrom.CTRom) -> AnimationScript:
@@ -897,6 +912,37 @@ def make_marle_reraise_script(ct_rom: ctrom.CTRom):
     return  reraise_scr
 
 
+def make_gale_slash_script(ct_rom: ctrom.CTRom) -> AnimationScript:
+    script = read_enemy_tech_script_from_ctrom(ct_rom, 0x74)
+    # print_object_script(script.main_script.target_objects[0])
+    # input()
+    script.main_script.target_objects.append(
+        [
+            ac.WaitForCounter1DValue(value=2),
+            ac.SetObjectPalette(palette=0),
+            ac.Pause(duration=4),
+            ac.PlayAnimationFirstFrame06(animation_id=5),
+            ac.Pause(duration=8),
+            ac.ResetPalette(),
+            ac.Pause(duration=8),
+            ac.PlayAnimationFirstFrame06(animation_id=3),
+            ac.ReturnCommand()
+        ]
+    )
+    return script
+
+
+def make_iron_orb_script(ct_rom: ctrom.CTRom) -> AnimationScript:
+    script = read_enemy_tech_script_from_ctrom(ct_rom, 0x41)
+
+    script.main_script.caster_objects[0][2] = ac.PlayAnimationOnce(animation_id=0x22)
+    target_obj = script.main_script.target_objects[0]
+    target_obj[1] = ac.PlayAnimationFirstFrame06(animation_id=3)
+    target_obj[4]  =ac.PlayAnimationFirstFrame06(animation_id=5)
+    return script
+
+
+
 def write_scripts_to_ct_rom(ct_rom: ctrom.CTRom):
     arrow_hail_script = make_arrow_rain_script(ct_rom)
     haste_all_script = make_single_marle_haste_all_script(ct_rom)
@@ -908,54 +954,51 @@ def write_scripts_to_ct_rom(ct_rom: ctrom.CTRom):
     prot_all_script.write_to_ctrom(ct_rom, NewScriptID.PROTECT_ALL)
     reraise_script.write_to_ctrom(ct_rom, NewScriptID.RERAISE)
 
+    gale_slash_script = make_gale_slash_script(ct_rom)
+    gale_slash_script.write_to_ctrom(ct_rom, NewScriptID.GALE_SLASH)
+
+    blurp_script = read_enemy_tech_script_from_ctrom(ct_rom, 0x5D)
+    blurp_script.main_script.caster_objects[0][1] = ac.PlayAnimationOnce(animation_id=0x5)
+    blurp_script.write_to_ctrom(ct_rom, NewScriptID.BLURP)
+
+    iron_orb_script = make_iron_orb_script(ct_rom)
+    iron_orb_script.write_to_ctrom(ct_rom, NewScriptID.IRON_ORB)
+
+    burst_ball_script = read_enemy_tech_script_from_ctrom(ct_rom, 0x88)
+    burst_ball_script.main_script.caster_objects[0][4] = ac.PlayAnimationOnce(animation_id=0x22)
+    burst_ball_script.write_to_ctrom(ct_rom, NewScriptID.BURST_BALL)
+
+
 
 def main():
     from ctrando.base import basepatch
+    from ctrando.postrando import palettes
     import random
 
+    dalton_magus = palettes.SNESPalette.from_hex_sequence("#281820#E4DAA4#DCA264#B09058#DCA264#9C6A34#72897B#C6641E#3F626A#D47A34#34220C#302028")
+
     ct_rom = ctrom.CTRom.from_file("/home/ross/Documents/ct.sfc")
+    dalton_magus.write_to_ctrom(ct_rom, 6)
     basepatch.base_patch_ct_rom(ct_rom)
-
-    reraise_scr = make_marle_reraise_script(ct_rom)
-    reraise_scr.write_to_ctrom(ct_rom, ctenums.TechID.LIFE_2_M)
     tech_man = pctech.PCTechManager.read_from_ctrom(ct_rom)
-    lifeline = tech_man.get_tech(ctenums.TechID.LIFE_LINE)
+    base_tech = tech_man.get_tech(ctenums.TechID.DARK_BOMB)
+    script_id = base_tech.graphics_header.script_id
+    base_tech.control_header.element = ctenums.Element.NONELEMENTAL
+    # tech.effect_headers[0] = pctech.ctt.PCTechEffectHeader(gale_slash_effect)
+    # tech.effect_headers[0].damage_formula_id = pctech.ctt.DamageFormula.PC_MELEE
+    base_tech.target_data = pctech.ctt.PCTechTargetData(b'\x07\x00')
+    base_tech.effect_headers[0].power = 0x2A
+    base_tech.graphics_header = pctech.ctt.PCTechGfxHeader(
+        bytes.fromhex("88 CE 0B 35 A9 A9 4A")
+    )
+    base_tech.graphics_header.script_id = script_id
+    base_tech.name = "*Burst Ball"
 
-    life2 = tech_man.get_tech(ctenums.TechID.LIFE_2_M)
-    life2.effect_mps[0] = 1
-    life2.target_data = pctech.ctt.PCTechTargetData(b'\x80\x00')
-    life2.effect_headers[0] = copy.deepcopy(lifeline.effect_headers[0])
-    tech_man.set_tech_by_id(life2, ctenums.TechID.LIFE_2_M)
+    tech_man.set_tech_by_id(base_tech, ctenums.TechID.DARK_BOMB)
 
+    script = read_enemy_tech_script_from_ctrom(ct_rom, 0x88)
+    script.write_to_ctrom(ct_rom, script_id)
 
-    # cyclone = tech_man.get_tech(0x1)
-    # provoke = tech_man.get_tech(0xA)
-    # provoke.target_data = pctech.ctt.PCTechTargetData(b'\x08\x00')
-    # provoke.control_header[1:] = cyclone.control_header[1:]
-    # provoke.effect_headers[0] = cyclone.effect_headers[0]
-    # provoke.effect_headers[0].damage_formula_id = pctech.ctt.DamageFormula.PC_RANGED
-    # provoke.name = "ArrowThing"
-    # # provoke.graphics_header.palette = 0x10
-    # # print(provoke.graphics_header)
-    # #provoke.graphics_header[:] = [0xA, 0xA, 0xE, 0xE, 0x19, 0x19, 0xFF]
-    #
-    # haste = tech_man.get_tech(0xD)
-    # haste.target_data = pctech.ctt.PCTechTargetData(b'\x81\x00')
-    # haste.name = "*Haste All"
-    # haste.graphics_header.layer3_packet_id = 0x15
-    # tech_man.set_tech_by_id(haste, 0xD)
-    #
-    # random.seed("asdfasFD")
-    # for _ in range(0x10):
-    #     while True:
-    #         x = random.randrange(0x20, 0xD1, 0x08)
-    #         y = random.randrange(0x60, 0xA1, 0x08)
-    #
-    #         if (x-0x80)**2/(0x60**2) + (y-0x80)**2/(0x20**2) <= 1:
-    #             print(f"{x:02X}, {y:02X}")
-    #             break
-    #
-    # tech_man.set_tech_by_id(provoke, 0xA)
     tech_man.write_to_ctrom(ct_rom, 5, 5)
     #
     # script = make_arrow_rain_script(ct_rom)
