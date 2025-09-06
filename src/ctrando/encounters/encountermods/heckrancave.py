@@ -1,5 +1,5 @@
 """Module for modifying forced encounters in Heckran Cave."""
-from ctrando.common import ctenums
+from ctrando.common import ctenums, memory
 from ctrando.locations.scriptmanager import ScriptManager
 from ctrando.locations.locationevent import FunctionID as FID
 from ctrando.locations.eventcommand import (
@@ -59,10 +59,15 @@ def unforce_jinn_bottle_1(script_manager: ScriptManager):
     # Objects can't call their own battles.  Put the battle commands here.
     battle_block = (
         EF()
-        .add(EC.call_obj_function(jinn_object, FID.ACTIVATE, 6,
-                                  FS.HALT))
-        .add(EC.assign_val_to_mem(0x80, 0x7E2A21, 1))
-        .add(EC.generic_command(0xD8, 0x10, 0x40))  # battle
+        .add_if(
+            EC.if_not_flag(memory.Flags.HECKRAN_CAVE_ENTRANCE_JINN_BOTTLE_BATTLE),
+            EF()
+            .add(EC.call_obj_function(jinn_object, FID.ACTIVATE, 6,
+                                      FS.HALT))
+            .add(EC.assign_val_to_mem(0x80, 0x7E2A21, 1))
+            .add(EC.generic_command(0xD8, 0x10, 0x40))  # battle
+        )
+
     )
 
     new_func = (

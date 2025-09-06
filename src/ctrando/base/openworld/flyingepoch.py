@@ -36,13 +36,19 @@ class EventMod(locationevent.LocEventMod):
             pos
         )
 
+        pos = script.find_exact_command(
+            EC.if_mem_op_value(0x7F0212, OP.EQUALS, 6),
+            script.get_function_start(0xA, FID.ARBITRARY_3)
+        )
+        script.delete_jump_block(pos)
+
         pos = script.find_exact_command(EC.set_flag(memory.Flags.HAS_SEEN_LAVOS_EMERGE_1999),
-                                        script.get_function_start(0x11, FID.ARBITRARY_3))
+                                        script.get_function_start(0xA, FID.ARBITRARY_3))
 
         crono_choice_ef = (
             EF()
             .add_if(
-                EC.if_mem_op_value(0x7F0212, OP.GREATER_OR_EQUAL, 0x80),
+                EC.if_mem_op_value(0x7F020E, OP.GREATER_OR_EQUAL, 0x80),
                 EF().add(EC.decision_box(
                     script.add_py_string(
                         "What does {pc1} choose? {line break}"
@@ -62,3 +68,25 @@ class EventMod(locationevent.LocEventMod):
         )
         script.delete_jump_block(pos)
         script.insert_commands(EC.set_flag(memory.Flags.LAVOS_SHELL_DEFEATED).to_bytearray(), pos)
+
+        # Fix PC count in return function
+        pos = script.find_exact_command(
+            EC.set_reset_bits(0x7F021A, 0xD3, True),
+            script.get_function_start(0xA, FID.ARBITRARY_4)
+        )
+        script.delete_commands(pos, 1)
+        temp_epoch_status = 0x7F021A
+        new_cmds = (
+            EF()
+            .add(EC.set_reset_bits(temp_epoch_status, 0xD1, True))
+            .add(EC.set_reset_bits(temp_epoch_status, 0x02, False))
+            .add_if(
+                EC.if_mem_op_value(0x7F0212, OP.GREATER_OR_EQUAL, 7),
+                EF().add(EC.increment_mem(temp_epoch_status))
+            )
+            .add_if(
+                EC.if_mem_op_value(0x7F0214, OP.GREATER_OR_EQUAL, 7),
+                EF().add(EC.increment_mem(temp_epoch_status))
+            )
+        )
+        script.insert_commands(new_cmds.get_bytearray(), pos)
