@@ -406,6 +406,10 @@ def get_default_region_connectors(
             rule=crono_trial_rule
         ),
         RegionConnector(
+            "crono_trial", "crono_trial_boss",
+            "gain_trial_recruit"
+        ),
+        RegionConnector(
             "guardia_castle_1000", "guardia_castle_treasury",
             "initiate_shell_quest",
             rule=logictypes.LogicRule([memory.Flags.GUARDIA_TREASURY_EXISTS])

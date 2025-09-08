@@ -174,7 +174,6 @@ def get_all_loc_regions() -> list[LocRegion]:
         loc_exits=set(),
         reward_spots={
                 RecruitID.CRONO_TRIAL,
-                BSID.PRISON_CATWALKS,
                 TID.GUARDIA_PRISON_LUNCH_BAG, TID.GUARDIA_JAIL_CELL,
                 TID.GUARDIA_JAIL_OMNICRONE_1, TID.GUARDIA_JAIL_OMNICRONE_2,
                 TID.GUARDIA_JAIL_OMNICRONE_3, TID.GUARDIA_JAIL_OMNICRONE_4,
@@ -183,7 +182,13 @@ def get_all_loc_regions() -> list[LocRegion]:
                 TID.GUARDIA_JAIL_OUTER_WALL, TID.PRISON_TOWER_1000,
         }
     )
+    crono_trial_boss = LocRegion(
+        "crono_trial_boss",
+        loc_exits=set(),
+        reward_spots={BSID.PRISON_CATWALKS}
+    )
     ret_list.append(crono_trial)
+    ret_list.append(crono_trial_boss)
 
     heckran_cave = LocRegion(
         "heckran_cave",
