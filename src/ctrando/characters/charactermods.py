@@ -168,6 +168,7 @@ def make_burst_ball(
     base_tech.control_header.element = ctenums.Element.NONELEMENTAL
     base_tech.target_data = pctech.ctt.PCTechTargetData(b'\x07\x00')
     base_tech.effect_headers[0].power = 0x2A
+    base_tech.effect_mps[0] = 20
     base_tech.graphics_header = pctech.ctt.PCTechGfxHeader(
         bytes.fromhex("88 CE 0B 35 A9 A9 4A")
     )
