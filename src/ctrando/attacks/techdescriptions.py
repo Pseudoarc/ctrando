@@ -61,6 +61,15 @@ _target_str_dict = {
 }
 
 
+def get_iron_orb_percent(iron_orb_mp: int) -> int:
+    min_percent = 30
+    max_percent = 100
+
+    percent =  min_percent + (max_percent-min_percent)*iron_orb_mp/20
+    percent = round(percent/10)*10
+    return percent
+
+
 def get_target_str(target: cttechtypes.TargetData):
     target_type = target[0] & 0x7F
     return _target_str_dict[target_type]
@@ -232,6 +241,9 @@ def get_single_tech_desc(
         if added_effect == EM.DEATH_40:
             elem_str = ''
             dmg_str = '40% Death'
+        elif added_effect == EM.IRON_ORB:
+            elem_str = ''
+            dmg_str = '50% HP'
         elif dmg_formula == DF.MAGIC:
             if ignore_def:
                 power_mult = 8
@@ -290,6 +302,9 @@ def update_black_hole_descs(
             new_percent = sorted([1, new_percent, 100])[1]
             tech.desc = tech.desc.replace("40% Death", f"{new_percent}% Death")
             tech_man.set_tech_by_id(tech, tech_id)
+        elif tech.control_header.get_effect_mod(0) == ctenums.WeaponEffects.IRON_ORB:
+            new_percent = get_iron_orb_percent(tech.effect_mps[0])
+            tech.desc = f"{new_percent}% HP"
 
 
 def update_all_tech_descs(

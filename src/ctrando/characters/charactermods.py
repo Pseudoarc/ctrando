@@ -147,7 +147,7 @@ def make_iron_orb(
     # tech.effect_headers[0] = pctech.ctt.PCTechEffectHeader(gale_slash_effect)
     # tech.effect_headers[0].damage_formula_id = pctech.ctt.DamageFormula.PC_MELEE
     base_tech.target_data = pctech.ctt.PCTechTargetData(b'\x07\x00')
-    base_tech.control_header.set_effect_mod(0, ctenums.WeaponEffects.HP_50_100)
+    base_tech.control_header.set_effect_mod(0, ctenums.WeaponEffects.IRON_ORB)
     base_tech.control_header.element = ctenums.Element.NONELEMENTAL
     base_tech.effect_headers[0].power = 0
     base_tech.graphics_header = pctech.ctt.PCTechGfxHeader(

@@ -7,6 +7,8 @@ from ctrando.asm.instructions import AddressingMode as AM
 from ctrando.common import asmpatcher, byteops, cttypes as cty, ctrom
 from ctrando.common.freespace import FSWriteType
 
+from ctrando.attacks import pctech
+
 
 class EffectMod(cty.SizedBinaryData):
     SIZE = 3
@@ -20,6 +22,7 @@ _current_damage_offset = 0xAD89
 _current_element_offset = 0xB190
 _current_attack_status_offset = 0xAE9B
 _current_attacker_offset = 0xB1F4
+_current_target_offset = 0xB1F6
 
 _crown_offset = 0x5E51
 _crown_bit = 0x80
@@ -44,11 +47,12 @@ def gather_vanilla_effects(ct_rom: ctrom.CTRom) -> list[EffectMod]:
     return effects
 
 
-def gather_new_effects_and_rts() -> tuple[list[EffectMod], list[assemble.ASMList]]:
+def gather_new_effects_and_rts(tech_man: pctech.PCTechManager) -> tuple[list[EffectMod], list[assemble.ASMList]]:
     routines = [
         get_venus_bow_rt(),
         get_spellslinger_rt(),
         get_add_element_effect(),
+        get_iron_orb_rt()
     ]
 
     effects = [
@@ -63,6 +67,7 @@ def gather_new_effects_and_rts() -> tuple[list[EffectMod], list[assemble.ASMList
         EffectMod(bytes([_max_vanilla_routine_index + 3, 0x40, 0])),  # Add shadow
         EffectMod(bytes([_max_vanilla_routine_index + 3, 0x20, 0])),  # Add water
         EffectMod(bytes([_max_vanilla_routine_index + 3, 0x10, 0])),  # Add fire
+        EffectMod(bytes([_max_vanilla_routine_index + 4, 5, 0]))  # ORB
     ]
 
     return effects, routines
@@ -244,6 +249,7 @@ def patch_additional_armor_effects(ct_rom: ctrom.CTRom,
 
 def expand_effect_mods(
         ct_rom: ctrom.CTRom,
+        tech_man: pctech.PCTechManager
 ):
     """
     Allow more effects.
@@ -256,7 +262,7 @@ def expand_effect_mods(
     """
 
     effects = gather_vanilla_effects(ct_rom)
-    additional_effects, additional_effect_routines = gather_new_effects_and_rts()
+    additional_effects, additional_effect_routines = gather_new_effects_and_rts(tech_man)
 
     effects += additional_effects
 
@@ -461,6 +467,72 @@ def get_spellslinger_rt() -> assemble.ASMList:
 
     return rt
 
+
+def get_iron_orb_rt() -> assemble.ASMList:
+    slow_mult_rom_addr = 0xC1FDBF
+    slow_div_rom_addr = 0xC1FDD3
+
+    rt: assemble.ASMList = [
+        inst.TDC(),
+        inst.LDX(_current_target_offset, AM.ABS),
+        inst.LDA(0x1C, AM.DIR),
+        inst.CMP(10, AM.IMM8),
+        inst.REP(0x20),
+        inst.BCC("non_max"),
+        inst.LDA(0x5E30, AM.ABS_X),
+        inst.STA(0x2C, AM.DIR),
+        inst.BRA("boss_check"),
+        "non_max",
+        inst.LDA(0x5E30, AM.ABS_X),
+        inst.STA(0x28, AM.DIR),
+        inst.LDA(10, AM.IMM16),
+        inst.STA(0x2A, AM.DIR),
+        inst.JSL(slow_div_rom_addr, AM.LNG),
+        inst.LDA(0x2C, AM.DIR),
+        inst.STA(0x28, AM.DIR),
+        inst.LDA(0x1C, AM.DIR),
+        inst.AND(0x00FF, AM.IMM16),
+        inst.STA(0x2A, AM.DIR),
+        inst.LDA(0x32, AM.DIR),  # remainder
+        inst.PHA(),
+        inst.JSL(slow_mult_rom_addr, AM.LNG),
+        inst.REP(0x20),
+        inst.LDX(0x2C, AM.DIR),
+        inst.STX(_current_damage_offset, AM.ABS),
+        inst.PLA(),
+        inst.STA(0x28, AM.DIR),
+        inst.LDA(0x1C, AM.DIR),
+        inst.STA(0x2A, AM.DIR),
+        inst.JSL(slow_mult_rom_addr),
+        inst.LDX(0x2C, AM.DIR),
+        inst.STX(0x28, AM.DIR),
+        inst.LDX(10, AM.IMM16),
+        inst.STX(0x2A, AM.DIR),
+        inst.JSL(slow_div_rom_addr, AM.LNG),
+        inst.REP(0x20),
+        inst.LDA(0x2C, AM.DIR),
+        inst.CLC(),
+        inst.ADC(_current_damage_offset, AM.ABS),
+        inst.STA(0x2C, AM.DIR),
+        "boss_check",
+        inst.SEP(0x20),
+        inst.LDX(_current_target_offset, AM.ABS),
+        inst.LDA(0x5E46, AM.ABS_X),
+        inst.AND(0x80, AM. IMM8),
+        inst.REP(0x20),
+        inst.BEQ("end"),
+        inst.LDA(0x2C, AM.DIR),
+        inst.LSR(mode=AM.NO_ARG),
+        inst.LSR(mode=AM.NO_ARG),
+        inst.STA(0x2C, AM.DIR),
+        "end",
+        inst.LDA(0x2C, AM.DIR),
+        inst.STA(_current_damage_offset, AM.ABS),
+        inst.SEP(0x20),
+        inst.RTS()
+    ]
+
+    return rt
 
 
 

@@ -1783,6 +1783,7 @@ class WeaponEffects(StrIntEnum):
     ADD_SHADOW = 0x40
     ADD_WATER = 0x41
     ADD_FIRE = 0x42
+    IRON_ORB = 0x43
 
 
 class NpcID(StrIntEnum):
