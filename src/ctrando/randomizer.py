@@ -171,6 +171,7 @@ def get_random_config(
         charactermods.add_magus_duals(config.pctech_manager)
     if settings.character_options.use_daltonized_magus:
         charactermods.add_daltonized_magus_techs(config.pctech_manager)
+        staticbossscaling.modify_poison_immunity(config.enemy_data_dict)
 
     ### Techs
     pctechrandomizer.modify_all_single_tech_powers(
@@ -322,7 +323,10 @@ def get_ctrom_from_config(
     print(f"({b-a})")
     basepatch.add_set_level_command(ct_rom, config.pcstat_manager)
 
-    effecttypes.expand_effect_mods(ct_rom)
+
+    effecttypes.expand_effect_mods(
+        ct_rom, config.pctech_manager
+    )
     animationscript.write_scripts_to_ct_rom(ct_rom)
     scriptreassign.write_magus_animation_scripts(config.pctech_manager, ct_rom)
 
