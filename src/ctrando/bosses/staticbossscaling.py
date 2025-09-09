@@ -146,3 +146,25 @@ def set_element_safety_level(ai_man: aim.EnemyAIManager, safe_level: int):
                                      value=safe_level),
         ]
         retinite_script.reaction_script.insert(ind, block)
+
+
+def modify_poison_immunity(
+        enemy_data_dict: dict[ctenums.EnemyID, enemystats.EnemyStats]
+):
+    """Give most bosses poison vulnerability"""
+    excluded_boss_ids = (
+        bosstypes.BossID.ATROPOS_XR, bosstypes.BossID.LAVOS_CORE,
+        bosstypes.BossID.LAVOS_SHELL, bosstypes.BossID.INNER_LAVOS,
+        bosstypes.BossID.ZEAL_2, bosstypes.BossID.DRAGON_TANK,
+        bosstypes.BossID.GUARDIAN, bosstypes.BossID.MAMMON_M,
+        bosstypes.BossID.MOTHER_BRAIN, bosstypes.BossID.R_SERIES,
+        bosstypes.BossID.ZOMBOR
+    )
+
+    for boss_id in bosstypes.BossID:
+        if boss_id in excluded_boss_ids:
+            continue
+        scheme = bosstypes.get_default_scheme(boss_id)
+        parts = set(part.enemy_id for part in scheme.parts)
+        for part in parts:
+            enemy_data_dict[part].set_is_immune(ctenums.StatusEffect.POISON, False)
