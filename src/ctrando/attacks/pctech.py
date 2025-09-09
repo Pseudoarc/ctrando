@@ -1471,6 +1471,12 @@ class PCTechManager:
         # Should be num desc ptrs - 3
         ct_rom.getbuffer()[0x02BE30] = 1 + self.num_techs + 1
 
+        # Fix "Can't run away" message.  Hardcoded description is in with
+        # the techs.  We need to fix the index.
+        # $C1/1097 A9 75       LDA #$75   Loading "Can't run away" index
+        # Vanilla: 0x74 techs, so it's always one more than the count.
+        ct_rom.getbuffer()[0x011098] = self.num_techs + 1
+
     def _write_learn_requirements_to_ct_rom(self, ct_rom: ctrom.CTRom,
                                             hint: int = 0x5F0000):
         """
