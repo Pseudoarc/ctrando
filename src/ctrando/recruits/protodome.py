@@ -91,7 +91,12 @@ def assign_pc_to_spot(
     )
 
     activate_fn = (
-        EF().add(EC.set_explore_mode(False))
+        EF()
+        .add_if(
+            EC.if_flag(memory.Flags.PROTO_DOME_RECRUIT_OBTAINED),
+            EF().add(EC.return_cmd())
+        )
+        .add(EC.set_explore_mode(False))
         .add(EC.assign_val_to_mem(0, 0x7F0240, 1))
         .add(EC.break_cmd())
         .add(EC.move_party(0x36, 0x19, 0x38, 0x19, 0x3A | 0x80, 0x16))
