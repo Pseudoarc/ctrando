@@ -348,6 +348,7 @@ shuffle_entrances = false   # Shuffle the target of overworld entrances
 #                      lead character (but not below the spot minimum)
 scale_level_to_leader=true
 scale_techlevel_to_leader=true
+scale_gear=true
 
 # Treasure Options: Options for how non-progression treasures are distributed
 good_loot = [  # loot which counts as a good item
@@ -395,3 +396,46 @@ weapon_rando_pool = [  # Weapons whose effects should be shuffled
     "doomsickle"
 ]
 bronze_fist_policy = "vanilla"  # {vanilla,remove,4x_crit,random_other} How to modify BronzeFist pre-shuffle
+
+# Post-Randomization Options
+# If running offline, you can use this in the same options file.  Otherwise, these options
+# will be ignored by the online generator and must be specified in a separate file.
+
+# Determine whether the default movement in locations/overworld/epoch is fast
+# If true, then the run button causes slow movement.
+default_fast_loc_movement = false
+default_fast_ow_movement = false
+default_fast_epoch_movement = false
+
+# Most options from the in-game menu can be set
+battle_speed = 5
+message_speed = 5
+battle_memory_cursor = false
+menu_memory_cursor = false
+window_background = 1  #  1 - 8 to match the in-game menu
+
+# Character palette can be set, but an external tool is needed to produce these strings.
+#crono_palette = ""
+#marle_palette = ""
+#lucca_palette = ""
+#robo_palette = ""
+#frog_palette = ""
+#ayla_palette = ""
+
+# This palette will give Magus the colors of Dalton
+magus_palette = "#281820#E4DAA4#DCA264#B09058#DCA264#9C6A34#72897B#C6641E#3F626A#D47A34#34220C#302028"
+
+# The desired ending can be set with this option.  The possible endings are:
+#    "beyond time" - The usual ending when defeating Lavos.  Depends on who is recruited/epoch status.
+#    "the dream project" - The dev ending in the end of time [default]
+#    "the successor of guardia" - Frog marries Leene
+#    "goodnight" - Kilwala and Nu play around
+#    "the legendary hero" - Robo and Atropos in future Leene Square.  Tata attacks Magus's castle.
+#    "the unknown past" - Scenes showing the characters in their own time periods
+#    "people of the times" - A slide show of various characters
+#    "the oath" - Frog goes to fight Magus alone
+#    "dino age" - Everyone is a reptite
+#    "what the prophet seeks" - Magus goes solo to the ocean palace to defeat Lavos
+#    "a slide show?" - Marle and Lucca rate the men of the game
+#    "random" - A random choice from the above.
+ending = "the dream project"
