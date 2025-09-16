@@ -188,7 +188,7 @@ def modify_all_single_tech_powers(
     for mp, tech_id in zip(heal_tech_mps+damage_tech_mps, heal_tech_ids+damage_tech_ids):
         modify_single_tech_power(tech_dict[tech_id], mp)
 
-    for tech_id in range(1+7*8, len(tech_dict.keys())+1):
+    for tech_id in range(1+7*8, tech_manager.num_techs+1):
         if tech_id not in tech_dict:
             continue
         tech = tech_dict[tech_id]
