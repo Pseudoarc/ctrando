@@ -185,7 +185,7 @@ def get_random_boss_assignment(
     available_spots = [
         spot for spot in base_dict
         if spot not in boss_rando_options.vanilla_boss_spots
-        and spot not in _midboss_spots
+        and spot not in (_midboss_spots + [bty.BossSpotID.OCEAN_PALACE_TWIN_GOLEM_ALT])
     ]
 
     boss_pool: list[bty.BossID] = []
