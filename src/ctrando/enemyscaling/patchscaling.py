@@ -19,6 +19,7 @@ _mag_affine_constant = 0
 _atk_affine_constant = 2
 _hit_affine_constant = 9
 _evd_affine_constant = 0x13
+_hp_affine_constant = 5
 
 
 def patch_pre_battle_level_setting(
@@ -352,8 +353,6 @@ def patch_enemy_stat_loads(
         scale_def_addr: int,
         scaling_exclusion_list: list[ctenums.EnemyID],
         true_levels_addr: int,
-        hp_quadratic_scale: bool = False,
-        hp_correction: int = 0,
 ):
     """
     After an enemy's stats are loaded, scale them using the enemy's level and
@@ -443,10 +442,9 @@ def patch_enemy_stat_loads(
         ]
 
     hp_scale_part = [
+        inst.JSL(byteops.to_rom_ptr(scale16_addr), AM.LNG),
         inst.JSL(byteops.to_rom_ptr(scale16_addr), AM.LNG)
     ]
-    if hp_quadratic_scale:
-        hp_scale_part += [inst.JSL(byteops.to_rom_ptr(scale16_addr), AM.LNG)]
 
     true_levels_rom_addr = byteops.to_rom_ptr(true_levels_addr)
     scale_part += [
@@ -472,7 +470,7 @@ def patch_enemy_stat_loads(
         inst.JSL(byteops.to_rom_ptr(scale8_addr), AM.LNG),
         inst.STA(lvl_ram_offset, AM.ABS_Y),
         #
-    ] + scalingschemes.get_affine_scale_values_routine(hp_correction, "hp") + [
+    ] + scalingschemes.get_affine_scale_values_routine(_hp_affine_constant, "hp") + [
         inst.LDA(index_offset, AM.ABS_Y),
         inst.CMP(ctenums.EnemyID.SON_OF_SUN_EYE, AM.IMM8),
         inst.BNE("normal_load"),
@@ -552,7 +550,8 @@ def patch_enemy_tech_power(
         ct_rom: ctrom.CTRom,
         scale8_rom_addr: int,
         phys_lut_addr: int,
-        mag_lut_addr: int
+        mag_lut_addr: int,
+        heal_lut_addr: int,
 ):
     """Intercept tech effect loading to scale the tech power."""
 
@@ -619,6 +618,35 @@ def patch_enemy_tech_power(
         inst.JSL(scale8_rom_addr, AM.LNG),
         inst.STA(eff_st_abs + 0x09, AM.ABS),
         "no scale",
+        # inst.LDA(eff_st_abs, AM.ABS),
+        # inst.BNE("skip heal"),
+        # inst.LDA(slot_addr_abs, AM.ABS),
+        # inst.ASL(mode=AM.NO_ARG),
+        # inst.TAX(),
+        # inst.REP(0x20),
+        # inst.LDA(0xFDA80B, AM.LNG_X),
+        # inst.TAX(),
+        # inst.SEP(0x20),
+        # inst.TDC(),
+        # inst.LDA(0x0001, AM.ABS_X),
+        # inst.STA(memory.Memory.ORIGINAL_LEVEL_TEMP & 0xFFFF, AM.ABS),
+        # inst.TAX(),
+        # inst.LDA(heal_lut_addr, AM.LNG_X),
+        # inst.STA(memory.Memory.FROM_SCALE_TEMP & 0xFFFF, AM.ABS),
+        # inst.LDA(memory.Memory.SCALING_LEVEL & 0xFFFF, AM.ABS),
+        # inst.TAX(),
+        # inst.LDA(heal_lut_addr, AM.LNG_X),
+        # inst.STA(memory.Memory.TO_SCALE_TEMP & 0xFFFF, AM.ABS),
+        # inst.LDA(eff_st_abs + 0x01, AM.ABS),
+        # inst.CMP(15, AM.IMM8),
+        # inst.BEQ("skip heal"),
+        # inst.JSL(scale8_rom_addr, AM.LNG),
+        # inst.CMP(15, AM.IMM8),
+        # inst.BNE("avoid max heal"),
+        # inst.INC(mode=AM.NO_ARG),
+        # "avoid max heal",
+        # inst.STA(eff_st_abs + 0x01, AM.ABS),
+        # "skip heal",
         inst.TDC(),
         inst.JMP(byteops.to_rom_ptr(return_addr), AM.LNG)
     ]
@@ -1049,8 +1077,6 @@ def patch_ai_multi_stat_math_15(
 def patch_ai_cond_hp_lte_08(
         ct_rom: ctrom.CTRom,
         scale16_rom_addr: int,
-        scale_hp_quadratic: bool,
-        scale_hp_correction: int = 0
 ):
     """
     Patch ai condition 0x08 - Check if enemy HP <= target
@@ -1075,9 +1101,8 @@ def patch_ai_cond_hp_lte_08(
     # C190F3  F0 02          BEQ $C190F7
     # C190F5  B0 0E          BCS $C19105
 
-    scale_hp_part = [inst.JSL(scale16_rom_addr, AM.LNG)]
-    if scale_hp_quadratic:
-        scale_hp_part += [inst.JSL(scale16_rom_addr, AM.LNG)]
+    scale_hp_part = [inst.JSL(scale16_rom_addr, AM.LNG),
+                     inst.JSL(scale16_rom_addr, AM.LNG)]
 
     orig_level_offset = 0x01
     new_rt: assemble.ASMList = [
@@ -1089,7 +1114,7 @@ def patch_ai_cond_hp_lte_08(
         inst.BRA("skip_scale"),
         inst.LDA(0x08, AM.DIR),
         "normal_scaling",
-    ] + scalingschemes.get_affine_scale_values_routine(scale_hp_correction) + [
+    ] + scalingschemes.get_affine_scale_values_routine(_hp_affine_constant) + [
         # inst.LDA(orig_level_offset, AM.ABS_X),
         # inst.STA(memory.Memory.FROM_SCALE_TEMP & 0xFFFF, AM.ABS),
         # inst.LDA(memory.Memory.SCALING_LEVEL & 0xFFFF, AM.ABS),
@@ -1116,8 +1141,6 @@ def patch_ai_scripts(
         scale8_rom_addr: int,
         scale16_rom_addr: int,
         scale_def_rom_addr: int,
-        scale_hp_quadratic: bool = False,
-        scale_hp_correction: int = 0,
 ):
     """
     Some AI scripts set stats.  We need to apply scaling routines to this.
@@ -1139,7 +1162,7 @@ def patch_ai_scripts(
     patch_ai_multi_stat_math_14(ct_rom, ai_stat_scale_rom_addr, scale_def_rom_addr)
     patch_ai_multi_stat_math_15(ct_rom, ai_stat_scale_rom_addr, scale_def_rom_addr)
 
-    patch_ai_cond_hp_lte_08(ct_rom, scale16_rom_addr, scale_hp_quadratic, scale_hp_correction)
+    patch_ai_cond_hp_lte_08(ct_rom, scale16_rom_addr)
 
 
 def get_scaling_scheme(
@@ -1263,6 +1286,7 @@ def apply_full_scaling_patch(
 
     phys_lut_b = bytes(make_lut(get_phys_effective_hp, _atk_affine_constant))
     mag_lut_b = bytes(make_lut(get_mag_effecive_hp, _mag_affine_constant))
+    heal_lut_b = bytes(make_lut(get_heal_effetive_hp, _mag_affine_constant))
 
     phys_lut_addr = ct_rom.space_manager.get_free_addr(len(phys_lut_b), 0x410000)
     ct_rom.seek(phys_lut_addr)
@@ -1272,20 +1296,28 @@ def apply_full_scaling_patch(
     ct_rom.seek(mag_lut_addr)
     ct_rom.write(mag_lut_b, ctrom.freespace.FSWriteType.MARK_USED)
 
+    heal_lut_addr = ct_rom.space_manager.get_free_addr(len(heal_lut_b), 0x410000)
+    ct_rom.seek(heal_lut_addr)
+    ct_rom.write(heal_lut_b, ctrom.freespace.FSWriteType.MARK_USED)
+
     patch_scaling_inventory(ct_rom, script_manager, byteops.to_rom_ptr(set_scale_addr))
     patch_pre_battle_level_setting(ct_rom, scaling_scheme)
     patch_enemy_stat_loads(
         ct_rom, slow_scale8_addr, slow_scale16_addr, scale_def_addr, scaling_exclusion_list, true_level_addr,
-        scaling_general_options.scale_hp_quadratic, scaling_general_options.scale_hp_correction
     )
     patch_enemy_rewards(ct_rom, scaling_exclusion_list, slow_scale8_addr, slow_scale16_addr)
-    patch_enemy_tech_power(ct_rom, byteops.to_rom_ptr(slow_scale8_addr), phys_lut_addr, mag_lut_addr)
+    patch_enemy_tech_power(ct_rom, byteops.to_rom_ptr(slow_scale8_addr), phys_lut_addr, mag_lut_addr, heal_lut_addr)
     patch_enemy_attack_power(ct_rom, byteops.to_rom_ptr(slow_scale8_addr), phys_lut_addr, mag_lut_addr)
     patch_ai_scripts(ct_rom, byteops.to_rom_ptr(slow_scale8_addr),
                      byteops.to_rom_ptr(slow_scale16_addr),
-                     byteops.to_rom_ptr(scale_def_addr),
-                     scaling_general_options.scale_hp_quadratic,
-                     scaling_general_options.scale_hp_correction)
+                     byteops.to_rom_ptr(scale_def_addr))
+
+
+def get_heal_effetive_hp(level: int) -> float:
+    """
+    Get an average boss's hp at a given level.
+    """
+    return (level+_hp_affine_constant)**2
 
 
 def get_phys_effective_hp(level: int) -> float:
