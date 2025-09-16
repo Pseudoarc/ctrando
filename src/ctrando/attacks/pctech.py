@@ -2332,3 +2332,12 @@ def fix_vanilla_techs(tech_man: PCTechManager):
         crono_bat_index = confuse_tech.battle_group.index(ctenums.CharID.CRONO)
         confuse_tech.effect_headers[crono_bat_index].applies_on_hit_effects = True
         tech_man.set_tech_by_id(confuse_tech, tech_id)
+
+
+def get_iron_orb_percent(iron_orb_mp: int) -> int:
+    min_percent = 30
+    max_percent = 100
+
+    percent =  min_percent + (max_percent-min_percent)*iron_orb_mp/20
+    percent = round(percent/10)*10
+    return percent

@@ -47,7 +47,7 @@ def gather_vanilla_effects(ct_rom: ctrom.CTRom) -> list[EffectMod]:
     return effects
 
 
-def gather_new_effects_and_rts(tech_man: pctech.PCTechManager) -> tuple[list[EffectMod], list[assemble.ASMList]]:
+def gather_new_effects_and_rts(orb_percent: int) -> tuple[list[EffectMod], list[assemble.ASMList]]:
     routines = [
         get_venus_bow_rt(),
         get_spellslinger_rt(),
@@ -67,7 +67,7 @@ def gather_new_effects_and_rts(tech_man: pctech.PCTechManager) -> tuple[list[Eff
         EffectMod(bytes([_max_vanilla_routine_index + 3, 0x40, 0])),  # Add shadow
         EffectMod(bytes([_max_vanilla_routine_index + 3, 0x20, 0])),  # Add water
         EffectMod(bytes([_max_vanilla_routine_index + 3, 0x10, 0])),  # Add fire
-        EffectMod(bytes([_max_vanilla_routine_index + 4, 5, 0]))  # ORB
+        EffectMod(bytes([_max_vanilla_routine_index + 4, orb_percent//10, 0]))  # ORB
     ]
 
     return effects, routines
@@ -249,7 +249,7 @@ def patch_additional_armor_effects(ct_rom: ctrom.CTRom,
 
 def expand_effect_mods(
         ct_rom: ctrom.CTRom,
-        tech_man: pctech.PCTechManager
+        tech_man: pctech.PCTechManager,
 ):
     """
     Allow more effects.
@@ -262,7 +262,15 @@ def expand_effect_mods(
     """
 
     effects = gather_vanilla_effects(ct_rom)
-    additional_effects, additional_effect_routines = gather_new_effects_and_rts(tech_man)
+    orb_mp = 8
+    for tech_id in range(1+6*8, 1+7*8):
+        tech = tech_man.get_tech(tech_id)
+        if tech.name == "Iron Orb":
+            orb_mp = tech.effect_mps[0]
+            break
+    orb_percent = pctech.get_iron_orb_percent(orb_mp)
+
+    additional_effects, additional_effect_routines = gather_new_effects_and_rts(orb_percent)
 
     effects += additional_effects
 

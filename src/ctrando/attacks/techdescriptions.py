@@ -11,7 +11,7 @@ from ctrando.common.ctenums import Element
 from ctrando.strings import ctstrings
 
 from ctrando.attacks import cttechtypes
-from ctrando.attacks.pctech import PCTechManager, TechNotFoundException
+from ctrando.attacks.pctech import PCTechManager, TechNotFoundException, get_iron_orb_percent
 
 from ctrando.items import itemdata
 
@@ -59,16 +59,6 @@ _target_str_dict = {
     0x1F: '1',  # '1 En1F',
     0x20: '1',  # '1 En1G',
 }
-
-
-def get_iron_orb_percent(iron_orb_mp: int) -> int:
-    min_percent = 30
-    max_percent = 100
-
-    percent =  min_percent + (max_percent-min_percent)*iron_orb_mp/20
-    percent = round(percent/10)*10
-    return percent
-
 
 def get_target_str(target: cttechtypes.TargetData):
     target_type = target[0] & 0x7F
@@ -305,6 +295,7 @@ def update_black_hole_descs(
         elif tech.control_header.get_effect_mod(0) == ctenums.WeaponEffects.IRON_ORB:
             new_percent = get_iron_orb_percent(tech.effect_mps[0])
             tech.desc = f"{new_percent}% HP"
+            tech_man.set_tech_by_id(tech, tech_id)
 
 
 def update_all_tech_descs(
