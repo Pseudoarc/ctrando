@@ -1,8 +1,10 @@
 """Patch a ctrom to use a scaling scheme."""
+import math
 import typing
 from typing import Optional
 
 from ctrando.arguments import enemyscaling
+from ctrando.characters.ctpcstats import HPGrowth
 from ctrando.bosses import bosstypes as bty
 from ctrando.locations import scriptmanager
 from ctrando.locations.locationevent import FunctionID as FID
@@ -548,13 +550,16 @@ def patch_enemy_stat_loads(
 
 def patch_enemy_tech_power(
         ct_rom: ctrom.CTRom,
-        scale8_rom_addr: Optional[int] = None,
+        scale8_rom_addr: int,
+        phys_lut_addr: int,
+        mag_lut_addr: int
 ):
     """Intercept tech effect loading to scale the tech power."""
 
     # This loop copies the effect header into [0x7FAEE6, 0x7FAEF2)
     # This is only called for enemy techs (not attacks).
-
+    phys_lut_rom_addr = byteops.to_rom_ptr(phys_lut_addr)
+    mag_lut_rom_addr = byteops.to_rom_ptr(mag_lut_addr)
     hook_addr = 0x01D836
     # C1D836  7B             TDC
     # C1D837  A8             TAY
@@ -600,20 +605,6 @@ def patch_enemy_tech_power(
         inst.BEQ("scale"),
         inst.BRA("no scale"),
         "scale",
-        # Let's be lazy and just do the linear scale for now.
-        # inst.LDA(0x80, AM.IMM8),
-        # inst.STA(SR.M7A, AM.LNG),
-        # inst.TDC(),
-        # inst.STA(SR.M7A, AM.LNG),
-        # inst.LDA(slot_addr_abs, AM.ABS),  # known < 0x80
-        # inst.STA(SR.M7B, AM.LNG),
-        # inst.REP(0x20),
-        # inst.LDA(SR.MPYL, AM.LNG),
-        # inst.TAX(),
-        # inst.TDC(),
-        # inst.SEP(0x20),
-        # inst.LDA(0x5E2D+1, AM.ABS_X),
-        # Aternate without mode7 Registers
         inst.LDA(slot_addr_abs, AM.ABS),
         inst.ASL(mode=AM.NO_ARG),
         inst.TAX(),
@@ -621,15 +612,9 @@ def patch_enemy_tech_power(
         inst.LDA(0xFDA80B, AM.LNG_X),
         inst.TAX(),
         inst.SEP(0x20),
-        inst.LDA(0x0001, AM.ABS_X),
-        # End Alternate
-        inst.STA(memory.Memory.ORIGINAL_LEVEL_TEMP & 0xFFFF, AM.ABS),
-        inst.STA(memory.Memory.FROM_SCALE_TEMP & 0xFFFF, AM.ABS)
-    ] + scalingschemes.get_affine_scale_values_routine(
-        0xF, 'techscale'
-    ) + [
-        # inst.LDA(memory.Memory.SCALING_LEVEL & 0xFFFF, AM.ABS),
-        # inst.STA(memory.Memory.TO_SCALE_TEMP & 0xFFFF, AM.ABS),
+        inst.TDC(),
+        inst.LDA(0x0001, AM.ABS_X)
+    ] + get_lut_scaler(phys_lut_rom_addr, mag_lut_rom_addr) + [
         inst.LDA(eff_st_abs + 0x09, AM.ABS),
         inst.JSL(scale8_rom_addr, AM.LNG),
         inst.STA(eff_st_abs + 0x09, AM.ABS),
@@ -644,9 +629,13 @@ def patch_enemy_tech_power(
 
 def patch_enemy_attack_power(
         ct_rom: ctrom.CTRom,
-        scale8_rom_addr: Optional[int] = None,
+        scale8_rom_addr: int,
+        phys_lut_addr: int,
+        mag_lut_addr: int
 ):
     """Intercept attack loading to scale the power."""
+    phys_lut_rom_addr = byteops.to_rom_ptr(phys_lut_addr)
+    mag_lut_rom_addr = byteops.to_rom_ptr(mag_lut_addr)
 
     # This is almost identical to tech power.
     hook_addr = 0x01D943
@@ -678,20 +667,13 @@ def patch_enemy_attack_power(
     slot_addr_abs = 0x7EB18B & 0xFFFF
     eff_st_abs = 0xAEE6
     effect_scale_rt = [
-        # Let's be lazy and just do the linear scale for now.
-        # inst.LDA(0x80, AM.IMM8),
-        # inst.STA(SR.M7A, AM.LNG),
-        # inst.TDC(),
-        # inst.STA(SR.M7A, AM.LNG),
-        # inst.LDA(slot_addr_abs, AM.ABS),  # known < 0x80
-        # inst.STA(SR.M7B, AM.LNG),
-        # inst.REP(0x20),
-        # inst.LDA(SR.MPYL, AM.LNG),
-        # inst.TAX(),
-        # inst.TDC(),
-        # inst.SEP(0x20),
-        # inst.LDA(0x5E2D + 1, AM.ABS_X),
-        # Alternate without mode7 registers
+        inst.LDA(eff_st_abs, AM.ABS),  # 0th byte is mode
+        inst.CMP(0x03, AM.IMM8),  # Damage
+        inst.BEQ("scale"),
+        inst.CMP(0x08, AM.IMM8),  # Multi-hit -- Do enemies use this?
+        inst.BEQ("scale"),
+        inst.BRA("no_scale"),
+        "scale",
         inst.LDA(slot_addr_abs, AM.ABS),
         inst.ASL(mode=AM.NO_ARG),
         inst.TAX(),
@@ -699,15 +681,12 @@ def patch_enemy_attack_power(
         inst.LDA(0xFDA80B, AM.LNG_X),
         inst.TAX(),
         inst.SEP(0x20),
+        inst.TDC(),
         inst.LDA(0x0001, AM.ABS_X),
-        # End Alternate
-        inst.STA(memory.Memory.ORIGINAL_LEVEL_TEMP & 0xFFFF, AM.ABS),
-        inst.STA(memory.Memory.FROM_SCALE_TEMP & 0xFFFF, AM.ABS)
-    ]
-
-    effect_scale_rt += scalingschemes.get_affine_scale_values_routine(
-        0xF, 'atkscale'  # TODO: Check this scaler
-    )
+    ] + get_lut_scaler(phys_lut_rom_addr, mag_lut_rom_addr)
+    # effect_scale_rt += scalingschemes.get_affine_scale_values_routine(
+    #     0x20, 'atkscale'  # TODO: Check this scaler
+    # )
     effect_scale_rt += [
         # inst.LDA(memory.Memory.SCALING_LEVEL & 0xFFFF, AM.ABS),
         # inst.STA(memory.Memory.TO_SCALE_TEMP & 0xFFFF, AM.ABS),
@@ -716,6 +695,7 @@ def patch_enemy_attack_power(
         inst.CMP(0xFF, AM.IMM8),
         inst.BEQ("no_scale"),
         inst.JSL(scale8_rom_addr, AM.LNG),
+        # inst.JSL(scale8_rom_addr, AM.LNG),
         inst.STA(eff_st_abs + 0x09, AM.ABS),
         "no_scale",
         inst.TDC(),
@@ -1281,6 +1261,17 @@ def apply_full_scaling_patch(
     ct_rom.seek(true_level_addr)
     ct_rom.write(true_levels, ctrom.freespace.FSWriteType.MARK_USED)
 
+    phys_lut_b = bytes(make_lut(get_phys_effective_hp, _atk_affine_constant))
+    mag_lut_b = bytes(make_lut(get_mag_effecive_hp, _mag_affine_constant))
+
+    phys_lut_addr = ct_rom.space_manager.get_free_addr(len(phys_lut_b), 0x410000)
+    ct_rom.seek(phys_lut_addr)
+    ct_rom.write(phys_lut_b, ctrom.freespace.FSWriteType.MARK_USED)
+
+    mag_lut_addr = ct_rom.space_manager.get_free_addr(len(mag_lut_b), 0x410000)
+    ct_rom.seek(mag_lut_addr)
+    ct_rom.write(mag_lut_b, ctrom.freespace.FSWriteType.MARK_USED)
+
     patch_scaling_inventory(ct_rom, script_manager, byteops.to_rom_ptr(set_scale_addr))
     patch_pre_battle_level_setting(ct_rom, scaling_scheme)
     patch_enemy_stat_loads(
@@ -1288,12 +1279,104 @@ def apply_full_scaling_patch(
         scaling_general_options.scale_hp_quadratic, scaling_general_options.scale_hp_correction
     )
     patch_enemy_rewards(ct_rom, scaling_exclusion_list, slow_scale8_addr, slow_scale16_addr)
-    patch_enemy_tech_power(ct_rom, byteops.to_rom_ptr(slow_scale8_addr))
-    patch_enemy_attack_power(ct_rom, byteops.to_rom_ptr(slow_scale8_addr))
+    patch_enemy_tech_power(ct_rom, byteops.to_rom_ptr(slow_scale8_addr), phys_lut_addr, mag_lut_addr)
+    patch_enemy_attack_power(ct_rom, byteops.to_rom_ptr(slow_scale8_addr), phys_lut_addr, mag_lut_addr)
     patch_ai_scripts(ct_rom, byteops.to_rom_ptr(slow_scale8_addr),
                      byteops.to_rom_ptr(slow_scale16_addr),
                      byteops.to_rom_ptr(scale_def_addr),
                      scaling_general_options.scale_hp_quadratic,
                      scaling_general_options.scale_hp_correction)
+
+
+def get_phys_effective_hp(level: int) -> float:
+    """
+    Get an average character's effecitve hp.  Effective hp is hp/(1-dmg_reduction).
+    That is, 50% defense is considered as doubling effective hp, 75% defense quadruples it.
+    """
+    base_hp = 56
+    hp_growth = HPGrowth(bytes.fromhex("0A 0C 15 0E 1D 13 63 14"))  # Frog HP
+
+    # "Standard" defense goes from 15 at lv1 to 190 (~75% reduction)
+    min_def = 15
+    max_def = 190
+    defense = math.floor(min_def + (max_def-min_def)*(level-1)/49)
+
+    total_defense = sorted([1, defense, 255])[1]
+    reduction = (256-total_defense)/256
+    effective_hp = (hp_growth.cumulative_growth_at_level(level) + base_hp)/reduction
+    return effective_hp
+
+
+def get_mag_effecive_hp(level: int) -> float:
+    """Same as phys hp but for magic resistances"""
+    base_hp = 56
+    hp_growth = HPGrowth(bytes.fromhex("0A 0C 15 0E 1D 13 63 14"))  # Frog HP
+    hp_at_level = hp_growth.cumulative_growth_at_level(level) + base_hp
+
+    # "Standard" defense goes from 15 at lv1 to 190 (~75% reduction)
+    min_mdef = 4
+    mdef_growth = 150
+    mdef_at_level = math.floor(min_mdef + mdef_growth*(level-1)/100)
+    mdef_at_level = sorted([1, mdef_at_level, 99])[1]
+
+    reduction = (100 - mdef_at_level) / 100
+    effective_hp = hp_at_level/reduction
+    return effective_hp
+
+
+def make_lut(
+        eff_hp_fn: typing.Callable[[int], float],
+        affine_const: int
+) -> list[int]:
+    base_ehp = eff_hp_fn(1)
+    rel_eff_hp = [
+        eff_hp_fn(x)/(base_ehp*(x+affine_const)) for x in range(1, 100)
+    ]
+    near_max = rel_eff_hp[49]
+    rel_eff_hp = [
+        sorted([1, round(x*0xE8/near_max), 0xFF])[1] for x in rel_eff_hp
+    ]
+    rel_eff_hp = [rel_eff_hp[0]] + rel_eff_hp
+
+    return rel_eff_hp
+
+
+def get_lut_scaler(
+        phys_lut_addr: int,
+        mag_lut_addr: int
+) -> assemble.ASMList:
+    """
+    Gets assembly that uses a lookup table to do scaling.
+    Comes in with original level in A (8-bit)
+    """
+    _use_mdef_val = 0x3C
+    eff_st_abs = 0xAEE6
+
+    rt = [
+        inst.STA(memory.Memory.ORIGINAL_LEVEL_TEMP & 0xFFFF, AM.ABS),
+        inst.TAX(),
+        inst.LDA(eff_st_abs + 6, AM.ABS),
+        inst.CMP(_use_mdef_val, AM.IMM8),
+        inst.BNE("phys_table"),
+        inst.LDA(mag_lut_addr, AM.LNG_X),
+        inst.STA(memory.Memory.FROM_SCALE_TEMP & 0xFFFF, AM.ABS),
+        inst.LDA(memory.Memory.SCALING_LEVEL & 0xFFFF, AM.ABS),
+        inst.TAX(),
+        inst.LDA(mag_lut_addr, AM.LNG_X),
+        inst.STA(memory.Memory.TO_SCALE_TEMP & 0xFFFF, AM.ABS),
+        inst.BRA("end_lut"),
+        "phys_table",
+        inst.LDA(phys_lut_addr, AM.LNG_X),
+        inst.STA(memory.Memory.FROM_SCALE_TEMP & 0xFFFF, AM.ABS),
+        inst.LDA(memory.Memory.SCALING_LEVEL & 0xFFFF, AM.ABS),
+        inst.TAX(),
+        inst.LDA(phys_lut_addr, AM.LNG_X),
+        inst.STA(memory.Memory.TO_SCALE_TEMP & 0xFFFF, AM.ABS),
+        "end_lut"
+    ]
+
+    return rt
+
+
 
 
