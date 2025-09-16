@@ -794,6 +794,28 @@ class EventCommand:
         return cmd
 
     @staticmethod
+    def copy_memory(
+            address: int,
+            payload: bytes
+    ):
+        """
+        Return an EventCommand which copies the payload bytes to the given address.
+        The address must be in bank 0x7E or 0x7F.
+        """
+        if not 0x7E0000 <= address < 0x800000:
+            raise ValueError
+
+        num_bytes = len(payload)
+
+        cmd = EventCommand.generic_command(
+            0x4E, address & 0xFFFF, address // 0x10000, num_bytes + 2, payload
+        )
+        cmd.arg_lens[-1] = num_bytes
+
+        return cmd
+
+
+    @staticmethod
     def assign_val_to_mem(
             val: int, address: int, num_bytes: int
     ) -> EventCommand:

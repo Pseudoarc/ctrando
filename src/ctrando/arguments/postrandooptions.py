@@ -1,6 +1,8 @@
 """Options which are applied after randomization."""
 import argparse
 from dataclasses import dataclass, field
+import enum
+
 import typing
 from functools import partial
 
@@ -12,6 +14,21 @@ def clip(val: float, min_val: float, max_val: float) -> float:
     return sorted([min_val, val, max_val])[1]
 
 
+class EndingID(enum.StrEnum):
+    BEYOND_TIME = "beyond time"
+    THE_DREAM_PROJECT = "the dream project"
+    THE_SUCCESSOR_OF_GUARDIA = "the successor of guardia"
+    GOODNIGHT = "goodnight"
+    THE_LEGENDARY_HERO = "the legendary hero"
+    THE_UNKNOWN_PAST = "the unknown past"
+    PEOPLE_OF_THE_TIMES = "people of the times"
+    THE_OATH = "the oath"
+    DINO_AGE = "dino age"
+    WHAT_THE_PROPHET_SEEKS = "what the prophet seeks"
+    SLIDE_SHOW = "a slide show?"
+    RANDOM = "random"
+
+
 @dataclass()
 class PostRandoOptions:
     attr_names: typing.ClassVar[tuple[str, ...]] = (
@@ -20,7 +37,8 @@ class PostRandoOptions:
         "battle_memory_cursor", "menu_memory_cursor",
         "window_background",
         "crono_palette", "marle_palette", "lucca_palette", "robo_palette",
-        "frog_palette", "ayla_palette", "magus_palette"
+        "frog_palette", "ayla_palette", "magus_palette",
+        "ending"
     )
     _default_fast_loc_movement: typing.ClassVar[bool] = False
     _default_fast_ow_movement: typing.ClassVar[bool] = False
@@ -87,6 +105,8 @@ class PostRandoOptions:
                                                                  _default_ayla_palette_b))
     magus_palette: SNESPalette = field(default_factory = partial(SNESPalette.from_bytes,
                                                                  _default_magus_palette_b))
+
+    ending: EndingID = EndingID("the dream project")
 
     def __post_init__(self):
         self.battle_speed = sorted([1, int(self.battle_speed), 8])[1]
@@ -167,6 +187,13 @@ class PostRandoOptions:
             group.add_argument(name, action="store", type=SNESPalette.from_hex_sequence,
                                help=f"Hex format palette for {char_name}",
                                default=argparse.SUPPRESS)
+
+        group.add_argument(
+            "--ending", action="store",
+            type=EndingID,
+            help="name of ending (or \"random\")",
+            default=argparse.SUPPRESS
+        )
 
     @classmethod
     def extract_from_namespace(cls, namespace: argparse.Namespace) -> typing.Self:

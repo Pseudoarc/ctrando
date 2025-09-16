@@ -323,7 +323,6 @@ def get_ctrom_from_config(
     print(f"({b-a})")
     basepatch.add_set_level_command(ct_rom, config.pcstat_manager)
 
-
     effecttypes.expand_effect_mods(
         ct_rom, config.pctech_manager
     )
@@ -454,7 +453,7 @@ def get_ctrom_from_config(
 
     print("Writing Post-Randomization Personalizations...", end="")
     a = time.time()
-    postrandowriter.write_post_rando_options(settings.post_random_options, ct_rom)
+    postrandowriter.write_post_rando_options(settings.post_random_options, post_config.script_manager)
     b = time.time()
     print(f"({b-a})")
 

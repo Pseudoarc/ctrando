@@ -1,9 +1,14 @@
 """Write Post-Randomization options to rom data"""
 from collections.abc import Callable
+import random
 
 from ctrando.arguments import postrandooptions
 from ctrando.base.basepatch import apply_fast_ow_movement
-from ctrando.common import ctrom
+from ctrando.common import ctenums, ctrom, memory
+from ctrando.locations.scriptmanager import ScriptManager
+from ctrando.locations.locationevent import LocationEvent, FunctionID as FID
+from ctrando.locations.eventcommand import EventCommand as EC, Operation as OP
+from ctrando.locations.eventfunction import EventFunction as EF
 from ctrando.postrando import gameoptions, palettes
 
 
@@ -94,11 +99,70 @@ def write_palettes(
     ow_pc_palettes.write_to_ctrom(ct_rom, 0)
 
 
+_ending_storyline_dict: dict[postrandooptions.EndingID, int] = {
+    postrandooptions.EndingID.BEYOND_TIME: 0xD4,
+    postrandooptions.EndingID.THE_DREAM_PROJECT: 0x00,
+    postrandooptions.EndingID.THE_SUCCESSOR_OF_GUARDIA: 0x27,
+    postrandooptions.EndingID.GOODNIGHT: 0x2D,
+    postrandooptions.EndingID.THE_LEGENDARY_HERO: 0x54,
+    postrandooptions.EndingID.THE_UNKNOWN_PAST: 0x66,
+    postrandooptions.EndingID.PEOPLE_OF_THE_TIMES: 0x75,
+    postrandooptions.EndingID.THE_OATH: 0x84,
+    postrandooptions.EndingID.DINO_AGE: 0x98,
+    postrandooptions.EndingID.WHAT_THE_PROPHET_SEEKS: 0x99,
+    postrandooptions.EndingID.SLIDE_SHOW: 0xA2
+}
+
+
+def write_ending_selection(
+        ending_name: postrandooptions.EndingID,
+        script_man: ScriptManager
+):
+    """Write the chosen ending to the rom's scripts."""
+
+    if ending_name == postrandooptions.EndingID.RANDOM:
+        storyline = random.choice(list(_ending_storyline_dict.values()))
+    else:
+        storyline = _ending_storyline_dict[ending_name]
+
+    new_commands = (
+        EF().add(EC.assign_val_to_mem(
+            0, memory.Memory.BLACKBIRD_LEFT_WING_CUTSCENE_COUNTER, 1)
+        ).add(EC.assign_val_to_mem(storyline, memory.Memory.STORYLINE_COUNTER, 1))
+    )
+
+    if ending_name == postrandooptions.EndingID.THE_OATH:
+        new_commands.add(
+            EC.copy_memory(0x7E2980, bytes([0, 4, 1, 2, 3, 0x80, 0x80]))
+        )
+
+    script = script_man[ctenums.LocID.TESSERACT]
+    pos = script.find_exact_command(
+        EC.if_flag(memory.Flags.BLACK_OMEN_MAMMON_M_BATTLE)
+    )
+
+    script.insert_commands(new_commands.get_bytearray(), pos)
+
+    script = script_man[ctenums.LocID.LAVOS]
+    start, end = script.get_function_bounds(8, FID.ARBITRARY_1)
+    pos = script.find_exact_command_opt(
+        EC.change_location(
+            ctenums.LocID.ENDING_SELECTOR_052, 0, 0, 0,
+            1, True
+        ), start, end
+    )
+
+    if pos is not None:
+        script.insert_commands(new_commands.get_bytearray(), pos)
+
+
 def write_post_rando_options(
         post_rando_options: postrandooptions.PostRandoOptions,
-        ct_rom: ctrom.CTRom
+        script_man: ScriptManager,
 ):
     """Implement settings from PostRandoOptions object."""
+
+    ct_rom = script_man.get_ctrom()
 
     if post_rando_options.default_fast_loc_movement:
         set_auto_run(ct_rom)
@@ -118,3 +182,4 @@ def write_post_rando_options(
 
     default_opts.write_to_ctrom(ct_rom)
     write_palettes(ct_rom, post_rando_options)
+    write_ending_selection(post_rando_options.ending, script_man)
