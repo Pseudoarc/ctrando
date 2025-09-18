@@ -4,6 +4,7 @@ import typing
 from ctrando.arguments import bossrandooptions as bro
 from ctrando.bosses import bosstypes as bty
 from ctrando.bosses import bossrandoassign as bass
+from ctrando.bosses.bossrandoassign import write_blackbird_peek
 from ctrando.common import ctenums, random
 from ctrando.locations.scriptmanager import ScriptManager
 from ctrando.arguments import bossrandooptions as bro
@@ -457,6 +458,10 @@ def write_bosses_to_ct_rom(
 
         assign_func(script_manager, scheme)
 
+    wing_boss = boss_assign_dict[bty.BossSpotID.BLACKBIRD_LEFT_WING]
+    epoch_boss = boss_assign_dict[bty.BossSpotID.EPOCH_REBORN]
+
+    bass.write_blackbird_peek(script_manager, epoch_boss, wing_boss)
 
     # ozzie_scheme = bty.get_default_scheme(bty.BossID.OZZIE_TRIO)
     # ozzie_scheme.parts[0].enemy_id = ctenums.EnemyID.FLEA

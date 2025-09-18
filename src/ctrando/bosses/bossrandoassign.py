@@ -278,7 +278,7 @@ def assign_blackbird_left_wing_boss(
 
 def get_base_alt_slots(
         boss_part: bosstypes.BossPart
-):
+) -> tuple[int, int]:
     base_slot = boss_part.slot
     base_id = boss_part.enemy_id
 
@@ -1283,4 +1283,35 @@ def add_r_series_boss_defeat_check(
                 .add(EC.assign_mem_to_mem(temp_addr, memory.Memory.BOSSES_DEFEATED,1))
                 .get_bytearray(), hook_data.pos
             )
+
+
+def write_blackbird_peek(
+        script_manager: scriptmanager.ScriptManager,
+        epoch_boss: bosstypes.BossID,
+        blackbird_wing_boss: bosstypes.BossID
+):
+    script = script_manager[ctenums.LocID.BLACKBIRD_HANGAR]
+
+    epoch_boss_part = bosstypes.get_default_scheme(epoch_boss).parts[0]
+    wing_boss_part = bosstypes.get_default_scheme(blackbird_wing_boss).parts[0]
+
+
+    epoch_boss_slot = 3
+    wing_main_slot, wing_alt_slot = get_base_alt_slots(wing_boss_part)
+    wing_boss_slot = wing_alt_slot
+
+    for obj_id in (6, 8, 9):
+        pos = script.get_object_start(obj_id)
+        script.delete_commands(pos)
+
+    pos = script.get_object_start(7)
+    new_cmd = EC.load_enemy(wing_boss_part.enemy_id, wing_boss_slot, False)
+    script.replace_command_at_pos(pos, new_cmd)
+
+    pos = script.get_object_start(0xA)
+    script.replace_command_at_pos(
+        pos, EC.load_enemy(epoch_boss_part.enemy_id, epoch_boss_slot, False)
+    )
+
+
 
