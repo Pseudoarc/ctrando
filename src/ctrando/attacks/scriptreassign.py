@@ -90,6 +90,7 @@ def reassign_tech_to_magus(
 
     from_index = tech.battle_group.index(from_pcid)
     tech.battle_group[from_index] = ctenums.CharID.MAGUS
+    tech.control_header.set_effect_index(from_index, to_effect_id)
 
     from_mmp_index = tech.menu_mp_reqs.index(from_effect_id)
     tech.menu_mp_reqs[from_mmp_index] = to_effect_id

@@ -1868,6 +1868,11 @@ class PCTechManager:
         self._update_rock_techs(ct_rom)
         self._write_blackhole_exceptions(ct_rom, black_hole_factor, black_hole_min)
 
+        # Display "Comb" for magus when he has dual techs
+        for bitmask in self._bitmasks:
+            if (bitmask & 0x02) and bitmask != 0x02:
+                ct_rom.getbuffer()[0x0CE60B:0x0CE60B + 3] = bytearray.fromhex('EA EA 80')
+                break
 
     @classmethod
     def _free_block_on_ct_rom_rw(
