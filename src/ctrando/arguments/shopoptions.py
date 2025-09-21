@@ -19,6 +19,12 @@ class ShopCapacityType(enum.StrEnum):
     RANDOM = "random"
 
 
+class ItemBasePrice(enum.StrEnum):
+    VANILLA = "vanilla"
+    BALANCED = "balanced"
+    MAX = "max"
+
+
 class ItemSalePrice(enum.StrEnum):
     VANILLA = "vanilla"
     RANDOM = "random"
@@ -98,6 +104,7 @@ class ShopOptions:
         ctenums.ItemID.ACCESSORY_END_BC,
         ctenums.ItemID.SCALING_LEVEL
     ]
+    _default_item_base_price: typing.ClassVar[ItemBasePrice] = ItemBasePrice.VANILLA
     _default_item_price: typing.ClassVar[ItemSalePrice] = ItemSalePrice.VANILLA
     _default_item_price_min_multiplier: typing.ClassVar[float] = 0.5
     _default_item_price_max_multiplier: typing.ClassVar[float] = 2.0
@@ -108,6 +115,7 @@ class ShopOptions:
             shop_capacity_randomization: ShopCapacityType = _default_shop_capacity,
             not_buyable_items: typing.Optional[list[ctenums.ItemID]] = None,
             not_sellable_items: typing.Optional[list[ctenums.ItemID]] = None,
+            item_base_prices: ItemBasePrice = _default_item_base_price,
             item_price_randomization: ItemSalePrice = _default_item_price,
             item_price_min_percent: float = _default_item_price_min_multiplier,
             item_price_max_percent: float = _default_item_price_max_multiplier,
@@ -124,6 +132,7 @@ class ShopOptions:
             not_sellable_items = self._default_not_buyable
         self.not_sellable_items = list(not_sellable_items)
 
+        self.item_base_prices = item_base_prices
         self.item_price_randomization = item_price_randomization
 
         if item_price_min_percent <= 0:
@@ -177,6 +186,11 @@ class ShopOptions:
         )
 
         argumenttypes.add_str_enum_to_group(
+            group, "--item-base-prices",
+            ItemBasePrice,
+        )
+
+        argumenttypes.add_str_enum_to_group(
             group, "--item-price-randomization",
             ItemSalePrice,
         )
@@ -198,6 +212,7 @@ class ShopOptions:
         attr_names = [
             "shop_inventory_randomization", "shop_capacity_randomization",
             "not_buyable_items", "not_sellable_items",
+            "item_base_prices",
             "item_price_randomization"
         ]
 

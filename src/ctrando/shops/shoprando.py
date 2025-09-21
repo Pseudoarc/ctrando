@@ -341,6 +341,44 @@ def randomize_shop_inventory(
             shop_manager.shop_dict[shop_id] = new_items
 
 
+def set_balanced_prices(
+        item_man: itemdata.ItemDB
+):
+    prices: dict[ctenums.ItemID, int] = {
+        ctenums.ItemID.ZODIACCAPE: 40000,
+        ctenums.ItemID.NOVA_ARMOR: 65000,
+        ctenums.ItemID.PRISMDRESS: 65000,
+        ctenums.ItemID.MOON_ARMOR: 40000,
+        ctenums.ItemID.RUBY_ARMOR: 30000,
+        ctenums.ItemID.GLOOM_CAPE: 20000,
+        ctenums.ItemID.WHITE_MAIL: 20000,
+        ctenums.ItemID.BLACK_MAIL: 20000,
+        ctenums.ItemID.BLUE_MAIL: 20000,
+        ctenums.ItemID.RED_MAIL: 20000,
+        ctenums.ItemID.PRISM_HELM: 65000,
+        ctenums.ItemID.GLOOM_HELM: 65000,
+        ctenums.ItemID.SAFE_HELM: 40000,
+        ctenums.ItemID.SIGHT_CAP: 30000,
+        ctenums.ItemID.MEMORY_CAP: 20000,
+        ctenums.ItemID.TIME_HAT: 25000,
+        ctenums.ItemID.VIGIL_HAT: 50000,
+        ctenums.ItemID.OZZIEPANTS: 10000,
+        ctenums.ItemID.RBOW_HELM: 30000,
+        ctenums.ItemID.MERMAIDCAP: 30000,
+    }
+
+    for item_id, price in prices.items():
+        item_man.item_dict[item_id].price = price
+
+
+def set_max_prices(
+        item_man: itemdata.ItemDB
+):
+    for item_id in ctenums.ItemID:
+        if item_id in item_man.item_dict:
+            item_man.item_dict[item_id].price = 65000
+
+
 def update_unsellable_prices(
         item_man: itemdata.ItemDB
 ):
@@ -485,6 +523,11 @@ def apply_shop_settings(
         rng: RNGType
 ):
     update_unsellable_prices(item_man)
+    if shop_options.item_base_prices == shopoptions.ItemBasePrice.BALANCED:
+        set_balanced_prices(item_man)
+    elif shop_options.item_base_prices == shopoptions.ItemBasePrice.MAX:
+        set_max_prices(item_man)
+
     update_unsellable(item_man, shop_options)
     randomize_item_prices(item_man, shop_options, rng)
     randomize_shop_inventory(shop_man, shop_options, ds_item_pool, rng)
