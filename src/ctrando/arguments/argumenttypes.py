@@ -8,6 +8,9 @@ from dataclasses import dataclass, fields
 from enum import Enum
 import typing
 
+from collections.abc import Iterable
+from typing import Protocol, TypeVar, Any
+
 
 class ArgumentGroup(typing.Protocol):
 
@@ -229,3 +232,118 @@ def str_to_enum(
 ):
     lookup_dict = str_to_enum_dict(enum_type)
     return lookup_dict[string]
+
+
+_Number = TypeVar("_Number", bound=int | float)
+
+class Argument[_T](Protocol):
+    default_value: _T
+    help_text: str
+
+    def add_to_argparse(
+            self,
+            argparse_name: str,
+            argparse_obj: argparse.ArgumentParser | argparse._ArgumentGroup,
+            type_fn: typing.Callable[[str], Any] | None = None
+    ):
+        ...
+
+
+class FlagArg:
+    def __init__(
+            self,
+            help_text: str
+    ):
+        self.default_value = False
+        self.help_text = help_text
+
+    def add_to_argparse(
+            self,
+            argparse_name: str,
+            argparse_obj: argparse.ArgumentParser | argparse._ArgumentGroup,
+            type_fn: typing.Callable[[str], Any] | None = None,
+    ):
+        argparse_obj.add_argument(
+            argparse_name,
+            action = "store_true",
+            default=argparse.SUPPRESS,
+            help=self.help_text,
+        )
+
+
+class DiscreteNumericalArg[_Number]:
+    def __init__(
+            self,
+            min_value: _Number,
+            max_value: _Number,
+            interval: float,
+            default_value: float,
+            help_text: str
+    ):
+        self.min_value = min_value
+        self.max_value = max_value
+        self.interval = interval
+        self.default_value = default_value
+        self.help_text = help_text
+
+    def add_to_argparse(
+            self,
+            argparse_name: str,
+            argparse_obj: argparse.ArgumentParser | argparse._ArgumentGroup,
+            type_fn: typing.Callable[[str], Any] | None = None,
+    ):
+        if type_fn is None:
+            type_fn = self.default_value.__class__
+
+        argparse_obj.add_argument(
+            argparse_name,
+            default=argparse.SUPPRESS,
+            action="store",
+            type=type_fn,
+            help=self.help_text
+        )
+
+
+class DiscreteCategorialArg[_T]:
+    def __init__(
+            self,
+            choices: Iterable[_T],
+            default_value: _T,
+            help_text: str
+    ):
+        self.choices = list(choices)
+        self.default_value = default_value
+        self.help_text = help_text
+
+
+    def add_to_argparse(
+            self,
+            argparse_name: str,
+            argparse_obj: argparse.ArgumentParser | argparse._ArgumentGroup,
+            type_fn: typing.Callable[[str], Any] | None = None
+    ):
+        argparse_obj.add_argument(
+            argparse_name,
+            default=argparse.SUPPRESS,
+            type=self.default_value.__class__
+
+        )
+
+
+class MultipleDiscreteSelection[_T]:
+    def __init__(
+            self,
+            choices: Iterable[_T],
+            default_value: Iterable[_T],
+            help_text: str
+    ):
+        self.choices = list(choices)
+        self.default_value = list(default_value)
+        self.help_text = help_text
+
+    def add_to_argparse(
+            self,
+            argparse_name: str,
+            argparse_obj: argparse.ArgumentParser | argparse._ArgumentGroup
+    ):
+        ...

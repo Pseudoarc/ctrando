@@ -5,6 +5,8 @@ import typing
 from ctrando.arguments import argumenttypes
 from dataclasses import dataclass, fields
 
+from ctrando.arguments.argumenttypes import DiscreteNumericalArg
+
 
 class EnemyPoolType(enum.StrEnum):
     VANILLA = "vanilla"
@@ -26,6 +28,16 @@ class DropOptions:
     _default_drop_rate: typing.ClassVar[float] = 0.10
     _default_mark_dropping_enemies: typing.ClassVar[bool] = False
 
+    _attr_names: typing.ClassVar[tuple[str, ...]] = (
+        "drop_enemy_pool", "drop_reward_pool",
+        "drop_rate", "mark_dropping_enemies"
+    )
+    _help_dict: typing.ClassVar[dict[str, str]] = {
+        "drop_enemy_pool": "Pool of enemies which can have a dropped item",
+        "drop_reward_pool": "Method of choosing enemy dropped items",
+        "drop_rate": "Percentage (decimal) of enemies in the drop pool which have a dropped item",
+        "mark_dropping_enemies": "Alter enemy names to indicate a dropped item"
+    }
     def __init__(
             self,
             drop_enemy_pool=_default_drop_enemy_pool,
@@ -37,6 +49,33 @@ class DropOptions:
         self.drop_reward_pool = drop_reward_pool
         self.drop_rate = drop_rate
         self.mark_dropping_enemies = mark_dropping_enemies
+
+    @classmethod
+    def get_argument_spec(cls) -> dict[str, argumenttypes.Argument]:
+        ret_dict: dict[str, argumenttypes.Argument] = {}
+
+        attr_name = "drop_enemy_pool"
+        ret_dict[attr_name] = argumenttypes.DiscreteCategorialArg(
+            list(EnemyPoolType), EnemyPoolType.VANILLA,
+            cls._help_dict[attr_name]
+        )
+
+        attr_name = "drop_reward_pool"
+        ret_dict[attr_name] = argumenttypes.DiscreteCategorialArg(
+            list(RewardPoolType), RewardPoolType.VANILLA,
+            cls._help_dict[attr_name]
+        )
+
+        attr_name = "drop_rate"
+        ret_dict[attr_name] = argumenttypes.DiscreteNumericalArg(
+            0.0, 1.0, 0.01, 1.0,
+            cls._help_dict[attr_name]
+        )
+
+        attr_name = "mark_dropping_enemies"
+        ret_dict[attr_name] = argumenttypes.FlagArg(cls._help_dict[attr_name])
+
+        return ret_dict
 
     @classmethod
     def add_group_to_parser(cls, parser: argparse.ArgumentParser):
@@ -74,12 +113,7 @@ class DropOptions:
     def extract_from_namespace(cls, namespace: argparse.Namespace):
 
         init_dict: dict[str, typing.Any] = {}
-        attr_names = (
-            "drop_enemy_pool", "drop_reward_pool",
-            "drop_rate", "mark_dropping_enemies"
-        )
-
-        for attr in attr_names:
+        for attr in cls._attr_names:
             if attr in namespace:
                 init_dict[attr] = getattr(namespace, attr)
 
@@ -91,6 +125,17 @@ class CharmOptions:
     _default_charm_reward_pool: typing.ClassVar[RewardPoolType] = RewardPoolType.VANILLA
     _default_charm_rate: typing.ClassVar[float] = 0.05
     _default_mark_charmable_enemies: typing.ClassVar[bool] = False
+
+    _attr_names: typing.ClassVar[tuple[str, ...]] = (
+        "charm_enemy_pool", "charm_reward_pool",
+        "charm_rate", "mark_charmable_enemies"
+    )
+    _help_dict: typing.ClassVar[dict[str, str]] = {
+        "charm_enemy_pool": "Pool of enemies which can have a charmable item",
+        "charm_reward_pool": "Method of choosing enemy charmable items",
+        "charm_rate": "Percentage (decimal) of enemies in the charm pool which have a charmable item",
+        "mark_charmable_enemies": "Alter enemy names to indicate a charmable item"
+    }
     def __init__(
             self,
             charm_enemy_pool=_default_charm_enemy_pool,
@@ -104,6 +149,33 @@ class CharmOptions:
         self.mark_charmable_enemies = mark_charmable_enemies
 
     @classmethod
+    def get_argument_spec(cls) -> dict[str, argumenttypes.Argument]:
+        ret_dict: dict[str, argumenttypes.Argument] = {}
+
+        attr_name = "charm_enemy_pool"
+        ret_dict[attr_name] = argumenttypes.DiscreteCategorialArg(
+            list(EnemyPoolType), EnemyPoolType.VANILLA,
+            cls._help_dict[attr_name]
+        )
+
+        attr_name = "charm_reward_pool"
+        ret_dict[attr_name] = argumenttypes.DiscreteCategorialArg(
+            list(RewardPoolType), RewardPoolType.VANILLA,
+            cls._help_dict[attr_name]
+        )
+
+        attr_name = "charm_rate"
+        ret_dict[attr_name] = argumenttypes.DiscreteNumericalArg(
+            0.0, 1.0, 0.01, 1.0,
+            cls._help_dict[attr_name]
+        )
+
+        attr_name = "mark_charmable_enemies"
+        ret_dict[attr_name] = argumenttypes.FlagArg(cls._help_dict[attr_name])
+
+        return ret_dict
+
+    @classmethod
     def add_group_to_parser(cls, parser: argparse.ArgumentParser):
         """Adds this as a group to the parser."""
         group = parser.add_argument_group(
@@ -113,26 +185,26 @@ class CharmOptions:
 
         argumenttypes.add_str_enum_to_group(
             group, "--charm-enemy-pool", EnemyPoolType,
-            help_str="Pool of enemies which can have a charmable item"
+            help_str=cls._help_dict["charm_enemy_pool"]
         )
 
         argumenttypes.add_str_enum_to_group(
             group, "--charm-reward-pool", RewardPoolType,
-            help_str="Method of choosing enemy charmable items"
+            help_str=cls._help_dict["charm_reward_pool"]
         )
 
         group.add_argument(
             "--charm-rate",
             action="store", type=float,
             default=argparse.SUPPRESS,
-            help="Percentage of enemies in the charm pool which have a charmable item"
+            help=cls._help_dict["charm_rate"]
         )
 
         group.add_argument(
             "--mark-charmable-enemies",
             action="store_true",
             default=argparse.SUPPRESS,
-            help="Alter enemy names to indicate a charmable item"
+            help=cls._help_dict["mark_charmable_enemies"]
         )
 
     @classmethod
@@ -162,14 +234,7 @@ class XPTPGRewards:
     xp_penalty_percent: int = 0
     level_cap: int = 60
 
-    @classmethod
-    def add_group_to_parser(cls, parser: argparse.ArgumentParser):
-        """Adds this as a group to the parser."""
-        group = parser.add_argument_group(
-            title="Battle Rewards Settings",
-            description="Settings which modify post-battle rewards."
-        )
-        help_dict: dict[str: str] = {
+    _help_dict: typing.ClassVar[dict[str, str]] = {
             'xp_scale': "Factor by which to scale XP earned in battle",
             'tp_scale': "Factor by which to scale TP earned in battle",
             'g_scale': "Factor by which to scale G earned in battle",
@@ -180,14 +245,63 @@ class XPTPGRewards:
             "xp_penalty_percent": "For each level beyond the penalty, the requirement grows by this percent",
             "level_cap": "Levels beyond the level cap will have prohibitively large requirements."
         }
+    _arg_names: typing.ClassVar[tuple[str, ...]] = (
+        'xp_scale', 'tp_scale', 'g_scale', 'split_xp', 'split_tp',
+        'fix_tp_doubling', "xp_penalty_level", "xp_penalty_percent",
+        "level_cap"
+    )
+
+    @classmethod
+    def add_group_to_parser(cls, parser: argparse.ArgumentParser):
+        """Adds this as a group to the parser."""
+        group = parser.add_argument_group(
+            title="Battle Rewards Settings",
+            description="Settings which modify post-battle rewards."
+        )
+
 
         argumenttypes.add_dataclass_to_group(
-            cls, group, help_dict=help_dict
+            cls, group, help_dict=cls._help_dict
         )
 
     @classmethod
     def extract_from_namespace(cls, namespace: argparse.Namespace) -> typing.Self:
         return argumenttypes.extract_dataclass_from_namespace(cls, namespace)
+
+    @classmethod
+    def get_arg_specs(cls) -> dict[str, argumenttypes.Argument]:
+
+        ret_dict: dict[str, argumenttypes.Argument[typing.Any]] = {}
+
+        for arg_name in ("xp_scale", "tp_scale", "g_scale"):
+            ret_dict[arg_name] = argumenttypes.DiscreteNumericalArg(
+                0.50, 10.00, 0.05, 3.0,
+                cls._help_dict[arg_name]
+            )
+
+        for arg_name in ("split_tp", "fix_tp_doubling"):
+            ret_dict[arg_name] = argumenttypes.FlagArg(cls._help_dict[arg_name])
+
+        arg_name = "xp_penalty_level"
+        ret_dict[arg_name] = argumenttypes.DiscreteNumericalArg(
+            1, 99, 1, 40,
+            cls._help_dict[arg_name]
+        )
+
+        arg_name = "xp_penalty_percent"
+        ret_dict[arg_name] = argumenttypes.DiscreteNumericalArg(
+            0, 100, 1, 15,
+            cls._help_dict[arg_name]
+        )
+
+        arg_name = "level_cap"
+        ret_dict[arg_name] = argumenttypes.DiscreteNumericalArg(
+            1, 99, 1, 50,
+            cls._help_dict[arg_name]
+        )
+
+        return ret_dict
+
 
 
 class BattleRewards:
@@ -200,6 +314,14 @@ class BattleRewards:
         self.xp_tp_rewards = xp_tp_rewards
         self.drop_options = drop_options
         self.charm_options = charm_options
+
+    @classmethod
+    def get_arg_specs(cls) -> dict[str, argumenttypes.Argument]:
+        ret_dict = XPTPGRewards.get_arg_specs()
+        ret_dict.update(DropOptions.get_argument_spec())
+        ret_dict.update(CharmOptions.get_argument_spec())
+
+        return ret_dict
 
     @classmethod
     def add_group_to_parser(cls, parser: argparse.ArgumentParser):
