@@ -117,8 +117,8 @@ class ShopOptions:
             not_sellable_items: typing.Optional[list[ctenums.ItemID]] = None,
             item_base_prices: ItemBasePrice = _default_item_base_price,
             item_price_randomization: ItemSalePrice = _default_item_price,
-            item_price_min_percent: float = _default_item_price_min_multiplier,
-            item_price_max_percent: float = _default_item_price_max_multiplier,
+            item_price_min_multiplier: float = _default_item_price_min_multiplier,
+            item_price_max_multiplier: float = _default_item_price_max_multiplier,
             item_price_randomization_exclusions: typing.Optional[list[ctenums.ItemID]] = None,
     ):
         self.shop_inventory_randomization = shop_inventory_randomization
@@ -135,14 +135,14 @@ class ShopOptions:
         self.item_base_prices = item_base_prices
         self.item_price_randomization = item_price_randomization
 
-        if item_price_min_percent <= 0:
+        if item_price_min_multiplier <= 0:
             raise ValueError
 
-        if item_price_max_percent <= 0 or item_price_max_percent < item_price_min_percent:
+        if item_price_max_multiplier <= 0 or item_price_max_multiplier < item_price_min_multiplier:
             raise ValueError
 
-        self.item_price_min_percent = item_price_min_percent
-        self.item_price_max_percent = item_price_max_percent
+        self.item_price_min_multiplier = item_price_min_multiplier
+        self.item_price_max_multiplier = item_price_max_multiplier
 
         if item_price_randomization_exclusions is None:
             item_price_randomization_exclusions = list(self._default_item_price_randomization_exclusions)
@@ -213,7 +213,8 @@ class ShopOptions:
             "shop_inventory_randomization", "shop_capacity_randomization",
             "not_buyable_items", "not_sellable_items",
             "item_base_prices",
-            "item_price_randomization"
+            "item_price_randomization",
+            "item_price_min_multiplier", "item_price_max_multiplier"
         ]
 
         init_dict: dict[str, typing.Any] = dict()

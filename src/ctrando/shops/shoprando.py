@@ -465,8 +465,8 @@ def randomize_item_prices(
                 new_price = rng.randrange(2, 65000, 2)
             case shopoptions.ItemSalePrice.RANDOM_MULTIPLIER:
                 # Temp values
-                new_price = item.price * get_random_multiplier(shop_options.item_price_min_percent,
-                                                               shop_options.item_price_max_percent,
+                new_price = item.price * get_random_multiplier(shop_options.item_price_min_multiplier,
+                                                               shop_options.item_price_max_multiplier,
                                                                rng.random)
             case _:
                 new_price = item.price
