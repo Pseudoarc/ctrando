@@ -24,6 +24,7 @@ class DynamicScalingOptions:
     defense_safety_max_level: int = 30
     obstacle_safety_level: int = 30
 
+
     def __post_init__(self):
         if self.max_scaling_level < 0:
             raise ValueError
@@ -37,6 +38,32 @@ class DynamicScalingOptions:
         if self.defense_safety_max_level < self.defense_safety_min_level:
             raise ValueError
 
+    @classmethod
+    def get_argument_spec(cls) -> argumenttypes.ArgSpec:
+        return {
+            "max_scaling_level": argumenttypes.DiscreteNumericalArg(
+                1, 99, 1, 50,
+                "Maximum level to scale to (if not none)",
+                type_fn=int
+            ),
+            "dynamic_scale_lavos": argumenttypes.FlagArg(
+                "Include Lavos in the dynamic scaling (if not none)"),
+            "defense_safety_min_level": argumenttypes.DiscreteNumericalArg(
+                1, 99, 1, 10,
+                "Level before which enemies have standard phys defense",
+                type_fn=int
+            ),
+            "defense_safety_max_level": argumenttypes.DiscreteNumericalArg(
+                1, 99, 1, 10,
+                "Level after which enemies have their normal phys defense",
+                type_fn=int
+            ),
+            "obstacle_safety_level": argumenttypes.DiscreteNumericalArg(
+                1, 99, 1, 10,
+                "Level before which Obstacle is single target",
+                type_fn=int
+            ),
+        }
 
 @dataclass
 class ProgressionScalingData:
@@ -45,6 +72,36 @@ class ProgressionScalingData:
     levels_per_key_item: float = 0.0
     levels_per_objective: float = 3.0
     levels_per_character: float = 1.0
+
+    @classmethod
+    def get_argument_spec(cls) -> argumenttypes.ArgSpec:
+        return {
+            "levels_per_boss": argumenttypes.DiscreteNumericalArg(
+                0.0, 10.0, 0.25, 2.0,
+                "Scaling levels gained per boss defeated",
+                type_fn=float
+            ),
+            "levels_per_quest": argumenttypes.DiscreteNumericalArg(
+                0.0, 10.0, 0.25, 2.0,
+                "Scaling levels gained per quest completed",
+                type_fn=float
+            ),
+            "levels_per_key_item": argumenttypes.DiscreteNumericalArg(
+                0.0, 10.0, 0.25, 0.0,
+                "Scaling levels gained per key item obtained",
+                type_fn=float
+            ),
+            "levels_per_objective": argumenttypes.DiscreteNumericalArg(
+                0.0, 10.0, 0.25, 2.0,
+                "Scaling levels gained per objective completed",
+                type_fn=float
+            ),
+            "levels_per_character": argumenttypes.DiscreteNumericalArg(
+                0.0, 10.0, 0.25, 2.0,
+                "Scaling levels gained per character recruited",
+                type_fn=float
+            ),
+        }
 
     def __post_init__(self):
         if self.levels_per_boss < 0:
@@ -70,6 +127,27 @@ class StaticScalingOptions:
     static_hp_scale_lavos: bool = False
     element_safety_level: int = 30
 
+    @classmethod
+    def get_argument_spec(cls):
+        return {
+            "normal_enemy_hp_scale": argumenttypes.DiscreteNumericalArg(
+                0.05, 2.0, 0.05, 1.0,
+                "Multiply non-boss enemy hp by this factor",
+                type_fn=float
+            ),
+            "static_boss_hp_scale": argumenttypes.DiscreteNumericalArg(
+                0.05, 2.0, 0.05, 0.75,
+                "Multiply boss hp by this factor",
+                type_fn=float
+            ),
+            "static_hp_scale_lavos": argumenttypes.FlagArg("Apply static hp scaling to lavos"),
+            "element_safety_level": argumenttypes.DiscreteNumericalArg(
+                1, 99, 1, 30,
+                "Before this level any magic hits Nizbel/Retinite weakness",
+                type_fn=int
+            )
+        }
+
     def __post_init__(self):
         if self.static_boss_hp_scale <= 0:
             raise ValueError
@@ -84,6 +162,13 @@ class ScalingOptions:
         DynamicScalingScheme.PROGRESSION: ProgressionScalingData
     }
 
+    _arg_dict: argumenttypes.ArgSpec = {
+        "dynamic_scaling_scheme": argumenttypes.DiscreteCategorialArg(
+            list(DynamicScalingScheme), DynamicScalingScheme.PROGRESSION,
+            "Method for dynamically scaling enemies"
+        ),
+    }
+
     def __init__(
             self,
             dynamic_scaling_scheme: DynamicScalingScheme = DynamicScalingScheme.PROGRESSION,
@@ -96,6 +181,15 @@ class ScalingOptions:
         self.dynamic_scaling_scheme_options = dynamic_scaling_scheme_options
         self.dynamic_scaling_general_options = dynamic_scaling_general_options
         self.static_scaling_options = static_scaling_options
+
+    @classmethod
+    def get_argument_spec(cls) -> argumenttypes.ArgSpec:
+        ret_dict = dict(cls._arg_dict)
+        ret_dict["dynamic_scaling_scheme_options"] = ProgressionScalingData.get_argument_spec()
+        ret_dict["dynamic_scaling_general_options"] = DynamicScalingOptions.get_argument_spec()
+        ret_dict["static_scaling_options"] = StaticScalingOptions.get_argument_spec()
+
+        return ret_dict
 
     @classmethod
     def add_group_to_parser(cls, parser: argparse.ArgumentParser):

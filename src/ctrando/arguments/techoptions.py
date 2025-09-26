@@ -56,6 +56,47 @@ class TechOptions:
         self.black_hole_factor = black_hole_factor
 
     @classmethod
+    def get_argument_spec(cls) -> argumenttypes.ArgSpec:
+        return {
+            "tech_order": argumenttypes.arg_from_enum(
+                TechOrder, cls._default_tech_order,
+                "Order in which techs are learned"
+            ),
+            "tech_damage": argumenttypes.arg_from_enum(
+                TechDamage, cls._default_tech_damage,
+                "Damage dealt by techs"
+            ),
+            "tech_damage_random_factor_min": argumenttypes.DiscreteNumericalArg(
+                0.05, 2.00, 0.05,
+                cls._default_mp_random_factor_min,
+                help_text="Minimum percent (as decimal, default 1.0) which "
+                          "MP costs may shift (ignored if vanilla damage)",
+                type_fn=float
+            ),
+            "tech_damage_random_factor_max": argumenttypes.DiscreteNumericalArg(
+                0.05, 2.00, 0.05,
+                cls._default_mp_random_factor_max,
+                help_text="Maximum percent (as decimal, default 1.0) which "
+                          "MP costs may shift (ignored if vanilla damage)",
+                type_fn=float
+            ),
+            "preserve_magic": argumenttypes.FlagArg(
+                "Keep each PC's first magic tech in its vanilla location "
+                "(may break specified order)"
+            ),
+            "black_hole_factor": argumenttypes.DiscreteNumericalArg(
+                1.0, 10.0, 0.5, cls._default_black_hole_factor,
+                "Percent kill chance per MP in black hole's cost",
+                type_fn=float
+            ),
+            "black_hole_min": argumenttypes.DiscreteNumericalArg(
+                1.0, 10.0, 0.5, cls._default_black_hole_factor,
+                "Base percent kill chance for black hole, total is base + mp*factor",
+                type_fn=float
+            ),
+        }
+
+    @classmethod
     def add_group_to_parser(cls, parser: argparse.ArgumentParser):
         """Add Tech Settings to parser."""
         group = parser.add_argument_group(

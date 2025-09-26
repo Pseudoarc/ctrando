@@ -15,10 +15,13 @@ from ctrando.locations import scriptmanager
 
 _paired_enemies: list[tuple[EID, EID]] = [
     (EID.BANTAM_IMP, EID.STONE_IMP),
-    (EID.BLUE_SHIELD, EID.INCOGNITO),
+    (EID.BLUE_SHIELD, EID.YODU_DE),
     (EID.GOLD_EAGLET, EID.RED_EAGLET),
     (EID.INCOGNITO, EID.PEEPINGDOOM),
     (EID.DEFUNCT, EID.DEPARTED),
+    (EID.GOBLIN, EID.OGAN),
+    (EID.SHIST, EID.PAHOEHOE),
+    # Bantam, Stone
 ]
 
 _required_groups: list[tuple[EID, ...]] = [

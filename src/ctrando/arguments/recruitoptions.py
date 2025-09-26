@@ -79,6 +79,35 @@ class RecruitOptions:
         self.scale_gear = scale_gear
 
     @classmethod
+    def get_argument_spec(cls) -> argumenttypes.ArgSpec:
+        ret_dict: argumenttypes.ArgSpec = {}
+
+        for name, data in cls._name_default_dict.items():
+            ret_dict[f"{name}_min_level"] = argumenttypes.DiscreteNumericalArg(
+                1, 99, 1, data.min_level,
+                f"Minimum level at which the {name} recruit can join (default: {data.min_level})",
+                type_fn=int
+            )
+            ret_dict[f"{name}_min_techlevel"] = argumenttypes.DiscreteNumericalArg(
+                1, 99, 1, data.min_level,
+                f"Minimum level at which the {name} recruit can join (default: {data.min_level})",
+                type_fn=int
+            )
+
+        ret_dict["minimum_recruits"] = argumenttypes.FlagArg(
+            "All recruits are given a min level of 1 and min tech level of 0, overrides other settings"
+        )
+        ret_dict["scale_level_to_leader"] = argumenttypes.FlagArg(
+            "Recruits are scaled to the level of the lead character (but not below the spot minimum)"
+        )
+        ret_dict["scale_techlevel_to_leader"] = argumenttypes.FlagArg(
+            "Recruits are scaled to the tech level of the lead character (but not below the spot minimum)"
+        )
+        ret_dict["scale_gear"] = argumenttypes.FlagArg(
+            "Recruit gear is scaled based on the level at which they are recruited"
+        )
+
+    @classmethod
     def add_group_to_parser(cls, parser: argparse.ArgumentParser):
         """Add recruit option group to parser"""
         group = parser.add_argument_group(

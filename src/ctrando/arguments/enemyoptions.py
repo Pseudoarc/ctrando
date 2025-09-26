@@ -58,6 +58,14 @@ class EnemyOptions:
         self.shuffle_enemies = shuffle_enemies
 
     @classmethod
+    def get_argument_spec(cls) -> argumenttypes.ArgSpec:
+        return {
+            "sightscope_all": argumenttypes.FlagArg("Enable sightscope usage on all enemies."),
+            "forced_sightscope": argumenttypes.FlagArg("Sightscope effect will be present without the item equipped."),
+            "shuffle_enemies": argumenttypes.FlagArg("Normal enemy types are shuffled (respects enemy size)")
+        }
+
+    @classmethod
     def add_group_to_parser(cls, parser: argparse.ArgumentParser):
         """Add Tech Settings to parser."""
         group = parser.add_argument_group(

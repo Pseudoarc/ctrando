@@ -61,7 +61,7 @@ class LogicOptions:
         ctenums.TreasureID.ARRIS_DOME_FOOD_LOCKER_KEY, ctenums.TreasureID.REPTITE_LAIR_KEY,
         ctenums.TreasureID.TABAN_GIFT_VEST, ctenums.TreasureID.GENO_DOME_BOSS_1
     )
-    _default_excluded_spots: typing.ClassVar[tuple[ctenums.TreasureID]] = (
+    _default_excluded_spots: typing.ClassVar[tuple[ctenums.TreasureID, ...]] = (
         # Magus
         ctenums.TreasureID.MAGUS_CASTLE_RIGHT_HALL, ctenums.TreasureID.MAGUS_CASTLE_GUILLOTINE_1,
         ctenums.TreasureID.MAGUS_CASTLE_GUILLOTINE_2, ctenums.TreasureID.MAGUS_CASTLE_SLASH_ROOM_1,
@@ -84,7 +84,7 @@ class LogicOptions:
         ctenums.TreasureID.TYRANO_LAIR_MAZE_1, ctenums.TreasureID.TYRANO_LAIR_MAZE_2,
         ctenums.TreasureID.TYRANO_LAIR_MAZE_3, ctenums.TreasureID.TYRANO_LAIR_MAZE_4,
     )
-    forced_excluded_spots: typing.ClassVar[tuple[ctenums.TreasureID]] = (
+    forced_excluded_spots: typing.ClassVar[tuple[ctenums.TreasureID, ...]] = (
         ctenums.TreasureID.GUARDIA_CASTLE_SEALED_1000,
         ctenums.TreasureID.NORTHERN_RUINS_ANTECHAMBER_SEALED_1000,
         ctenums.TreasureID.NORTHERN_RUINS_BACK_RIGHT_SEALED_1000,

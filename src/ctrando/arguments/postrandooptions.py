@@ -113,6 +113,47 @@ class PostRandoOptions:
         self.message_speed = sorted([1, int(self.message_speed), 8])[1]
 
     @classmethod
+    def get_argument_spec(cls) -> argumenttypes.ArgSpec:
+        ret_dict: argumenttypes.ArgSpec = {
+            "default_fast_loc_movement": argumenttypes.FlagArg(
+                "Default location (dungeon, etc) movement is fast and run button slows"),
+            "default_fast_ow_movement": argumenttypes.FlagArg(
+                "Default overworld movement is fast and run button slows"),
+            "default_fast_epoch_movement": argumenttypes.FlagArg(
+                "Default epoch movement is fast and run button slows"),
+            "battle_speed": argumenttypes.DiscreteNumericalArg(
+                1, 8, 1, cls._default_battle_speed,
+                "Default battle speed", type_fn=int),
+            "message_speed": argumenttypes.DiscreteNumericalArg(
+                1, 8, 1, cls._default_message_speed,
+                "Default message speed", type_fn=int),
+            "battle_memory_cursor": argumenttypes.FlagArg(
+                "By default turn battle memory cursor on"),
+            "menu_memory_cursor": argumenttypes.FlagArg(
+                "By default turn menu memory cursor on"),
+            "window_background": argumenttypes.DiscreteNumericalArg(
+                1, 8, 1, cls._default_window_background,
+                "Default window background", type_fn=int
+            )
+        }
+        for arg_name in ("crono_palette", "marle_palette", "lucca_palette", "robo_palette",
+                         "frog_palette", "ayla_palette", "magus_palette",):
+            char_name = arg_name.split("_")[0].capitalize()
+            ret_dict[arg_name] = argumenttypes.StringArgument[SNESPalette](
+                help_text=f"Hex format palette for {char_name}",
+                parser=SNESPalette.from_hex_sequence
+            )
+
+        ret_dict["ending"] = argumenttypes.arg_from_enum(
+            EndingID, EndingID.THE_DREAM_PROJECT,
+            "name of ending (or \"random\")"
+        )
+
+        return ret_dict
+
+
+
+    @classmethod
     def add_group_to_parser(cls, parser: argparse.ArgumentParser):
         """Add these options to the parser."""
 

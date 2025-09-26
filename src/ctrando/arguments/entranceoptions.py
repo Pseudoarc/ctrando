@@ -38,6 +38,21 @@ class EntranceShufflerOptions:
     )
     _default_vanilla_spots: typing.ClassVar[tuple[OWExit, ...]] = ()
 
+    @classmethod
+    def get_argument_spec(cls) -> aty.ArgSpec:
+        return {
+            "shuffle_entrances": aty.FlagArg("Whether to shuffle entrances or not"),
+            "preserve_spots": aty.arg_multiple_from_enum(
+                OWExit, cls._default_preserve_spots,
+                "Spots which are to be shuffled among themselves"
+            ),
+            "rest_vanilla": aty.FlagArg("Only shuffle locations in preserve_spots"),
+            "vanilla_spots": aty.arg_multiple_from_enum(
+                OWExit, cls._default_vanilla_spots,
+                "Spots guaranteed to not be shuffled. Takes precedence over preserve_spots"
+            )
+        }
+
     def __init__(
             self,
             shuffle_entrances: bool = _default_shuffle_entrances,

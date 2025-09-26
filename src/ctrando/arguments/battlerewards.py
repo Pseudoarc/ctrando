@@ -3,9 +3,7 @@ import enum
 import typing
 
 from ctrando.arguments import argumenttypes
-from dataclasses import dataclass, fields
-
-from ctrando.arguments.argumenttypes import DiscreteNumericalArg
+from dataclasses import dataclass
 
 
 class EnemyPoolType(enum.StrEnum):
@@ -51,25 +49,24 @@ class DropOptions:
         self.mark_dropping_enemies = mark_dropping_enemies
 
     @classmethod
-    def get_argument_spec(cls) -> dict[str, argumenttypes.Argument]:
+    def get_argument_spec(cls) -> argumenttypes.ArgSpec:
         ret_dict: dict[str, argumenttypes.Argument] = {}
 
         attr_name = "drop_enemy_pool"
-        ret_dict[attr_name] = argumenttypes.DiscreteCategorialArg(
-            list(EnemyPoolType), EnemyPoolType.VANILLA,
-            cls._help_dict[attr_name]
+        ret_dict[attr_name] = argumenttypes.arg_from_enum(
+            EnemyPoolType, EnemyPoolType.VANILLA, cls._help_dict[attr_name]
         )
 
         attr_name = "drop_reward_pool"
-        ret_dict[attr_name] = argumenttypes.DiscreteCategorialArg(
-            list(RewardPoolType), RewardPoolType.VANILLA,
-            cls._help_dict[attr_name]
+        ret_dict[attr_name] = argumenttypes.arg_from_enum(
+            RewardPoolType, RewardPoolType.VANILLA, cls._help_dict[attr_name],
         )
 
         attr_name = "drop_rate"
         ret_dict[attr_name] = argumenttypes.DiscreteNumericalArg(
             0.0, 1.0, 0.01, 1.0,
-            cls._help_dict[attr_name]
+            cls._help_dict[attr_name],
+            type_fn=float
         )
 
         attr_name = "mark_dropping_enemies"
@@ -149,25 +146,23 @@ class CharmOptions:
         self.mark_charmable_enemies = mark_charmable_enemies
 
     @classmethod
-    def get_argument_spec(cls) -> dict[str, argumenttypes.Argument]:
+    def get_argument_spec(cls) -> argumenttypes.ArgSpec:
         ret_dict: dict[str, argumenttypes.Argument] = {}
 
         attr_name = "charm_enemy_pool"
-        ret_dict[attr_name] = argumenttypes.DiscreteCategorialArg(
-            list(EnemyPoolType), EnemyPoolType.VANILLA,
-            cls._help_dict[attr_name]
+        ret_dict[attr_name] = argumenttypes.arg_from_enum(
+            EnemyPoolType, EnemyPoolType.VANILLA, cls._help_dict[attr_name]
         )
 
         attr_name = "charm_reward_pool"
-        ret_dict[attr_name] = argumenttypes.DiscreteCategorialArg(
-            list(RewardPoolType), RewardPoolType.VANILLA,
-            cls._help_dict[attr_name]
+        ret_dict[attr_name] = argumenttypes.arg_from_enum(
+            RewardPoolType, RewardPoolType.VANILLA, cls._help_dict[attr_name]
         )
 
         attr_name = "charm_rate"
         ret_dict[attr_name] = argumenttypes.DiscreteNumericalArg(
             0.0, 1.0, 0.01, 1.0,
-            cls._help_dict[attr_name]
+            cls._help_dict[attr_name], type_fn=float
         )
 
         attr_name = "mark_charmable_enemies"
@@ -269,14 +264,14 @@ class XPTPGRewards:
         return argumenttypes.extract_dataclass_from_namespace(cls, namespace)
 
     @classmethod
-    def get_arg_specs(cls) -> dict[str, argumenttypes.Argument]:
+    def get_argument_spec(cls) -> argumenttypes.ArgSpec:
 
         ret_dict: dict[str, argumenttypes.Argument[typing.Any]] = {}
 
         for arg_name in ("xp_scale", "tp_scale", "g_scale"):
             ret_dict[arg_name] = argumenttypes.DiscreteNumericalArg(
                 0.50, 10.00, 0.05, 3.0,
-                cls._help_dict[arg_name]
+                cls._help_dict[arg_name], type_fn=float
             )
 
         for arg_name in ("split_tp", "fix_tp_doubling"):
@@ -285,19 +280,19 @@ class XPTPGRewards:
         arg_name = "xp_penalty_level"
         ret_dict[arg_name] = argumenttypes.DiscreteNumericalArg(
             1, 99, 1, 40,
-            cls._help_dict[arg_name]
+            cls._help_dict[arg_name], type_fn=int
         )
 
         arg_name = "xp_penalty_percent"
         ret_dict[arg_name] = argumenttypes.DiscreteNumericalArg(
             0, 100, 1, 15,
-            cls._help_dict[arg_name]
+            cls._help_dict[arg_name], type_fn=int
         )
 
         arg_name = "level_cap"
         ret_dict[arg_name] = argumenttypes.DiscreteNumericalArg(
             1, 99, 1, 50,
-            cls._help_dict[arg_name]
+            cls._help_dict[arg_name], type_fn=int
         )
 
         return ret_dict
@@ -317,9 +312,10 @@ class BattleRewards:
 
     @classmethod
     def get_arg_specs(cls) -> dict[str, argumenttypes.Argument]:
-        ret_dict = XPTPGRewards.get_arg_specs()
-        ret_dict.update(DropOptions.get_argument_spec())
-        ret_dict.update(CharmOptions.get_argument_spec())
+        ret_dict: argumenttypes.ArgSpec = dict()
+        ret_dict["xp_tp_rewards"] = XPTPGRewards.get_argument_spec()
+        ret_dict["drop_options"] = DropOptions.get_argument_spec()
+        ret_dict["charm_options"] = CharmOptions.get_argument_spec()
 
         return ret_dict
 

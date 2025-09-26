@@ -58,7 +58,7 @@ def weapon_pool_verify(in_string: str) -> ItemID:
 
 
 class GearRandoOptions:
-    _default_weapon_rando_pool: typing.ClassVar[tuple[ItemID]] = (
+    _default_weapon_rando_pool: typing.ClassVar[tuple[ItemID, ...]] = (
         ItemID.RAINBOW, ItemID.SHIVA_EDGE, ItemID.SWALLOW, ItemID.RED_KATANA, ItemID.SLASHER,
         ItemID.VALKERYE, ItemID.SIREN, ItemID.SONICARROW,
         ItemID.WONDERSHOT, ItemID.SHOCK_WAVE, ItemID.PLASMA_GUN,
@@ -66,6 +66,26 @@ class GearRandoOptions:
         ItemID.MASAMUNE_1, ItemID.MASAMUNE_2, ItemID.BRAVESWORD, ItemID.RUNE_BLADE, ItemID.DEMON_HIT, ItemID.PEARL_EDGE,
         ItemID.IRON_FIST, ItemID.BRONZEFIST,
         ItemID.DOOMSICKLE
+    )
+    _all_weapons: typing.ClassVar[tuple[ItemID,...]] = (
+        ItemID.WOOD_SWORD, ItemID.IRON_BLADE, ItemID.STEELSABER, ItemID.LODE_SWORD,
+        ItemID.RED_KATANA, ItemID.FLINT_EDGE, ItemID.DARK_SABER, ItemID.AEON_BLADE,
+        ItemID.DEMON_EDGE, ItemID.ALLOYBLADE, ItemID.STAR_SWORD, ItemID.VEDICBLADE,
+        ItemID.KALI_BLADE, ItemID.SHIVA_EDGE, ItemID.BOLT_SWORD, ItemID.SLASHER,
+        ItemID.BRONZE_BOW, ItemID.IRON_BOW, ItemID.LODE_BOW, ItemID.ROBIN_BOW,
+        ItemID.SAGE_BOW, ItemID.DREAM_BOW, ItemID.COMETARROW, ItemID.SONICARROW,
+        ItemID.VALKERYE, ItemID.SIREN, ItemID.AIR_GUN, ItemID.DART_GUN,
+        ItemID.AUTO_GUN, ItemID.PICOMAGNUM, ItemID.PLASMA_GUN, ItemID.RUBY_GUN,
+        ItemID.DREAM_GUN, ItemID.MEGABLAST, ItemID.SHOCK_WAVE, ItemID.WONDERSHOT,
+        ItemID.GRAEDUS, ItemID.TIN_ARM, ItemID.HAMMER_ARM, ItemID.MIRAGEHAND,
+        ItemID.STONE_ARM, ItemID.DOOMFINGER, ItemID.MAGMA_HAND, ItemID.MEGATONARM,
+        ItemID.BIG_HAND, ItemID.KAISER_ARM, ItemID.GIGA_ARM, ItemID.TERRA_ARM,
+        ItemID.CRISIS_ARM, ItemID.BRONZEEDGE, ItemID.IRON_SWORD, ItemID.MASAMUNE_1,
+        ItemID.FLASHBLADE, ItemID.PEARL_EDGE, ItemID.RUNE_BLADE, ItemID.BRAVESWORD,
+        ItemID.MASAMUNE_2, ItemID.DEMON_HIT, ItemID.FIST, ItemID.FIST_2, ItemID.FIST_3,
+        ItemID.IRON_FIST, ItemID.BRONZEFIST, ItemID.DARKSCYTHE, ItemID.HURRICANE,
+        ItemID.STARSCYTHE, ItemID.DOOMSICKLE, ItemID.MOP, ItemID.SWALLOW,
+        ItemID.SLASHER_2, ItemID.RAINBOW
     )
     _default_ds_item_pool: typing.ClassVar[tuple[ItemID]] = tuple(DSItem)
     _default_ds_replacement_chance: int = 50
@@ -88,6 +108,30 @@ class GearRandoOptions:
         self.weapon_rando_pool = tuple(weapon_rando_pool)
         self.bronze_fist_policy = bronze_fist_policy
         # self.remove_9999 = remove_9999
+
+    @classmethod
+    def get_argument_spec(cls) -> aty.ArgSpec:
+        return {
+            "ds_item_pool": aty.arg_multiple_from_enum(
+                DSItem, cls._default_ds_item_pool,"DS Items which may appear"
+            ),
+            "ds_replacement_chance": aty.DiscreteNumericalArg(
+                0, 100, 5, cls._default_ds_replacement_chance,
+                "Percent chance (e.g. 10 for 10 percent) to replace an item with a ds counterpart",
+                type_fn=int
+            ),
+            "weapon_rando_pool": aty.MultipleDiscreteSelection(
+                cls._all_weapons,
+                cls._default_weapon_rando_pool,
+                "Weapons whose effects will be shuffled",
+                choice_from_str_fn=functools.partial(aty.str_to_enum, enum_type=ItemID),
+                str_from_choice_fn=functools.partial(aty.enum_to_str, enum_type=ItemID)
+            ),
+            "bronze_fist_policy": aty.arg_from_enum(
+                BronzeFistPolicy, BronzeFistPolicy.VANILLA,
+                "How to modify BronzeFist pre-shuffle"
+            )
+        }
 
     @classmethod
     def add_group_to_parser(cls, parser: argparse.ArgumentParser):

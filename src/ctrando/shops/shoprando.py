@@ -315,7 +315,7 @@ def randomize_shop_inventory(
             }
 
         item_pool = list(ctenums.ItemID)
-        removed_items = shop_options.not_buyable_items + shopoptions.ShopOptions.unused_items
+        removed_items = list(shop_options.not_buyable_items) + list(shopoptions.ShopOptions.unused_items)
         if gearrandooptions.DSItem.DRAGONS_TEAR not in ds_item_pool:
             removed_items += ctenums.ItemID.DRAGON_TEAR
         if gearrandooptions.DSItem.VALOR_CREST not in ds_item_pool:
@@ -494,7 +494,7 @@ def update_unsellable(
         shop_options: shopoptions.ShopOptions
 ):
     forced_unsellable = (
-        shopoptions.ShopOptions.unused_items +
+        list(shopoptions.ShopOptions.unused_items) +
         [
             ctenums.ItemID.MASAMUNE_1, ctenums.ItemID.MASAMUNE_2,
             ctenums.ItemID.BENT_HILT, ctenums.ItemID.BENT_SWORD,

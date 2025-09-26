@@ -76,6 +76,38 @@ class ObjectiveOptions:
     objective_specifiers: list[str] = field(default_factory=list)
 
     @classmethod
+    def get_argument_spec(cls) -> argumenttypes.ArgSpec:
+        ret_dict: argumenttypes.ArgSpec =  {
+            "num_algetty_portal_objectives": argumenttypes.DiscreteNumericalArg(
+                0, 8, 1, 3,
+                "Number of objectives needed to unlock the portal in Algetty's entrance",
+                type_fn=int
+            ),
+            "num_omen_objectives": argumenttypes.DiscreteNumericalArg(
+                0, 8, 1, 3,
+                "Number of objectives needed to unlock the final door in the Black Omen",
+                type_fn=int
+            ),
+            "num_bucket_objectives": argumenttypes.DiscreteNumericalArg(
+                0, 8, 1, 3,
+                "Number of objectives needed to unlock the final door in the Black Omen",
+                type_fn=int
+            ),
+        }
+
+        for obj_id in range(8):
+            obj_num = obj_id+1
+            arg_name = f"objective_{obj_num}"
+            help_text = f"Specifier for objective {obj_num}"
+            ret_dict[arg_name] = argumenttypes.StringArgument[str](
+                help_text=help_text,
+                parser=parse_objective_str
+            )
+
+        return ret_dict
+
+
+    @classmethod
     def add_group_to_parser(cls, parser: argparse.ArgumentParser):
         """Adds this as a group to the parser."""
         group = parser.add_argument_group(

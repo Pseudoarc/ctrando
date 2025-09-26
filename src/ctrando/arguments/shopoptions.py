@@ -34,7 +34,7 @@ class ItemSalePrice(enum.StrEnum):
 class ShopOptions:
     _default_shop_inventory: typing.ClassVar[ShopInventoryType] = ShopInventoryType.VANILLA
     _default_shop_capacity: typing.ClassVar[ShopCapacityType] = ShopCapacityType.VANILLA
-    _default_not_buyable: typing.ClassVar[list[ctenums.ItemID]] = [
+    _default_not_buyable: typing.ClassVar[tuple[ctenums.ItemID, ...]] = (
         ctenums.ItemID.SLASHER,
         ctenums.ItemID.MASAMUNE_1, ctenums.ItemID.MASAMUNE_2,
         ctenums.ItemID.BENT_HILT, ctenums.ItemID.BENT_SWORD,
@@ -70,8 +70,8 @@ class ShopOptions:
         ctenums.ItemID.PENDANT_CHARGE, ctenums.ItemID.RAINBOW_SHELL,
         ctenums.ItemID.SCALING_LEVEL, ctenums.ItemID.JETSOFTIME,
         ctenums.ItemID.DRAGON_TEAR, ctenums.ItemID.VALOR_CREST,
-    ]
-    forced_not_buyable: typing.ClassVar[tuple[ctenums.ItemID]] = (
+    )
+    forced_not_buyable: typing.ClassVar[tuple[ctenums.ItemID, ...]] = (
         ctenums.ItemID.MASAMUNE_1, ctenums.ItemID.MASAMUNE_2,
         ctenums.ItemID.BENT_HILT, ctenums.ItemID.BENT_SWORD,
         ctenums.ItemID.HERO_MEDAL,
@@ -84,7 +84,7 @@ class ShopOptions:
         ctenums.ItemID.PENDANT_CHARGE, ctenums.ItemID.RAINBOW_SHELL,
         ctenums.ItemID.SCALING_LEVEL, ctenums.ItemID.JETSOFTIME
     )
-    unused_items: typing.ClassVar[list[ctenums.ItemID]] = [
+    unused_items: typing.ClassVar[tuple[ctenums.ItemID, ...]] = (
         ctenums.ItemID.MASAMUNE_0_ATK, ctenums.ItemID.OBJECTIVE_1,
         ctenums.ItemID.OBJECTIVE_2, ctenums.ItemID.OBJECTIVE_3,
         ctenums.ItemID.OBJECTIVE_4, ctenums.ItemID.OBJECTIVE_5,
@@ -103,7 +103,7 @@ class ShopOptions:
         ctenums.ItemID.ARMOR_END_7B, ctenums.ItemID.HELM_END_94,
         ctenums.ItemID.ACCESSORY_END_BC,
         ctenums.ItemID.SCALING_LEVEL
-    ]
+    )
     _default_item_base_price: typing.ClassVar[ItemBasePrice] = ItemBasePrice.VANILLA
     _default_item_price: typing.ClassVar[ItemSalePrice] = ItemSalePrice.VANILLA
     _default_item_price_min_multiplier: typing.ClassVar[float] = 0.5
@@ -148,6 +148,54 @@ class ShopOptions:
             item_price_randomization_exclusions = list(self._default_item_price_randomization_exclusions)
         self.item_price_randomization_exclusions = list(item_price_randomization_exclusions)
 
+    @classmethod
+    def get_argument_spec(cls) -> argumenttypes.ArgSpec:
+
+        available_item_pool = [x for x in ctenums.ItemID
+                               if x not in cls.unused_items]
+
+        return {
+            "shop_inventory_randomization": argumenttypes.arg_from_enum(
+                ShopInventoryType, cls._default_shop_inventory,
+                help_text="How shop inventory should be randomized"
+            ),
+            "shop_capacity_randomization": argumenttypes.arg_from_enum(
+                ShopCapacityType, cls._default_shop_capacity,
+                help_text="How shop capacity should be randomized"
+            ),
+            "not_buyable_items:": argumenttypes.arg_multiple_from_enum(
+                ctenums.ItemID, cls._default_not_buyable,
+                help_text="Items which can never appear in shops",
+                available_pool=[
+                    x for x in ctenums.ItemID if x not in cls.unused_items
+                ]
+            ),
+            "not_sellable_items": argumenttypes.arg_multiple_from_enum(
+                ctenums.ItemID, cls._default_not_buyable,
+                help_text="Items which can never be sold",
+                available_pool=[
+                    x for x in ctenums.ItemID if x not in cls.unused_items
+                ]
+            ),
+            "item_base_prices": argumenttypes.arg_from_enum(
+                ItemBasePrice, ItemBasePrice.VANILLA,
+                help_text="Unmodified price of items"
+            ),
+            "item_price_randomization": argumenttypes.arg_from_enum(
+                ItemSalePrice, ItemSalePrice.VANILLA,
+                help_text="How item prices should be randomized"
+            ),
+            "item_price_min_multiplier": argumenttypes.DiscreteNumericalArg(
+                0.05, 10.00, 0.05, cls._default_item_price_min_multiplier,
+                "minimum price multiplier that an item's price can roll",
+                type_fn=float
+            ),
+            "item_price_max_multiplier": argumenttypes.DiscreteNumericalArg(
+                0.05, 10.00, 0.05, cls._default_item_price_max_multiplier,
+                "maximum price multiplier that an item's price can roll",
+                type_fn=float
+            ),
+        }
 
     @classmethod
     def add_group_to_parser(cls, parser: argparse.ArgumentParser):

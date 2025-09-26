@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 import argparse
+import functools
 from collections.abc import Iterable
 import enum
 import inspect
 from dataclasses import dataclass, fields
-from enum import Enum
+from enum import Enum, StrEnum
 import typing
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from typing import Protocol, TypeVar, Any
+from unicodedata import lookup
 
 
 class ArgumentGroup(typing.Protocol):
@@ -218,21 +220,38 @@ def extract_dataclass_from_namespace(dataclass_type: typing.Type[_DT],
 
 
 def str_to_enum_dict(
-        enum_type: typing.Type[enum.Enum],
-):
-    lookup_dict = {
-        enum_member.name.lower(): enum_member for enum_member in enum_type
-    }
+        enum_type: typing.Type[_ET],
+        force_enum_names: bool = False
+) -> dict[str, _ET]:
+    if issubclass(enum_type, StrEnum) and not force_enum_names:
+        lookup_dict = {
+            enum_member.value: enum_member for enum_member in enum_type
+        }
+    else:
+        lookup_dict = {
+            enum_member.name.lower(): enum_member for enum_member in enum_type
+        }
     return lookup_dict
 
 
 def str_to_enum(
         string: str,
-        enum_type: typing.Type[enum.Enum]
+        enum_type: typing.Type[enum.Enum],
+        force_enum_names: bool = False
 ):
-    lookup_dict = str_to_enum_dict(enum_type)
+    lookup_dict = str_to_enum_dict(enum_type, force_enum_names)
     return lookup_dict[string]
 
+
+def enum_to_str(
+        enum_member: _ET,
+        enum_type: typing.Type[_ET],
+        force_enum_names: bool = False
+):
+    if issubclass(enum_type, StrEnum) and not force_enum_names:
+        return enum_member.value
+
+    return enum_member.name.lower()
 
 _Number = TypeVar("_Number", bound=int | float)
 
@@ -244,8 +263,11 @@ class Argument[_T](Protocol):
             self,
             argparse_name: str,
             argparse_obj: argparse.ArgumentParser | argparse._ArgumentGroup,
-            type_fn: typing.Callable[[str], Any] | None = None
     ):
+        ...
+
+    def get_toml_value(self, value: typing.Any) -> typing.Any:
+        """Return a value representing value suitable for a toml dictionary"""
         ...
 
 
@@ -261,7 +283,6 @@ class FlagArg:
             self,
             argparse_name: str,
             argparse_obj: argparse.ArgumentParser | argparse._ArgumentGroup,
-            type_fn: typing.Callable[[str], Any] | None = None,
     ):
         argparse_obj.add_argument(
             argparse_name,
@@ -269,6 +290,13 @@ class FlagArg:
             default=argparse.SUPPRESS,
             help=self.help_text,
         )
+
+    def get_toml_value(self, value: typing.Any) -> typing.Any:
+        if not isinstance(value, bool):
+            raise TypeError
+
+        return value
+
 
 
 class DiscreteNumericalArg[_Number]:
@@ -278,22 +306,25 @@ class DiscreteNumericalArg[_Number]:
             max_value: _Number,
             interval: float,
             default_value: float,
-            help_text: str
+            help_text: str,
+            type_fn: Callable[[typing.Any], _Number]
     ):
         self.min_value = min_value
         self.max_value = max_value
         self.interval = interval
         self.default_value = default_value
         self.help_text = help_text
+        self.type_fn = type_fn
 
     def add_to_argparse(
             self,
             argparse_name: str,
             argparse_obj: argparse.ArgumentParser | argparse._ArgumentGroup,
-            type_fn: typing.Callable[[str], Any] | None = None,
     ):
-        if type_fn is None:
+        if self.type_fn is None:
             type_fn = self.default_value.__class__
+        else:
+            type_fn = self.type_fn
 
         argparse_obj.add_argument(
             argparse_name,
@@ -303,31 +334,62 @@ class DiscreteNumericalArg[_Number]:
             help=self.help_text
         )
 
+    def get_toml_value(self, value: typing.Any) -> typing.Any:
+        if not self.min_value <= value <= self.max_value:
+            raise ValueError(
+                f"Value must be in range({self.min_value}, {self.max_value+1})")
+
+        return self.type_fn(value)
+
 
 class DiscreteCategorialArg[_T]:
     def __init__(
             self,
             choices: Iterable[_T],
             default_value: _T,
-            help_text: str
+            help_text: str,
+            choice_from_str_fn: Callable[[str], _T] | None = None,
+            str_from_choice_fn: Callable[[_T], str] | None = None
     ):
         self.choices = list(choices)
         self.default_value = default_value
         self.help_text = help_text
-
+        self.choice_from_str_fn = choice_from_str_fn
+        self.str_from_choice_fn = str_from_choice_fn
 
     def add_to_argparse(
             self,
             argparse_name: str,
             argparse_obj: argparse.ArgumentParser | argparse._ArgumentGroup,
-            type_fn: typing.Callable[[str], Any] | None = None
     ):
+        if self.choice_from_str_fn is None:
+            type_fn = self.default_value.__class__
+        else:
+            type_fn = self.choice_from_str_fn
+
         argparse_obj.add_argument(
             argparse_name,
             default=argparse.SUPPRESS,
-            type=self.default_value.__class__
-
+            type=type_fn
         )
+
+    def get_toml_value(self, value: typing.Any) -> typing.Any:
+        return self.str_from_choice_fn(value)
+
+
+def arg_from_enum(
+        enum_type: typing.Type[_ET],
+        default_value: _ET,
+        help_text: str,
+        force_enum_names: bool = False
+):
+    return DiscreteCategorialArg(
+        list(enum_type), default_value, help_text,
+        choice_from_str_fn=functools.partial(str_to_enum, enum_type=enum_type,
+                                             force_enum_names=force_enum_names),
+        str_from_choice_fn=functools.partial(enum_to_str, enum_type=enum_type,
+                                             force_enum_names=force_enum_names)
+    )
 
 
 class MultipleDiscreteSelection[_T]:
@@ -335,15 +397,129 @@ class MultipleDiscreteSelection[_T]:
             self,
             choices: Iterable[_T],
             default_value: Iterable[_T],
-            help_text: str
+            help_text: str,
+            choice_from_str_fn: Callable[[str], _T] | None = None,
+            str_from_choice_fn: Callable[[_T], str] | None = None,
     ):
         self.choices = list(choices)
         self.default_value = list(default_value)
         self.help_text = help_text
+        self.choice_from_str_fn = choice_from_str_fn
+        self.str_from_choice_fn = str_from_choice_fn
 
     def add_to_argparse(
             self,
             argparse_name: str,
             argparse_obj: argparse.ArgumentParser | argparse._ArgumentGroup
     ):
+        argparse_obj.add_argument(
+            argparse_name, nargs="*",
+            help=self.help_text,
+            type=self.choice_from_str_fn,
+            default=argparse.SUPPRESS
+        )
+
+    def get_toml_value(self, value: typing.Any) -> typing.Any:
+        if not isinstance(value, Iterable):
+            raise ValueError
+
+        if self.str_from_choice_fn is None:
+            str_fn = str
+        else:
+            str_fn = self.str_from_choice_fn
+
+        return [str_fn(x) for x in value]
+
+
+class StringArgument[_T]:
+    def __init__(
+            self,
+            help_text: str,
+            parser: Callable[[str], _T]
+    ):
+        self.help_text = help_text
+        self.parser = parser
+
+    def add_to_argparse(
+            self,
+            argparse_name: str,
+            argparse_obj: argparse.ArgumentParser | argparse._ArgumentGroup,
+    ):
+        argparse_obj.add_argument(
+            argparse_name,
+            action = "store",
+            default=argparse.SUPPRESS,
+            help=self.help_text,
+            type=self.parser
+        )
+
+    def get_toml_value(self, value: typing.Any) -> typing.Any:
+        if not isinstance(value, str):
+            raise TypeError
+
+        return self.parser(value)
+
+
+def arg_multiple_from_enum(
+        enum_type: typing.Type[_ET],
+        default_value: Iterable[_ET],
+        help_text: str,
+        force_enum_names: bool = False,
+        available_pool: Iterable[_ET] = None
+):
+    if available_pool is not None:
+        pool = list(available_pool)
+        def choice_from_str_fn(val: str) -> _ET:
+            choice = str_to_enum(val, enum_type, force_enum_names)
+            if choice not in pool:
+                raise ValueError
+            return choice
+
+        def str_from_choice_fn(val: _ET) -> str:
+            if val not in pool:
+                raise ValueError
+            return enum_to_str(val, enum_type, force_enum_names)
+    else:
+        pool = list(enum_type)
+        choice_from_str_fn = functools.partial(
+            str_to_enum, enum_type=enum_type, force_enum_names=force_enum_names)
+        str_from_choice_fn = functools.partial(
+            enum_to_str, enum_type=enum_type, force_enum_names=force_enum_names)
+
+    return MultipleDiscreteSelection(
+        pool, default_value, help_text,
+        choice_from_str_fn=choice_from_str_fn,
+        str_from_choice_fn=str_from_choice_fn
+    )
+
+# type ArgSpec = dict[str, Argument | ArgSpec]
+ArgSpec: typing.TypeAlias = dict[str, typing.Union['ArgSpec', Argument]]
+
+
+class SettingsObject(typing.Protocol):
+
+    @classmethod
+    def add_group_to_parser(cls, parser: argparse.ArgumentParser):
         ...
+
+    @classmethod
+    def extract_from_namespace(cls, namespace: argparse.Namespace) -> typing.Self:
+        ...
+
+    @classmethod
+    def get_argument_spec(cls) -> ArgSpec:
+        ...
+
+
+def main():
+
+    class Foo(StrEnum):
+        a_elem = "a"
+        b_elem = "b"
+
+    print(str_to_enum_dict(Foo))
+
+
+
+if __name__ == "__main__":
+    main()
