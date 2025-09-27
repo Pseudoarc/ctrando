@@ -5,7 +5,9 @@ from collections.abc import Iterable
 import functools
 import typing
 
+from ctrando.arguments import argumenttypes
 from ctrando.arguments.argumenttypes import str_to_enum, str_to_enum_dict
+from ctrando.arguments import shopoptions
 from ctrando.common.ctenums import ItemID, TreasureID as TID
 from ctrando.treasures.treasuretypes import RewardType
 
@@ -76,6 +78,27 @@ class TreasureOptions:
         self.good_loot_spots = tuple(set(good_loot_spots))
         self.good_loot = tuple(good_loot)
         self.good_loot_rate = good_loot_rate
+
+    @classmethod
+    def get_argument_spec(cls) -> argumenttypes.ArgSpec:
+        return {
+            "good_loot": argumenttypes.arg_multiple_from_enum(
+                ItemID, cls._default_good_loot,
+                "Loot that is considered to be good",
+                available_pool=[
+                    x for x in ItemID if x not in shopoptions.ShopOptions.unused_items
+                ]
+            ),
+            "good_loot_spots": argumenttypes.arg_multiple_from_enum(
+                TID, cls._default_good_loot_spots,
+                "Spots which will be given a random good reward"
+            ),
+            "good_loot_rate": argumenttypes.DiscreteNumericalArg(
+                0.0, 1.0, 0.05, cls._default_good_loot_rate,
+                "Percent chance to fill a good loot spot with good loot",
+                type_fn=float
+            )
+        }
 
     @classmethod
     def add_group_to_parser(cls, parser: argparse.ArgumentParser):

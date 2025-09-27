@@ -26,6 +26,7 @@ class DropOptions:
     _default_drop_rate: typing.ClassVar[float] = 0.10
     _default_mark_dropping_enemies: typing.ClassVar[bool] = False
 
+    description: typing.ClassVar[str] = "Settings which modify enemy drops"
     _attr_names: typing.ClassVar[tuple[str, ...]] = (
         "drop_enemy_pool", "drop_reward_pool",
         "drop_rate", "mark_dropping_enemies"
@@ -79,7 +80,7 @@ class DropOptions:
         """Adds this as a group to the parser."""
         group = parser.add_argument_group(
             title="Enemy Drop Settings",
-            description="Settings which modify enemy drops."
+            description=cls.description
         )
 
         argumenttypes.add_str_enum_to_group(
@@ -133,6 +134,8 @@ class CharmOptions:
         "charm_rate": "Percentage (decimal) of enemies in the charm pool which have a charmable item",
         "mark_charmable_enemies": "Alter enemy names to indicate a charmable item"
     }
+    name: typing.ClassVar[str] = "Enemy charm settings"
+    description: typing.ClassVar[str] = "Settings which modify enemy charms"
     def __init__(
             self,
             charm_enemy_pool=_default_charm_enemy_pool,
@@ -174,8 +177,7 @@ class CharmOptions:
     def add_group_to_parser(cls, parser: argparse.ArgumentParser):
         """Adds this as a group to the parser."""
         group = parser.add_argument_group(
-            title="Enemy Charm Settings",
-            description="Settings which modify enemy charms."
+            title=cls.name, description=cls.description
         )
 
         argumenttypes.add_str_enum_to_group(
@@ -311,7 +313,7 @@ class BattleRewards:
         self.charm_options = charm_options
 
     @classmethod
-    def get_arg_specs(cls) -> dict[str, argumenttypes.Argument]:
+    def get_argument_spec(cls) -> dict[str, argumenttypes.Argument]:
         ret_dict: argumenttypes.ArgSpec = dict()
         ret_dict["xp_tp_rewards"] = XPTPGRewards.get_argument_spec()
         ret_dict["drop_options"] = DropOptions.get_argument_spec()

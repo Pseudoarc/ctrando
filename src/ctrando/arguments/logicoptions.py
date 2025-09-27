@@ -2,12 +2,16 @@ import argparse
 from collections.abc import Iterable, Sequence
 import functools
 import typing
+from ctrando.arguments import argumenttypes, shopoptions
 from ctrando.arguments.argumenttypes import str_to_enum, str_to_enum_dict
 from ctrando.common import ctenums, memory
 from ctrando.logic.logictypes import RewardType, ScriptReward
 
 _treasure_id_str_dict = str_to_enum_dict(ctenums.TreasureID)
 _item_id_str_dict = str_to_enum_dict(ctenums.ItemID)
+_str_item_id_dict = {
+    val: key for key,val in _item_id_str_dict.items()
+}
 
 
 _reward_dict: dict[str, RewardType] = {
@@ -27,6 +31,10 @@ _reward_dict: dict[str, RewardType] = {
     "desert": memory.Flags.PLANT_LADY_SAVES_SEED,
 }
 
+_inverse_reward_dict: dict[RewardType, str] = {
+    val: key for key,val in _reward_dict.items()
+}
+
 
 def str_to_reward(string: str) -> RewardType:
     """Translate a string into a RewardType."""
@@ -39,6 +47,18 @@ def str_to_reward(string: str) -> RewardType:
         return _item_id_str_dict[string]
 
     raise ValueError(string)
+
+
+def reward_to_str(reward: RewardType) -> str:
+    """Translate a reward into a string"""
+
+    if reward in _inverse_reward_dict:
+        return _inverse_reward_dict[reward]
+
+    if isinstance(reward, ctenums.ItemID):
+        return _str_item_id_dict[reward]
+
+    raise ValueError
 
 
 class LogicOptions:
@@ -97,6 +117,8 @@ class LogicOptions:
     _default_force_early_flight: typing.ClassVar[bool] = False
     _default_starter_rewards: typing.ClassVar[tuple[RewardType,...]] = (ScriptReward.EPOCH,)
 
+    name: typing.ClassVar[str] = "Logic Options"
+    description: typing.ClassVar[str] = "Options for the distribution of key items"
     def __init__(
             self,
             additional_key_items: Sequence[ctenums.ItemID] = _default_additional_key_items,
@@ -120,13 +142,60 @@ class LogicOptions:
         self.starter_rewards = starter_rewards
 
     @classmethod
+    def get_argument_spec(cls) -> argumenttypes.ArgSpec:
+        return {
+            "additional_key_items": argumenttypes.arg_multiple_from_enum(
+                ctenums.ItemID, cls._default_additional_key_items,
+                "Extra (non-progression) items to add to the key item pool",
+                available_pool=[
+                    x for x in ctenums.ItemID if x not in shopoptions.ShopOptions.unused_items
+                ]
+            ),
+            "forced_spots": argumenttypes.arg_multiple_from_enum(
+                ctenums.TreasureID, cls._default_forced_spots,
+                "Spots forced to have key items (if enough KIs)",
+            ),
+            "incentive_spots": argumenttypes.arg_multiple_from_enum(
+                ctenums.TreasureID, cls._default_incentive_spots,
+                "Spots (outside forced) with increased probability to have key items"
+            ),
+            "incentive_factor": argumenttypes.DiscreteNumericalArg(
+                1.0, 10.0, 0.05, cls._default_incentive_factor,
+                "Factor by which to increase the weight of incentive spots",
+                type_fn=float
+            ),
+            "excluded_spots": argumenttypes.arg_multiple_from_enum(
+                ctenums.TreasureID, cls._default_excluded_spots,
+                "Spots which are forbidden to have key items",
+            ),
+            "decay_factor": argumenttypes.DiscreteNumericalArg(
+                0.0, 1.0, 0.05, cls._default_decay_factor,
+                "Factor by which to decrease the weight of regions which "
+                "have already received items (1.0 = no change)",
+                type_fn=float
+            ),
+            "starter_rewards": argumenttypes.MultipleDiscreteSelection(
+                [
+                    x for x in ctenums.ItemID if x not in shopoptions.ShopOptions.unused_items
+                ] + list(_reward_dict.values()),
+                cls._default_starter_rewards,
+                "Rewards to grant at game start",
+                str_to_reward, reward_to_str
+            ),
+            # "force_early_flight": argumenttypes.FlagArg(
+            #     "The JetsOfTime will be guaranteed in a pre-flight location"
+            # ),
+            "hard_lavos_end_boss": argumenttypes.FlagArg(
+                "The game will end if Ocean Palace Lavos is defeated"
+            )
+
+        }
+
+    @classmethod
     def add_group_to_parser(cls, parser: argparse.ArgumentParser):
         """Add these options to the parser."""
 
-        group = parser.add_argument_group(
-            "Logic Options",
-            "Options for the distribution of key items"
-        )
+        group = parser.add_argument_group(cls.name, cls.description)
 
         group.add_argument(
             "--additional-key-items",

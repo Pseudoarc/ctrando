@@ -8,11 +8,66 @@ from ctrando.bosses import bosstypes as bty
 class BossScalingOptions:
     """Special Scaling for bosses"""
 
+    _default_levels: typing.ClassVar[dict[bty.BossID, int]] = {
+        bty.BossID.DALTON: 26,  # default=32
+        bty.BossID.DALTON_PLUS: 17,  # default=20
+        bty.BossID.ELDER_SPAWN: 47,  # default=46
+        bty.BossID.FLEA: 17,  # default=21
+        bty.BossID.GIGA_MUTANT: 48,  # default=47
+        bty.BossID.GOLEM: 27,  # default=34
+        bty.BossID.GOLEM_BOSS: 34,  # default=34
+        bty.BossID.HECKRAN: 12,  # default=13
+        bty.BossID.LAVOS_SPAWN: 37,  # default=37
+        bty.BossID.MAMMON_M: 44,  # default=48
+        bty.BossID.MAGUS_NORTH_CAPE: 37,  # default=37
+        bty.BossID.MASA_MUNE: 15,  # default=16
+        bty.BossID.MEGA_MUTANT: 46,  # default=45
+        bty.BossID.MUD_IMP: 29,  # default=26
+        bty.BossID.NIZBEL: 16,  # default=18
+        bty.BossID.NIZBEL_2: 21,  # default=27
+        bty.BossID.RETINITE: 30,  # default=30
+        bty.BossID.R_SERIES: 7,  # default=10
+        bty.BossID.RUST_TYRANO: 35,  # default=35
+        bty.BossID.SLASH_SWORD: 19,  # default=22
+        bty.BossID.SON_OF_SUN: 41,  # default=40
+        bty.BossID.TERRA_MUTANT: 50,  # default=49
+        bty.BossID.YAKRA: 4,  # default=6
+        bty.BossID.YAKRA_XIII: 39,  # default=45
+        bty.BossID.ZOMBOR: 9,  # default=13
+        # DON'T CHANGE THIS LOLmother_brain_level=1 #default=23
+        bty.BossID.DRAGON_TANK: 5,  # default=7
+        bty.BossID.GIGA_GAIA: 30,  # default=32
+        bty.BossID.GUARDIAN: 6,  # default=8
+        bty.BossID.MAGUS: 20,  # default=20
+        bty.BossID.BLACK_TYRANO: 20,  # default=20
+        bty.BossID.OZZIE_TRIO: 33,  # default=38
+        bty.BossID.ATROPOS_XR: 33,  # default=38
+        bty.BossID.FLEA_PLUS: 27,  # default=35
+        bty.BossID.SUPER_SLASH: 27,  # default=35
+        bty.BossID.KRAWLIE: 6,  # default=8
+        bty.BossID.GATO: 0,  # default=1
+        bty.BossID.ZEAL_2: 42
+    }
+
     def __init__(self, boss_powers: dict[bty.BossID, int | None] = None):
         if boss_powers is None:
             boss_powers = {}
         self.boss_level_dict: dict[bty.BossID, int | None] = {}
         self.boss_level_dict.update(boss_powers)
+
+    @classmethod
+    def get_argument_spec(cls) -> argumenttypes.ArgSpec:
+        ret_dict: argumenttypes.ArgSpec = {}
+
+        for boss_id, default in cls._default_levels.items():
+            boss_name = f"{boss_id.value.lower()}"
+            ret_dict[f"{boss_name}_level"] = argumenttypes.DiscreteNumericalArg(
+                0, 99, 1, default,
+                f"The internal level of {boss_id} [Experimental]",
+                type_fn=int
+            )
+
+        return ret_dict
 
     @classmethod
     def add_group_to_parser(cls, parser: argparse.ArgumentParser):

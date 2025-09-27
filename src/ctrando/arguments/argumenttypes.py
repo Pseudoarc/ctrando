@@ -497,6 +497,8 @@ ArgSpec: typing.TypeAlias = dict[str, typing.Union['ArgSpec', Argument]]
 
 
 class SettingsObject(typing.Protocol):
+    name: typing.ClassVar[str]
+    description: typing.ClassVar[str]
 
     @classmethod
     def add_group_to_parser(cls, parser: argparse.ArgumentParser):

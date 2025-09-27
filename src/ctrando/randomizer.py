@@ -619,6 +619,8 @@ def main():
         print(exc, file=sys.stderr)
         sys.exit(-2)
 
+    x = settings.get_argument_spec()
+
     list_type = settings.general_options.list_keys
 
     if list_type is not None:

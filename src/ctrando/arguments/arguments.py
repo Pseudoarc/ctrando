@@ -166,6 +166,27 @@ class Settings:
         self.boss_scaling_options = boss_scaling_options
 
     @classmethod
+    def get_argument_spec(cls) -> argumenttypes.ArgSpec:
+        return {
+            # "general_options": GeneralOptions.
+            "battle_rewards": battlerewards.BattleRewards.get_argument_spec(),
+            "tech_options": techoptions.TechOptions.get_argument_spec(),
+            "scaling_options": enemyscaling.ScalingOptions.get_argument_spec(),
+            "logic_options": logicoptions.LogicOptions.get_argument_spec(),
+            "boss_rando_options": bossrandooptions.BossRandoOptions.get_argument_spec(),
+            "shop_options": shopoptions.ShopOptions.get_argument_spec(),
+            "objective_options": objectiveoptions.ObjectiveOptions.get_argument_spec(),
+            "entrance_options": entranceoptions.EntranceShufflerOptions.get_argument_spec(),
+            "recruit_options": recruitoptions.RecruitOptions.get_argument_spec(),
+            "treasure_options": treasureoptions.TreasureOptions.get_argument_spec(),
+            "enemy_options": enemyoptions.EnemyOptions.get_argument_spec(),
+            "post_rando_options": postrandooptions.PostRandoOptions.get_argument_spec(),
+            "gear_rando_options": gearrandooptions.GearRandoOptions.get_argument_spec(),
+            "character_options": characteroptions.CharacterOptions.get_argument_spec(),
+            "boss_scaling_options": enemyoptions.BossScalingOptions.get_argument_spec()
+        }
+
+    @classmethod
     def extract_from_namespace(cls, namespace: argparse.Namespace) -> typing.Self:
         return cls(
             general_options=GeneralOptions.extract_from_namespace(namespace),
