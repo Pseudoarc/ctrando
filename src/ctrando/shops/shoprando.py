@@ -308,9 +308,11 @@ def randomize_shop_inventory(
             new_capacities = list(shop_capacity_dict.values())
             rng.shuffle(new_capacities)
             shop_capacity_dict = dict(zip(shop_capacity_dict.keys(), new_capacities))
-        elif shop_options.shop_inventory_randomization == shopoptions.ShopCapacityType.RANDOM:
+        elif shop_options.shop_capacity_randomization == shopoptions.ShopCapacityType.RANDOM:
+            max_capacity = max(shop_capacity_dict.values())
+            min_capacity = min(shop_capacity_dict.values())
             shop_capacity_dict = {
-                key: rng.randrange(2, 10)
+                key: rng.randrange(min_capacity, max_capacity)
                 for key in shop_capacity_dict
             }
 
