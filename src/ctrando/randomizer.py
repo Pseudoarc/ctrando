@@ -31,7 +31,7 @@ from ctrando.entranceshuffler.entrancefiller import update_starting_rewards
 from ctrando.items import gearrando, itemdata
 from ctrando.locations.scriptmanager import ScriptManager
 from ctrando.objectives import objectivewriter
-from ctrando.postrando import postrandowriter
+from ctrando.postrando import postrandowriter, flashreduce
 from ctrando.recruits import recruitwriter
 from ctrando.strings import ctstrings
 from ctrando.treasures import treasureassign
@@ -453,7 +453,8 @@ def get_ctrom_from_config(
 
     print("Writing Post-Randomization Personalizations...", end="")
     a = time.time()
-    postrandowriter.write_post_rando_options(settings.post_random_options, post_config.script_manager)
+    postrandowriter.write_post_rando_options(settings.post_random_options, post_config.script_manager,
+                                             post_config.overworld_manager)
     b = time.time()
     print(f"({b-a})")
 

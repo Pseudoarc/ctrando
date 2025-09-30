@@ -38,7 +38,7 @@ class PostRandoOptions:
         "window_background",
         "crono_palette", "marle_palette", "lucca_palette", "robo_palette",
         "frog_palette", "ayla_palette", "magus_palette",
-        "ending"
+        "ending", "remove_flashes"
     )
     _default_fast_loc_movement: typing.ClassVar[bool] = False
     _default_fast_ow_movement: typing.ClassVar[bool] = False
@@ -107,6 +107,7 @@ class PostRandoOptions:
                                                                  _default_magus_palette_b))
 
     ending: EndingID = EndingID("the dream project")
+    remove_flashes: bool = False
 
     def __post_init__(self):
         self.battle_speed = sorted([1, int(self.battle_speed), 8])[1]
@@ -147,6 +148,9 @@ class PostRandoOptions:
         ret_dict["ending"] = argumenttypes.arg_from_enum(
             EndingID, EndingID.THE_DREAM_PROJECT,
             "name of ending (or \"random\")"
+        )
+        ret_dict["remove_flashes"] = argumenttypes.FlagArg(
+            "Remove flashes from many animations"
         )
 
         return ret_dict
@@ -234,6 +238,11 @@ class PostRandoOptions:
             type=EndingID,
             help="name of ending (or \"random\")",
             default=argparse.SUPPRESS
+        )
+
+        group.add_argument(
+            "--remove_flashes", action="store_true",
+            help="Remove flashes from many animations."
         )
 
     @classmethod

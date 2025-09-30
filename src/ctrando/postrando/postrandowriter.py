@@ -5,11 +5,12 @@ import random
 from ctrando.arguments import postrandooptions
 from ctrando.base.basepatch import apply_fast_ow_movement
 from ctrando.common import ctenums, ctrom, memory
+from ctrando.overworlds.owmanager import OWManager
 from ctrando.locations.scriptmanager import ScriptManager
 from ctrando.locations.locationevent import LocationEvent, FunctionID as FID
 from ctrando.locations.eventcommand import EventCommand as EC, Operation as OP
 from ctrando.locations.eventfunction import EventFunction as EF
-from ctrando.postrando import gameoptions, palettes
+from ctrando.postrando import gameoptions, palettes, flashreduce
 
 
 def set_auto_run(ct_rom: ctrom.CTRom):
@@ -159,6 +160,7 @@ def write_ending_selection(
 def write_post_rando_options(
         post_rando_options: postrandooptions.PostRandoOptions,
         script_man: ScriptManager,
+        ow_manager: OWManager,
 ):
     """Implement settings from PostRandoOptions object."""
 
@@ -183,3 +185,6 @@ def write_post_rando_options(
     default_opts.write_to_ctrom(ct_rom)
     write_palettes(ct_rom, post_rando_options)
     write_ending_selection(post_rando_options.ending, script_man)
+
+    if post_rando_options.remove_flashes:
+        flashreduce.apply_all_flash_hacks(script_man, ow_manager, ct_rom)
