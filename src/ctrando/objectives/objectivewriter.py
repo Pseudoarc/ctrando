@@ -16,7 +16,7 @@ from ctrando.strings import ctstrings
 
 def get_objective_count_checks(
         script: LocationEvent,
-        obj_settings: oty.ObjectiveSettings,
+        obj_settings: objectiveoptions.ObjectiveOptions,
 ):
     ret_ef = (
         EF()
@@ -311,6 +311,7 @@ def write_test_objectives(
 
     quests = objectives
 
+    descs: list[str] = []
     for item_id, obj_id, flag in zip(item_pool, quests, obj_flags):
         if obj_id is None:
             continue
@@ -333,7 +334,7 @@ def write_test_objectives(
         item_manager[item_id].secondary_stats.is_key_item = True
         item_manager[item_id].secondary_stats.is_unsellable = True
 
-        # print(f"Writing {obj_id}")
+        descs.append(item_desc)
         write_simple_objective_to_ct_rom(
             script_manager,
             item_id,
@@ -341,7 +342,6 @@ def write_test_objectives(
             locator,
             objective_settings
         )
-        # write_quest_objective(script_manager, obj_id, item_id, flag, objective_settings)
 
     add_items_func = EF()
     for (item_id, obj_key) in zip(item_pool, objectives):
@@ -407,6 +407,50 @@ def write_test_objectives(
 
     obj_text += reward_text
     script.strings[6] = ctstrings.CTString.from_ascii(obj_text)
+
+    script = script_manager[ctenums.LocID.LOAD_SCREEN]
+    find_cmd = EC.assign_val_to_mem(
+        0x0100, memory.Memory.SHOP_MULTIPLIER,2
+    )
+
+    obj_str = ""
+    for ind, desc in enumerate(descs):
+        obj_str += f"{ind}: {desc}"
+        if ind == len(descs) - 1:
+            obj_str += "{null}"
+        elif (ind + 1) % 4 == 0:
+            obj_str += "{full break}"
+        else:
+            obj_str += "{linebreak+0}"
+
+    new_obj_id = script.append_empty_object()
+    script.set_function(
+        new_obj_id, FID.STARTUP,
+        EF().add(EC.return_cmd()).add(EC.end_cmd())
+    )
+    script.set_function(
+        new_obj_id, FID.ACTIVATE,
+        EF()
+        .set_label("start")
+        .add(EC.decision_box(script.add_py_string(
+            "      View Objectives{linebreak+0}"
+            "      Start{null}"
+        ), 0, 1))
+        .add_if(
+            EC.if_result_equals(0),
+            EF().add(EC.auto_text_box(
+                script.add_py_string(obj_str)
+            ))
+            .jump_to_label(EC.jump_back(), "start")
+        )
+        .add(EC.return_cmd())
+    )
+
+    pos = script.find_exact_command(find_cmd)
+    script.insert_commands(
+        EC.call_obj_function(new_obj_id, FID.ACTIVATE, 4, FS.HALT)
+        .to_bytearray(), pos
+    )
 
     # Repeat objective rewards in kitchen
     # script = script_manager[ctenums.LocID.CRONOS_KITCHEN]
