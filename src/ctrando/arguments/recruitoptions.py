@@ -107,6 +107,8 @@ class RecruitOptions:
             "Recruit gear is scaled based on the level at which they are recruited"
         )
 
+        return ret_dict
+
     @classmethod
     def add_group_to_parser(cls, parser: argparse.ArgumentParser):
         """Add recruit option group to parser"""
