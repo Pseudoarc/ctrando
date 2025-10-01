@@ -439,3 +439,6 @@ magus_palette = "#281820#E4DAA4#DCA264#B09058#DCA264#9C6A34#72897B#C6641E#3F626A
 #    "a slide show?" - Marle and Lucca rate the men of the game
 #    "random" - A random choice from the above.
 ending = "the dream project"
+
+# If set to true, most flashing animations are removed
+remove_flashes = false
