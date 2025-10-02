@@ -334,6 +334,10 @@ def get_ctrom_from_config(
     print(f"({b-a})")
     basepatch.add_set_level_command(ct_rom, config.pcstat_manager)
 
+    effecttypes.write_bh_percent(ct_rom, config.pctech_manager,
+                                 settings.tech_options.black_hole_min,
+                                 settings.tech_options.black_hole_factor
+    )
     effecttypes.expand_effect_mods(
         ct_rom, config.pctech_manager
     )

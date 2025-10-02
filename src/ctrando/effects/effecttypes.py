@@ -245,8 +245,6 @@ def patch_additional_armor_effects(ct_rom: ctrom.CTRom,
         asmpatcher.apply_jmp_patch(rt, file_hook, ct_rom)
 
 
-
-
 def expand_effect_mods(
         ct_rom: ctrom.CTRom,
         tech_man: pctech.PCTechManager,
@@ -269,7 +267,6 @@ def expand_effect_mods(
             orb_mp = tech.effect_mps[0]
             break
     orb_percent = pctech.get_iron_orb_percent(orb_mp)
-
     additional_effects, additional_effect_routines = gather_new_effects_and_rts(orb_percent)
 
     effects += additional_effects
@@ -597,6 +594,18 @@ def get_add_element_effect() -> assemble.ASMList:
         inst.RTS()
     ]
     return rt
+
+
+def write_bh_percent(ct_rom: ctrom.CTRom,
+                     tech_man: pctech.PCTechManager,
+                     bh_min: float, bh_factor: float):
+    bh_mps = tech_man.get_blackhole_mps()
+    bh_mp = bh_mps[0]  # For now only one bh, but this is where it would change.
+
+    bh_percent = pctech.get_black_hole_percent(bh_mp, bh_min, bh_factor)
+
+    ct_rom.seek(0x0C2A72)
+    ct_rom.write(bytes([bh_percent]))
 
 
 if __name__ == "__main__":

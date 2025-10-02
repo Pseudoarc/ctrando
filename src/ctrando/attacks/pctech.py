@@ -1746,6 +1746,15 @@ class PCTechManager:
             byteops.to_rom_ptr(rock_mmp_start), 3, "little")
         )
 
+    def get_blackhole_mps(self) -> list[int]:
+        black_hole_mps: list[int] = []
+        for tech_id in range(1, 1 + 8 * 7):
+            tech = self.get_tech(tech_id)
+            if tech.graphics_header.layer3_packet_id == 0x08:
+                black_hole_mps.append(tech.effect_mps[0])
+
+        return black_hole_mps
+
     def _write_blackhole_exceptions(
             self, ct_rom: ctrom.CTRom,
             black_hole_factor: float,
@@ -1788,11 +1797,6 @@ class PCTechManager:
             new_rt_b = assemble.assemble(new_rt)
             ct_rom.seek(hook_addr)
             ct_rom.write(new_rt_b)
-
-            ct_rom.seek(0x0C2A72)
-            mp = self.get_tech(black_hole_ids[0]).effect_mps[0]
-            percent = sorted([1, round(black_hole_min + mp*black_hole_factor), 100])[1]
-            ct_rom.write(bytes([percent]))
         else:
             new_rt: assemble.ASMList = [inst.LDA(0xAE93, AM.ABS)]
             for ind, tech_id in enumerate(black_hole_ids):
@@ -2345,4 +2349,10 @@ def get_iron_orb_percent(iron_orb_mp: int) -> int:
 
     percent =  min_percent + (max_percent-min_percent)*iron_orb_mp/20
     percent = round(percent/10)*10
+    return percent
+
+
+def get_black_hole_percent(black_hole_mp: int, bh_min: float, bh_factor: float) -> int:
+    percent = bh_min + black_hole_mp*bh_factor
+    percent = sorted([0, round(percent), 100])[1]
     return percent
