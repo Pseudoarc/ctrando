@@ -1,6 +1,7 @@
 """
 Randomize which enemies appear in each dungeon.
 """
+import copy
 
 from ctrando.common import ctenums, ctrom, random
 from ctrando.common.ctenums import EnemyID as EID
@@ -13,8 +14,8 @@ from ctrando.locations import scriptmanager
 # - Defunct has trigger for when hit by enemy (will break if no departed present)
 # - Base can hit enemies (may cause strange triggers)
 
-_paired_enemies: list[tuple[EID, EID]] = [
-    (EID.BANTAM_IMP, EID.STONE_IMP),
+_assignable_paired_enemies: list[tuple[EID, EID]] = [
+    # (EID.BANTAM_IMP, EID.STONE_IMP),
     (EID.BLUE_SHIELD, EID.YODU_DE),
     (EID.GOLD_EAGLET, EID.RED_EAGLET),
     (EID.INCOGNITO, EID.PEEPINGDOOM),
@@ -75,7 +76,9 @@ _good_enemies = (
     EID.LASER_GUARD, EID.HEXAPOD, EID.ROLY_BOMBER, EID.BASHER,
     # Safe paired enemies
     EID.STONE_IMP, EID.GOLD_EAGLET, EID.RED_EAGLET, EID.DEFUNCT, EID.DEPARTED,  # Small
-    EID.BANTAM_IMP  #
+    EID.BANTAM_IMP,  #
+    # Adding the shields
+    EID.BLUE_SHIELD, EID.YODU_DE, EID.INCOGNITO, EID.PEEPINGDOOM
 )
 
 _small_enemies = [
@@ -88,22 +91,24 @@ _small_enemies = [
     EID.TEMPURITE, EID.DIABLOS, EID.GARGOYLE, EID.GRIMALKIN, EID.HENCH_BLUE, EID.T_POLE,
     EID.CROAKER, EID.AMPHIBITE, EID.MAD_BAT, EID.VAMP, EID.SCOUTER, EID.FLYCLOPS,
     EID.BUGGER, EID.DEBUGGER, EID.DEBUGGEST, EID.SORCERER, EID.CRATER, EID.VOLCANO,
-    EID.SHITAKE, EID.HETAKE, EID.SHIST, EID.PAHOEHOE, EID.NEREID, EID.SAVE_POINT_ENEMY,
+    EID.SHITAKE, EID.HETAKE, EID.NEREID, EID.SAVE_POINT_ENEMY,
     EID.MOHAVOR, EID.SHADOW, EID.BASE, EID.ACID, EID.ALKALINE, EID.ION, EID.ANION, EID.THRASHER,
-    EID.LASHER, EID.GOBLIN, EID.CAVE_BAT, EID.BLOB, EID.RAT, EID.GREMLIN, EID.RUNNER,
+    EID.LASHER, EID.CAVE_BAT, EID.BLOB, EID.RAT, EID.GREMLIN, EID.RUNNER,
     EID.PROTO_2, EID.PROTO_3, EID.PROTO_4, EID.BUG, EID.BEETLE, EID.RAIN_FROG, EID.LEAPER,
     EID.GUARDIAN_BYTE, EID.RED_SCOUT, EID.BLUE_SCOUT, EID.LASER_GUARD, EID.ROLY_BOMBER, EID.BASHER,
     # Safe paired enemies
-    EID.STONE_IMP, EID.GOLD_EAGLET, EID.RED_EAGLET, EID.DEFUNCT, EID.DEPARTED,  # Small
+    # EID.STONE_IMP,
+    # EID.GOLD_EAGLET, EID.RED_EAGLET, EID.DEFUNCT, EID.DEPARTED,
+    # EID.SHIST, EID.PAHOEHOE, EID.GOBLIN,
 ]
 
 _mid_enemies = [
-    EID.TERRASAUR, EID.ROLY_RIDER, EID.IMP_ACE, EID.MACABRE, EID.REAPER, EID.OGAN,
+    EID.TERRASAUR, EID.ROLY_RIDER, EID.IMP_ACE, EID.MACABRE, EID.REAPER,
     EID.FLUNKY, EID.GROUPIE, EID.WINGED_APE, EID.CAVE_APE, EID.MEGASAUR, EID.OMNICRONE,
     EID.BEAST, EID.LIZARDACTYL, EID.AVIAN_REX, EID.ALIEN, EID.MUTANT, EID.METAL_MUTE,
     EID.GIGASAUR, EID.FOSSIL_APE, EID.OCTORIDER, EID.TUBSTER, EID.HEXAPOD,
     # Safe paired enemies
-    EID.BANTAM_IMP
+    # EID.BANTAM_IMP, EID.OGAN,
 ]
 
 _large_enemies = [EID.GOON, EID.SYNCHRITE, EID.CYBOT]
@@ -111,6 +116,38 @@ _large_enemies = [EID.GOON, EID.SYNCHRITE, EID.CYBOT]
 
 def generate_size_lists(sprite_data_dict):
     size_groups: list[list[EID]] = [[],[],[]]
+
+
+def assign_transforming_enemies(rng: random.RNGType) -> dict[EID, EID]:
+    """Shuffle transforming enemies based on size"""
+
+    ret_dict: dict[EID, EID] = {}
+
+    small_to_mid = [
+        (EID.BANTAM_IMP, EID.STONE_IMP),
+        (EID.OGAN, EID.GOBLIN),
+    ]
+    small_to_mid_targets = copy.copy(small_to_mid)
+    rng.shuffle(small_to_mid_targets)
+
+    small_to_small = [
+        (EID.BLUE_SHIELD, EID.YODU_DE),
+        (EID.GOLD_EAGLET, EID.RED_EAGLET),
+        (EID.INCOGNITO, EID.PEEPINGDOOM),
+        (EID.DEFUNCT, EID.DEPARTED),
+        (EID.SHIST, EID.PAHOEHOE),
+    ]
+    small_to_small_targets = copy.copy(small_to_small)
+    rng.shuffle(small_to_small_targets)
+
+    from_enemies = small_to_mid + small_to_small
+    to_enemies = small_to_mid_targets + small_to_small_targets
+
+    for from_pair, to_pair in zip(from_enemies, to_enemies):
+        for from_id, to_id in zip(from_pair, to_pair):
+            ret_dict[from_id] = to_id
+
+    return ret_dict
 
 
 def get_enemy_shuffle(
@@ -126,6 +163,9 @@ def get_enemy_shuffle(
         return dict(zip(_good_enemies, _good_enemies))
 
     assign_dict: dict[EID, EID] = {}
+    transformed_dict = assign_transforming_enemies(rng)
+    assign_dict.update(transformed_dict)
+
     for ind in range(3):
         size_group = size_groups[ind]
         shuffled_group = list(size_group)
