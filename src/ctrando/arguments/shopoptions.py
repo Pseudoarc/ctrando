@@ -163,7 +163,7 @@ class ShopOptions:
                 ShopCapacityType, cls._default_shop_capacity,
                 help_text="How shop capacity should be randomized"
             ),
-            "not_buyable_items:": argumenttypes.arg_multiple_from_enum(
+            "not_buyable_items": argumenttypes.arg_multiple_from_enum(
                 ctenums.ItemID, cls._default_not_buyable,
                 help_text="Items which can never appear in shops",
                 available_pool=[
