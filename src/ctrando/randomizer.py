@@ -1,4 +1,5 @@
 """The main randomizer."""
+import copy
 import enum
 import pathlib
 import pickle
@@ -307,6 +308,7 @@ def get_ctrom_from_config(
         settings: arguments.Settings,
         config: randostate.ConfigState,
         post_config_load_path: pathlib.Path | None = None,
+        prepatched_rom_load_path: pathlib.Path | None = None,
         make_tf_friendly: bool = False
 ) -> ctrom.CTRom:
     """Generate the rom specified by the settings and config"""
@@ -317,8 +319,17 @@ def get_ctrom_from_config(
     ct_rom = ctrom.CTRom(input_rom.getbuffer())
     print("Applying Base Patch...", end="")
     a=time.time()
-    basepatch.base_patch_ct_rom(ct_rom)
-    basepatch.apply_ow_warp_patch(ct_rom)
+    if prepatched_rom_load_path is not None:
+        try:
+            infile = open(prepatched_rom_load_path, "rb")
+            ct_rom = pickle.load(infile)
+        except (OSError, pickle.PickleError):
+            apply_settings_free_patches(ct_rom)
+        finally:
+            infile.close()
+    else:
+        apply_settings_free_patches(ct_rom)
+
     b=time.time()
     print(f"({b-a})")
     basepatch.add_set_level_command(ct_rom, config.pcstat_manager)
@@ -702,6 +713,28 @@ def dump_openworld_post_config(
     with open(dump_path, "wb") as outfile:
         # noinspection PyTypeChecker
         pickle.dump(post_config, outfile)
+
+
+def apply_settings_free_patches(vanilla_rom: ctrom.CTRom):
+    """
+    Apply patches which do not depend on settings and dump the CTRom.
+    """
+    basepatch.base_patch_ct_rom(vanilla_rom)
+    basepatch.apply_ow_warp_patch(vanilla_rom)
+
+
+def dump_prepatched_ctrom(
+        vanilla_rom: ctrom.CTRom,
+        dump_path: pathlib.Path
+):
+    """
+    Dump a settings-free patched rom
+    """
+    copy_rom = copy.deepcopy(vanilla_rom)
+    apply_settings_free_patches(copy_rom)
+
+    with open(dump_path, "wb") as outfile:
+        pickle.dump(copy_rom, outfile)
 
 
 if __name__ == "__main__":
