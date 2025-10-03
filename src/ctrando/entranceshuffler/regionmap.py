@@ -578,8 +578,8 @@ def get_default_region_connectors(
         RegionConnector(
             "proto_dome", "proto_dome_portal",
             "proto_dome_power",
-            rule=logictypes.LogicRule([memory.Flags.FACTORY_POWER_ACTIVATED]),
-            reversible=False
+            rule=logictypes.LogicRule([memory.Flags.PROTO_DOME_DOOR_UNLOCKED]),
+            reversible=True
         ),
         RegionConnector(
             "keepers_dome", "keepers_dome_sealed",

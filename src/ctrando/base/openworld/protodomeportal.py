@@ -33,7 +33,9 @@ class EventMod(locationevent.LocEventMod):
         # Compute the number of PCs and put it into cls.num_pc_addr
         pos: Optional[int] = script.get_object_start(0)
         script.insert_commands(
-            EF().add(EC.assign_val_to_mem(1, cls.num_pc_addr, 1))
+            EF()
+            .add(EC.set_flag(memory.Flags.PROTO_DOME_DOOR_UNLOCKED))
+            .add(EC.assign_val_to_mem(1, cls.num_pc_addr, 1))
             .add(EC.assign_mem_to_mem(memory.Memory.ACTIVE_PC2, cls.temp_pc_addr, 1))
             .add_if(
                 EC.if_mem_op_value(cls.temp_pc_addr, OP.NOT_EQUALS, 0x80),
@@ -65,20 +67,20 @@ class EventMod(locationevent.LocEventMod):
                 break
             script.delete_jump_block(pos)
 
-        # Block the door if Factory is not done
-        pos = script.get_function_start(0, FID.ACTIVATE)
-        script.insert_commands(
-            # EF().add_if(EC.if_not_flag(memory.Flags.FACTORY_POWER_ACTIVATED))
-            EF().add_if(
-                EC.if_not_flag(memory.Flags.FACTORY_POWER_ACTIVATED),
-                EF().add(
-                    EC.copy_tiles(0x19, 8, 0x1A, 8,
-                                  0x17, 0xC,
-                                  False, False, False, True,
-                                  unk_0x10=True, unk_0x20=True,
-                                  copy_z_plane=True)
-                )).get_bytearray(), pos
-        )
+        # Block the door if Factory is not done -- Not anymore.
+        # pos = script.get_function_start(0, FID.ACTIVATE)
+        # script.insert_commands(
+        #     # EF().add_if(EC.if_not_flag(memory.Flags.FACTORY_POWER_ACTIVATED))
+        #     EF().add_if(
+        #         EC.if_not_flag(memory.Flags.FACTORY_POWER_ACTIVATED),
+        #         EF().add(
+        #             EC.copy_tiles(0x19, 8, 0x1A, 8,
+        #                           0x17, 0xC,
+        #                           False, False, False, True,
+        #                           unk_0x10=True, unk_0x20=True,
+        #                           copy_z_plane=True)
+        #         )).get_bytearray(), pos
+        # )
 
         # exploremode
         pos = script.find_exact_command(

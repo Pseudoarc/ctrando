@@ -47,12 +47,12 @@ class EventMod(locationevent.LocEventMod):
     @classmethod
     def modify_portal_door(cls, script: Event):
         """
-        Change the door to be open when the factory power is on.
+        Change the door to be open when the flag is set.
         """
         pos = script.find_exact_command(EC.if_storyline_counter_lt(0x42))
 
         script.replace_jump_cmd(
-            pos, EC.if_not_flag(memory.Flags.FACTORY_POWER_ACTIVATED))
+            pos, EC.if_not_flag(memory.Flags.PROTO_DOME_DOOR_UNLOCKED))
 
     @classmethod
     def modify_startup(cls, script: Event):

@@ -537,7 +537,7 @@ def get_all_loc_regions() -> list[LocRegion]:
             TID.FACTORY_RUINS_GENERATOR,
             BSID.FACTORY_RUINS
         },
-        region_rewards=[memory.Flags.FACTORY_POWER_ACTIVATED]
+        region_rewards=[memory.Flags.PROTO_DOME_DOOR_UNLOCKED]
     )
     ret_list.append(factory_ruins)
     ret_list.append(factory_ruins_inside)
@@ -1012,7 +1012,8 @@ def get_all_loc_regions() -> list[LocRegion]:
     ret_list.append(sun_palace)
 
     end_of_time = LocRegion(
-        "end_of_time"
+        "end_of_time",
+        region_rewards=[memory.Flags.PROTO_DOME_DOOR_UNLOCKED]
     )
     ret_list.append(end_of_time)
 
