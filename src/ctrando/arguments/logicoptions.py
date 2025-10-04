@@ -129,7 +129,8 @@ class LogicOptions:
             decay_factor: float = _default_decay_factor,
             hard_lavos_end_boss: bool = _default_hard_lavos_end_boss,
             force_early_flight: bool = _default_force_early_flight,
-            starter_rewards: Sequence[RewardType] = _default_starter_rewards
+            starter_rewards: Sequence[RewardType] = _default_starter_rewards,
+            boats_of_time: bool = False
     ):
         self.additional_key_items = sorted(additional_key_items)
         self.forced_spots = forced_spots
@@ -140,6 +141,8 @@ class LogicOptions:
         self.hard_lavos_final_boss = hard_lavos_end_boss
         self.force_early_flight = force_early_flight
         self.starter_rewards = starter_rewards
+        self.boats_of_time = boats_of_time
+
 
     @classmethod
     def get_argument_spec(cls) -> argumenttypes.ArgSpec:
@@ -187,6 +190,9 @@ class LogicOptions:
             # ),
             "hard_lavos_end_boss": argumenttypes.FlagArg(
                 "The game will end if Ocean Palace Lavos is defeated"
+            ),
+            "boats_of_time": argumenttypes.FlagArg(
+                "Additional ferry locations."
             )
 
         }
@@ -265,12 +271,19 @@ class LogicOptions:
             default=argparse.SUPPRESS
         )
 
+        group.add_argument(
+            "--boats-of-time", action="store_true",
+            help="Additional Ferry locations",
+            default=argparse.SUPPRESS
+        )
+
     @ classmethod
     def extract_from_namespace(cls, namespace: argparse.Namespace):
         attr_names = [
             "additional_key_items", "forced_spots", "incentive_spots",
             "incentive_factor", "excluded_spots", "decay_factor",
-            "hard_lavos_end_boss", "starter_rewards", "force_early_flight"
+            "hard_lavos_end_boss", "starter_rewards", "force_early_flight",
+            "boats_of_time",
         ]
 
         init_dict: dict[str, typing.Any] = dict()

@@ -371,7 +371,35 @@ def get_default_region_connectors(
     if logic_options.force_early_flight:
         bb_rule = bb_rule & logictypes.LogicRule([ctenums.ItemID.JETSOFTIME])
 
-    return [
+    extra_connectors = []
+    if logic_options.boats_of_time:
+        extra_connectors += [
+            RegionConnector(
+                "truce_ticket_office", "choras_1000_overworld",
+                "ferry_to_choras",
+                reversible=False
+            ),
+            RegionConnector(
+                "truce_ticket_office", "choras_600_overworld",
+                "ferry_to_choras_600",
+                rule=logictypes.LogicRule([ItemID.GATE_KEY]),
+                reversible=False
+            ),
+            RegionConnector(
+                "truce_ticket_office", "ozzies_fort_overworld",
+                "ferry_to_ozzie",
+                rule=logictypes.LogicRule([ItemID.GATE_KEY]),
+                reversible=False
+            ),
+            RegionConnector(
+                "truce_ticket_office", "giants_claw_overworld",
+                "ferry_to_claw",
+                rule=logictypes.LogicRule([ItemID.GATE_KEY]),
+                reversible=False
+            ),
+        ]
+
+    return extra_connectors + [
         RegionConnector(
             "starting_rewards", "cronos_house",
             "game_start",

@@ -48,6 +48,9 @@ def is_local_mem(addr: int):
         0x7F0000 <= addr < 0x7F0200
     )
 
+def is_bank_7F(addr: int):
+    return 0x7F0000 <= addr < 0x800000
+
 
 def is_memory_addr(addr: int):
     return 0x7E0000 < addr < 0x800000
@@ -754,7 +757,7 @@ class EventCommand:
                 cmd_id = 0x51
             else:
                 cmd_id = 0x52
-        elif is_local_mem(from_addr) and is_script_mem(to_addr):
+        elif is_bank_7F(from_addr) and is_script_mem(to_addr):
             # arg 1: from_addr - 0x7F0000
             # arg 2: offset of to_addr
             cmd_args = [from_addr - 0x7F0000, get_offset(to_addr)]
@@ -762,7 +765,7 @@ class EventCommand:
                 cmd_id = 0x53
             else:
                 cmd_id = 0x54
-        elif is_script_mem(from_addr) and is_local_mem(to_addr):
+        elif is_script_mem(from_addr) and is_bank_7F(to_addr):
             # arg 1: offset of from_addr
             # arg 2: to_addr - 0x7F0000
             cmd_args = [get_offset(from_addr), to_addr - 0x7F0000]
