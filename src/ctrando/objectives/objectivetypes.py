@@ -124,6 +124,7 @@ class QuestID(Enum):
     SUNKEN_DESERT = auto()  # All the way to Lucca's mission.
     GENO_DOME = auto()
     DEATH_PEAK = auto()
+    SPEKKIO = auto()
 
 
 @dataclass
@@ -237,7 +238,8 @@ _quest_data_dict: dict[QuestID, QuestData] = {
     QuestID.OZZIES_FORT: QuestData("*OzzieFort", "Defeat Ozzie (Cat Switch)"),
     QuestID.SUNKEN_DESERT: QuestData("*SunkenDsrt", "Have Lucca Face Her Past"),
     QuestID.GENO_DOME: QuestData("*Geno Dome", "Defeat Geno Dome Boss"),
-    QuestID.DEATH_PEAK: QuestData("*DeathPeak", "Clear Death Peak")
+    QuestID.DEATH_PEAK: QuestData("*DeathPeak", "Clear Death Peak"),
+    QuestID.SPEKKIO: QuestData("*Spekkio", "Defeat Spekkio")
 }
 
 _boss_abbrev: dict[bty.BossID, str] = {
@@ -401,6 +403,10 @@ _quest_locator_dict: dict[QuestID, HookLocator] = {
     QuestID.DEATH_PEAK: CommandSequenceLocator(
         ctenums.LocID.DEATH_PEAK_GUARDIAN_SPAWN, 8, FID.ACTIVATE,
         [EC.return_cmd()], False
+    ),
+    QuestID.SPEKKIO: CommandSequenceLocator(
+        ctenums.LocID.SPEKKIO, 0, FID.ARBITRARY_0,
+        cmd_sequence=[EC.set_byte(0x7F0232)], place_after_last=True
     )
 }
 
