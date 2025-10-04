@@ -1220,6 +1220,9 @@ def apply_full_scaling_patch(
 
     scaling_exclusion_list = [
         ctenums.EnemyID.NU, ctenums.EnemyID.NU_2,
+        ctenums.EnemyID.SPEKKIO_FROG, ctenums.EnemyID.SPEKKIO_KILWALA,
+        ctenums.EnemyID.SPEKKIO_OGRE, ctenums.EnemyID.SPEKKIO_OMNICRONE,
+        ctenums.EnemyID.SPEKKIO_MASA_MUNE, ctenums.EnemyID.SPEKKIO_NU,
         ctenums.EnemyID.UNKNOWN_BF,  # Weird Motherbrain object
         ctenums.EnemyID.UNUSED_FF,  # Placeholder enemy
     ]
