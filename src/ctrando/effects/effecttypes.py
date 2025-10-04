@@ -600,6 +600,9 @@ def write_bh_percent(ct_rom: ctrom.CTRom,
                      tech_man: pctech.PCTechManager,
                      bh_min: float, bh_factor: float):
     bh_mps = tech_man.get_blackhole_mps()
+    if not bh_mps:
+        return
+
     bh_mp = bh_mps[0]  # For now only one bh, but this is where it would change.
 
     bh_percent = pctech.get_black_hole_percent(bh_mp, bh_min, bh_factor)
