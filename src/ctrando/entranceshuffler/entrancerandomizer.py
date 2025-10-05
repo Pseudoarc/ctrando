@@ -145,7 +145,7 @@ def get_shuffled_map_from_connectors(
     )
 
 
-_known_dead_ends = [
+_known_dead_ends: list[LocExit] = [
         LocExit.CRONOS_HOUSE, LocExit.TRUCE_MAYOR, LocExit.TRUCE_MARKET_1000,
         LocExit.TRUCE_INN_1000, LocExit.PORRE_INN_1000,
         LocExit.GUARDIA_CASTLE_1000, LocExit.PORRE_MAYOR_1000,
@@ -264,13 +264,14 @@ def get_shuffled_exit_connectors(
         assign_dict[ow_exit] = target
 
     # Give Crono's house a good exit to avoid dead-ending
-    if LocExit.CRONOS_HOUSE in loc_exit_pool:
+    if LocExit.CRONOS_HOUSE in loc_exit_pool and LocExit.CRONOS_HOUSE not in dungeon_targets:
         bad_ow_exits = [
             OWExit.SUN_KEEP_600, OWExit.SUN_KEEP_1000, OWExit.SUN_KEEP_2300,
             OWExit.SUN_PALACE, OWExit.SUN_KEEP_LAST_VILLAGE,
             OWExit.SUN_KEEP_PREHISTORY, OWExit.LAIR_RUINS,
             OWExit.GENO_DOME, OWExit.OZZIES_FORT,
         ]
+
         bad_ow_exits += [x for x in dungeon_exits if x not in bad_ow_exits]
         bad_ow_exits = [
             x for x in bad_ow_exits if x not in assign_dict.keys()

@@ -3,7 +3,8 @@ from ctrando.base import openworldutils as owu
 
 from ctrando.common import ctenums, memory
 from ctrando.common.randostate import ScriptManager
-from ctrando.locations.eventcommand import EventCommand as EC
+from ctrando.locations.locationevent import FunctionID as FID
+from ctrando.locations.eventcommand import EventCommand as EC, FuncSync as FS
 from ctrando.locations.eventfunction import EventFunction as EF
 from ctrando.recruits import recruitassign as ra
 
@@ -20,6 +21,7 @@ def assign_pc_to_spot(
     Assign a PC to the Milennial Fair spot.
     """
 
+
     scale_block = (
         EF().add(EC.set_level(char_id, min_level))
         .add(EC.set_tech_level(char_id, min_techlevel))
@@ -30,6 +32,18 @@ def assign_pc_to_spot(
     # Most of the work has been done in the openworld mod
     script = script_man[ctenums.LocID.LOAD_SCREEN]
 
+    recruit_obj = script.append_empty_object()
+    script.set_function(recruit_obj, FID.STARTUP,
+                        EF().add(EC.return_cmd()).add(EC.end_cmd()))
+    script.set_function(
+        recruit_obj, FID.ACTIVATE,
+        owu.get_increment_addr(memory.Memory.RECRUITS_OBTAINED)
+        .add(EC.assign_val_to_mem(
+            0x80 >> char_id,
+            memory.Memory.RECRUITED_CHARACTERS, 1)
+        ).append(scale_block)
+        .add(EC.return_cmd())
+    )
     # A little clunky.  Finds the second big memset command and writes
     # the char_id instead of 0 (Crono) to the first byte of the payload.
     pos, cmd = script.find_command([0x4E])
@@ -42,11 +56,7 @@ def assign_pc_to_spot(
     repl_cmd = EC.name_pc(char_id)
     script.data[pos:pos+len(repl_cmd)] = repl_cmd.to_bytearray()
     script.insert_commands(
-        owu.get_increment_addr(memory.Memory.RECRUITS_OBTAINED)
-        .add(EC.assign_val_to_mem(
-            0x80 >> char_id,
-            memory.Memory.RECRUITED_CHARACTERS, 1)
-        ).append(scale_block)
-        .get_bytearray(), pos
+        EC.call_obj_function(recruit_obj, FID.ACTIVATE, 4, FS.HALT)
+        .to_bytearray(), pos
     )
 
