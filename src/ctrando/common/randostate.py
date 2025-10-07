@@ -59,7 +59,7 @@ class ConfigState:
             ctenums.ItemID.RAINBOW_SHELL: (" Rbow Shell",
                                            "Give to King in 600AD"),
             ctenums.ItemID.JETSOFTIME: (" JetsOfTime",
-                                        " Use at Blacbird 12000BC"),
+                                        " Use at Blackbird 12000BC"),
             ctenums.ItemID.SCALING_LEVEL: (" ScalingLvl", "Current level of enemies")
         }
 
