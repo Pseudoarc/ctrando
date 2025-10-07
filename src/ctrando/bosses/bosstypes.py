@@ -162,6 +162,20 @@ class BossID(enum.StrEnum):
         return out
 
 
+def get_midboss_ids() -> list[BossID]:
+    return [
+        BossID.KRAWLIE, BossID.ATROPOS_XR, BossID.SUPER_SLASH,
+        BossID.FLEA_PLUS, BossID.GATO, BossID.DALTON
+    ]
+
+
+def get_boss_ids() -> list[BossID]:
+    midbosses = set(get_midboss_ids())
+
+    return [boss_id for boss_id in BossID
+            if boss_id not in midbosses]
+
+
 class BossPart:
     """
     Data class for a single part of a boss: enemy id, slot, and displacement
