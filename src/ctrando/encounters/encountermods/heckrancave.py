@@ -26,6 +26,7 @@ def remove_intro_fight(script_manager: ScriptManager):
     end_pos = script.find_exact_command(end_cmd) + len(end_cmd)
 
     func = EF.from_bytearray(script.data[start_pos: end_pos])
+    func.add(EC.return_cmd())
     script.delete_commands_range(del_start_pos, end_pos)
 
     # If an enemy calls their own battle, it can cause errors with future
