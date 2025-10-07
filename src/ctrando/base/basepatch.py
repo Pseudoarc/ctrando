@@ -1330,7 +1330,9 @@ def patch_max_tech_count(ct_rom: ctrom.CTRom):
 
     # We really only need the first 7*50 + 0xE bytes (next tech level, techs learned)
     # The rest are already zeroed out
-    rom[0x02958A:0x02958A+2] = int.to_bytes(7*0x50 + 0x0D, 2, "little")
+    # There's some writing to this range during attract mode.
+    # There may be a better way, but we're just going to copy an extra 0x10 bytes
+    rom[0x02958A:0x02958A+2] = int.to_bytes(7*0x50 + 0x0D + 0x10, 2, "little")
 
 
 # Notes on making eventcommands
