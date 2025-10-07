@@ -1,8 +1,11 @@
 """Module for randomizing enemy drop/charm rewards"""
 from ctrando.arguments import battlerewards
+from ctrando.bosses import bosstypes as bty
+from ctrando.characters import ctpcstats
 from ctrando.common import ctenums
 from ctrando.common.random import RNGType
 from ctrando.enemydata import enemystats
+from ctrando.enemyscaling.patchscaling import get_true_levels_bytes
 
 
 def get_enemy_pool(
@@ -140,6 +143,83 @@ def mark_charm_and_drop(
             cur_name = enemy_stats.name.ljust(0xB, " ")
             cur_name = cur_name[:-len(suffix)] + suffix
             enemy_stats.name = cur_name
+
+
+
+def normalize_boss_xp(
+        enemy_dict: dict[ctenums.EnemyID, enemystats.EnemyStats],
+        true_levels_dict: dict[bty.BossID, int | None],
+        xp_threholds: ctpcstats.XPThreshholds  # For xp thresholds
+):
+
+    true_levels_b = get_true_levels_bytes(enemy_dict, true_levels_dict)
+
+    # Before starting, set Zeal's XP to any non-zero value so it isn't ignored.
+    enemy_dict[ctenums.EnemyID.ZEAL].xp = 1
+
+    boss_ids = bty.get_boss_ids()
+    for boss_id in boss_ids:
+        scheme = bty.get_default_scheme(boss_id)
+        part_ids = [part.enemy_id for part in scheme.parts]
+        total_xp = sum(enemy_dict[part_id].xp for part_id in part_ids)
+
+        xp_share: dict[ctenums.EnemyID, int] = {}
+        for part_id in part_ids:
+            cur_share = xp_share.get(part_id, 0)
+            cur_share += enemy_dict[part_id].xp
+            xp_share[part_id] = cur_share
+
+        # for part_id in set(part_ids):
+        #     print(f"{part_id}: {enemy_dict[part_id].xp}")
+
+        total_xp = sum(xp_share.values())
+        if not total_xp:
+            continue
+
+        level = true_levels_dict.get(boss_id, None)
+        if level is not None:
+            target_xp = xp_threholds.get_xp_for_level(level)
+        else:
+            real_parts = [part_id for part_id, xp in xp_share.items()
+                          if xp > 0]
+
+            total_level = sum(enemy_dict[part].level for part in real_parts)
+            avg_level = round(total_level/len(real_parts))
+            target_xp = xp_threholds.get_xp_for_level(avg_level)
+
+        for part_id in set(part_ids):
+            new_xp = round(enemy_dict[part_id].xp * target_xp/total_xp)
+            new_xp = sorted([0, new_xp, 0xFFFF])[1]
+            enemy_dict[part_id].xp = new_xp
+
+        # for part_id in set(part_ids):
+        #     print(f"{part_id}: {enemy_dict[part_id].xp}")
+        # input()
+
+def modify_boss_midboss_xp_tp(
+        enemy_dict: dict[ctenums.EnemyID, enemystats.EnemyStats],
+        midboss_factor: float,
+        boss_factor: float
+):
+    midbosses = bty.get_midboss_ids()
+
+    for boss_id in bty.BossID:
+        if boss_id in midbosses:
+            factor = midboss_factor
+        else:
+            factor = boss_factor
+
+        scheme = bty.get_default_scheme(boss_id)
+        parts = set(part.enemy_id for part in scheme.parts)
+
+        for part in parts:
+            new_xp = enemy_dict[part].xp*factor
+            new_xp = sorted([0, round(new_xp), 0xFFFF])[1]
+            enemy_dict[part].xp = new_xp
+
+            new_tp = enemy_dict[part].tp*factor
+            new_tp = sorted([0, round(new_tp), 0xFF])[1]
+            enemy_dict[part].tp = new_tp
 
 
 def apply_reward_rando(

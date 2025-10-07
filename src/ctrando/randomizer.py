@@ -223,6 +223,21 @@ def get_random_config(
     ### Enemy Reshuffle
     config.enemy_assign_dict = enemyrando.get_enemy_shuffle(settings.enemy_options.shuffle_enemies, rng)
 
+    ### XP modifications depending on enemy type
+    # This needs to be BEFORE adaptive scale, which changes xp requirements
+    if settings.battle_rewards.xp_tp_rewards.normalize_boss_xp:
+        rewardrando.normalize_boss_xp(
+            config.enemy_data_dict,
+            settings.boss_scaling_options.boss_level_dict,
+            config.pcstat_manager.xp_thresholds
+        )
+
+    rewardrando.modify_boss_midboss_xp_tp(
+        config.enemy_data_dict,
+        settings.battle_rewards.xp_tp_rewards.midboss_reward_factor,
+        settings.battle_rewards.xp_tp_rewards.boss_reward_factor
+    )
+
     ### XP/TP Mod
     characterwriter.adaptive_scale_xp(
         config.pcstat_manager,

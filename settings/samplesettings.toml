@@ -14,6 +14,9 @@ xp_penalty_level=45      # Levels past this level become more difficult to obtai
 xp_penalty_percent=15    # For each level beyond the penalty, the requirement grows by this percent
 level_cap=55             # Levels beyond the level cap will have prohibitively large requirements.
 
+midboss_reward_factor=1.0    # Midboss XP/TP is additionally multiplied by this factor
+boss_reward_factor=1.0       # Boss XP/TP is additionally multiplied by this factor
+normalize_boss_xp=true       # Boss XP is proportional to their level
 
 ### Tech Options
 tech_order="mp_type"  # Order in which techs are learned

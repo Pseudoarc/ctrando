@@ -230,22 +230,29 @@ class XPTPGRewards:
     xp_penalty_level: int = 99
     xp_penalty_percent: int = 0
     level_cap: int = 60
+    boss_reward_factor: float = 1.0
+    midboss_reward_factor: float = 1.0
+    normalize_boss_xp: bool = False
 
     _help_dict: typing.ClassVar[dict[str, str]] = {
-            'xp_scale': "Factor by which to scale XP earned in battle",
-            'tp_scale': "Factor by which to scale TP earned in battle",
-            'g_scale': "Factor by which to scale G earned in battle",
-            'split_xp': "XP is split among living party members rather than shared evenly",
-            'split_tp': "TP is split among living party members rather than shared evenly",
-            'fix_tp_doubling': "TP rewards are not duplicated for every gained tech level",
-            "xp_penalty_level": "Levels past this level become more difficult to obtain",
-            "xp_penalty_percent": "For each level beyond the penalty, the requirement grows by this percent",
-            "level_cap": "Levels beyond the level cap will have prohibitively large requirements."
-        }
+        'xp_scale': "Factor by which to scale XP earned in battle",
+        'tp_scale': "Factor by which to scale TP earned in battle",
+        'g_scale': "Factor by which to scale G earned in battle",
+        'split_xp': "XP is split among living party members rather than shared evenly",
+        'split_tp': "TP is split among living party members rather than shared evenly",
+        'fix_tp_doubling': "TP rewards are not duplicated for every gained tech level",
+        "xp_penalty_level": "Levels past this level become more difficult to obtain",
+        "xp_penalty_percent": "For each level beyond the penalty, the requirement grows by this percent",
+        "level_cap": "Levels beyond the level cap will have prohibitively large requirements.",
+        "boss_reward_factor": "Boss xp/tp is additionally multiplied by this factor",
+        "midboss_reward_factor": "Midboss xp/tp is additionally multiplied by this factor",
+        "normalize_boss_xp": "Boss xp is proportional to their level"
+    }
     _arg_names: typing.ClassVar[tuple[str, ...]] = (
         'xp_scale', 'tp_scale', 'g_scale', 'split_xp', 'split_tp',
         'fix_tp_doubling', "xp_penalty_level", "xp_penalty_percent",
-        "level_cap"
+        "level_cap", "boss_reward_factor", "midboss_reward_factor",
+        "normalize_boss_xp"
     )
 
     @classmethod
@@ -255,7 +262,6 @@ class XPTPGRewards:
             title="Battle Rewards Settings",
             description="Settings which modify post-battle rewards."
         )
-
 
         argumenttypes.add_dataclass_to_group(
             cls, group, help_dict=cls._help_dict
@@ -295,6 +301,17 @@ class XPTPGRewards:
         ret_dict[arg_name] = argumenttypes.DiscreteNumericalArg(
             1, 99, 1, 50,
             cls._help_dict[arg_name], type_fn=int
+        )
+
+        for arg_name in ("boss_reward_factor", "midboss_reward_factor"):
+            ret_dict[arg_name] = argumenttypes.DiscreteNumericalArg(
+                0.0, 5.0, 0.25, 2.0,
+                cls._help_dict[arg_name], type_fn=float
+            )
+
+        arg_name = "normalize_boss_xp"
+        ret_dict[arg_name] = argumenttypes.FlagArg(
+            cls._help_dict[arg_name]
         )
 
         return ret_dict
