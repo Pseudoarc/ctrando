@@ -1182,6 +1182,34 @@ def get_scaling_scheme(
     raise ValueError
 
 
+def get_true_levels_bytes(
+        enemy_dict: dict[ctenums.EnemyID, EnemyStats],
+        boss_scaling_settings: dict[bty.BossID, int | None],
+):
+    true_levels: bytearray = bytearray(
+        [enemy_dict.get(ctenums.EnemyID(ind), EnemyStats()).level
+         for ind in range(0x100)]
+    )
+    true_levels[ctenums.EnemyID.ZEAL_2_RIGHT] = 0x30
+    true_levels[ctenums.EnemyID.SAVE_POINT_ENEMY] = 20
+    true_levels[ctenums.EnemyID.TURRET] = 35
+    true_levels[ctenums.EnemyID.LAVOS_1] = 50
+    true_levels[ctenums.EnemyID.LAVOS_OCEAN_PALACE] = 50
+    true_levels[ctenums.EnemyID.R_SERIES] = 5
+    true_levels[ctenums.EnemyID.MOTHERBRAIN] = 0x26
+    true_levels[ctenums.EnemyID.DALTON_PLUS] = 20
+    true_levels[ctenums.EnemyID.ROLY_BOMBER] = 0x15  # Match outlaw
+    true_levels[ctenums.EnemyID.DEFUNCT] = 0x28  # Match departed
+
+    for boss_id, level in boss_scaling_settings.items():
+        scheme = bty.get_default_scheme(boss_id)
+        enemy_ids = [part.enemy_id for part in scheme.parts]
+        for enemy_id in enemy_ids:
+            true_levels[enemy_id] = level
+
+    return true_levels
+
+
 def apply_full_scaling_patch(
         ct_rom: ctrom.CTRom,
         scaling_general_options: enemyscaling.DynamicScalingOptions,
@@ -1260,27 +1288,7 @@ def apply_full_scaling_patch(
         scaling_scheme + [inst.RTL()], ct_rom
     )
 
-    true_levels: bytearray = bytearray(
-        [enemy_stat_dict.get(ctenums.EnemyID(ind), EnemyStats()).level
-         for ind in range(0x100)]
-    )
-    true_levels[ctenums.EnemyID.ZEAL_2_RIGHT] = 0x30
-    true_levels[ctenums.EnemyID.SAVE_POINT_ENEMY] = 20
-    true_levels[ctenums.EnemyID.TURRET] = 35
-    true_levels[ctenums.EnemyID.LAVOS_1] = 50
-    true_levels[ctenums.EnemyID.LAVOS_OCEAN_PALACE] = 50
-    true_levels[ctenums.EnemyID.R_SERIES] = 5
-    true_levels[ctenums.EnemyID.MOTHERBRAIN] = 0x26
-    true_levels[ctenums.EnemyID.DALTON_PLUS] = 20
-    true_levels[ctenums.EnemyID.ROLY_BOMBER] = 0x15  # Match outlaw
-    true_levels[ctenums.EnemyID.DEFUNCT] = 0x28  # Match departed
-
-    for boss_id, level in boss_scaling_settings.items():
-        scheme = bty.get_default_scheme(boss_id)
-        enemy_ids = [part.enemy_id for part in scheme.parts]
-        for enemy_id in enemy_ids:
-            true_levels[enemy_id] = level
-
+    true_levels = get_true_levels_bytes(enemy_stat_dict, boss_scaling_settings)
     true_level_addr = ct_rom.space_manager.get_free_addr(
         len(true_levels), 0x410000
     )
