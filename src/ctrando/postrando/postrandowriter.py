@@ -129,7 +129,9 @@ def write_ending_selection(
     new_commands = (
         EF().add(EC.assign_val_to_mem(
             0, memory.Memory.BLACKBIRD_LEFT_WING_CUTSCENE_COUNTER, 1)
-        ).add(EC.assign_val_to_mem(storyline, memory.Memory.STORYLINE_COUNTER, 1))
+        )
+        .add(EC.reset_flag(memory.Flags.HARD_LAVOS_DEFEATED))
+        .add(EC.assign_val_to_mem(storyline, memory.Memory.STORYLINE_COUNTER, 1))
     )
 
     if ending_name == postrandooptions.EndingID.THE_OATH:
