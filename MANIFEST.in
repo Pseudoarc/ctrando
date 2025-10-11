@@ -1,1 +1,2 @@
+recursive-include src/ctrando/presets *
 include src/ctrando/strings/huffman_table.pickle

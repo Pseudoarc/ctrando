@@ -90,7 +90,7 @@ class ObjectiveOptions:
             ),
             "num_bucket_objectives": argumenttypes.DiscreteNumericalArg(
                 0, 8, 1, 3,
-                "Number of objectives needed to unlock the final door in the Black Omen",
+                "Number of objectives needed to unlock the bucket in the End of Time",
                 type_fn=int
             ),
         }
