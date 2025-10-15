@@ -409,8 +409,8 @@ def get_ctrom_from_config(
 
     staticbossscaling.scale_boss_hp(
         config.enemy_data_dict, post_config.enemy_ai_manager,
-        enemyscaling.StaticScalingOptions.static_boss_hp_scale,
-        enemyscaling.StaticScalingOptions.static_hp_scale_lavos
+        settings.scaling_options.static_scaling_options.static_boss_hp_scale,
+        settings.scaling_options.static_scaling_options.static_hp_scale_lavos
     )
     staticbossscaling.set_element_safety_level(post_config.enemy_ai_manager,
                                                settings.scaling_options.static_scaling_options.element_safety_level)
