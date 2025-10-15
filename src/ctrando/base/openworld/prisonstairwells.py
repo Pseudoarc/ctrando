@@ -111,6 +111,20 @@ class EventMod(locationevent.LocEventMod):
                            1 + len(reset_flag)).to_bytearray(), pos
         )
 
+        guard_objs = [0x14, 0x15, 0x16]
+        for obj_id in guard_objs:
+            pos = script.get_object_start(obj_id)
+            script.insert_commands(
+                EF()
+                .add_if(
+                    EC.if_flag(memory.Flags.HAS_ESCAPED_GUARDIA_PRISON),
+                    EF()
+                    .add(EC.remove_object(obj_id))
+                    .add(EC.return_cmd())
+                    .add(EC.end_cmd())
+                ).get_bytearray(), pos
+            )
+
     @classmethod
     def change_storyline_triggers(cls, script: locationevent.LocationEvent):
         """
