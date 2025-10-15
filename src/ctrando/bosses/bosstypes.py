@@ -333,7 +333,7 @@ _default_schemes: dict[BossID, BossScheme] = {
         BossPart(_EID.FLEA_PLUS_TRIO, 9, displacement=(0x20, 0x30))
     ),
     BossID.RETINITE: BossScheme(
-        BossPart(_EID.RETINITE, 3),
+        BossPart(_EID.RETINITE_EYE, 3),
         BossPart(_EID.RETINITE_TOP, 9, (0, -0x8)),
         BossPart(_EID.RETINITE_BOTTOM, 6, (0, 0x28))
     ),

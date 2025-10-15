@@ -1301,7 +1301,6 @@ class EnemyID(StrIntEnum):
     # TERRAMUTANT = 0x37
     #  = 0x38
     JUGGLER = 0x39
-    RETINITE = 0x3A
     MAGE = 0x3B
     UNKNOWN_3C = 0x3C
     REPTITE_PURPLE = 0x3D

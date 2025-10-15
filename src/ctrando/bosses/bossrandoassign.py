@@ -406,7 +406,7 @@ def assign_zenan_bridge_boss(
 
     first_x_px, first_y_px = 0xE8, 0x78
     main_id = boss.parts[0].enemy_id
-    if main_id not in (ctenums.EnemyID.ZOMBOR_TOP, ctenums.EnemyID.RETINITE):
+    if main_id not in (ctenums.EnemyID.ZOMBOR_TOP, ctenums.EnemyID.RETINITE_EYE):
         first_y_px += 0x20
 
     boss_copy = bosstypes.BossScheme(*boss.parts)
