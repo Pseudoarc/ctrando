@@ -76,9 +76,16 @@ class EventMod(locationevent.LocEventMod):
 
         new_end = (
             EF()
-            .add(EC.assign_val_to_mem(6, 0x7F00DA,1))
-            .add(EC.assign_val_to_mem(4 , memory.Memory.LAVOS_STATUS, 1))
+            .add(EC.assign_val_to_mem(0xA, 0x7F00DE, 1))
+            .add(EC.assign_val_to_mem(4, memory.Memory.LAVOS_STATUS, 1))
             .add(EC.change_location(ctenums.LocID.LAVOS, 7, 0xA))
         )
+        #
+        # new_end = (
+        #     EF()
+        #     .add(EC.assign_val_to_mem(6, 0x7F00DA,1))
+        #     .add(EC.assign_val_to_mem(4 , memory.Memory.LAVOS_STATUS, 1))
+        #     .add(EC.change_location(ctenums.LocID.LAVOS, 7, 0xA))
+        # )
         script.insert_commands(new_end.get_bytearray(), pos)
 

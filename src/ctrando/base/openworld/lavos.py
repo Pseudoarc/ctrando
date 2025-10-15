@@ -62,3 +62,18 @@ class EventMod(locationevent.LocEventMod):
             EC.change_location(ctenums.LocID.LAST_VILLAGE_EMPTY_HUT,
                                0x18, 0x18, Facing.DOWN, )
         )
+
+        # remove a hide lavos command usually used in boss rush
+        pos = script.find_exact_command(
+            EC.return_cmd(),
+            script.get_object_start(0x1C)
+        ) - 1
+        script.delete_commands(pos, 1)
+
+        # force play the lavos song when interacted with from Black Omen
+        pos = script.find_exact_command(
+            cmd := EC.if_mem_op_value(0x7F0214, OP.EQUALS, 1),
+            script.get_function_start(0xA, FID.STARTUP)
+        )
+        pos += len(cmd)
+        script.insert_commands(EC.play_song(0xD).to_bytearray(), pos)
