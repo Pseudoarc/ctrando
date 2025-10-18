@@ -38,7 +38,7 @@ class PiecewiseLinear:
         ind = bisect.bisect_left(self.points, in_val,
                                  key=lambda x: x[0])
 
-        if ind >= len(self.points)-1:
+        if ind >= len(self.points):
             return self.points[-1][1]
         elif self.points[ind-1][0] == in_val:
             return self.points[ind-1][1]
