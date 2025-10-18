@@ -195,6 +195,52 @@ def get_max_party_level_scaler() -> assemble.ASMList:
     return routine
 
 
+def get_lut_scale_values_routine(
+        lut_rom_addr: int,
+        set_8bit_a: bool = False,
+        preserve_x: bool = True,
+        use_abs: bool = False,
+):
+    ret_rt: assemble.ASMList =[]
+    if set_8bit_a:
+        ret_rt = [inst.SEP(0x20)]
+    if preserve_x:
+        ret_rt += [inst.PHX()]
+
+    if use_abs:
+        mode = AM.ABS
+        orig_level = memory.Memory.ORIGINAL_LEVEL_TEMP & 0xFFFF
+        from_temp = memory.Memory.FROM_SCALE_TEMP & 0xFFFF
+        scaling_level = memory.Memory.SCALING_LEVEL & 0xFFFF
+        to_temp = memory.Memory.TO_SCALE_TEMP & 0xFFFF
+    else:
+        mode = AM.LNG
+        orig_level = memory.Memory.ORIGINAL_LEVEL_TEMP
+        from_temp = memory.Memory.FROM_SCALE_TEMP
+        scaling_level = memory.Memory.SCALING_LEVEL
+        to_temp = memory.Memory.TO_SCALE_TEMP
+
+    ret_rt += [
+        inst.LDA(0x00, AM.IMM8),
+        inst.XBA(),
+        inst.LDA(orig_level, mode),
+        inst.TAX(),
+        inst.LDA(lut_rom_addr, AM.LNG_X),
+        inst.STA(from_temp, mode),
+        inst.LDA(scaling_level, mode),
+        inst.TAX(),
+        inst.LDA(lut_rom_addr, AM.LNG_X),
+        inst.STA(to_temp, mode),
+    ]
+
+    if set_8bit_a:
+        ret_rt += [inst.REP(0x20)]
+    if preserve_x:
+        ret_rt += [inst.PLX()]
+
+    return ret_rt
+
+
 def get_affine_scale_values_routine(
         constant_part: int,
         label_prefix: str = ""  # Needed for having multiple of these not conflict

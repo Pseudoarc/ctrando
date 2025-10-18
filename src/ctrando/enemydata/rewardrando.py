@@ -183,7 +183,7 @@ def normalize_boss_xp(
             real_parts = [part_id for part_id, xp in xp_share.items()
                           if xp > 0]
 
-            total_level = sum(enemy_dict[part].level for part in real_parts)
+            total_level = sum(true_levels_b[part] for part in real_parts)
             avg_level = round(total_level/len(real_parts))
             target_xp = xp_threholds.get_xp_for_level(avg_level)
 
@@ -199,25 +199,28 @@ def normalize_boss_xp(
 def modify_boss_midboss_xp_tp(
         enemy_dict: dict[ctenums.EnemyID, enemystats.EnemyStats],
         midboss_factor: float,
-        boss_factor: float
+        boss_xp_factor: float,
+        boss_tp_factor: float,
 ):
     midbosses = bty.get_midboss_ids()
 
     for boss_id in bty.BossID:
         if boss_id in midbosses:
-            factor = midboss_factor
+            xp_factor = midboss_factor
+            tp_factor = midboss_factor
         else:
-            factor = boss_factor
+            xp_factor = boss_xp_factor
+            tp_factor = boss_tp_factor
 
         scheme = bty.get_default_scheme(boss_id)
         parts = set(part.enemy_id for part in scheme.parts)
 
         for part in parts:
-            new_xp = enemy_dict[part].xp*factor
+            new_xp = enemy_dict[part].xp*xp_factor
             new_xp = sorted([0, round(new_xp), 0xFFFF])[1]
             enemy_dict[part].xp = new_xp
 
-            new_tp = enemy_dict[part].tp*factor
+            new_tp = enemy_dict[part].tp*tp_factor
             new_tp = sorted([0, round(new_tp), 0xFF])[1]
             enemy_dict[part].tp = new_tp
 

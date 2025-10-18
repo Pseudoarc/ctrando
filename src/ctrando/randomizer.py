@@ -235,7 +235,8 @@ def get_random_config(
     rewardrando.modify_boss_midboss_xp_tp(
         config.enemy_data_dict,
         settings.battle_rewards.xp_tp_rewards.midboss_reward_factor,
-        settings.battle_rewards.xp_tp_rewards.boss_reward_factor
+        settings.battle_rewards.xp_tp_rewards.boss_xp_factor,
+        settings.battle_rewards.xp_tp_rewards.boss_tp_factor
     )
 
     ### XP/TP Mod

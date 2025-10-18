@@ -23,6 +23,7 @@ class DynamicScalingOptions:
     defense_safety_min_level: int = 10
     defense_safety_max_level: int = 30
     obstacle_safety_level: int = 30
+    eno_hp: bool = False
 
 
     def __post_init__(self):

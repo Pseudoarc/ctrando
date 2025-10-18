@@ -11,7 +11,7 @@ from ctrando.locations.locationevent import FunctionID as FID
 from ctrando.locations.eventcommand import EventCommand as EC
 from ctrando.asm import instructions as inst, assemble
 from ctrando.asm.instructions import AddressingMode as AM  #, SpecialRegister as SR
-from ctrando.common import asmpatcher, byteops, ctenums, ctrom, memory
+from ctrando.common import asmpatcher, byteops, ctenums, ctrom, memory, piecewiselinear as pwl
 from ctrando.enemydata.enemystats import EnemyStats
 from ctrando.enemyscaling import scalingschemes
 
@@ -109,10 +109,11 @@ def patch_scaling_inventory(
     asmpatcher.apply_jmp_patch(routine, hook_addr, ct_rom, return_addr)
 
 def patch_enemy_rewards(
-        ct_rom: ctrom.CTRom,
+        ct_rom: ctrom.CTRom, *,
         scaling_exclusion_list: Optional[list[ctenums.EnemyID,]] = None,
-        scale_8_addr: Optional[int] = None,
-        scale_16_addr: Optional[int] = None
+        scale_8_addr: int,
+        scale_16_addr: int,
+        xp_lut_addr: int,
 ):
     """Interrupt the reward loading routine to do scaling."""
 
@@ -204,7 +205,6 @@ def patch_enemy_rewards(
         # inst.LDA(memory.Memory.SCALING_LEVEL & 0xFFFF, AM.ABS),
         # inst.STA(memory.Memory.TO_SCALE_TEMP & 0xFFFF, AM.ABS),
     ]
-    store_original_level_rt += scalingschemes.get_affine_scale_values_routine(2, 'rew')
 
     get_reward_addr_rt: assemble.ASMList = [
         # Original routine copies the slot to $04.  Used later.
@@ -245,10 +245,22 @@ def patch_enemy_rewards(
 
     scale_reward_rt: assemble.ASMList = [
         # xp  - A already set to 16-bit
+        inst.SEP(0x20),
+        inst.PHX(),
+        inst.LDA(memory.Memory.ORIGINAL_LEVEL_TEMP & 0xFFFF, AM.ABS),
+        inst.TAX(),
+        inst.LDA(xp_lut_addr, AM.LNG_X),
+        inst.STA(memory.Memory.FROM_SCALE_TEMP & 0xFFFF, AM.ABS),
+        inst.LDA(memory.Memory.SCALING_LEVEL & 0xFFFF, AM.ABS),
+        inst.TAX(),
+        inst.LDA(xp_lut_addr, AM.LNG_X),
+        inst.STA(memory.Memory.TO_SCALE_TEMP & 0xFFFF, AM.ABS),
+        inst.REP(0x20),
+        inst.PLX(),
         inst.LDA(reward_rom_st, AM.LNG_X),
         inst.BEQ("no_xp"),
         inst.JSL(scale_16_rom_addr, AM.LNG),
-        inst.JSL(scale_16_rom_addr, AM.LNG),
+        # inst.JSL(scale_16_rom_addr, AM.LNG),
         inst.CLC(),
         inst.ADC(battle_xp_offset, AM.ABS),
         inst.BCC("no_xp_carry"),
@@ -256,7 +268,10 @@ def patch_enemy_rewards(
         "no_xp_carry",
         inst.STA(battle_xp_offset, AM.ABS),
         "no_xp",
+        inst.SEP(0x20)
         # gp
+    ] + scalingschemes.get_affine_scale_values_routine(2, "gp") + [
+        inst.REP(0x20),
         inst.LDA(reward_rom_st+2, AM.LNG_X),
         inst.BEQ("no_gp"),
         inst.JSL(scale_16_rom_addr, AM.LNG),
@@ -271,12 +286,11 @@ def patch_enemy_rewards(
         inst.TDC(),
         inst.SEP(0x20),
         inst.LDA(reward_rom_st+6, AM.LNG_X),
-        inst.CMP(1, AM.IMM8),  # Min TP to scale
-        inst.BCC("no_scale_tp"),
+        inst.CMP(0, AM.IMM8),  # Min TP to scale
+        inst.BEQ("zero_tp"),
         ] + scalingschemes.get_affine_scale_values_routine(5, "tp") + [
         inst.LDA(reward_rom_st + 6, AM.LNG_X),
         inst.JSL(scale_8_rom_addr, AM.LNG),
-        "no_scale_tp",
         inst.CMP(0, AM.IMM8),
         inst.BNE("nonzero_tp"),
         inst.INC(mode=AM.NO_ARG),
@@ -290,6 +304,7 @@ def patch_enemy_rewards(
         inst.REP(0x20),
         "no_tp_carry",
         inst.STA(battle_tp_offset, AM.ABS),
+        "zero_tp",
         inst.JMP(return_rom_addr, AM.LNG)
         # Why is tp given an extra byte instead of XP or GP?
     ]
@@ -353,6 +368,7 @@ def patch_enemy_stat_loads(
         scale_def_addr: int,
         scaling_exclusion_list: list[ctenums.EnemyID],
         true_levels_addr: int,
+        hp_lut_addr: int
 ):
     """
     After an enemy's stats are loaded, scale them using the enemy's level and
@@ -414,7 +430,7 @@ def patch_enemy_stat_loads(
             stat_offset: int,
             value_exclusion: typing.Optional[int] = None
     ) -> assemble.ASMList:
-        routine = [
+        routine: assemble.ASMList = [
             inst.LDA(stat_offset, AM.ABS_Y)
         ]
         if value_exclusion is not None:
@@ -441,10 +457,13 @@ def patch_enemy_stat_loads(
             inst.BEQ("skip_scaling")
         ]
 
-    hp_scale_part = [
-        inst.JSL(byteops.to_rom_ptr(scale16_addr), AM.LNG),
-        inst.JSL(byteops.to_rom_ptr(scale16_addr), AM.LNG)
-    ]
+    hp_lut_rom_addr = byteops.to_rom_ptr(hp_lut_addr)
+    get_hp_scalers = scalingschemes.get_lut_scale_values_routine(
+        hp_lut_rom_addr,
+        set_8bit_a=False,
+        preserve_x=True,
+        use_abs=False
+    )
 
     true_levels_rom_addr = byteops.to_rom_ptr(true_levels_addr)
     scale_part += [
@@ -470,7 +489,7 @@ def patch_enemy_stat_loads(
         inst.JSL(byteops.to_rom_ptr(scale8_addr), AM.LNG),
         inst.STA(lvl_ram_offset, AM.ABS_Y),
         #
-    ] + scalingschemes.get_affine_scale_values_routine(_hp_affine_constant, "hp") + [
+    ] + get_hp_scalers + [
         inst.LDA(index_offset, AM.ABS_Y),
         inst.CMP(ctenums.EnemyID.SON_OF_SUN_EYE, AM.IMM8),
         inst.BNE("normal_load"),
@@ -483,16 +502,15 @@ def patch_enemy_stat_loads(
         inst.REP(0x20),
         inst.LDA(hp_ram_offset, AM.ABS_Y),
         "scale_hp",
-    ] + hp_scale_part + [
-        # inst.JSL(byteops.to_rom_ptr(scale16_addr)),
+        inst.JSL(byteops.to_rom_ptr(scale16_addr)),
         inst.CMP(0x0000, AM.IMM16),
         inst.BNE("nonzero_hp"),
         inst.INC(mode=AM.NO_ARG),
         inst.BRA("no_overflow"),
         "nonzero_hp",
-        inst.BIT(0x8000, AM.IMM16),
-        inst.BEQ("no_overflow"),
-        inst.LDA(0x7FFF, AM.IMM16),
+        inst.CMP(30000, AM.IMM16),
+        inst.BCC("no_overflow"),
+        inst.LDA(30000, AM.IMM16),
         "no_overflow",
         inst.STA(hp_ram_offset, AM.ABS_Y),
         inst.STA(hp_ram_offset+2, AM.ABS_Y),
@@ -1077,6 +1095,7 @@ def patch_ai_multi_stat_math_15(
 def patch_ai_cond_hp_lte_08(
         ct_rom: ctrom.CTRom,
         scale16_rom_addr: int,
+        hp_lut_rom_addr: int
 ):
     """
     Patch ai condition 0x08 - Check if enemy HP <= target
@@ -1101,9 +1120,6 @@ def patch_ai_cond_hp_lte_08(
     # C190F3  F0 02          BEQ $C190F7
     # C190F5  B0 0E          BCS $C19105
 
-    scale_hp_part = [inst.JSL(scale16_rom_addr, AM.LNG),
-                     inst.JSL(scale16_rom_addr, AM.LNG)]
-
     orig_level_offset = 0x01
     new_rt: assemble.ASMList = [
         inst.SEP(0x20),
@@ -1114,17 +1130,14 @@ def patch_ai_cond_hp_lte_08(
         inst.BRA("skip_scale"),
         inst.LDA(0x08, AM.DIR),
         "normal_scaling",
-    ] + scalingschemes.get_affine_scale_values_routine(_hp_affine_constant) + [
-        # inst.LDA(orig_level_offset, AM.ABS_X),
-        # inst.STA(memory.Memory.FROM_SCALE_TEMP & 0xFFFF, AM.ABS),
-        # inst.LDA(memory.Memory.SCALING_LEVEL & 0xFFFF, AM.ABS),
-        # inst.STA(memory.Memory.TO_SCALE_TEMP & 0xFFFF, AM.ABS),
+    ] + scalingschemes.get_lut_scale_values_routine(
+        hp_lut_rom_addr, False, True, True) + [
         inst.REP(0x20),
-        inst.LDA(0x08, AM.DIR)
-    ] + scale_hp_part + [
-        inst.BIT(0x8000, AM.IMM16),
-        inst.BEQ("no_overflow"),
-        inst.LDA(0x7FFF, AM.IMM16),
+        inst.LDA(0x08, AM.DIR),
+        inst.JSL(scale16_rom_addr, AM.LNG),
+        inst.CMP(30000, AM.IMM16),
+        inst.BCC("no_overflow"),
+        inst.LDA(30000, AM.IMM16),
         "no_overflow",
         inst.STA(0x08, AM.DIR),
         "skip_scale",
@@ -1141,6 +1154,7 @@ def patch_ai_scripts(
         scale8_rom_addr: int,
         scale16_rom_addr: int,
         scale_def_rom_addr: int,
+        hp_lut_rom_addr: int,
 ):
     """
     Some AI scripts set stats.  We need to apply scaling routines to this.
@@ -1162,7 +1176,7 @@ def patch_ai_scripts(
     patch_ai_multi_stat_math_14(ct_rom, ai_stat_scale_rom_addr, scale_def_rom_addr)
     patch_ai_multi_stat_math_15(ct_rom, ai_stat_scale_rom_addr, scale_def_rom_addr)
 
-    patch_ai_cond_hp_lte_08(ct_rom, scale16_rom_addr)
+    patch_ai_cond_hp_lte_08(ct_rom, scale16_rom_addr, hp_lut_rom_addr)
 
 
 def get_scaling_scheme(
@@ -1190,16 +1204,56 @@ def get_true_levels_bytes(
         [enemy_dict.get(ctenums.EnemyID(ind), EnemyStats()).level
          for ind in range(0x100)]
     )
-    true_levels[ctenums.EnemyID.ZEAL_2_RIGHT] = 0x30
+
+    # Basic enemies with a bad level setting.
     true_levels[ctenums.EnemyID.SAVE_POINT_ENEMY] = 20
     true_levels[ctenums.EnemyID.TURRET] = 35
-    true_levels[ctenums.EnemyID.LAVOS_1] = 50
-    true_levels[ctenums.EnemyID.LAVOS_OCEAN_PALACE] = 50
-    true_levels[ctenums.EnemyID.R_SERIES] = 5
-    true_levels[ctenums.EnemyID.MOTHERBRAIN] = 0x26
-    true_levels[ctenums.EnemyID.DALTON_PLUS] = 20
     true_levels[ctenums.EnemyID.ROLY_BOMBER] = 0x15  # Match outlaw
     true_levels[ctenums.EnemyID.DEFUNCT] = 0x28  # Match departed
+
+    # Possible Problem Enemies:
+    # Gigasaur/Leaper are way too strong at lv35.
+
+    # Boss adjustment for difficulty
+    true_levels[ctenums.EnemyID.R_SERIES] = 5
+    true_levels[ctenums.EnemyID.YAKRA] = 5
+    true_levels[ctenums.EnemyID.GUARDIAN] = 6
+    true_levels[ctenums.EnemyID.GUARDIAN_BIT] = 6
+    true_levels[ctenums.EnemyID.HECKRAN] = 12
+    true_levels[ctenums.EnemyID.ZOMBOR_TOP] = 10
+    true_levels[ctenums.EnemyID.ZOMBOR_BOTTOM] = 10
+    true_levels[ctenums.EnemyID.MASA_MUNE] = 15
+    true_levels[ctenums.EnemyID.NIZBEL] = 16
+    true_levels[ctenums.EnemyID.FLEA] = 18
+    true_levels[ctenums.EnemyID.SLASH_SWORD] = 18
+    true_levels[ctenums.EnemyID.DALTON_PLUS] = 20
+    true_levels[ctenums.EnemyID.NIZBEL_II] = 23
+    true_levels[ctenums.EnemyID.BLACKTYRANO] = 20
+    true_levels[ctenums.EnemyID.AZALA] = 20
+    true_levels[ctenums.EnemyID.DALTON] = 26
+    true_levels[ctenums.EnemyID.MUD_IMP] = 29
+    true_levels[ctenums.EnemyID.BLUE_BEAST] = 29
+    true_levels[ctenums.EnemyID.RED_BEAST] = 29
+    true_levels[ctenums.EnemyID.GOLEM] = 27
+    true_levels[ctenums.EnemyID.FLEA_PLUS] = 27
+    true_levels[ctenums.EnemyID.SUPER_SLASH] = 27
+    true_levels[ctenums.EnemyID.RETINITE_EYE] = 28
+    true_levels[ctenums.EnemyID.RETINITE_TOP] = 28
+    true_levels[ctenums.EnemyID.RETINITE_BOTTOM] = 28
+    true_levels[ctenums.EnemyID.GIGA_GAIA_HEAD] = 30
+    true_levels[ctenums.EnemyID.GIGA_GAIA_LEFT] = 30
+    true_levels[ctenums.EnemyID.GIGA_GAIA_RIGHT] = 30
+    true_levels[ctenums.EnemyID.LAVOS_SPAWN_SHELL] = 32
+    true_levels[ctenums.EnemyID.LAVOS_SPAWN_HEAD] = 32
+    true_levels[ctenums.EnemyID.MOTHERBRAIN] = 32
+    true_levels[ctenums.EnemyID.DISPLAY] = 32
+    true_levels[ctenums.EnemyID.GREAT_OZZIE] = 33
+    true_levels[ctenums.EnemyID.FLEA_PLUS_TRIO] = 33
+    true_levels[ctenums.EnemyID.SUPER_SLASH_TRIO] = 33
+    true_levels[ctenums.EnemyID.YAKRA_XIII] = 38
+    true_levels[ctenums.EnemyID.ZEAL_2_RIGHT] = 0x30
+    true_levels[ctenums.EnemyID.LAVOS_1] = 50
+    true_levels[ctenums.EnemyID.LAVOS_OCEAN_PALACE] = 50
 
     for boss_id, level in boss_scaling_settings.items():
         scheme = bty.get_default_scheme(boss_id)
@@ -1296,7 +1350,7 @@ def apply_full_scaling_patch(
     ct_rom.write(true_levels, ctrom.freespace.FSWriteType.MARK_USED)
 
     phys_lut_b = bytes(make_lut(get_phys_effective_hp, _atk_affine_constant))
-    mag_lut_b = bytes(make_lut(get_mag_effecive_hp, _mag_affine_constant))
+    mag_lut_b = bytes(make_lut(get_mag_effective_hp, _mag_affine_constant))
     heal_lut_b = bytes(make_lut(get_heal_effetive_hp, _mag_affine_constant))
 
     phys_lut_addr = ct_rom.space_manager.get_free_addr(len(phys_lut_b), 0x410000)
@@ -1311,17 +1365,35 @@ def apply_full_scaling_patch(
     ct_rom.seek(heal_lut_addr)
     ct_rom.write(heal_lut_b, ctrom.freespace.FSWriteType.MARK_USED)
 
+    hp_lut = make_hp_lut(scaling_general_options.eno_hp)
+    hp_lut_b = bytes(hp_lut)
+    hp_lut_addr = ct_rom.space_manager.get_free_addr(len(hp_lut_b), 0x410000)
+    ct_rom.seek(hp_lut_addr)
+    ct_rom.write(hp_lut_b, ctrom.freespace.FSWriteType.MARK_USED)
+
+    xp_lut = make_xp_lut()
+    xp_lut_b = bytes(xp_lut)
+    xp_lut_addr = ct_rom.space_manager.get_free_addr(len(xp_lut_b), 0x410000)
+    ct_rom.seek(xp_lut_addr)
+    ct_rom.write(xp_lut_b, ctrom.freespace.FSWriteType.MARK_USED)
+
     patch_scaling_inventory(ct_rom, script_manager, byteops.to_rom_ptr(set_scale_addr))
     patch_pre_battle_level_setting(ct_rom, scaling_scheme)
     patch_enemy_stat_loads(
         ct_rom, slow_scale8_addr, slow_scale16_addr, scale_def_addr, scaling_exclusion_list, true_level_addr,
+        hp_lut_addr
     )
-    patch_enemy_rewards(ct_rom, scaling_exclusion_list, slow_scale8_addr, slow_scale16_addr)
+    patch_enemy_rewards(ct_rom,
+                        scaling_exclusion_list=scaling_exclusion_list,
+                        scale_8_addr=slow_scale8_addr,
+                        scale_16_addr=slow_scale16_addr,
+                        xp_lut_addr=xp_lut_addr)
     patch_enemy_tech_power(ct_rom, byteops.to_rom_ptr(slow_scale8_addr), phys_lut_addr, mag_lut_addr, heal_lut_addr)
     patch_enemy_attack_power(ct_rom, byteops.to_rom_ptr(slow_scale8_addr), phys_lut_addr, mag_lut_addr)
     patch_ai_scripts(ct_rom, byteops.to_rom_ptr(slow_scale8_addr),
                      byteops.to_rom_ptr(slow_scale16_addr),
-                     byteops.to_rom_ptr(scale_def_addr))
+                     byteops.to_rom_ptr(scale_def_addr),
+                     byteops.to_rom_ptr(hp_lut_addr))
 
 
 def get_heal_effetive_hp(level: int) -> float:
@@ -1333,32 +1405,57 @@ def get_heal_effetive_hp(level: int) -> float:
 
 def get_phys_effective_hp(level: int) -> float:
     """
-    Get an average character's effecitve hp.  Effective hp is hp/(1-dmg_reduction).
+    Get an average character's effective hp.  Effective hp is hp/(1-dmg_reduction).
     That is, 50% defense is considered as doubling effective hp, 75% defense quadruples it.
     """
-    base_hp = 56
-    hp_growth = HPGrowth(bytes.fromhex("0A 0C 15 0E 1D 13 63 14"))  # Frog HP
+    base_hp = 110
+    hp_growth = HPGrowth(bytes.fromhex("07 0A 10 0F 63 14 FF 00"))  # Robo HP
 
     # "Standard" defense goes from 15 at lv1 to 190 (~75% reduction)
-    min_def = 15
-    max_def = 190
-    defense = math.floor(min_def + (max_def-min_def)*(level-1)/49)
+    # min_def = 15
+    # max_def = 190
+    # defense = math.floor(min_def + (max_def-min_def)*(level-1)/49)
 
-    total_defense = sorted([1, defense, 255])[1]
+    # Try a more "rando" def where it jumps up rather quickly.
+    armor_func = pwl.PiecewiseLinear(
+        (1, 3+5),  # Hide + Hide
+        (10, 20+52),     # Rock + Meso
+        (30, 29+71),     # Lode + Lode
+        (40, 36+82),     # Vigil + Nova
+        (50, 40+85),       # Prism + Moon
+    )
+    armor = armor_func(level)
+
+    stamina_growth = 178
+    base_stamina = 10
+    stamina = math.floor(sorted([1, base_stamina+stamina_growth*(level-1)/100, 99])[1])
+
+
+    total_defense = sorted([1, stamina+armor, 255])[1]
     reduction = (256-total_defense)/256
     effective_hp = (hp_growth.cumulative_growth_at_level(level) + base_hp)/reduction
     return effective_hp
 
 
-def get_mag_effecive_hp(level: int) -> float:
+def get_mag_effective_hp(level: int) -> float:
     """Same as phys hp but for magic resistances"""
+    # Magus
+    # base_hp = 90
+    # hp_growth = HPGrowth(bytes.fromhex("1B 0A 28 1C 2D 16 63 12"))  # Magus HP
+
+    # Frog
     base_hp = 56
     hp_growth = HPGrowth(bytes.fromhex("0A 0C 15 0E 1D 13 63 14"))  # Frog HP
     hp_at_level = hp_growth.cumulative_growth_at_level(level) + base_hp
 
-    # "Standard" defense goes from 15 at lv1 to 190 (~75% reduction)
+    # Frog
     min_mdef = 4
     mdef_growth = 150
+
+    # Magus
+    # min_mdef = 9
+    # mdef_growth = 175
+
     mdef_at_level = math.floor(min_mdef + mdef_growth*(level-1)/100)
     mdef_at_level = sorted([1, mdef_at_level, 99])[1]
 
@@ -1382,6 +1479,81 @@ def make_lut(
     rel_eff_hp = [rel_eff_hp[0]] + rel_eff_hp
 
     return rel_eff_hp
+
+
+def make_xp_lut() -> list[int]:
+    """Return relative xp lut."""
+    # Use hardcoded so that it does not change with various xp re-weighings.
+    xp_to_next = [
+        20, 20, 40, 70, 110, 160, 220, 300, 400, 520,
+        650, 790, 940, 1100, 1270, 1450, 1640, 1840, 2050, 2270,
+        2500, 2740, 2990, 3250, 3520, 3800, 4090, 4390, 4700, 5020,
+        5350, 5690, 6040, 6400, 6770, 7150, 7540, 7940, 8350, 8770,
+        9200, 9640, 10090, 10550, 11020, 11500, 11990, 12490, 13000, 13520,
+        14050, 14590, 15140, 15700, 16270, 16850, 17440, 18040, 18650, 19270,
+        19900, 20540, 21190, 21850, 22520, 23200, 23890, 24590, 25300, 26020,
+        26750, 27490, 28240, 29000, 29770, 30550, 31340, 32140, 32950, 33770,
+        34600, 35440, 36290, 37150, 38020, 38900, 39790, 40690, 41600, 42520,
+        43450, 44390, 45340, 46300, 47270, 48250, 49240, 50240, 51250, 51250]
+
+    denom = xp_to_next[50]/0xFF  # So approx lv50xp/denom = 0xFF
+    xp_lut = [sorted([1, round(xp/denom), 0xFF])[1] for xp in xp_to_next]
+
+    xp_lut[0:4] = [xp_lut[4]]*4
+
+    return xp_lut
+
+
+def make_hp_lut(alt_table: bool = False):
+    def linspace(start: float, stop: float, num_vals: int) -> list[float]:
+        if num_vals == 1:
+            return [start]
+
+        step = (stop-start)/(num_vals-1)
+        ret = [start + ind*step for ind in range(num_vals-1)]
+        ret.append(stop)
+        return ret
+
+    def frange(start: float, stop: float, step: float) -> list[float]:
+        num_vals = math.floor((stop-start)/step)
+        return linspace(start, stop, num_vals)[:-1]
+
+
+    if not alt_table:  # Lut approxiating quadratic
+        affine_constant = 5
+        correction_factor = 15
+        hp_table = [((level+affine_constant)**2)/correction_factor for level in range(101)]
+        hp_table = [round(sorted([1, x, 0xFF])[1]) for x in hp_table]
+    else:  # Modified Phone HP
+        # hp_table = [0.5, 1, 2, 2.5, 3, 3.5]  # levels 0 through 5
+        # hp_table += linspace(4, 25, 15)[:-1]  # 6 through 19
+        # hp_table += linspace(25, 100, 31)[:-1] # 20 through 49
+        #
+        # remaining = 100 - len(hp_table)
+
+        # hp_func = pwl.PiecewiseLinear(
+        #     (0, 0.5),
+        #     (6, 6),
+        #     (20, 25),
+        #     (45, 100)
+        # )
+        hp_func = pwl.PiecewiseLinear(
+            (1, 1),
+            (5, 5),
+            (20, 25),
+            (40, 70),
+            (50, 80)
+        )
+        hp_table = [
+            sorted([1, round(0xFF*hp_func(x)/85), 0xFF])[1] for x in range(100)
+        ]
+
+        # max_val = max(hp_table)
+        # for x in hp_table[:60]:
+        #     print(x*100/max_val)
+        # input()
+
+    return hp_table
 
 
 def get_lut_scaler(

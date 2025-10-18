@@ -230,7 +230,8 @@ class XPTPGRewards:
     xp_penalty_level: int = 99
     xp_penalty_percent: int = 0
     level_cap: int = 60
-    boss_reward_factor: float = 1.0
+    boss_xp_factor: float = 1.0
+    boss_tp_factor: float = 1.0
     midboss_reward_factor: float = 1.0
     normalize_boss_xp: bool = False
 
@@ -244,14 +245,15 @@ class XPTPGRewards:
         "xp_penalty_level": "Levels past this level become more difficult to obtain",
         "xp_penalty_percent": "For each level beyond the penalty, the requirement grows by this percent",
         "level_cap": "Levels beyond the level cap will have prohibitively large requirements.",
-        "boss_reward_factor": "Boss xp/tp is additionally multiplied by this factor",
+        "boss_xp_factor": "Boss xp is additionally multiplied by this factor",
+        "boss_tp_factor": "Boss tp is additionally multiplied by this factor",
         "midboss_reward_factor": "Midboss xp/tp is additionally multiplied by this factor",
         "normalize_boss_xp": "Boss xp is proportional to their level"
     }
     _arg_names: typing.ClassVar[tuple[str, ...]] = (
         'xp_scale', 'tp_scale', 'g_scale', 'split_xp', 'split_tp',
         'fix_tp_doubling', "xp_penalty_level", "xp_penalty_percent",
-        "level_cap", "boss_reward_factor", "midboss_reward_factor",
+        "level_cap", "boss_xp_factor", "boss_tp_factor" "midboss_reward_factor",
         "normalize_boss_xp"
     )
 
@@ -303,7 +305,8 @@ class XPTPGRewards:
             cls._help_dict[arg_name], type_fn=int
         )
 
-        for arg_name in ("boss_reward_factor", "midboss_reward_factor"):
+        for arg_name in (
+                "boss_xp_factor", "boss_xp_factor", "midboss_reward_factor"):
             ret_dict[arg_name] = argumenttypes.DiscreteNumericalArg(
                 0.0, 5.0, 0.25, 2.0,
                 cls._help_dict[arg_name], type_fn=float
