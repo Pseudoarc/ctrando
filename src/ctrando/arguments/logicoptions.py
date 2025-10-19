@@ -228,7 +228,7 @@ class LogicOptions:
         )
 
         group.add_argument(
-            "--incenctive-factor",
+            "--incentive-factor",
             type=float,
             default=argparse.SUPPRESS,
             help="Factor by which to increase the weight of incentive spots."

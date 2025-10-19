@@ -68,7 +68,7 @@ class ShopOptions:
         ctenums.ItemID.TOMAS_POP, ctenums.ItemID.PETALS_2, ctenums.ItemID.FANGS_2,
         ctenums.ItemID.HORNS_2, ctenums.ItemID.FEATHERS_2,
         ctenums.ItemID.PENDANT_CHARGE, ctenums.ItemID.RAINBOW_SHELL,
-        ctenums.ItemID.SCALING_LEVEL, ctenums.ItemID.JETSOFTIME,
+        ctenums.ItemID.JETSOFTIME,
         ctenums.ItemID.DRAGON_TEAR, ctenums.ItemID.VALOR_CREST,
     )
     forced_not_buyable: typing.ClassVar[tuple[ctenums.ItemID, ...]] = (
@@ -97,8 +97,6 @@ class ShopOptions:
         ctenums.ItemID.UNUSED_EF, ctenums.ItemID.UNUSED_F0,
         ctenums.ItemID.UNUSED_F1,
         # maybe put these in a different category
-        ctenums.ItemID.FIST, ctenums.ItemID.FIST_2, ctenums.ItemID.FIST_3,
-        ctenums.ItemID.IRON_FIST, ctenums.ItemID.BRONZEFIST,
         ctenums.ItemID.NONE, ctenums.ItemID.WEAPON_END_5A,
         ctenums.ItemID.ARMOR_END_7B, ctenums.ItemID.HELM_END_94,
         ctenums.ItemID.ACCESSORY_END_BC,
@@ -163,7 +161,7 @@ class ShopOptions:
                 ShopCapacityType, cls._default_shop_capacity,
                 help_text="How shop capacity should be randomized"
             ),
-            "not_buyable_items:": argumenttypes.arg_multiple_from_enum(
+            "not_buyable_items": argumenttypes.arg_multiple_from_enum(
                 ctenums.ItemID, cls._default_not_buyable,
                 help_text="Items which can never appear in shops",
                 available_pool=[

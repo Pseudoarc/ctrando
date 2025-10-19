@@ -550,13 +550,12 @@ def write_character_spoilers(
         outfile.write("\n")
 
 
-def write_spoilers(
+def write_spoilers_to_file(
         settings: arguments.Settings,
         config: randostate.ConfigState,
-        path: pathlib.Path
+        outfile: TextIO
 ):
 
-    with open(path, "w") as outfile:
         write_rjust_dict(config.recruit_dict, "Recruit Spots", outfile)
         outfile.write("\n")
 
@@ -613,6 +612,17 @@ def write_spoilers(
         #     key_items,
         #     config.starting_rewards,
         # )
+
+
+def write_spoilers(
+        settings: arguments.Settings,
+        config: randostate.ConfigState,
+        path: pathlib.Path
+):
+
+    with open(path, "w") as outfile:
+        write_spoilers_to_file(settings, config, outfile)
+
 
 def get_proof(
         entrance_assignment: dict[regionmap.OWExit, regionmap.OWExit],
