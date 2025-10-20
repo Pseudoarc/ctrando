@@ -269,33 +269,75 @@ def resolve_character_conflicts(
         rng: random.RNGType
 ):
     """
-    Prevent the cathedral boss from blocking access to magic required to defeat it.
+    Prevent the Cathedral boss from blocking access to magic required to defeat it.
+    Prevent the Death Peak boss from blocking access to magic required to defeat it.
     """
+
     vanilla_spots = boss_rando_options.vanilla_boss_spots
     nizbel_ids = (bty.BossID.NIZBEL, bty.BossID.NIZBEL_2)
 
-    castle_recruit = recruit_assign_dict[ctenums.RecruitID.CASTLE]
-    cathedral_boss = boss_assign_dict[bty.BossSpotID.MANORIA_CATHERDAL]
-
     # The general strategy is just find a random boss who is not a nizbel
-    # or retinite.  Then swap that with the cathedral boss if it's bad.
-    nizbel_locks_crono = cathedral_boss in nizbel_ids and castle_recruit == ctenums.CharID.CRONO
-    retinite_locks_water = (
-            cathedral_boss == bty.BossID.RETINITE and
-            castle_recruit in (ctenums.CharID.FROG, ctenums.CharID.MARLE)
+    # or retinite.  Then swap that with the offending boss
+
+    recruit_boss_spot_pairs: tuple[tuple[ctenums.RecruitID, bty.BossSpotID], ...] = (
+        (ctenums.RecruitID.CASTLE, bty.BossSpotID.MANORIA_CATHERDAL),
+        (ctenums.RecruitID.DEATH_PEAK, bty.BossSpotID.DEATH_PEAK)
     )
 
-    if nizbel_locks_crono or retinite_locks_water:
+    bad_spots: list[bty.BossSpotID] = []
+    for recruit_id, boss_spot_id in recruit_boss_spot_pairs:
+        recruit = recruit_assign_dict[recruit_id]
+        boss = boss_assign_dict[boss_spot_id]
+
+        lit_lock = (boss in nizbel_ids) and recruit == ctenums.CharID.CRONO
+        water_lock = (boss == bty.BossID.RETINITE and recruit in (
+            ctenums.CharID.MARLE, ctenums.CharID.FROG
+        ))
+
+        if lit_lock or water_lock:
+            bad_spots.append(boss_spot_id)
+
+    if not bad_spots:
+        return
+
+    if len(bad_spots) == 2:
+        spot1, spot2 = bad_spots
+        boss_assign_dict[spot1], boss_assign_dict[spot2] = (
+            boss_assign_dict[spot2], boss_assign_dict[spot1])
+    elif len(bad_spots) == 1:
+        bad_spot = bad_spots[0]
+        bad_boss = boss_assign_dict[bad_spot]
+
         spots = [x for x in boss_assign_dict.keys() if x not in vanilla_spots]
         rng.shuffle(spots)
         for spot in spots:
             boss = boss_assign_dict[spot]
             if boss not in nizbel_ids + (bty.BossID.RETINITE,):
-                boss_assign_dict[spot] = cathedral_boss
-                boss_assign_dict[bty.BossSpotID.MANORIA_CATHERDAL] = boss
+                boss_assign_dict[spot] = bad_boss
+                boss_assign_dict[bad_spot] = boss
                 break
         else:
-            boss_assign_dict[bty.BossSpotID.MANORIA_CATHERDAL] = bty.BossID.YAKRA
+            boss_assign_dict[bad_spot] = bty.BossID.YAKRA
+    else:
+        raise ValueError
+
+    # nizbel_locks_crono = cathedral_boss in nizbel_ids and castle_recruit == ctenums.CharID.CRONO
+    # retinite_locks_water = (
+    #         cathedral_boss == bty.BossID.RETINITE and
+    #         castle_recruit in (ctenums.CharID.FROG, ctenums.CharID.MARLE)
+    # )
+    #
+    # if nizbel_locks_crono or retinite_locks_water:
+    #     spots = [x for x in boss_assign_dict.keys() if x not in vanilla_spots]
+    #     rng.shuffle(spots)
+    #     for spot in spots:
+    #         boss = boss_assign_dict[spot]
+    #         if boss not in nizbel_ids + (bty.BossID.RETINITE,):
+    #             boss_assign_dict[spot] = cathedral_boss
+    #             boss_assign_dict[bty.BossSpotID.MANORIA_CATHERDAL] = boss
+    #             break
+    #     else:
+    #         boss_assign_dict[bty.BossSpotID.MANORIA_CATHERDAL] = bty.BossID.YAKRA
 
 
 def fix_boss_sprites_given_assignment(
