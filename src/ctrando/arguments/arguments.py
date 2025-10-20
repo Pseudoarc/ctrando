@@ -1,12 +1,15 @@
 """Commandline for CTRando"""
 from __future__ import annotations
 
+import dataclasses
 import gettext
 import argparse
 from dataclasses import dataclass
 import enum
+from importlib.resources import files
 import random
 import sys
+import tomllib
 import typing
 
 from pathlib import Path
@@ -37,6 +40,25 @@ class KeyListType(enum.StrEnum):
     BOSSES = "bosses"
 
 
+@dataclass()
+class PresetData:
+    name: str
+    filename: str
+
+
+class Presets(enum.Enum):
+    BEGINNER = PresetData("Beginner Settings", "samplesettings.toml")
+    DUNGEON_SHUFFLE = PresetData("Dungeon Shuffle", "dungeonshuffle.toml")
+
+
+def get_preset(preset: Presets) -> dict[str, typing.Any]:
+    filename = preset.value.filename
+    return tomllib.loads(
+        files("ctrando.arguments").joinpath("presets", filename).read_text()
+    )
+
+
+
 @dataclass
 class GeneralOptions:
     input_file: typing.Optional[Path] = None
@@ -44,6 +66,7 @@ class GeneralOptions:
     seed: typing.Optional[str] = None
     options_file: typing.Optional[Path] = None
     list_keys: typing.Optional[KeyListType] = None
+    preset: typing.Optional[str] = None
 
     @classmethod
     def add_group_to_parser(cls, parser: argparse.ArgumentParser):
@@ -75,8 +98,24 @@ class GeneralOptions:
             "--options-file",
             type=Path,
             default=argparse.SUPPRESS,
-            help=("File with additional settings.  Will be overiddedn by "
+            help=("File with additional settings.  Will be overidden by "
                   "arguments on the commandline.")
+        )
+
+        preset_names = ", ".join(preset.name.lower() for preset in Presets)
+        preset_dict = {
+            preset.name.lower(): preset
+            for preset in Presets
+        }
+        general_group.add_argument(
+            "--preset", action="store",
+            default=argparse.SUPPRESS,
+            help=(
+                "Base settings.  Will be overridden by arguments on the "
+                "command line or those in --options-file "
+                f"[{preset_names}]"
+            ),
+            type=lambda x: preset_dict[x]
         )
 
         argumenttypes.add_str_enum_to_group(
@@ -113,6 +152,11 @@ class GeneralOptions:
         else:
             options_file = None
 
+        if hasattr(namespace, "preset"):
+            preset = getattr(namespace, "preset")
+        else:
+            preset = None
+
         if hasattr(namespace, "list_keys"):
             list_keys = getattr(namespace, "list_keys")
         else:
@@ -123,7 +167,8 @@ class GeneralOptions:
             output_directory=output_directory,
             seed=seed,
             options_file=options_file,
-            list_keys=list_keys
+            list_keys=list_keys,
+            preset=preset
         )
 
 

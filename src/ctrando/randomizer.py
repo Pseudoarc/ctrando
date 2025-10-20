@@ -7,6 +7,7 @@ import random
 import sys
 import time
 import tomllib
+import typing
 from typing import TextIO
 
 from ctrando.arguments import (
@@ -132,13 +133,28 @@ def extract_settings(*in_args: str) -> arguments.Settings:
     parser = arguments.get_parser()
     args = parser.parse_args(in_args)
 
+    if hasattr(args, "preset"):
+        preset: arguments.Presets = getattr(args, "preset")
+        preset_data = arguments.get_preset(preset)
+    else:
+        preset_data: dict[str, typing.Any] = {}
+
     if hasattr(args, "options_file"):
         options_path = getattr(args, "options_file")
         with open(options_path, 'rb') as infile:
-            data = tomllib.load(infile)
+            options_data = tomllib.load(infile)
 
-        additional_args = tomloptions.toml_data_to_args(data, args)
-        args = parser.parse_args(sys.argv[1:] + additional_args)
+    else:
+        options_data: dict[str, typing.Any] = {}
+
+    preset_data.update(options_data)
+
+    additional_args = tomloptions.toml_data_to_args(preset_data, args)
+    args = parser.parse_args(sys.argv[1:] + additional_args)
+
+
+
+
 
     settings = arguments.Settings.extract_from_namespace(args)
     return settings

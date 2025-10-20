@@ -1,48 +1,41 @@
 
 ### General Settings
-input_file="./ct.sfc"
-output_directory="./"  # If omitted, will be the directory of input_file
-seed="phone-entrance-1"
+# seed="CTRandoLearningSeed"
 
 ### Battle Rewards
-xp_scale=3.0  # [default = 5.0]
-tp_scale=3.0  # [default = 4.0]
-g_scale=1.0  # Not implemented yet
-split_xp=true  # TP is split among living party members rather than shared evenly
+xp_scale=4.0  # Factor by which to scale XP earned in battle
+tp_scale=4.0  # Factor by which to scale TP earned in battle
+# g_scale=1.0  # Not implemented yet
+split_xp=true  # XP is split among living party members rather than shared evenly
 split_tp=true  # TP is split among living party members rather than shared evenly
 fix_tp_doubling=true  # TP rewards are not duplicated for every gained tech level
 
+xp_penalty_level=45      # Levels past this level become more difficult to obtain
+xp_penalty_percent=15    # For each level beyond the penalty, the requirement grows by this percent
+level_cap=55             # Levels beyond the level cap will have prohibitively large requirements.
+
+
 ### Tech Options
-# tech_order -- the order in which techs are learned.
+tech_order="mp_type"  # Order in which techs are learned
 # - "vanilla": Techs are learned in their vanilla order [default]
 # - "random": Techs are learned in a random order
 # - "mp": Techs are learned in order of how much mp they cost
 # - "mp_type": Techs are learned in order of how much mp they cost.  But the tech list will
 #              be in the same type order (damage, healing, other) as the vanilla tech list.
-tech_order="mp_type"
 
 # tech_damage -- A tech's damage varies dependin on its mp usage
 # - "vanilla": A tech's base power (mp) is its vanilla power [default]
 # - "shuffle": Tech mps are shuffled (damage and healing separately).
 # - "random": Tech mps are assigned randomly according to the vanilla
 #             distribution of mps.
-tech_damage="shuffle"
+tech_damage="shuffle"  # {vanilla,shuffle,random}
+tech_damage_random_factor_min=0.75  # Minimum percent (as decimal, default 1.0) which MP costs may shift
+                                    # (ignored if vanilla damage)
+tech_damage_random_factor_max=1.25  # Same, but for maximum
+preserve_magic=false  # Keep each PC's first magic tech in its vanilla location (may break specified order)
 
-# tech_damage_random_factor_min
-# tech_damage_random_factor_max  -- After base assignment, perturb tech mps by some percentage.
-#                                   A value of 1.00 would mean no change.
-tech_damage_random_factor_min=0.67
-tech_damage_random_factor_max=1.5
-
-# preserve_magic -- A player's first magic tech will be in the same position as vanilla.
-preserve_magic=false
-
-# black_hole_factor -- Magus's tech Black Hole gains this much percent changes to insta-kill
-#                      per MP it costs.
-# black_hole_min -- Base percent kill chance for black hole. Total is base + mp*factor.
-black_hole_factor=3.0  # so 20mp Black Hole is 100% insant death.
-black_hole_min=40
-
+black_hole_factor=3.0   # Base percent kill chance for black hole. Total is base + mp*factor.
+black_hole_min=40       # Base percent kill chance for black hole. Total is base + mp*factor.
 
 ### Scaling Options
 dynamic_scaling_scheme = "progression"  # Options: "none", "progression"
@@ -50,79 +43,65 @@ dynamic_scaling_scheme = "progression"  # Options: "none", "progression"
 ## Dynamic Scaling Options (Only if dynamic scaling is not none)
 max_scaling_level=50
 dynamic_scale_lavos=true
-# defense_safety_min_level -- If the scaling is below this level, defense cannot exceed 50% reduction(usual)
-defense_safety_min_level=10
-# defense_safety_max_level -- Enemies have vanilla defense at this level.
-#                             Between min and max, linearly scale if defense would exceed 50% reduction
-defense_safety_max_level=30
+defense_safety_min_level=10     # If the scaling is below this level, defense cannot exceed 50% reduction(usual)
+defense_safety_max_level=30     # Enemies have vanilla defense at this level.
+                                # Between min and max, linearly scale if defense would exceed 50% reduction
+obstacle-safety-level=30        # Below this scaliing level, obstacle will be single target
 
 ## Settings for dynamic_scaling_scheme="progression"
+# Scaling levels granted when events occur:
 levels_per_boss=2.0
 levels_per_quest=0.0
-levels_per_key_item=0.0
-levels_per_objective=2.0
-levels_per_character=3.0
+levels_per_key_item=1.0
+levels_per_objective=3.0
+levels_per_character=1.0
 
 ## Static Scaling Options
 # normal_enemy_hp_scale=1.0  # Not implemented yet
-static_boss_hp_scale=1.0
+static_boss_hp_scale=0.70
 static_hp_scale_lavos=false
 # element_safety_level -- Below this level, Nizbel, Nizbel II, and Retinite will
 #                         React to any magic as though they were their weakness.
 element_safety_level=30
-# obstacle_safety_level -- Blow this level, Obstacle will be the single target
-#                          chaos attack used by Yakra XIII
-obstacle_safety_level=30
 
 ### Logic Options
-# additional_key_items -- Items beyond the required to add to the pool.
-# - Use --list-keys items to see all valid item keys
-# - The forced key items are:
+# The forced key items are:
 # [
-#   "c_trigger", "clone", "pendant", "pendant_charge", "dreamstone",
-#   "ruby_knife", "jetsoftime", "tools", "rainbow_shell", "prismshard",
-#   "jerky", "jerky",  # (Yes, two)
+#   "c_trigger", "clone", "pendant", "pendant_charge", "dreamstone", "ruby_knife", "jetsoftime",
+#   "tools", "rainbow_shell", "prismshard", "jerky", "jerky",  # (Yes, two)
 #   "bent_hilt", "bent_sword", "hero_medal", "masamune_1", # (not "masamune_2")
 #   "tomas_pop", "moon_stone", "sun_stone", "bike_key",  "seed", "gate_key"
 # ]
 # - Use this options to guarantee the presence of gear in key item spots
-additional_key_items=["masamune_2"]
+additional_key_items=["masamune_2"]  # Extra (non-progression) items to add to the key item pool.
 
-# forced_spots -- Items guaranteed to have a key item
-# - If there are more forced spots than key items, some forced spots may get normal loot
-# - If there are fewer forced spots than key items, some key items will be placed randomly
-# - Use --list-keys spots to get a list of spots.
-# - Uncomment the next block for a reasonable set of forced spots.
+# forced_spots -- Treasure spots guaranteed to have a key item
 forced_spots = [
-"laruba_rock",
-"hunting_range_nu_reward",
-
-"zenan_bridge_chef",
-"zenan_bridge_captain",
-"yakras_room",
-"denadoro_mts_key",
-"frogs_burrow_left",
-"tata_reward",
-"mountains_re_nice_magic_tab",
-"dorino_bromide_magic_tab",
-
-"prison_tower_1000",
-"truce_mayor_2f",
-"forest_ruins",
-"porre_mayor_2f",
-"jerky_gift",
-"bekkler_key",
-"snail_stop_key",
-"taban_gift_vest",
-"fair_pendant",
-"melchior_forge_masa",
-
-"arris_dome_food_locker_key",
-"sewers_3",
-"lab_16_4"
+    # "eot_gaspar_reward",
+    "death_peak_south_face_summit",
+    "sun_palace_key",
+    "bekkler_key",
+    "fair_pendant",
+    "zeal_mammon_machine",
+    "mt_woe_key",
+    "giants_claw_key",
+    "kings_trial_key",
+    "yakras_room",
+    "snail_stop_key",
+    "denadoro_mts_key",
+    "frogs_burrow_left",
+    "melchior_forge_masa",
+    "cyrus_grave_key",
+    "tata_reward",
+    "fiona_key",
+    "sun_keep_2300",
+    "jerky_gift",
+    "arris_dome_doan_key",
+    "arris_dome_food_locker_key",
+    "reptite_lair_key",
+    "taban_gift_vest",  # After Heckran
+    "geno_dome_boss_1"
 ]
-hard_lavos_end_boss=true
-force_early_flight=false
 
 # excluded_spots -- a list of spots which will never hold a key item
 # - Charged versions of chargable chests are never allowed
@@ -147,14 +126,11 @@ excluded_spots=[
     # Tyrano Lair
     "tyrano_lair_maze_1", "tyrano_lair_maze_2",
     "tyrano_lair_maze_3", "tyrano_lair_maze_4",
-
 ]
 
-# incentive_spots -- A list of spots with increased chance of having a key item
- #incentive_spots=[]
-
- #incentive_factor=5.0  # 5x more weight for incentive spots.
-# decay_factor = 0.7  # How much the weight decays each time a key item is put into a region
+# incentive_spots=[]    # A list of spots with increased chance of having a key item
+# incentive_factor=5.0  # 5x more weight for incentive spots.
+# decay_factor = 0.7    # How much the weight decays each time a key item is put into a region
 
 # starter_rewards -- A list of rewards to be granted at game start
 #  - "dark_ages", "future", "end_of_time", "apocalypse": Epoch time gauge access
@@ -166,7 +142,10 @@ excluded_spots=[
 #  - "omen_last_village", "omen_present": The Black Omen begins on these maps
 #                                         without needing Ocean Palace.
 #  - "truce_pillar", "bangor_pillar", "dark_ages_pillar": Give EoT pillars for warping.
+#  - "desert": Put the Sunken Desert on the 600AD map at the start.
 starter_rewards = ["epoch"]
+hard_lavos_end_boss=true  # The game will end if Ocean Palace Lavos is defeated.
+boats_of_time=false  # Ferry to Choras.  With gate key ferry to 600AD destinations.
 
 ### Boss Rando Options
 # boss_randomization scheme
@@ -259,48 +238,17 @@ not_buyable_items = [
     "bike_key", "pendant", "gate_key", "prismshard", "c_trigger", "tools",
     "jerky", "race_log", "moon_stone", "sun_stone", "ruby_knife", "yakra_key",
     "clone", "tomas_pop", "pendant_charge", "rainbow_shell", "jetsoftime",
-    "seed", "dreamstone",
-    "megaelixir", "hyperether", "elixir", "speed_tab", "power_tab", "magic_tab",
-    "rainbow", "shiva_edge", "swallow",
-    "valkerye", "siren",
-    "wondershot", "taban_suit",
-    "crisis_arm", "terra_arm",
-    "masamune_2",
-    "bronzefist",
-    "doomsickle", "gloom_helm", "gloom_cape",
-    "prism_helm", "vigil_hat", "safe_helm", "haste_helm",
-    "rbow_helm", "mermaidcap", "dark_helm",
-    "moon_armor", "nova_armor",
-    "prismdress", "zodiaccape",
-    "ruby_armor",
-    "prismspecs", "sun_shades", "gold_stud", "gold_erng", "greendream",
-    "blue_rock", "gold_rock", "black_rock", "white_rock", "silverrock"
+    "seed", "dreamstone"
 ]
 
 # not_sellable_items -- Items which can not be sold.
 #                       Progression key itemes will never be sellable regardless of this setting.
 #  - By default this is the same as the default not buyable list.
 not_sellable_items = [
-    "masamune_1", "masamune_2", "bent_hilt", "bent_sword", "hero_medal",
-    "bike_key", "pendant", "gate_key", "prismshard", "c_trigger", "tools",
-    "jerky", "race_log", "moon_stone", "sun_stone", "ruby_knife", "yakra_key",
-    "clone", "tomas_pop", "pendant_charge", "rainbow_shell", "jetsoftime",
-    "seed", "dreamstone",
-    "megaelixir", "hyperether", "elixir", "speed_tab", "power_tab", "magic_tab",
-    "rainbow", "shiva_edge", "swallow",
-    "valkerye", "siren",
-    "wondershot", "taban_suit",
-    "crisis_arm", "terra_arm",
-    "masamune_2",
-    "bronzefist",
-    "doomsickle", "gloom_helm", "gloom_cape",
-    "prism_helm", "vigil_hat", "safe_helm", "haste_helm",
-    "rbow_helm", "mermaidcap", "dark_helm",
-    "moon_armor", "nova_armor",
-    "prismdress", "zodiaccape",
-    "ruby_armor",
-    "prismspecs", "sun_shades", "gold_stud", "gold_erng", "greendream",
-    "blue_rock", "gold_rock", "black_rock", "white_rock", "silverrock"
+    "masamune_1", "masamune_2", "bent_hilt", "bent_sword", "hero_medal", "petal", "horn", "fang", "feather", "seed",
+    "bike_key", "pendant", "gate_key", "prismshard", "c_trigger", "tools", "jerky", "race_log", "moon_stone",
+    "sun_stone", "ruby_knife", "yakra_key", "clone", "tomas_pop", "petals_2", "fangs_2", "horns_2", "feathers_2",
+    "pendant_charge", "rainbow_shell", "jetsoftime", "dreamstone"
 ]
 
 # item_price_randomization -- How to randomize item prices.
@@ -308,112 +256,107 @@ not_sellable_items = [
 #  - "random": Randomize prices uniformly randomly
 #  - "random_multiplier": Randomize prices relative to their original price (eventually configure range)
 item_price_randomization = "random_multiplier"
+item_price_min_multiplier = 0.25  # Only for use with "random_multiplier" prices
+item_price_max_multiplier = 4.00  # Only for use with "random_multiplier" prices
 
-# item_price_min_multiplier -- Only for use with "random percent" prices
-item_price_min_multiplier = 1
+### Objective Options
+num_algetty_portal_objectives = 2  # Number of objectives needed to unlock the portal in Algetty's entrance
+num_omen_objectives = 2            # Number of objectives needed to unlock the final door in the Black Omen
+num_bucket_objectives = 4          # Number of objectives needed to unlock the bucket in the End of Time.
+num_timegauge_objectives = 5       # Number of objectives needed to unlock 1999 on the time gauge.
 
-# item_price_max_multiplier -- Only for use with "random percent" prices
-item_price_max_multiplier = 1
-
-# item_price_randomization_exclusions -- Items to ignore for price randomization.
-# item_price_randomization_exclusions = []
-
-### Objective Reward Options
-# num_algetty_portal_objectives -- Number of objectives needed to unlock the portal in Algetty's entrance
-num_algetty_portal_objectives = 4
-
-# num_omen_objectives -- Number of objectives needed to unlock the final door in the Black Omen
-num_omen_objectives = 4
-
-# num_bucket_objectives --Number of objectives needed to unlock the bucket in the End of Time.
-num_bucket_objectives = 6
-
-# num_timegauge_objectives -- Number of objectives needed to unlock 1999 on the time gauge.
-num_timegauge_objectives = 7
-
+# Objective specifications are complicated
+# Special Markers: "any_boss", "any_miniboss", "any_quest", "open_quest", "gated_quest",
+#                  "flight_gated_quest", "very_gated_quest"
+# Can specify boss name or quest name individually
+objective_1 = "any_quest"
+objective_2 = "any_quest"
+objective_3 = "any_quest"
+objective_4 = "any_quest"
+objective_5 = "any_quest"
+objective_6 = "any_quest"
+objective_7 = "any_quest"
+objective_8 = "any_quest"
 
 ### Enemy Drop Settings:
 #  Settings which modify enemy drops.
-#
-#  --drop-enemy-pool {vanilla,all}
-#                        Pool of enemies which can have a dropped item
-drop_enemy_pool = "vanilla"
-#  --drop-reward-pool {vanilla,shuffle,random}
-#                        Method of choosing enemy dropped items
-drop_reward_pool = "shuffle"
-#  --drop-rate DROP_RATE
-#                        Percentage of enemies in the drop pool which have a
-#                        dropped item
-drop_rate=1.0
-#  --mark-dropping-enemies
-#                        Alter enemy names to indicate a dropped item
-mark_dropping_enemies = true
+drop_enemy_pool = "vanilla"   # {vanilla,all} Pool of enemies which can have a dropped item
+drop_reward_pool = "shuffle"  # {vanilla,shuffle,random} Method of choosing enemy dropped items
+drop_rate=1.0                 # Percentage of enemies (1.0 is 100%) in the drop pool which have a dropped item
+mark_dropping_enemies = true  # Alter enemy names to indicate a dropped item
 
 ### Enemy Charm Settings:
 #  Settings which modify enemy charms.
-#  --charm-enemy-pool {vanilla,all}
-#                        Pool of enemies which can have a charmable item
-charm_enemy_pool="vanilla"
+#  --charm-enemy-pool
+charm_enemy_pool="vanilla"  # {vanilla,all} Pool of enemies which can have a charmable item
+charm_reward_pool="shuffle" # {vanilla,shuffle,random} Method of choosing enemy charmable items
+charm_rate = 1.0            # Percentage of enemies (1 is 100%) in the charm pool which have a charmable item
+mark_charmable_enemies=true # Alter enemy names to indicate a charmable item
 
-#  --charm-reward-pool {vanilla,shuffle,random}
-#                        Method of choosing enemy charmable items
-charm_reward_pool="shuffle"
+# Entrance Shuffler Options: Options for how overworld entrances are shuffled.
+shuffle_entrances = true   # Shuffle the target of overworld entrances
+# preserve_spots = [PRESERVE_SPOTS ...]   # Spots which are to be shuffled among themselves.
+preserve_spots = [
+    "northern_ruins_1000", "millennial_fair", "vortex_pt", "fionas_shrine",
+    "guardia_castle_1000", "snail_stop",
+    "zenan_bridge_600_north",
+    "magus_lair",
+    "sunken_desert",
+    "guardia_castle_600", "manoria_cathedral", "tatas_house",
+    "cursed_woods", "denadoro_mts", "ozzies_fort",
+    "arris_dome", "proto_dome", "factory_ruins", "sun_keep_2300",
+    "death_peak", "geno_dome", "sun_palace",
+    "lair_ruins", "reptite_lair", "dactyl_nest",
+    "sun_keep_prehistory",
+    "terra_cave", "zeal_palace", "blackbird",
+    "north_cape", "last_village_commons"
+]
+rest_vanilla = true                    # Only shuffle locations specified by preserve_spots
+# vanilla_spots [VANILLA_SPOTS ...]       # Spots which are not shuffled.  Will take precedence over preserve_spots
 
-#  --charm-rate CHARM_RATE
-#                        Percentage of enemies in the charm pool which have a
-#                        charmable item
-charm_rate = 1.0  # 100%
-
-#  --mark-charmable-enemies
-#                        Alter enemy names to indicate a charmable item
-mark_charmable_enemies=true
-
-### Entrance Options
-#shuffle_entrances=true
-#preserve_dungeons=true
 
 ### Recruit Options
 #  starter_min_level=STARTER_MIN_LEVEL
 #                      Minimum level at which the starter recruit can join (deafult: 1)
-#  starter_min_tech_level=STARTER_MIN_TECH_LEVEL
+#  starter_min_techlevel=STARTER_MIN_TECHLEVEL
 #                      Minimum tech level at which the starter recruit can
 #                      join (default: 0)
 #  fair_min_level=FAIR_MIN_LEVEL
 #                      Minimum level at which the fair recruit can join (deafult: 1)
-#  fair_min_tech_level=FAIR_MIN_TECH_LEVEL
+#  fair_min_techlevel=FAIR_MIN_TECHLEVEL
 #                      Minimum tech level at which the fair recruit can join
 #                      (default: 0)
 #  cathedral_min_level=CATHEDRAL_MIN_LEVEL
 #                      Minimum level at which the cathedral recruit can join (deafult: 5)
-#  cathedral_min_tech_level=CATHEDRAL_MIN_TECH_LEVEL
+#  cathedral_min_techlevel=CATHEDRAL_MIN_TECHLEVEL
 #                      Minimum tech level at which the cathedral recruit can join (default: 0)
 #  castle_min_level=CASTLE_MIN_LEVEL
 #                      Minimum level at which the castle recruit can join (deafult: 5)
-#  castle_min_tech_level=CASTLE_MIN_TECH_LEVEL
+#  castle_min_techlevel=CASTLE_MIN_TECHLEVEL
 #                      Minimum tech level at which the castle recruit can join (default: 1)
 #  trial_min_level=TRIAL_MIN_LEVEL
 #                      Minimum level at which the trial recruit can join (deafult: 7)
-#  trial_min_tech_level=TRIAL_MIN_TECH_LEVEL
+#  trial_min_techlevel=TRIAL_MIN_TECHLEVEL
 #                      Minimum tech level at which the trial recruit can join (default: 1)
 #  proto_min_level=PROTO_MIN_LEVEL
 #                      Minimum level at which the proto recruit can join (deafult: 1)
-#  proto_min_tech_level=PROTO_MIN_TECH_LEVEL
+#  proto_min_techlevel=PROTO_MIN_TECHLEVEL
 #                      Minimum tech level at which the proto recruit can join (default: 0)
 #  north_cape_min_level=NORTH_CAPE_MIN_LEVEL
 #                      Minimum level at which the north_cape recruit can join (deafult: 37)
-#  north_cape_min_tech_level=NORTH_CAPE_MIN_TECH_LEVEL
+#  north_cape_min_techlevel=NORTH_CAPE_MIN_TECHLEVEL
 #                      Minimum tech level at which the north_cape recruit can join (default: 3)
 #  burrow_min_level=BURROW_MIN_LEVEL
 #                      Minimum level at which the burrow recruit can join (deafult: 18)
-#  burrow_min_tech_level=BURROW_MIN_TECH_LEVEL
+#  burrow_min_techlevel=BURROW_MIN_TECHLEVEL
 #                      Minimum tech level at which the burrow recruit can join (default: 2)
 #  dactyl_min_level=DACTYL_MIN_LEVEL
 #                      Minimum level at which the dactyl recruit can join (deafult: 20)
-#  dactyl_min_tech_level=DACTYL_MIN_TECH_LEVEL
+#  dactyl_min_techlevel=DACTYL_MIN_TECHLEVEL
 #                      Minimum tech level at which the dactyl recruit can join (default: 2)
 #  death_peak_min_level=DEATH_PEAK_MIN_LEVEL
 #                      Minimum level at which the death_peak recruit can join (deafult: 37)
-#  death_peak_min_tech_level=DEATH_PEAK_MIN_TECH_LEVEL
+#  death_peak_min_techlevel=DEATH_PEAK_MIN_TECHLEVEL
 #                      Minimum tech level at which the death_peak recruit can join (default: 8)
 #  minimum-recruits    All recruits are given a min level of 1 and min tech
 #                      level of 0. Overrides other min settings.
@@ -422,8 +365,11 @@ mark_charmable_enemies=true
 scale_level_to_leader=true
 scale_techlevel_to_leader=true
 scale_gear=true
+minimum_recruits = true
 
-good_loot = [
+# Treasure Options: Options for how non-progression treasures are distributed
+good_loot = [  # loot which counts as a good item
+    "megaelixir", "hyperether", "elixir", "speed_tab",  # consumables
     "rainbow", "shiva_edge", "swallow",  # Crono gear
     "valkerye", "siren",  # Marle gear
     "wondershot", "taban_suit",  # Lucca gear
@@ -439,50 +385,77 @@ good_loot = [
     "prismspecs", "sun_shades", "gold_stud", "gold_erng", "greendream",  # top accs
     "blue_rock", "gold_rock", "black_rock", "white_rock", "silverrock",  #rocks
 ]
-good_loot_rate = 1.0
 
-#  --good-loot-spots GOOD_LOOT_SPOTS [GOOD_LOOT_SPOTS ...]
-#                        Spots which will be given a random good reward.
+good_loot_spots = []  # Spots which will be given a random good reward.
+good_loot_rate=0.5    # Proportion (between 0 and 1) of good loot spots which receive good loot.
 
-# The list below contains most spots of interest
-good_loot_spots = [
-    	"eot_gaspar_reward",
- 	"zeal_mammon_machine",
-        "mt_woe_key",
- 	"giants_claw_key",
- 	"kings_trial_key",
-    	"cyrus_grave_key",
- 	"fiona_key",
- 	"sun_keep_2300",
-        "arris_dome_doan_key",
-	"reptite_lair_key",
- 	"geno_dome_boss_1",
- 	"sun_palace_key",
-        "death_peak_south_face_summit",
- 	"lazy_carpenter",
-        "pyramid_left",
-        "melchior_sunstone_specs",
- 	"melchior_rainbow_shell",
- 	"melchior_sunstone_rainbow",
-        "factory_ruins_generator",
-        "lucca_wondershot",
-        "enhasa_nu_battle_magic_tab",
-        "ocean_palace_switch_secret",
-        "black_omen_nu_hall_w",
-        "black_omen_nu_hall_nw",
-        "black_omen_nu_hall_sw",
-        "black_omen_nu_hall_e",
-        "black_omen_nu_hall_ne",
-        "black_omen_nu_hall_se",
-        "arris_dome_seal_1",
-        "bangor_dome_seal_1",
-        "trann_dome_seal_1",
-        "ozzies_fort_final_1",
-        "cronos_mom",
-        "kajar_nu_scratch_magic_tab",
-        "kajar_rock",
- 	"black_omen_terra_rock"
+# Enemy Options: Options relating to Enemies
+sightscope_all=true     # Enable sightscope usage on all enemies.
+forced_sightscope=true  # Sightscope effect will be present without the item equipped.
+shuffle_enemies=false   # Normal enemy types are shuffled (respects enemy size)
+
+# Gear Randomization Options: Options for how the stats of weapons may be randomized
+ds_item_pool =  [   # DS Items which may appear.
+    "dreamseeker", "venus_bow", "turboshot", "spellslinger", "dragon_arm", "apocalypse_arm",
+    "dinoblade", "judgement_scythe", "dreamreaper",
+    "reptite_dress", "dragon_armor", "regal_plate", "regal_gown", "shadowplume_robe",
+    "elemental_aegis", "saurian_leathers",
+    "dragonhead", "reptite_tiara", "masters_crown", "angels_tiara",
+    "valor_crest", "dragons_tear"
 ]
+ds_replacement_chance = 50  # Percent chance (e.g. 10 for 10 percent) to replace an item with a ds counterpart.
+weapon_rando_pool = [  # Weapons whose effects should be shuffled
+    "rainbow", "shiva_edge", "swallow", "red_katana", "slasher",
+    "valkerye", "siren", "sonicarrow",
+    "terra_arm", "crisis_arm",
+    "masamune_1", "masamune_2", "bravesword", "rune_blade", "demon_hit",
+    "iron_fist", "bronzefist",
+    "doomsickle"
+]
+bronze_fist_policy = "vanilla"  # {vanilla,remove,4x_crit,random_other} How to modify BronzeFist pre-shuffle
 
-sightscope_all=true
-forced_sightscope=true
+# Post-Randomization Options
+# If running offline, you can use this in the same options file.  Otherwise, these options
+# will be ignored by the online generator and must be specified in a separate file.
+
+# Determine whether the default movement in locations/overworld/epoch is fast
+# If true, then the run button causes slow movement.
+default_fast_loc_movement = false
+default_fast_ow_movement = false
+default_fast_epoch_movement = false
+
+# Most options from the in-game menu can be set
+battle_speed = 5
+message_speed = 5
+battle_memory_cursor = false
+menu_memory_cursor = false
+window_background = 1  #  1 - 8 to match the in-game menu
+
+# Character palette can be set, but an external tool is needed to produce these strings.
+#crono_palette = ""
+#marle_palette = ""
+#lucca_palette = ""
+#robo_palette = ""
+#frog_palette = ""
+#ayla_palette = ""
+
+# This palette will give Magus the colors of Dalton
+magus_palette = "#281820#E4DAA4#DCA264#B09058#DCA264#9C6A34#72897B#C6641E#3F626A#D47A34#34220C#302028"
+
+# The desired ending can be set with this option.  The possible endings are:
+#    "beyond time" - The usual ending when defeating Lavos.  Depends on who is recruited/epoch status.
+#    "the dream project" - The dev ending in the end of time [default]
+#    "the successor of guardia" - Frog marries Leene
+#    "goodnight" - Kilwala and Nu play around
+#    "the legendary hero" - Robo and Atropos in future Leene Square.  Tata attacks Magus's castle.
+#    "the unknown past" - Scenes showing the characters in their own time periods
+#    "people of the times" - A slide show of various characters
+#    "the oath" - Frog goes to fight Magus alone
+#    "dino age" - Everyone is a reptite
+#    "what the prophet seeks" - Magus goes solo to the ocean palace to defeat Lavos
+#    "a slide show?" - Marle and Lucca rate the men of the game
+#    "random" - A random choice from the above.
+ending = "the dream project"
+
+# If set to true, most flashing animations are removed
+remove_flashes = false

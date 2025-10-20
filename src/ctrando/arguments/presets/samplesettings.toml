@@ -1,6 +1,4 @@
-
-### General Settings
-seed="CTRandoLearningSeed-2"
+### Beginner preset
 
 ### Battle Rewards
 xp_scale=4.0  # Factor by which to scale XP earned in battle
@@ -15,7 +13,8 @@ xp_penalty_percent=15    # For each level beyond the penalty, the requirement gr
 level_cap=55             # Levels beyond the level cap will have prohibitively large requirements.
 
 midboss_reward_factor=1.0    # Midboss XP/TP is additionally multiplied by this factor
-boss_reward_factor=1.0       # Boss XP/TP is additionally multiplied by this factor
+boss_xp_factor=1.0           # Boss XP is additionally multiplied by this factor
+boss_tp_factor=1.0           # Boss XP is additionally multiplied by this factor
 normalize_boss_xp=true       # Boss XP is proportional to their level
 
 ### Tech Options
@@ -60,12 +59,12 @@ levels_per_objective=3.0
 levels_per_character=1.0
 
 ## Static Scaling Options
-# normal_enemy_hp_scale=1.0  # Not implemented yet
-static_boss_hp_scale=0.70
+static_boss_hp_scale=1.0
 static_hp_scale_lavos=false
 # element_safety_level -- Below this level, Nizbel, Nizbel II, and Retinite will
 #                         React to any magic as though they were their weakness.
 element_safety_level=30
+obstacle_safety_level=30
 
 ### Logic Options
 # The forced key items are:
@@ -102,7 +101,7 @@ forced_spots = [
     "arris_dome_doan_key",
     "arris_dome_food_locker_key",
     "reptite_lair_key",
-    "taban_gift_vest",  # After Heckran
+    "taban_gift_vest",  # Talk to Taban after Heckran
     "geno_dome_boss_1"
 ]
 
@@ -427,7 +426,7 @@ window_background = 1  #  1 - 8 to match the in-game menu
 #ayla_palette = ""
 
 # This palette will give Magus the colors of Dalton
-magus_palette = "#281820#E4DAA4#DCA264#B09058#DCA264#9C6A34#72897B#C6641E#3F626A#D47A34#34220C#302028"
+# magus_palette = "#281820#E4DAA4#DCA264#B09058#DCA264#9C6A34#72897B#C6641E#3F626A#D47A34#34220C#302028"
 
 # The desired ending can be set with this option.  The possible endings are:
 #    "beyond time" - The usual ending when defeating Lavos.  Depends on who is recruited/epoch status.

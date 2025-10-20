@@ -1,2 +1,2 @@
-recursive-include src/ctrando/presets *
+recursive-include src/ctrando/arguments/presets *.toml
 include src/ctrando/strings/huffman_table.pickle
