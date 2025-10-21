@@ -58,7 +58,6 @@ def get_preset(preset: Presets) -> dict[str, typing.Any]:
     )
 
 
-
 @dataclass
 class GeneralOptions:
     input_file: typing.Optional[Path] = None

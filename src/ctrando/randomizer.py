@@ -124,15 +124,11 @@ def list_keys(key_type: arguments.KeyListType):
 
 def extract_settings(*in_args: str) -> arguments.Settings:
     """
-    Read commandline arguments to generate a settings object.
+    Read arguments to generate a settings object.
     """
-
-    if not in_args:
-        in_args = sys.argv[1:]
 
     parser = arguments.get_parser()
     args = parser.parse_args(in_args)
-
     if hasattr(args, "preset"):
         preset: arguments.Presets = getattr(args, "preset")
         preset_data = arguments.get_preset(preset)
@@ -150,11 +146,7 @@ def extract_settings(*in_args: str) -> arguments.Settings:
     preset_data.update(options_data)
 
     additional_args = tomloptions.toml_data_to_args(preset_data, args)
-    args = parser.parse_args(sys.argv[1:] + additional_args)
-
-
-
-
+    args = parser.parse_args(list(in_args) + additional_args)
 
     settings = arguments.Settings.extract_from_namespace(args)
     return settings
@@ -672,7 +664,7 @@ def main():
     print("Getting Settings...", end = "")
     a = time.time()
     try:
-        settings = extract_settings()
+        settings = extract_settings(*sys.argv[1:])
     except ValueError as exc:
         print(exc, file=sys.stderr)
         sys.exit(-2)
