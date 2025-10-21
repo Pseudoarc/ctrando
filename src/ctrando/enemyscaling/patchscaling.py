@@ -1540,9 +1540,9 @@ def make_hp_lut(alt_table: bool = False):
         hp_func = pwl.PiecewiseLinear(
             (1, 1),
             (5, 5),
-            (20, 25),
+            (20, 30),
             (40, 70),
-            (50, 80)
+            (50, 75)
         )
         hp_table = [
             sorted([1, round(0xFF*hp_func(x)/85), 0xFF])[1] for x in range(100)
