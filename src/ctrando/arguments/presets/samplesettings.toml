@@ -4,8 +4,8 @@
 xp_scale=4.0  # Factor by which to scale XP earned in battle
 tp_scale=4.0  # Factor by which to scale TP earned in battle
 # g_scale=1.0  # Not implemented yet
-split_xp=true  # XP is split among living party members rather than shared evenly
-split_tp=true  # TP is split among living party members rather than shared evenly
+split_xp=true  # XP is split among living party members so smaller parties get more
+split_tp=true  # TP is split among living party members so smaller parties get more
 fix_tp_doubling=true  # TP rewards are not duplicated for every gained tech level
 
 xp_penalty_level=45      # Levels past this level become more difficult to obtain
@@ -14,8 +14,8 @@ level_cap=55             # Levels beyond the level cap will have prohibitively l
 
 midboss_reward_factor=1.0    # Midboss XP/TP is additionally multiplied by this factor
 boss_xp_factor=1.0           # Boss XP is additionally multiplied by this factor
-boss_tp_factor=1.0           # Boss XP is additionally multiplied by this factor
-normalize_boss_xp=true       # Boss XP is proportional to their level
+boss_tp_factor=1.0           # Boss TP is additionally multiplied by this factor
+normalize_boss_xp=true       # Bosses give a full level's worth of XP before other modifiers
 
 ### Tech Options
 tech_order="mp_type"  # Order in which techs are learned
