@@ -854,7 +854,7 @@ def assign_arris_dome_boss(
     script.delete_commands(pos, 3)
 
     boss_obj_data = [BossObjectData(0xB), BossObjectData(0xC), BossObjectData(0xD)]
-    update_multi_part_objects(script, boss, boss_obj_data, 0x80, 0xA8)
+    update_multi_part_objects(script, boss, boss_obj_data, 0x80, 0xC8)
 
 
 def assign_geno_dome_boss(
