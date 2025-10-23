@@ -9,7 +9,7 @@ split_tp=true  # TP is split among living party members so smaller parties get m
 fix_tp_doubling=true  # TP rewards are not duplicated for every gained tech level
 
 xp_penalty_level=45      # Levels past this level become more difficult to obtain
-xp_penalty_percent=15    # For each level beyond the penalty, the requirement grows by this percent
+xp_penalty_percent=20    # For each level beyond the penalty, the requirement grows by this percent
 level_cap=55             # Levels beyond the level cap will have prohibitively large requirements.
 
 midboss_reward_factor=1.0    # Midboss XP/TP is additionally multiplied by this factor
