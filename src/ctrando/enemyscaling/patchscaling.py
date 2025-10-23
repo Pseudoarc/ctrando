@@ -1216,7 +1216,7 @@ def get_true_levels_bytes(
 
     # Boss adjustment for difficulty
     true_levels[ctenums.EnemyID.R_SERIES] = 5
-    true_levels[ctenums.EnemyID.YAKRA] = 5
+    true_levels[ctenums.EnemyID.YAKRA] = 4
     true_levels[ctenums.EnemyID.GUARDIAN] = 6
     true_levels[ctenums.EnemyID.GUARDIAN_BIT] = 6
     true_levels[ctenums.EnemyID.HECKRAN] = 12
@@ -1365,7 +1365,7 @@ def apply_full_scaling_patch(
     ct_rom.seek(heal_lut_addr)
     ct_rom.write(heal_lut_b, ctrom.freespace.FSWriteType.MARK_USED)
 
-    hp_lut = make_hp_lut(scaling_general_options.eno_hp)
+    hp_lut = make_hp_lut(True)
     hp_lut_b = bytes(hp_lut)
     hp_lut_addr = ct_rom.space_manager.get_free_addr(len(hp_lut_b), 0x410000)
     ct_rom.seek(hp_lut_addr)
@@ -1538,11 +1538,11 @@ def make_hp_lut(alt_table: bool = False):
         #     (45, 100)
         # )
         hp_func = pwl.PiecewiseLinear(
-            (1, 1),
+            (1, 1.5),
             (5, 5),
-            (20, 30),
+            (20, 25),
             (40, 70),
-            (50, 75)
+            # (50, 75)
         )
         hp_table = [
             sorted([1, round(0xFF*hp_func(x)/85), 0xFF])[1] for x in range(100)
