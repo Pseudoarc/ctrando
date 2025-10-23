@@ -221,12 +221,12 @@ class EventMod(locationevent.LocEventMod):
         scene = (
             EF().add(EC.set_explore_mode(False))
             # .add(EC.call_obj_function(0x13, FID.ARBITRARY_3, 3, FS.HALT))
-            .add(EC.static_animation(0x3E)).add(EC.pause(1))
+            .add(EC.static_animation(0x0E))
             .add(EC.call_obj_function(0x14, FID.ARBITRARY_3, 4, FS.HALT))
             # .add(EC.call_obj_function(0x13, FID.ARBITRARY_4, 4, FS.HALT))
             .add(EC.play_animation(0x3)).add(EC.pause(1))
             .add(EC.text_box(str_id, False))
-            .add(EC.reset_animation())
+            .add(EC.static_animation(0x0E))
             .add(EC.set_flag(memory.Flags.GUARDIA_TREASURY_EXISTS))
             # Allow immediate access to the Yakra XIII Fight
             .add(EC.assign_val_to_mem(
