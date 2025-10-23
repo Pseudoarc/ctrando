@@ -254,8 +254,9 @@ def assign_epoch_reborn_boss(
     bru.assign_boss_to_one_spot_location_script(
         script_manager[loc_id], boss,
         boss_load_finder=_default_boss_load_finder(boss_obj),
+        battle_x_px=0x080, battle_y_px=0x198,
         show_pos_finder=None,
-        last_coord_finder=_default_coordinate_finder(boss_obj)
+        last_coord_finder=None
     )
 
 
