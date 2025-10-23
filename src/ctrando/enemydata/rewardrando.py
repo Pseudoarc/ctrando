@@ -145,13 +145,37 @@ def mark_charm_and_drop(
             enemy_stats.name = cur_name
 
 
+def pre_reduce_xp_thresholds(
+        enemy_dict: dict[ctenums.EnemyID, enemystats.EnemyStats],
+        xp_thresholds: ctpcstats.XPThreshholds,
+        base_scale_factor: int = 2.0
+):
+    """
+    Reduce all xp thresholds and xp rewards by a factor to shrink
+    the range of possible xp values.
+    """
+
+    for enemy_stats in enemy_dict.values():
+        xp = enemy_stats.xp
+        if xp == 0:
+            continue
+        # print(xp, end=", ")
+        xp = sorted([1, round(xp/base_scale_factor), 0xFFFF])[1]
+        enemy_stats.xp = xp
+        # print(xp)
+
+    input
+
+    for level in range(99):
+        xp_req = xp_thresholds.get_xp_for_level(level)
+        xp_req = sorted([1, round(xp_req/base_scale_factor), 0xFFFF])[1]
+        xp_thresholds.set_xp_for_level(level, xp_req)
 
 def normalize_boss_xp(
         enemy_dict: dict[ctenums.EnemyID, enemystats.EnemyStats],
         true_levels_dict: dict[bty.BossID, int | None],
         xp_threholds: ctpcstats.XPThreshholds  # For xp thresholds
 ):
-
     true_levels_b = get_true_levels_bytes(enemy_dict, true_levels_dict)
 
     # Before starting, set Zeal's XP to any non-zero value so it isn't ignored.

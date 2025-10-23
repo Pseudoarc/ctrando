@@ -232,6 +232,10 @@ def get_random_config(
     config.enemy_assign_dict = enemyrando.get_enemy_shuffle(settings.enemy_options.shuffle_enemies, rng)
 
     ### XP modifications depending on enemy type
+    # Reduce the xp values so that we don't get so close to 0xFFFF
+    rewardrando.pre_reduce_xp_thresholds(config.enemy_data_dict,
+                                         config.pcstat_manager.xp_thresholds)
+
     # This needs to be BEFORE adaptive scale, which changes xp requirements
     if settings.battle_rewards.xp_tp_rewards.normalize_boss_xp:
         rewardrando.normalize_boss_xp(
