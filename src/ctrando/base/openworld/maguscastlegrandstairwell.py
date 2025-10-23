@@ -55,10 +55,10 @@ class EventMod(locationevent.LocEventMod):
         new_block = (
             EF()
             .add_if(
-                EC.if_pc_active(ctenums.CharID.MAGUS),
+                EC.if_pc_recruited(ctenums.CharID.MAGUS),
                 EF().add(EC.decision_box(
                     script.add_py_string(
-                        "{magus}: I know a shortcut. Where to?{line break}"
+                        "{magus} knows a shortcut. Where to?{line break}"
                         "   Throne of Defense (normal){line break}"
                         "   Castle Entrance{null}"
                     ), 1, 2
