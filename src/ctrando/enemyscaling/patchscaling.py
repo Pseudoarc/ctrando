@@ -6,6 +6,7 @@ from typing import Optional
 from ctrando.arguments import enemyscaling
 from ctrando.characters.ctpcstats import HPGrowth
 from ctrando.bosses import bosstypes as bty
+from ctrando.enemyai.enemyaitypes import StatOffset
 from ctrando.locations import scriptmanager
 from ctrando.locations.locationevent import FunctionID as FID
 from ctrando.locations.eventcommand import EventCommand as EC
@@ -1153,6 +1154,52 @@ def patch_ai_cond_hp_lte_08(
     asmpatcher.apply_jmp_patch(new_rt, hook_addr, ct_rom, return_addr)
 
 
+def patch_ai_cond_stat_lte_0B(
+        ct_rom: ctrom.CTRom,
+):
+    """
+    Patch the check stat less than or equal routine to load the current
+    scaling level instead of the enemy's level stat.
+    """
+    # C1920D  BF 00 00 CC    LDA $CC0000,X  <-- Stat Offset to $0A
+    # C19211  85 0A          STA $0A
+    # C19213  64 0B          STZ $0B
+    # C19215  E8             INX
+    # C19216  8E D2 B1       STX $B1D2
+    # C19219  BF 00 00 CC    LDA $CC0000,X  <-- Threshold to $08
+    # C1921D  85 08          STA $08
+    # ...
+    # C1922A  BF 0B A8 FD    LDA $FDA80B,X
+    # C1922E  A8             TAY
+    # C1922F  7B             TDC
+    # C19230  E2 20          SEP #$20       <-- Hook here
+    # C19232  B1 0A          LDA ($0A),Y
+    # C19234  C5 08          CMP $08        <-- Return here
+    # C19236  F0 0F          BEQ $C19247
+    # C19238  90 0D          BCC $C19247
+
+    hook_rom_addr = 0xC19230
+    hook_addr = hook_rom_addr - 0xC00000
+
+    return_rom_addr = 0xC19234
+    return_addr = return_rom_addr - 0xC00000
+
+    rt: assemble.ASMList = [
+        inst.SEP(0x20),
+        inst.LDA(0x0A, AM.DIR),
+        inst.CMP(StatOffset.LEVEL, AM.IMM8),
+        inst.BNE("normal_load"),
+        inst.LDA(memory.Memory.SCALING_LEVEL & 0xFFFF, AM.ABS),
+        inst.BRA("jump_back"),
+        "normal_load",
+        inst.LDA(0x0A, AM.DIR_24_Y),
+        "jump_back",
+        inst.JMP(return_rom_addr, AM.LNG)
+    ]
+
+    asmpatcher.apply_jmp_patch(rt, hook_addr, ct_rom, return_addr, 0x410000)
+
+
 def patch_ai_scripts(
         ct_rom: ctrom.CTRom,
         scale8_rom_addr: int,
@@ -1181,7 +1228,7 @@ def patch_ai_scripts(
     patch_ai_multi_stat_math_15(ct_rom, ai_stat_scale_rom_addr, scale_def_rom_addr)
 
     patch_ai_cond_hp_lte_08(ct_rom, scale16_rom_addr, hp_lut_rom_addr)
-
+    patch_ai_cond_stat_lte_0B(ct_rom)
 
 def get_scaling_scheme(
         scaling_scheme: enemyscaling.DynamicScalingScheme,
