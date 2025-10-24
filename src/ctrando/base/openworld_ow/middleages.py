@@ -66,6 +66,11 @@ def modify_overworld(overworld: ow.Overworld):
     # 	0701212900        [00EC] SetTile(L2, x21, y29, 00)
     #         - Remove the rock in front of the cave
     #  - Replace with a check for the Magic Cave being open.
+    closed_cave_exit = overworld.exit_data.exits[3]
+    closed_cave_exit.is_active = False
+
+    open_cave_exit = overworld.exit_data.exits[4]
+    open_cave_exit.is_active = True
 
     ind = script.find_next_exact_command(
         owh.branch_if_storyline_lt(0x87), start=ind
@@ -73,6 +78,7 @@ def modify_overworld(overworld: ow.Overworld):
     script.replace_jump_command(
         ind,
         owh.branch_if_flag_reset(memory.Flags.OW_MAGIC_CAVE_OPEN))
+    script.delete_commands(ind+1, ind+3)
 
     # 4CA61B8A2C        [0101] If(Mem.StorylineCtr < 8A) Goto [012D]
     #  - If Magus is not defeated, skip these commands that kill a bunch of
