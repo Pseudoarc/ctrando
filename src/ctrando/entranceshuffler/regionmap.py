@@ -1038,6 +1038,12 @@ def get_default_region_connectors(
             reversible=False
         ),
         RegionConnector(
+            "tyrano_lair_entrance", "tyrano_lair",
+            "ayla_opens_skull",
+            rule=logictypes.LogicRule([CharID.AYLA]),
+            reversible=False
+        ),
+        RegionConnector(
             "porre_1000_overworld", "dark_ages_skyway_island_overworld",
             "flight_dark_ages",
             rule=logictypes.LogicRule([logictypes.ScriptReward.EPOCH,

@@ -1076,9 +1076,15 @@ def get_all_loc_regions() -> list[LocRegion]:
     )
     ret_list.append(reptite_lair)
 
+    tyrano_lair_entrance = LocRegion(
+        "tyrano_lair_entrance",
+        loc_exits={LocExit.TYRANO_LAIR},
+    )
+    ret_list.append(tyrano_lair_entrance)
+
     tyrano_lair = LocRegion(
         "tyrano_lair",
-        loc_exits={LocExit.TYRANO_LAIR},
+        # loc_exits={LocExit.TYRANO_LAIR},
         reward_spots={
             TID.TYRANO_LAIR_MAZE_1, TID.TYRANO_LAIR_MAZE_2,
             TID.TYRANO_LAIR_MAZE_3, TID.TYRANO_LAIR_MAZE_4,
