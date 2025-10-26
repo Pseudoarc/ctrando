@@ -1468,12 +1468,19 @@ def get_phys_effective_hp(level: int) -> float:
     # defense = math.floor(min_def + (max_def-min_def)*(level-1)/49)
 
     # Try a more "rando" def where it jumps up rather quickly.
+    # armor_func = pwl.PiecewiseLinear(
+    #     (1, 3+5),  # Hide + Hide
+    #     (10, 20+52),     # Rock + Meso
+    #     (30, 29+71),     # Lode + Lode
+    #     (40, 36+82),     # Vigil + Nova
+    #     (50, 40+85),       # Prism + Moon
+    # )
     armor_func = pwl.PiecewiseLinear(
-        (1, 3+5),  # Hide + Hide
-        (10, 20+52),     # Rock + Meso
-        (30, 29+71),     # Lode + Lode
-        (40, 36+82),     # Vigil + Nova
-        (50, 40+85),       # Prism + Moon
+        (1, 3 + 5),  # Hide + Hide
+        (5, 20 + 52),  # Rock + Meso
+        (15, 29 + 71),  # Lode + Lode
+        (20, 36 + 82),  # Vigil + Nova
+        (25, 40 + 85),  # Prism + Moon
     )
     armor = armor_func(level)
 
@@ -1481,10 +1488,11 @@ def get_phys_effective_hp(level: int) -> float:
     base_stamina = 10
     stamina = math.floor(sorted([1, base_stamina+stamina_growth*(level-1)/100, 99])[1])
 
-
     total_defense = sorted([1, stamina+armor, 255])[1]
     reduction = (256-total_defense)/256
-    effective_hp = (hp_growth.cumulative_growth_at_level(level) + base_hp)/reduction
+    hp = min(hp_growth.cumulative_growth_at_level(level)+base_hp, 999)
+    effective_hp = hp/reduction
+
     return effective_hp
 
 
