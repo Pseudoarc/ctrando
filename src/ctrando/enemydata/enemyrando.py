@@ -232,6 +232,7 @@ _relevant_loc_ids = [
     ctenums.LocID.OZZIES_FORT_GUILLOTINE,
     ctenums.LocID.GIANTS_CLAW_ENTRANCE,
     ctenums.LocID.GIANTS_CLAW_CAVERNS,
+    ctenums.LocID.GIANTS_CLAW_LAIR_ENTRANCE,
     ctenums.LocID.MANORIA_SHRINE_ANTECHAMBER,
     ctenums.LocID.MANORIA_STORAGE,
     ctenums.LocID.MANORIA_KITCHEN,
