@@ -47,7 +47,8 @@ _default_assignment_dict: dict[bty.BossSpotID, bty.BossID] = {
     bty.BossSpotID.TYRANO_LAIR_NIZBEL: bty.BossID.NIZBEL_2,
     bty.BossSpotID.ZEAL_PALACE: bty.BossID.DALTON,
     bty.BossSpotID.ZENAN_BRIDGE: bty.BossID.ZOMBOR,
-    bty.BossSpotID.BLACK_OMEN_ZEAL: bty.BossID.ZEAL
+    bty.BossSpotID.BLACK_OMEN_ZEAL: bty.BossID.ZEAL,
+    bty.BossSpotID.NORTH_CAPE: bty.BossID.MAGUS_NORTH_CAPE
 }
 
 def get_vanilla_assignment() -> dict[bty.BossSpotID, bty.BossID]:
@@ -93,6 +94,7 @@ _assign_function_dict: dict[bty.BossSpotID, AssignFunction] = {
     bty.BossSpotID.ZEAL_PALACE: bass.assign_zeal_palace_boss,
     bty.BossSpotID.ZENAN_BRIDGE: bass.assign_zenan_bridge_boss,
     bty.BossSpotID.BLACK_OMEN_ZEAL: bass.assign_black_omen_zeal,
+    bty.BossSpotID.NORTH_CAPE: bass.assign_north_cape_boss,
 }
 
 _midboss_spots: list[bty.BossSpotID] = [
@@ -254,7 +256,8 @@ def resolve_character_conflicts(
 
     recruit_boss_spot_pairs: tuple[tuple[ctenums.RecruitID, bty.BossSpotID], ...] = (
         (ctenums.RecruitID.CASTLE, bty.BossSpotID.MANORIA_CATHERDAL),
-        (ctenums.RecruitID.DEATH_PEAK, bty.BossSpotID.DEATH_PEAK)
+        (ctenums.RecruitID.DEATH_PEAK, bty.BossSpotID.DEATH_PEAK),
+        (ctenums.RecruitID.NORTH_CAPE, bty.BossSpotID.NORTH_CAPE)
     )
 
     bad_spots: list[bty.BossSpotID] = []
@@ -272,6 +275,10 @@ def resolve_character_conflicts(
 
     if not bad_spots:
         return
+
+    # There can only be two bad spots.
+    # - Crono can block one Nizbel at most
+    # - Marle/Frog can block at most Retinite
 
     if len(bad_spots) == 2:
         spot1, spot2 = bad_spots

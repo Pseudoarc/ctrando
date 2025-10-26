@@ -27,7 +27,6 @@ def assign_pc_to_spot(
         scale_gear: bool = False
 ):
     """Put a recruitable character in North Cape."""
-
     # The vanilla spot works like this:
     # 1) The Giant Blue Star (Obj10) is set to only appear at the right time.
     #    When activated, it calls out to Obj09, Activate, which does the Magus
@@ -48,51 +47,65 @@ def assign_pc_to_spot(
 
     # Change the sparkle object.
     sparkle_obj = 0x10
-    script.set_function(
-        sparkle_obj, FID.STARTUP,
-        EF().add(EC.load_npc(0x71))
-        .add(EC.set_object_coordinates_tile(7, 6))
-        .add_if(
-            EC.if_flag(memory.Flags.NORTH_CAPE_RECRUIT_OBTAINED),
-            EF().add(EC.set_own_drawing_status(False)))
-        .add(EC.return_cmd()).add(EC.end_cmd())
-    )
-
-    script.set_function(
-        sparkle_obj, FID.ACTIVATE,
-        EF().add_if(
-            EC.if_not_flag(memory.Flags.NORTH_CAPE_RECRUIT_OBTAINED),
-            EF().add(EC.party_follow())
-            .add(EC.call_obj_function(9, FID.ACTIVATE, 1, FS.HALT))
-        ).add(EC.return_cmd())
-    )
+    # script.set_function(
+    #     sparkle_obj, FID.STARTUP,
+    #     EF().add(EC.load_npc(0x71))
+    #     .add(EC.set_object_coordinates_tile(7, 6))
+    #     .add_if(
+    #         EC.if_flag(memory.Flags.NORTH_CAPE_RECRUIT_OBTAINED),
+    #         EF().add(EC.set_own_drawing_status(False)))
+    #     .add(EC.return_cmd()).add(EC.end_cmd())
+    # )
+    #
+    # script.set_function(
+    #     sparkle_obj, FID.ACTIVATE,
+    #     EF().add_if(
+    #         EC.if_not_flag(memory.Flags.NORTH_CAPE_RECRUIT_OBTAINED),
+    #         EF().add(EC.party_follow())
+    #         .add(EC.call_obj_function(9, FID.ACTIVATE, 1, FS.HALT))
+    #     ).add(EC.return_cmd())
+    # )
 
     # Mostly copying from the vanilla event with many omissions.
     temp_pc3_addr = 0x7F0240
     # Change the function it calls out to.
-    new_function = (
-        EF().add(EC.set_explore_mode(False))
-        .add(EC.assign_val_to_mem(1, 0x7F020E, 1))  # Stop Fn
-        .add(EC.call_pc_function(0, FID.ARBITRARY_0, 4, FS.CONT))
-        .add(EC.call_pc_function(1, FID.ARBITRARY_0, 4, FS.CONT))
-        .add(EC.call_pc_function(2, FID.ARBITRARY_0, 4, FS.CONT))
-        .add(EC.generic_command(0xE7, 0, 2))  # Scroll
+
+    pos = script.get_function_start(9, FID.ACTIVATE )
+    pos, _ = script.find_command([0xD9], pos)  # move party
+    ins_block = (
+        EF()
         .add(EC.call_obj_function(recruit_obj_id, FID.ARBITRARY_0, 1, FS.HALT))
         .add(EC.call_obj_function(recruit_obj_id, FID.ARBITRARY_1, 1, FS.SYNC))
     )
     for pc_id in ctenums.CharID:
         if pc_id != recruit_char_id:
             obj_id = pc_id+1
-            new_function.add(EC.set_object_facing(obj_id, 'down'))
+            ins_block.add(EC.set_object_facing(obj_id, 'down'))
+
     (
-        new_function
+        ins_block
         .add(EC.call_obj_function(recruit_obj_id, FID.ARBITRARY_2, 2, FS.HALT))
         .add(EC.call_pc_function(2, FID.ARBITRARY_1, 1, FS.CONT))
         .add(EC.call_pc_function(1, FID.ARBITRARY_1, 1, FS.CONT))
         .add(EC.call_pc_function(0, FID.ARBITRARY_1, 1, FS.HALT))
-        .add(EC.move_party(0x07, 0x09,
-                           0x05, 0x09,
-                           0x09, 0x09))
+    )
+    script.insert_commands(ins_block.get_bytearray(), pos)
+    pos += len(ins_block)
+
+    pos = script.find_exact_command(
+        EC.remove_object(0x10), pos
+    )
+    script.insert_commands(
+        EC.set_object_drawing_status(recruit_obj_id, False)
+        .to_bytearray(), pos
+    )
+
+    pos = script.find_exact_command(
+        EC.assign_val_to_mem(0, 0x7F020E, 1), pos
+    )
+    recruit_block = (
+        EF()
+        .add(EC.set_object_drawing_status(recruit_obj_id, True))
         .add(EC.play_song(ra.get_char_music(recruit_char_id)))
         .add(EC.call_obj_function(recruit_obj_id, FID.ARBITRARY_3, 2, FS.HALT))
         .add(EC.pause(1))
@@ -101,14 +114,49 @@ def assign_pc_to_spot(
             EF().add(EC.set_flag(memory.Flags.KEEP_SONG_ON_SWITCH))
             .add(EC.switch_pcs())
             .add(EC.reset_flag(memory.Flags.KEEP_SONG_ON_SWITCH))
-        ).add(EC.assign_val_to_mem(0, 0x7F020E, 1))  # Stop Fn
-        .add(EC.party_follow()).add(EC.set_explore_mode(True))
-        .add(EC.return_cmd())
+        )
     )
+    script.insert_commands(recruit_block.get_bytearray(), pos)
 
-    script.set_function(
-        9, FID.ACTIVATE, new_function
-    )
+    # new_function = (
+    #     EF().add(EC.set_explore_mode(False))
+    #     .add(EC.assign_val_to_mem(1, 0x7F020E, 1))  # Stop Fn
+    #     .add(EC.call_pc_function(0, FID.ARBITRARY_0, 4, FS.CONT))
+    #     .add(EC.call_pc_function(1, FID.ARBITRARY_0, 4, FS.CONT))
+    #     .add(EC.call_pc_function(2, FID.ARBITRARY_0, 4, FS.CONT))
+    #     .add(EC.generic_command(0xE7, 0, 2))  # Scroll
+    #     .add(EC.call_obj_function(recruit_obj_id, FID.ARBITRARY_0, 1, FS.HALT))
+    #     .add(EC.call_obj_function(recruit_obj_id, FID.ARBITRARY_1, 1, FS.SYNC))
+    # )
+    # for pc_id in ctenums.CharID:
+    #     if pc_id != recruit_char_id:
+    #         obj_id = pc_id+1
+    #         new_function.add(EC.set_object_facing(obj_id, 'down'))
+    # (
+    #     new_function
+    #     .add(EC.call_obj_function(recruit_obj_id, FID.ARBITRARY_2, 2, FS.HALT))
+    #     .add(EC.call_pc_function(2, FID.ARBITRARY_1, 1, FS.CONT))
+    #     .add(EC.call_pc_function(1, FID.ARBITRARY_1, 1, FS.CONT))
+    #     .add(EC.call_pc_function(0, FID.ARBITRARY_1, 1, FS.HALT))
+    #     .add(EC.move_party(0x07, 0x09,
+    #                        0x05, 0x09,
+    #                        0x09, 0x09))
+    #     .add(EC.play_song(ra.get_char_music(recruit_char_id)))
+    #     .add(EC.call_obj_function(recruit_obj_id, FID.ARBITRARY_3, 2, FS.HALT))
+    #     .add(EC.pause(1))
+    #     .add_if(
+    #         EC.if_mem_op_value(temp_pc3_addr, OP.NOT_EQUALS, 0x80),
+    #         EF().add(EC.set_flag(memory.Flags.KEEP_SONG_ON_SWITCH))
+    #         .add(EC.switch_pcs())
+    #         .add(EC.reset_flag(memory.Flags.KEEP_SONG_ON_SWITCH))
+    #     ).add(EC.assign_val_to_mem(0, 0x7F020E, 1))  # Stop Fn
+    #     .add(EC.party_follow()).add(EC.set_explore_mode(True))
+    #     .add(EC.return_cmd())
+    # )
+    #
+    # script.set_function(
+    #     9, FID.ACTIVATE, new_function
+    # )
 
     scale_block = owu.get_level_techlevel_set_function(
         recruit_char_id, scale_level_to_lead, scale_techlevel_to_lead, scale_gear,
@@ -136,8 +184,8 @@ def assign_pc_to_spot(
     )
 
     # Save functions before messing with the pc objects
-    stopping_arb = script.get_function(2, FID.ARBITRARY_0)
-    surprise_arb = script.get_function(2, FID.ARBITRARY_1)
+    # stopping_arb = script.get_function(2, FID.ARBITRARY_0)
+    # surprise_arb = script.get_function(2, FID.ARBITRARY_1)
 
     repl_anim_dict: dict[ctenums.CharID, tuple[int, int]] ={
         ctenums.CharID.MARLE: (0x13, 0x14),
@@ -201,17 +249,14 @@ def assign_pc_to_spot(
         .add(EC.end_cmd())
     )
 
-    if recruit_char_id != ctenums.CharID.MAGUS:
-        script.set_function(recruit_obj_id, FID.ARBITRARY_0, recruit_arb0)
-        script.set_function(recruit_obj_id, FID.ARBITRARY_1, recruit_arb1)
-        script.set_function(recruit_obj_id, FID.ARBITRARY_2, recruit_arb2)
+    script.set_function(recruit_obj_id, FID.ARBITRARY_0, recruit_arb0)
+    script.set_function(recruit_obj_id, FID.ARBITRARY_1, recruit_arb1)
+    script.set_function(recruit_obj_id, FID.ARBITRARY_2, recruit_arb2)
 
-
-    for pc_id in ctenums.CharID:
-        if pc_id != recruit_char_id:
-            obj_id = pc_id + 1
-            script.set_function(obj_id, FID.ACTIVATE, EF().add(EC.return_cmd()))
-            script.set_function(obj_id, FID.TOUCH, EF().add(EC.return_cmd()))
-            script.set_function(obj_id, FID.ARBITRARY_0, stopping_arb)
-            script.set_function(obj_id, FID.ARBITRARY_1, surprise_arb)
-
+    # for pc_id in ctenums.CharID:
+    #     if pc_id != recruit_char_id:
+    #         obj_id = pc_id + 1
+    #         script.set_function(obj_id, FID.ACTIVATE, EF().add(EC.return_cmd()))
+    #         script.set_function(obj_id, FID.TOUCH, EF().add(EC.return_cmd()))
+    #         script.set_function(obj_id, FID.ARBITRARY_0, stopping_arb)
+    #         script.set_function(obj_id, FID.ARBITRARY_1, surprise_arb)

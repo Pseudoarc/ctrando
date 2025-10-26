@@ -277,6 +277,26 @@ def assign_blackbird_left_wing_boss(
     )
 
 
+def assign_north_cape_boss(
+        script_manager: scriptmanager.ScriptManager,
+        boss: bosstypes.BossScheme
+):
+    loc_id = ctenums.LocID.NORTH_CAPE
+    boss_obj = 8
+
+    bru.assign_boss_to_one_spot_location_script(
+        script_manager[loc_id], boss,
+        boss_load_finder=_default_boss_load_finder(boss_obj),
+        show_pos_finder=bru.CommandHookLocator(
+            9, FID.ACTIVATE,
+            [EC.remove_object(0x10)]
+        ),
+        last_coord_finder=bru.CommandHookLocator(
+            boss_obj, FID.ACTIVATE, [0x8B]
+        )
+    )
+
+
 def get_base_alt_slots(
         boss_part: bosstypes.BossPart
 ) -> tuple[int, int]:

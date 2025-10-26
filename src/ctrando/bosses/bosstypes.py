@@ -45,6 +45,7 @@ class BossSpotID(enum.StrEnum):
     PRISON_CATWALKS = enum.auto()
     BLACKBIRD_LEFT_WING = enum.auto()
     OZZIES_FORT_TRIO = enum.auto()
+    NORTH_CAPE = enum.auto()
 
     # minibosses
     EPOCH_REBORN = enum.auto()
@@ -94,7 +95,8 @@ _boss_spot_names: dict[BossSpotID, str] = {
     BossSpotID.MILLENNIAL_FAIR_GATO: 'Millennial Fair Gato',
     BossSpotID.SEWERS_KRAWLIE: 'Future Sewers',
     BossSpotID.OZZIES_FORT_TRIO: 'Ozzie\'s Fort Trio',
-    BossSpotID.BLACK_OMEN_ZEAL: 'Black Omen Zeal'
+    BossSpotID.BLACK_OMEN_ZEAL: 'Black Omen Zeal',
+    BossSpotID.NORTH_CAPE: "North Cape"
 }
 
 
@@ -423,7 +425,8 @@ def get_default_boss_assignment() -> dict[BossSpotID, BossID]:
         BSID.ZEAL_PALACE: BossID.GOLEM,
         BSID.ZENAN_BRIDGE: BossID.ZOMBOR,
         BSID.BLACK_OMEN_ZEAL: BossID.ZEAL,
-        BSID.OZZIES_FORT_TRIO: BossID.OZZIE_TRIO
+        BSID.OZZIES_FORT_TRIO: BossID.OZZIE_TRIO,
+        BSID.NORTH_CAPE: BossID.MAGUS_NORTH_CAPE
     }
 
 
