@@ -42,13 +42,9 @@ class EventMod(locationevent.LocEventMod):
             memory.Flags.HAS_ALGETTY_PORTAL
         )
 
-        # pos = script.get_function_start(closed_portal_id, FID.STARTUP)
-        # script.insert_commands(
-        #     EF()
-        #     .add_if(
-        #         EC.if_not_flag(memory.Flags.ZEAL_HAS_FALLEN),
-        #         EF().add(EC.return_cmd()).add(EC.end_cmd()),
-        #     )
-        #     .get_bytearray(),
-        #     pos,
-        # )
+        # Fix exploremode/partyfollow
+        pos = script.find_exact_command(
+            EC.party_follow(),
+            script.get_function_start(0xB, FID.ACTIVATE)
+        ) + 1
+        script.insert_commands(EC.set_explore_mode(True).to_bytearray(), pos)
