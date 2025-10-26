@@ -149,7 +149,7 @@ def get_twin_spot_assignment(
     ]
 
     if not one_spot_ids:
-        raise ValueError
+        return bty.BossID.GOLEM
 
     return rng.choice(one_spot_ids)
 
@@ -186,7 +186,7 @@ def get_random_boss_assignment(
     available_spots = [
         spot for spot in base_dict
         if spot not in boss_rando_options.vanilla_boss_spots
-        and spot not in (_midboss_spots + [bty.BossSpotID.OCEAN_PALACE_TWIN_GOLEM_ALT])
+        and spot not in _midboss_spots
     ]
 
     boss_pool: list[bty.BossID] = []
@@ -204,16 +204,7 @@ def get_random_boss_assignment(
                 temp_available_spots.remove(twin_spot)
 
                 base_dict[twin_spot] = twin_assign
-
-                if twin_spot == bty.BossSpotID.OCEAN_PALACE_TWIN_GOLEM:
-                    temp_boss_pool.remove(twin_assign)
-
-
-        # if twin_spot in available_spots:
-        #     twin_assign = get_twin_spot_assignment(boss_pool, rng)
-        #     base_dict[twin_spot] = twin_assign
-        #
-        #     temp_available_spots.remove(twin_spot)
+                temp_boss_pool.remove(twin_assign)
 
         if bty.BossSpotID.OZZIES_FORT_TRIO in available_spots:
             ozzie_boss = get_ozzies_fort_assignment(temp_boss_pool, available_spots, rng)
@@ -231,15 +222,7 @@ def get_random_boss_assignment(
         for twin_spot in twin_spots:
             if twin_spot in available_spots:
                 twin_assign = get_twin_spot_assignment(boss_pool, rng)
-
-                if twin_spot == bty.BossSpotID.OCEAN_PALACE_TWIN_GOLEM:
-                    available_spots.remove(twin_spot)
-
-        # twin_spot = bty.BossSpotID.OCEAN_PALACE_TWIN_GOLEM
-        # if twin_spot in available_spots:
-        #     twin_assign = get_twin_spot_assignment(boss_pool, rng)
-        #     base_dict[twin_spot] = twin_assign
-        #     available_spots.remove(twin_spot)
+                available_spots.remove(twin_spot)
 
         if bty.BossSpotID.OZZIES_FORT_TRIO in available_spots:
             ozzie_boss = get_ozzies_fort_assignment(boss_pool, available_spots, rng)
@@ -248,16 +231,6 @@ def get_random_boss_assignment(
 
         for spot in available_spots:
             base_dict[spot] = rng.choice(boss_pool)
-
-    # if bty.BossSpotID.OCEAN_PALACE_TWIN_GOLEM in available_spots:
-    #     twin_boss = bty.BossID.GOLEM
-    #     one_spot_ids = [
-    #         boss_id for boss_id in boss_pool
-    #         if len(bty.get_default_scheme(boss_id).parts) == 1
-    #     ]
-    #     if one_spot_ids:
-    #         twin_boss = rng.choice(one_spot_ids)
-    #     base_dict[bty.BossSpotID.OCEAN_PALACE_TWIN_GOLEM] = twin_boss
 
     return base_dict
 
