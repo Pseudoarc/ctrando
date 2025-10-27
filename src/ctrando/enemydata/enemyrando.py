@@ -273,7 +273,6 @@ _relevant_loc_ids = [
     ctenums.LocID.REPTITE_LAIR_TUNNEL,
     ctenums.LocID.HUNTING_RANGE,
     ctenums.LocID.DACTYL_NEST_LOWER, ctenums.LocID.DACTYL_NEST_UPPER,
-    ctenums.LocID.GIANTS_CLAW_ENTRANCE,
     ctenums.LocID.TYRANO_LAIR_EXTERIOR, ctenums.LocID.TYRANO_LAIR_ENTRANCE,
     ctenums.LocID.TYRANO_LAIR_ANTECHAMBERS, ctenums.LocID.TYRANO_LAIR_STORAGE,
     ctenums.LocID.TYRANO_LAIR_ROOM_OF_VERTIGO,
