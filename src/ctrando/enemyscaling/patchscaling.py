@@ -1192,7 +1192,7 @@ def patch_ai_cond_stat_lte_0B(
         inst.LDA(memory.Memory.SCALING_LEVEL & 0xFFFF, AM.ABS),
         inst.BRA("jump_back"),
         "normal_load",
-        inst.LDA(0x0A, AM.DIR_24_Y),
+        inst.LDA(0x0A, AM.DIR_16_Y),
         "jump_back",
         inst.JMP(return_rom_addr, AM.LNG)
     ]
@@ -1600,17 +1600,17 @@ def make_hp_lut(alt_table: bool = False):
             (1, 1.5),
             (5, 5),
             (20, 25),
-            (40, 70),
-            # (50, 75)
+            (40, 55),
+            (50, 65)
         )
         hp_table = [
             sorted([1, round(0xFF*hp_func(x)/85), 0xFF])[1] for x in range(100)
         ]
 
-        # max_val = max(hp_table)
-        # for x in hp_table[:60]:
-        #     print(x*100/max_val)
-        # input()
+        max_val = max(hp_table)
+        for x in hp_table[:60]:
+            print(x*100/max_val)
+        input()
 
     return hp_table
 
