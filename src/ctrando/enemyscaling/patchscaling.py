@@ -1294,6 +1294,7 @@ def get_true_levels_bytes(
     true_levels[ctenums.EnemyID.GIGA_GAIA_HEAD] = 30
     true_levels[ctenums.EnemyID.GIGA_GAIA_LEFT] = 30
     true_levels[ctenums.EnemyID.GIGA_GAIA_RIGHT] = 30
+    true_levels[ctenums.EnemyID.MAGUS_NORTH_CAPE] = 30
     true_levels[ctenums.EnemyID.LAVOS_SPAWN_SHELL] = 32
     true_levels[ctenums.EnemyID.LAVOS_SPAWN_HEAD] = 32
     true_levels[ctenums.EnemyID.MOTHERBRAIN] = 32
