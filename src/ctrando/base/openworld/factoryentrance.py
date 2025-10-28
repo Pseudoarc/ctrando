@@ -35,7 +35,8 @@ class EventMod(locationevent.LocEventMod):
                 .add(EC.play_sound(0x70))
                 .add(copy_cmd)
                 .add(EC.pause(2))
-                .add(EC.play_sound(0xA0)),
+                .add(EC.play_sound(0xA0))
+                .add(EC.set_flag(memory.Flags.ROBO_USED_FACTORY_RUINS_ENTRANCE_COMPUTER)),
                 EF().add(EC.auto_text_box(
                     script.add_py_string("ERROR: Only R-Series can access.{null}")
                 ))
