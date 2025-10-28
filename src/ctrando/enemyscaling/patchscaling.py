@@ -1598,14 +1598,16 @@ def make_hp_lut(alt_table: bool = False):
         #     (45, 100)
         # )
         hp_func = pwl.PiecewiseLinear(
-            (1, 1.5),
-            (5, 5),
-            (20, 25),
-            (40, 55),
-            (50, 65)
+            (1, 1),
+            (5, 8),
+            (10, 20),
+            (20, 40),
+            (30, 60 ),
+            (40, 90),
+            (50, 100),
         )
         hp_table = [
-            sorted([1, round(0xFF*hp_func(x)/85), 0xFF])[1] for x in range(100)
+            sorted([1, round(0xFF*hp_func(x)/100), 0xFF])[1] for x in range(100)
         ]
 
         # max_val = max(hp_table)
