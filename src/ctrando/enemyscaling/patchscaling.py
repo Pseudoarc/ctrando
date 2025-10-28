@@ -1608,10 +1608,10 @@ def make_hp_lut(alt_table: bool = False):
             sorted([1, round(0xFF*hp_func(x)/85), 0xFF])[1] for x in range(100)
         ]
 
-        max_val = max(hp_table)
-        for x in hp_table[:60]:
-            print(x*100/max_val)
-        input()
+        # max_val = max(hp_table)
+        # for x in hp_table[:60]:
+        #     print(x*100/max_val)
+        # input()
 
     return hp_table
 
