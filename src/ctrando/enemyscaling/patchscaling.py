@@ -1274,9 +1274,9 @@ def get_true_levels_bytes(
     true_levels[ctenums.EnemyID.ZOMBOR_TOP] = 10
     true_levels[ctenums.EnemyID.ZOMBOR_BOTTOM] = 10
     true_levels[ctenums.EnemyID.MASA_MUNE] = 15
-    true_levels[ctenums.EnemyID.NIZBEL] = 16
-    true_levels[ctenums.EnemyID.FLEA] = 18
-    true_levels[ctenums.EnemyID.SLASH_SWORD] = 18
+    true_levels[ctenums.EnemyID.NIZBEL] = 17
+    true_levels[ctenums.EnemyID.FLEA] = 19
+    true_levels[ctenums.EnemyID.SLASH_SWORD] = 20
     true_levels[ctenums.EnemyID.DALTON_PLUS] = 20
     true_levels[ctenums.EnemyID.NIZBEL_II] = 23
     true_levels[ctenums.EnemyID.BLACKTYRANO] = 20
@@ -1302,7 +1302,11 @@ def get_true_levels_bytes(
     true_levels[ctenums.EnemyID.GREAT_OZZIE] = 33
     true_levels[ctenums.EnemyID.FLEA_PLUS_TRIO] = 33
     true_levels[ctenums.EnemyID.SUPER_SLASH_TRIO] = 33
-    true_levels[ctenums.EnemyID.YAKRA_XIII] = 38
+    true_levels[ctenums.EnemyID.YAKRA_XIII] = 45
+    true_levels[ctenums.EnemyID.GIGA_MUTANT_HEAD] = 47
+    true_levels[ctenums.EnemyID.GIGA_MUTANT_BOTTOM] = 47
+    true_levels[ctenums.EnemyID.TERRA_MUTANT_HEAD] = 48
+    true_levels[ctenums.EnemyID.TERRA_MUTANT_BOTTOM] = 48
     true_levels[ctenums.EnemyID.ZEAL_2_RIGHT] = 0x30
     true_levels[ctenums.EnemyID.LAVOS_1] = 50
     true_levels[ctenums.EnemyID.LAVOS_OCEAN_PALACE] = 50
@@ -1580,7 +1584,7 @@ def make_hp_lut(alt_table: bool = False):
 
 
     if not alt_table:  # Lut approxiating quadratic
-        affine_constant = 5
+        affine_constant = 10
         correction_factor = 15
         hp_table = [((level+affine_constant)**2)/correction_factor for level in range(101)]
         hp_table = [round(sorted([1, x, 0xFF])[1]) for x in hp_table]
@@ -1598,22 +1602,25 @@ def make_hp_lut(alt_table: bool = False):
         #     (45, 100)
         # )
         hp_func = pwl.PiecewiseLinear(
-            (1, 1),
-            (5, 8),
-            (10, 20),
-            (20, 40),
-            (30, 60 ),
-            (40, 90),
-            (50, 100),
+            (1, 175),
+            (4, 920),
+            (12, 2000),
+            (20, 4500),
+            (27, 7000),
+            (40, 11000),
+            (50, 14000)
         )
+
+        max_hp = hp_func(50)
+
         hp_table = [
-            sorted([1, round(0xFF*hp_func(x)/100), 0xFF])[1] for x in range(100)
+            sorted([1, round(0xFF*hp_func(x)/max_hp), 0xFF])[1] for x in range(100)
         ]
 
-        # max_val = max(hp_table)
-        # for x in hp_table[:60]:
-        #     print(x*100/max_val)
-        # input()
+    # max_val = max(hp_table)
+    # for x in hp_table[:60]:
+    #     print(x*100/max_val)
+    # input()
 
     return hp_table
 
