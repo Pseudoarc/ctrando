@@ -382,6 +382,8 @@ def get_ctrom_from_config(
 
     print("Setting Random Data...", end="")
     a = time.time()
+
+    randofixes.fix_movement_locks(post_config.enemy_ai_manager)
     # Slash AI
     for tech_id in range(1, 9):
         if config.pctech_manager.get_tech(tech_id).name == "Slash":

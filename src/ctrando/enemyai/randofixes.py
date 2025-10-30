@@ -4,6 +4,25 @@ from ctrando.common.ctenums import EnemyID, ItemID
 from ctrando.enemyai.enemyaimanager import EnemyAIManager
 import ctrando.enemyai.enemyaitypes as aitypes
 
+
+def fix_movement_locks(
+        ai_manager: EnemyAIManager
+):
+    """
+    Some enemies get stuck in some domains because of a movement of "1"
+    attacked to an attack command.  Blindly replacing it.
+    """
+    for enemy_id in (EnemyID.MASA_MUNE, EnemyID.SLASH_SWORD):
+        script = ai_manager.script_dict[enemy_id]
+
+        for block in script.action_script:
+            actions = block.action_list
+
+            for action in actions:
+                if action.ACTION_ID == 1 and action[-1] == 1:
+                    action[-1] = 0xA
+
+
 def fix_dino_slash_scripts(
         ai_manager: EnemyAIManager,
         new_slash_id: int
