@@ -19,7 +19,9 @@ from ctrando.locations.scriptmanager import ScriptManager
 from ctrando.objectives import objectivetypes
 from ctrando.overworlds import overworld, owexitdata
 from ctrando.overworlds.owmanager import OWManager
+from ctrando.recruits import recruitwriter
 from ctrando.treasures import treasuretypes as ttypes
+from ctrando.entranceshuffler import regionmap
 
 
 _LocEvent = locationevent.LocationEvent
@@ -42,6 +44,7 @@ class ConfigState:
     shop_manager: shoptypes.ShopManager
     recruit_dict: dict[ctenums.RecruitID, ctenums.CharID | None]
     ow_exit_assignment_dict: dict[owexitdata.OWExitClass, owexitdata.OWExitClass]
+    region_map: regionmap.RegionMap
     starting_rewards: list[logictypes.RewardType]
     objectives: list[objectivetypes.ObjectiveType]
     enemy_assign_dict: dict[ctenums.EnemyID, ctenums.EnemyID]
@@ -93,6 +96,7 @@ class ConfigState:
         ow_exit_assignment_dict = {
             exit_class: exit_class for exit_class in owexitdata.OWExitClass
         }
+        region_map = regionmap.get_default_map()
         starting_rewards = []
         objectives = [None for _ in range(8)]
         enemy_assign_dict: dict[ctenums.EnemyID, ctenums.EnemyID] = dict()
@@ -100,7 +104,7 @@ class ConfigState:
         return cls(
             item_db, treasure_assignment, pcstat_manager,
             pctech_manager, enemy_data_dict, boss_assignment_dict,
-            shop_manager, recruit_dict, ow_exit_assignment_dict,
+            shop_manager, recruit_dict, ow_exit_assignment_dict, region_map,
             starting_rewards, objectives, enemy_assign_dict
         )
 
