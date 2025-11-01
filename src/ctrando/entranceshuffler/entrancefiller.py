@@ -39,7 +39,7 @@ def get_key_item_fill(
         logic_options: logicoptions.LogicOptions,
         entrance_options: entranceoptions.EntranceShufflerOptions,
         rng: RNGType
-) -> tuple[dict[ctenums.TreasureID, ctenums.ItemID], dict[regionmap.OWExit, regionmap.OWExit]]:
+) -> tuple[dict[ctenums.TreasureID, ctenums.ItemID], dict[regionmap.OWExit, regionmap.OWExit], regionmap.RegionMap]:
 
     forced_key_items = get_forced_key_items()
 
@@ -117,8 +117,7 @@ def get_key_item_fill(
             # input()
 
     entrance_assignment = entrancerandomizer.get_ow_exit_assign_dict(exit_connectors)
-
-    return treasure_assignment, entrance_assignment
+    return treasure_assignment, entrance_assignment, region_map
 
 
 def fill_key_items(
