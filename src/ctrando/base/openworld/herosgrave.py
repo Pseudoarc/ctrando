@@ -264,6 +264,14 @@ class EventMod(locationevent.LocEventMod):
         pos = script.get_object_start(0xC)
         end = script.get_object_start(0xF)
         #shorten_scene(script, pos, end, False)
+
+        pos = script.find_exact_command(
+            EC.return_cmd(), script.get_function_start(0, FID.ARBITRARY_0)
+        )
+        script.insert_commands(
+            EC.set_explore_mode(True).to_bytearray(), pos
+        )
+
         cls.speed_up_cyrus_appearing(script)
         cls.speed_up_masamune_spinning(script)
         cls.speed_up_masa_mune_powering(script)
