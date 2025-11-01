@@ -17,7 +17,9 @@ from ctrando.enemydata import enemystats, rewardrando, enemyrando
 from ctrando.logic import logictweaks, logictypes
 from ctrando.shops import shoptypes, shoprando
 
-from ctrando.attacks import pctechrandomizer, techdescriptions, pctech, animationscript, scriptreassign
+from ctrando.attacks import (
+    pctechrandomizer, techdescriptions, pctech, animationscript, scriptreassign
+)
 from ctrando.base import basepatch, xptpmod, modifymaps, chesttext
 from ctrando.bosses import staticbossscaling, bossrando, bosstypes
 from ctrando.characters import characterwriter, charactermods
@@ -28,11 +30,13 @@ from ctrando import encounters
 
 from ctrando.enemyai import randofixes
 from ctrando.enemyscaling import patchscaling
-from ctrando.entranceshuffler import entrancefiller, entranceassign, regionmap, maptraversal, locregions
+from ctrando.entranceshuffler import (
+    entrancefiller, entranceassign, regionmap, maptraversal, locregions
+)
 from ctrando.entranceshuffler.entrancefiller import update_starting_rewards
 from ctrando.items import gearrando, itemdata
 from ctrando.locations.scriptmanager import ScriptManager
-from ctrando.objectives import objectivewriter
+from ctrando.objectives import objectivewriter, objectivelogic
 from ctrando.postrando import postrandowriter, flashreduce
 from ctrando.recruits import recruitwriter
 from ctrando.strings import ctstrings
@@ -265,7 +269,7 @@ def get_random_config(
     ### Logic (KI Fill, Entrances)
     config.starting_rewards = list(settings.logic_options.starter_rewards)
     entrancefiller.update_starting_rewards(config.starting_rewards, settings.entrance_options)
-    treasure_assignment, entrance_assignment = entrancefiller.get_key_item_fill(
+    treasure_assignment, entrance_assignment, region_map = entrancefiller.get_key_item_fill(
         dict(),
         config.boss_assignment_dict,
         config.recruit_dict,
@@ -274,7 +278,12 @@ def get_random_config(
         rng
     )
 
+    objectivelogic.add_objectives_to_map(config.objectives, config.boss_assignment_dict,
+                                         settings.objective_options, region_map)
+
+
     config.ow_exit_assignment_dict = entrance_assignment
+    config.region_map = region_map
     # for key, val in entrance_assignment.items():
     #     print(key, val)
     # input()
