@@ -195,7 +195,9 @@ def get_random_boss_assignment(
     twin_spots = (bty.BossSpotID.OCEAN_PALACE_TWIN_GOLEM,
                   bty.BossSpotID.OCEAN_PALACE_TWIN_GOLEM_ALT)
     if boss_rando_options.boss_randomization_type == bro.BossRandoType.SHUFFLE:
-        boss_pool = [base_dict[spot] for spot in available_spots]
+        # Don't add the alt twin to the pool or you get two golems
+        boss_pool = [base_dict[spot] for spot in available_spots
+                     if spot != bty.BossSpotID.OCEAN_PALACE_TWIN_GOLEM_ALT]
 
         temp_boss_pool = list(boss_pool)
         temp_available_spots = list(available_spots)
@@ -206,7 +208,10 @@ def get_random_boss_assignment(
                 temp_available_spots.remove(twin_spot)
 
                 base_dict[twin_spot] = twin_assign
-                temp_boss_pool.remove(twin_assign)
+
+                # Only remove the boss from the pool if it's assigned to the main twin spot
+                if twin_spot == bty.BossSpotID.OCEAN_PALACE_TWIN_GOLEM:
+                    temp_boss_pool.remove(twin_assign)
 
         if bty.BossSpotID.OZZIES_FORT_TRIO in available_spots:
             ozzie_boss = get_ozzies_fort_assignment(temp_boss_pool, available_spots, rng)
