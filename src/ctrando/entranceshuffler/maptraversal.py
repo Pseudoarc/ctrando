@@ -131,6 +131,10 @@ class MapTraverser:
             log_connectors: bool = False
     ) -> list[str]:
 
+        if regions_to_skip is None:
+            regions_to_skip = set()
+        if rewards_to_skip is None:
+            rewards_to_skip = set()
 
         step_summary: list[str] = []
         step_regions: list[str] = []
@@ -196,6 +200,41 @@ def is_map_traversable(
         print(f"\t{x}")
 
     return False
+
+
+def get_sphere_dict(
+        region_map: regionmap.RegionMap,
+        treasure_dict: dict[ctenums.TreasureID, ttypes.RewardType],
+        recruit_dict: dict[ctenums.RecruitID, ctenums.CharID],
+        starting_rewards: list[typing.Any] = None
+) -> dict[str, int]:
+    """
+    Return a dictionary of region name -> sphere number
+    """
+    sphere = 0
+    traverser = MapTraverser(region_map, "starting_rewards", starting_rewards)
+
+    total_regions = set(region_map.name_connector_dict.keys())
+    ret_dict = {name: 0 for name in total_regions}
+
+    while True:
+        traverser.step(treasure_dict, recruit_dict)
+        regions = traverser.reached_regions
+        regions.intersection_update(total_regions)
+
+        if not regions:
+            raise ValueError
+
+        for region in regions:
+            ret_dict[region] = sphere
+
+        total_regions.difference_update(regions)
+        if not total_regions:
+            break
+
+        sphere += 1
+
+    return ret_dict
 
 
 def main():
