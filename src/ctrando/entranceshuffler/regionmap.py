@@ -157,6 +157,34 @@ class RegionMap:
 
         return ret_dict
 
+    def add_loc_region(self, region: LocRegion):
+        region_name = region.name
+        if region_name in self.loc_region_dict:
+            raise ValueError
+
+        self.loc_region_dict[region_name] = region
+        if region_name not in self.name_connector_dict:
+            self.name_connector_dict[region_name] = []
+
+
+    def add_region_connector(self, connector: RegionConnector):
+        if connector.from_region_name not in self.name_connector_dict:
+            raise ValueError
+
+        self.name_connector_dict[connector.from_region_name].append(
+            RegionConnector(connector.from_region_name, connector.to_region_name,
+                            connector.link_name, connector.rule, False)
+        )
+
+        if connector.reversible:
+            if connector.to_region_name not in self.name_connector_dict:
+                raise ValueError
+
+            self.name_connector_dict[connector.to_region_name].append(
+                RegionConnector(connector.to_region_name, connector.from_region_name,
+                                connector.link_name, connector.rule, False)
+            )
+
 
 _charge_rule = logicfactory.ProgressiveRule([ctenums.ItemID.PENDANT, ctenums.ItemID.PENDANT_CHARGE])
 _masa_rule = logicfactory.ProgressiveRule([ctenums.ItemID.MASAMUNE_1, ctenums.ItemID.MASAMUNE_2])
@@ -1208,7 +1236,10 @@ def get_default_map():
     ow_regions = owregions.get_ow_regions()
     loc_regions = locregions.get_all_loc_regions()
     exit_connectors = get_default_exit_connectors()
-    region_connectors = get_default_region_connectors()
+    region_connectors = get_default_region_connectors(
+        recruit_assign_dict=recruitwriter.get_default_recruit_assignment_dict(),
+        logic_options=logicoptions.LogicOptions()
+    )
 
     return RegionMap(
         ow_regions, loc_regions, exit_connectors, region_connectors
