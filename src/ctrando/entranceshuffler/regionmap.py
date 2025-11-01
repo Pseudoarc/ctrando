@@ -10,6 +10,7 @@ from ctrando.entranceshuffler.owregions import OWRegion
 from ctrando.overworlds.owexitdata import OWExitClass as OWExit
 from ctrando.locations.locexitdata import LocOWExits as LocExit
 from ctrando.logic import logictypes, logicfactory
+from ctrando.recruits import recruitwriter
 
 
 from collections.abc import Iterable
@@ -78,7 +79,7 @@ class RegionMap:
             exit_connectors: Iterable[ExitConnector],
             region_connectors: Iterable[RegionConnector],
     ):
-        self.ow_region_dict: dict[str: OWRegion] = dict()
+        self.ow_region_dict: dict[str, OWRegion] = dict()
         self.ow_exit_dict: dict[OWExit, str] = dict()
 
         for region in ow_regions:
@@ -158,7 +159,7 @@ class RegionMap:
 
 
 _charge_rule = logicfactory.ProgressiveRule([ctenums.ItemID.PENDANT, ctenums.ItemID.PENDANT_CHARGE])
-
+_masa_rule = logicfactory.ProgressiveRule([ctenums.ItemID.MASAMUNE_1, ctenums.ItemID.MASAMUNE_2])
 
 def get_default_exit_connectors() -> list[ExitConnector]:
     return [
@@ -337,6 +338,7 @@ def get_default_region_connectors(
         recruit_assign_dict[RecruitID.STARTER] = ctenums.CharID.CRONO
 
     charge_rule = _charge_rule
+    masa_rule = _masa_rule
 
     fair_recruit_rule = logictypes.LogicRule()
     if (char_id := recruit_assign_dict[ctenums.RecruitID.MILLENNIAL_FAIR]) is not None:
@@ -563,12 +565,12 @@ def get_default_region_connectors(
         RegionConnector(
             "cursed_woods", "burrow_medal",
             "show_frog_medal",
-            rule=logictypes.LogicRule([ctenums.ItemID.HERO_MEDAL])
+            rule=logictypes.LogicRule([ctenums.ItemID.HERO_MEDAL]) | masa_rule(1)
         ),
         RegionConnector(
             "cursed_woods", "burrow_recruit",
             "show_burrow_recruit_masamune",
-            rule=logictypes.LogicRule([ctenums.ItemID.MASAMUNE_1])
+            rule=masa_rule(1)
         ),
         RegionConnector(
             "tatas_house", "tata_reward",
@@ -794,7 +796,7 @@ def get_default_region_connectors(
             reversible=False
         ),
         RegionConnector(
-            "blackbird_scaffolding", "blackbird_scaffolding_epoch",
+            "blackbird_scaffolding", "epoch_reborn",
             "jets_turn_in",
             rule=logictypes.LogicRule([ItemID.JETSOFTIME])
         ),
@@ -802,6 +804,11 @@ def get_default_region_connectors(
             "last_village_commons", "blackbird",
             "get_captured_by_dalton",
             rule=bb_rule
+        ),
+        RegionConnector(
+            "blackbird", "epoch_reborn",
+            "defeat_blackbird_wing_boss",
+            reversible=False,
         ),
         RegionConnector(
             "skyway_enhasa_south", "land_bridge_enhasa_south",
