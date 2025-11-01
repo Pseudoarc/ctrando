@@ -88,20 +88,7 @@ class ConfigState:
         boss_assignment_dict = bosstypes.get_default_boss_assignment()
         shop_manager = shoptypes.ShopManager.read_from_ctrom(ct_rom)
         treasure_assignment = ttypes.get_vanilla_assignment()
-
-        # TODO: Move this elsewhere.
-        recruit_dict = {
-            ctenums.RecruitID.STARTER: ctenums.CharID.CRONO,
-            ctenums.RecruitID.MILLENNIAL_FAIR: ctenums.CharID.MARLE,
-            ctenums.RecruitID.CRONO_TRIAL: None,
-            ctenums.RecruitID.PROTO_DOME: ctenums.CharID.ROBO,
-            ctenums.RecruitID.FROGS_BURROW: ctenums.CharID.FROG,
-            ctenums.RecruitID.DACTYL_NEST: ctenums.CharID.AYLA,
-            ctenums.RecruitID.NORTH_CAPE: ctenums.CharID.MAGUS,
-            ctenums.RecruitID.CATHEDRAL: ctenums.CharID.LUCCA,
-            ctenums.RecruitID.DEATH_PEAK: None,
-            ctenums.RecruitID.CASTLE: None
-        }
+        recruit_dict = recruitwriter.get_default_recruit_assignment_dict()
 
         ow_exit_assignment_dict = {
             exit_class: exit_class for exit_class in owexitdata.OWExitClass

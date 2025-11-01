@@ -48,6 +48,21 @@ def get_recruit_spot_data(recruit_spot: RecruitID) -> RecruitSpotData:
     return _recruit_spot_data_dict[recruit_spot]
 
 
+def get_default_recruit_assignment_dict() -> dict[RecruitID, CharID]:
+    return {
+        RecruitID.STARTER: CharID.CRONO,
+        RecruitID.MILLENNIAL_FAIR: CharID.MARLE,
+        RecruitID.CRONO_TRIAL: None,
+        RecruitID.PROTO_DOME: CharID.ROBO,
+        RecruitID.FROGS_BURROW: CharID.FROG,
+        RecruitID.DACTYL_NEST: CharID.AYLA,
+        RecruitID.NORTH_CAPE: CharID.MAGUS,
+        RecruitID.CATHEDRAL: CharID.LUCCA,
+        RecruitID.DEATH_PEAK: None,
+        RecruitID.CASTLE: None
+    }
+
+
 def get_random_recruit_assignment_dict(
         rng: RNGType
 ) -> dict[RecruitID, CharID]:
