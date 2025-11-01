@@ -12,7 +12,8 @@ def fix_movement_locks(
     Some enemies get stuck in some domains because of a movement of "1"
     attacked to an attack command.  Blindly replacing it.
     """
-    for enemy_id in (EnemyID.MASA_MUNE, EnemyID.SLASH_SWORD):
+    for enemy_id in (EnemyID.MASA_MUNE, EnemyID.SLASH_SWORD, EnemyID.GATO,
+                     EnemyID.KRAWLIE):
         script = ai_manager.script_dict[enemy_id]
 
         for block in script.action_script:
