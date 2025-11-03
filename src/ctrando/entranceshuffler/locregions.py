@@ -1040,6 +1040,7 @@ def get_all_loc_regions() -> list[LocRegion]:
         region_rewards=[memory.Flags.HAS_DARK_AGES_TIMEGAUGE_ACCESS,
                         QuestID.MAGUS_CASTLE],
         region_loc_ids={LocID.MAGUS_CASTLE_OZZIE, LocID.MAGUS_CASTLE_PITS,
+                        LocID.MAGUS_CASTLE_ENTRANCE,
                         LocID.MAGIC_CAVE_EXTERIOR, LocID.MAGIC_CAVE_EXTERIOR_OPEN,
                         LocID.MAGUS_CASTLE_GUILLOTINES, LocID.MAGUS_CASTLE_DUNGEON,
                         LocID.MAGUS_CASTLE_HALL_DECEIT, LocID.MAGUS_CASTLE_HALL_AGGRESSION,
@@ -1428,6 +1429,7 @@ def get_all_loc_regions() -> list[LocRegion]:
             TID.MT_WOE_KEY,
         },
         region_loc_ids={
+            LocID.BEAST_NEST,
             LocID.MT_WOE_SUMMIT, LocID.MT_WOE_WESTERN_FACE,
             LocID.MT_WOE_LOWER_EASTERN_FACE, LocID.MT_WOE_UPPER_EASTERN_FACE,
             LocID.MT_WOE_WESTERN_FACE, LocID.MT_WOE_MIDDLE_EASTERN_FACE,
