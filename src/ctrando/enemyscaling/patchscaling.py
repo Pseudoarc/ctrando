@@ -13,8 +13,11 @@ from ctrando.locations.eventcommand import EventCommand as EC
 from ctrando.asm import instructions as inst, assemble
 from ctrando.asm.instructions import AddressingMode as AM  #, SpecialRegister as SR
 from ctrando.common import asmpatcher, byteops, ctenums, ctrom, memory, piecewiselinear as pwl
+from ctrando.entranceshuffler import regionmap
 from ctrando.enemydata.enemystats import EnemyStats
 from ctrando.enemyscaling import scalingschemes
+from ctrando.treasures import treasuretypes as ttypes
+
 
 _mag_affine_constant = 0
 _atk_affine_constant = 2
@@ -1230,22 +1233,6 @@ def patch_ai_scripts(
     patch_ai_cond_hp_lte_08(ct_rom, scale16_rom_addr, hp_lut_rom_addr)
     patch_ai_cond_stat_lte_0B(ct_rom)
 
-def get_scaling_scheme(
-        scaling_scheme: enemyscaling.DynamicScalingScheme,
-        scaling_scheme_options: enemyscaling.DyanamicScaleSchemeOptions,
-        slow_mult_rom_addr: int,
-) -> assemble.ASMList:
-    if scaling_scheme == enemyscaling.DynamicScalingScheme.NONE:
-        return []
-
-    if scaling_scheme == enemyscaling.DynamicScalingScheme.PROGRESSION:
-        if isinstance(scaling_scheme_options, enemyscaling.ProgressionScalingData):
-            return scalingschemes.get_progression_scaler_from_opts(scaling_scheme_options, slow_mult_rom_addr)
-        else:
-            raise TypeError
-
-    raise ValueError
-
 
 def get_true_levels_bytes(
         enemy_dict: dict[ctenums.EnemyID, EnemyStats],
@@ -1329,6 +1316,10 @@ def apply_full_scaling_patch(
         scaling_scheme_options: enemyscaling.DyanamicScaleSchemeOptions,
         script_manager: scriptmanager.ScriptManager,
         enemy_stat_dict: dict[ctenums.EnemyID, EnemyStats],
+        region_map: regionmap.RegionMap,
+        treasure_assignment: dict[ctenums.TreasureID, ttypes.RewardType],
+        recruit_assignment: dict[ctenums.RecruitID, ctenums.CharID | None],
+        starting_rewards: list[typing.Any],
         boss_scaling_settings: dict[bty.BossID, int| None],
 ):
     if scaling_scheme_type == enemyscaling.DynamicScalingScheme.NONE:
@@ -1346,9 +1337,27 @@ def apply_full_scaling_patch(
     slow_div_rt_rom_addr = byteops.to_rom_ptr(slow_div_rt_addr)
     slow_mult_rt_rom_addr = 0xC1FDBF
 
-    scaling_scheme = get_scaling_scheme(
-        scaling_scheme_type, scaling_scheme_options, slow_mult_rt_rom_addr
-    )
+    if scaling_scheme_type == enemyscaling.DynamicScalingScheme.PROGRESSION:
+        if not isinstance(scaling_scheme_options, enemyscaling.ProgressionScalingData):
+            raise TypeError
+
+        scaling_scheme = scalingschemes.get_progression_scaler_from_opts(
+            scaling_scheme_options, slow_mult_rt_rom_addr
+        )
+    elif scaling_scheme_type == enemyscaling.DynamicScalingScheme.LOGIC_DEPTH:
+        loc_level_b = scalingschemes.generate_loc_id_level_lut(
+            region_map, treasure_assignment, recruit_assignment, starting_rewards
+        )
+
+        loc_level_addr = ct_rom.space_manager.get_free_addr(len(loc_level_b), 0x410000)
+        ct_rom.seek(loc_level_addr)
+        ct_rom.write(loc_level_b, ctrom.freespace.FSWriteType.MARK_USED)
+
+        scaling_scheme = scalingschemes.get_logic_depth_scaler(loc_level_addr)
+    else:
+        raise ValueError
+
+
     scaling_scheme += [
         inst.LDA(memory.Memory.SCALING_LEVEL, AM.LNG),
         inst.CMP(scaling_general_options.max_scaling_level, AM.IMM8),
@@ -1377,8 +1386,6 @@ def apply_full_scaling_patch(
             ctenums.EnemyID.LAVOS_OCEAN_PALACE,
         ]
 
-    scale8_addr = add_scale8_routine(ct_rom)
-    scale16_addr = add_scale16_routine(ct_rom)
     slow_scale8_addr = asmpatcher.add_jsl_routine(
         scalingschemes.get_slow_scale8_routine(slow_mult_rt_rom_addr, slow_div_rt_rom_addr),
         ct_rom

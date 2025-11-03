@@ -12,13 +12,15 @@ Module for producing assmembly that can compute the desired level of enemies.
 - Do not assume that player data is in its usual place for battle.
 - The debugger shows that [$34, $45) should be free for temp values.
 """
-from typing import Optional
+import typing
 
 from ctrando.arguments import enemyscaling
 from ctrando.asm import assemble
 from ctrando.asm import instructions as inst
 from ctrando.asm.instructions import AddressingMode as AM, SpecialRegister as SR
-from ctrando.common import memory
+from ctrando.common import memory, ctenums, byteops
+from ctrando.entranceshuffler import maptraversal, regionmap
+from ctrando.treasures import treasuretypes as ttypes
 
 
 # Notes:
@@ -41,6 +43,73 @@ def get_progression_scaler_from_opts(
         scaler_options.levels_per_key_item,
         slow_mult_rom_addr
     )
+
+
+def generate_loc_id_level_lut(
+        region_map: regionmap.RegionMap,
+        treasure_assignment: dict[ctenums.TreasureID, ttypes.RewardType],
+        recruit_assignment: dict[ctenums.RecruitID, ctenums.CharID | None],
+        starting_rewards: list[typing.Any]
+) -> bytes:
+    """Returns bytes (one per loc_id) with level for that location."""
+
+    init_dict = {loc_id: 0 for loc_id in range(0x200)}
+    sphere_dict = maptraversal.get_sphere_dict(
+        region_map, treasure_assignment, recruit_assignment, starting_rewards
+    )
+
+    for region_name, sphere in sphere_dict.items():
+        if region_name in region_map.loc_region_dict:
+            region = region_map.loc_region_dict[region_name]
+            for loc_id in region.region_loc_ids:
+                init_dict[loc_id] = sphere
+    obj_region_names = (
+        "unlock_omen_objectives", "unlock_bucket_objectives", "timegauge_1999_objectives"
+    )
+    end_sphere = max(
+        sphere_dict[name] for name in obj_region_names
+    )
+    max_sphere = max(init_dict[x] for x in init_dict.keys())
+    end_sphere = min(end_sphere + 1, max_sphere)
+
+    init_dict = {
+        key: min(val, end_sphere) for key, val in init_dict.items()
+    }
+    values = sorted(set(init_dict.values()))
+    value_dict = {val: ind for ind, val in enumerate(values)}
+    for key, val in init_dict.items():
+        init_dict[key] = value_dict[val]
+
+    end_sphere = value_dict[end_sphere]
+    min_level, max_level = 5, 50
+    start_sphere = 0
+
+    for key, val in init_dict.items():
+        new_val = round(min_level + val*(max_level-min_level)/(end_sphere-start_sphere))
+        init_dict[key] = new_val
+
+    out_b = bytes(
+        [init_dict[x] for x in range(0x200)]
+    )
+    return out_b
+
+
+def get_logic_depth_scaler(
+        loc_id_lut_addr: int
+) -> assemble.ASMList:
+
+    loc_id_addr = 0x7E0100
+    loc_id_addr_abs = loc_id_addr & 0xFFFF
+    loc_id_lut_rom_addr = byteops.to_rom_ptr(loc_id_lut_addr)
+
+    return [
+        inst.REP(0x20),
+        inst.LDA(loc_id_addr_abs, AM.ABS),
+        inst.TAX(),
+        inst.SEP(0x20),
+        inst.LDA(loc_id_lut_rom_addr, AM.LNG_X),
+        inst.STA(memory.Memory.SCALING_LEVEL & 0xFFFF, AM.ABS),
+    ]
 
 
 def get_progression_scaler(

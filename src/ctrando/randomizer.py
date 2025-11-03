@@ -40,7 +40,7 @@ from ctrando.objectives import objectivewriter, objectivelogic
 from ctrando.postrando import postrandowriter, flashreduce
 from ctrando.recruits import recruitwriter
 from ctrando.strings import ctstrings
-from ctrando.treasures import treasureassign
+from ctrando.treasures import treasureassign, treasuretypes as ttypes
 
 from ctrando.effects import effecttypes
 
@@ -50,6 +50,9 @@ def apply_dynamic_scaling(
         ct_rom: ctrom.CTRom,
         script_manager: ScriptManager,
         enemy_data_dict: dict[ctenums.EnemyID, enemystats.EnemyStats],
+        region_map: regionmap.RegionMap,
+        treasure_assignment: dict[ctenums.TreasureID, ttypes.RewardType],
+        recruit_assignment: dict[ctenums.RecruitID, ctenums.CharID | None],
         settings: arguments.Settings,
 ):
     scaling_opts = settings.scaling_options
@@ -81,6 +84,10 @@ def apply_dynamic_scaling(
         scaling_scheme_type=settings.scaling_options.dynamic_scaling_scheme,
         scaling_scheme_options=settings.scaling_options.dynamic_scaling_scheme_options,
         script_manager=script_manager,
+        region_map=region_map,
+        treasure_assignment=treasure_assignment,
+        recruit_assignment=recruit_assignment,
+        starting_rewards=settings.logic_options.starter_rewards,
         enemy_stat_dict=enemy_data_dict,
         boss_scaling_settings=settings.boss_scaling_options.boss_level_dict,
     )
@@ -414,8 +421,13 @@ def get_ctrom_from_config(
     enemyrando.fix_npc_graphics(ct_rom, config.enemy_assign_dict,
                                 post_config.enemy_sprite_dict)
 
-    apply_dynamic_scaling(ct_rom, post_config.script_manager,
-                          config.enemy_data_dict, settings)
+    apply_dynamic_scaling(ct_rom,
+                          post_config.script_manager,
+                          config.enemy_data_dict,
+                          config.region_map,
+                          config.treasure_assignment,
+                          config.recruit_dict,
+                          settings)
 
     bossrando.fix_boss_sprites_given_assignment(config.boss_assignment_dict,
                                                 post_config.enemy_sprite_dict)

@@ -13,6 +13,7 @@ from ctrando.arguments import argumenttypes
 class DynamicScalingScheme(enum.StrEnum):
     NONE = "none"
     PROGRESSION = "progression"
+    LOGIC_DEPTH = "logic_depth"
 
 
 @dataclass
@@ -63,6 +64,11 @@ class DynamicScalingOptions:
                 type_fn=int
             ),
         }
+
+@dataclass()
+class LogicDepthScalingData:
+    ...
+
 
 @dataclass
 class ProgressionScalingData:
@@ -158,7 +164,8 @@ class ScalingOptions:
     """Class for all scaling options."""
     _option_type_dict: dict[DynamicScalingScheme, DyanamicScaleSchemeOptions] = {
         DynamicScalingScheme.NONE: None,
-        DynamicScalingScheme.PROGRESSION: ProgressionScalingData
+        DynamicScalingScheme.PROGRESSION: ProgressionScalingData,
+        DynamicScalingScheme.LOGIC_DEPTH: None
     }
 
     _arg_dict: argumenttypes.ArgSpec = {
