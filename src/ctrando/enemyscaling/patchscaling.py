@@ -1302,6 +1302,8 @@ def get_true_levels_bytes(
     true_levels[ctenums.EnemyID.GREAT_OZZIE] = 33
     true_levels[ctenums.EnemyID.FLEA_PLUS_TRIO] = 33
     true_levels[ctenums.EnemyID.SUPER_SLASH_TRIO] = 33
+    true_levels[ctenums.EnemyID.SON_OF_SUN_EYE] = 43
+    true_levels[ctenums.EnemyID.SON_OF_SUN_FLAME] = 43
     true_levels[ctenums.EnemyID.YAKRA_XIII] = 45
     true_levels[ctenums.EnemyID.GIGA_MUTANT_HEAD] = 47
     true_levels[ctenums.EnemyID.GIGA_MUTANT_BOTTOM] = 47
