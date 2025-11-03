@@ -5,7 +5,6 @@ import argparse
 import typing
 from dataclasses import dataclass
 import enum
-import sys
 
 
 from ctrando.arguments import argumenttypes

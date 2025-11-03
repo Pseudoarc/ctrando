@@ -3,8 +3,8 @@ import importlib
 import pkgutil
 from typing import Type
 
-from ctrando.common import ctenums, ctrom, randostate
-from ctrando.locations import locationevent, locationtypes
+from ctrando.common import randostate
+from ctrando.locations import locationevent
 
 from ctrando.base import openworld
 # from ctrando.base import basepatch, chesttext, apply_openworld_ow

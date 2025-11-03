@@ -1,9 +1,8 @@
 """Walk through a Map and collect rewards."""
 import typing
-from collections.abc import Sequence
 from typing import Any
 
-from ctrando.common import ctenums, ctrom, randostate, memory
+from ctrando.common import ctenums, memory
 from ctrando.entranceshuffler.regionmap import RegionConnector
 from ctrando.logic.logictypes import Game
 from ctrando.entranceshuffler import regionmap
