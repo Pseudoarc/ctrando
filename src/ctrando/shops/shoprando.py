@@ -358,6 +358,7 @@ def set_balanced_prices(
         ctenums.ItemID.BLUE_MAIL: 20000,
         ctenums.ItemID.RED_MAIL: 20000,
         ctenums.ItemID.PRISM_HELM: 65000,
+        ctenums.ItemID.HASTE_HELM: 65000,
         ctenums.ItemID.GLOOM_HELM: 65000,
         ctenums.ItemID.SAFE_HELM: 40000,
         ctenums.ItemID.SIGHT_CAP: 30000,
