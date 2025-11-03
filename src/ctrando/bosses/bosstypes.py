@@ -341,11 +341,11 @@ _default_schemes: dict[BossID, BossScheme] = {
     ),
     BossID.R_SERIES: BossScheme(
         BossPart(_EID.R_SERIES, 3),
-        BossPart(_EID.R_SERIES, 4, (0, 0x20)),
+        BossPart(_EID.R_SERIES, 4, (0, 0x40)),
         BossPart(_EID.R_SERIES, 7, (0x20, 0)),
-        BossPart(_EID.R_SERIES, 8, (0x20, 0x20)),
+        BossPart(_EID.R_SERIES, 8, (0x20, 0x40)),
         BossPart(_EID.R_SERIES, 9, (-0x20, 0)),
-        BossPart(_EID.R_SERIES, 0xA, (-0x20, 0x20))
+        BossPart(_EID.R_SERIES, 0xA, (-0x20, 0x40))
     ),
     BossID.RUST_TYRANO: BossScheme(BossPart(_EID.RUST_TYRANO,  3)),
     BossID.SLASH_SWORD: BossScheme(BossPart(_EID.SLASH_SWORD, 3)),
