@@ -85,12 +85,12 @@ class TechOptions:
                 "(may break specified order)"
             ),
             "black_hole_factor": argumenttypes.DiscreteNumericalArg(
-                1.0, 10.0, 0.5, cls._default_black_hole_factor,
+                0.0, 10.0, 0.5, cls._default_black_hole_factor,
                 "Percent kill chance per MP in black hole's cost",
                 type_fn=float
             ),
             "black_hole_min": argumenttypes.DiscreteNumericalArg(
-                1.0, 10.0, 0.5, cls._default_black_hole_factor,
+                0.0, 100.0, 0.5, cls._default_black_hole_factor,
                 "Base percent kill chance for black hole, total is base + mp*factor",
                 type_fn=float
             ),
