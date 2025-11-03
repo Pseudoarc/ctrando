@@ -1,5 +1,6 @@
 """
 Module with some useful functions for generating recruit event code.
+Also stores some recruit defaults.
 """
 
 from ctrando.base import openworldutils as owu
@@ -7,6 +8,23 @@ from ctrando.common import ctenums, memory
 from ctrando.common.ctenums import ItemID
 from ctrando.locations.eventcommand import EventCommand as EC, Operation as OP
 from ctrando.locations.eventfunction import EventFunction as EF
+
+
+def get_default_recruit_assignment_dict() -> dict[ctenums.RecruitID, ctenums.CharID | None]:
+    return {
+        ctenums.RecruitID.STARTER: ctenums.CharID.CRONO,
+        ctenums.RecruitID.MILLENNIAL_FAIR: ctenums.CharID.MARLE,
+        ctenums.RecruitID.CRONO_TRIAL: None,
+        ctenums.RecruitID.PROTO_DOME: ctenums.CharID.ROBO,
+        ctenums.RecruitID.FROGS_BURROW: ctenums.CharID.FROG,
+        ctenums.RecruitID.DACTYL_NEST: ctenums.CharID.AYLA,
+        ctenums.RecruitID.NORTH_CAPE: ctenums.CharID.MAGUS,
+        ctenums.RecruitID.CATHEDRAL: ctenums.CharID.LUCCA,
+        ctenums.RecruitID.DEATH_PEAK: None,
+        ctenums.RecruitID.CASTLE: None
+    }
+
+
 
 _char_music: dict[ctenums.CharID, int] = {
     ctenums.CharID.CRONO: 0x18,

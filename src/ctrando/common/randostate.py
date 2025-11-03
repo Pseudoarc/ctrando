@@ -19,7 +19,7 @@ from ctrando.locations.scriptmanager import ScriptManager
 from ctrando.objectives import objectivetypes
 from ctrando.overworlds import overworld, owexitdata
 from ctrando.overworlds.owmanager import OWManager
-from ctrando.recruits import recruitwriter
+from ctrando.recruits import recruitassign
 from ctrando.treasures import treasuretypes as ttypes
 from ctrando.entranceshuffler import regionmap
 
@@ -91,7 +91,7 @@ class ConfigState:
         boss_assignment_dict = bosstypes.get_default_boss_assignment()
         shop_manager = shoptypes.ShopManager.read_from_ctrom(ct_rom)
         treasure_assignment = ttypes.get_vanilla_assignment()
-        recruit_dict = recruitwriter.get_default_recruit_assignment_dict()
+        recruit_dict = recruitassign.get_default_recruit_assignment_dict()
 
         ow_exit_assignment_dict = {
             exit_class: exit_class for exit_class in owexitdata.OWExitClass

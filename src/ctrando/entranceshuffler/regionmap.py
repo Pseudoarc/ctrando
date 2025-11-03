@@ -10,7 +10,7 @@ from ctrando.entranceshuffler.owregions import OWRegion
 from ctrando.overworlds.owexitdata import OWExitClass as OWExit
 from ctrando.locations.locexitdata import LocOWExits as LocExit
 from ctrando.logic import logictypes, logicfactory
-from ctrando.recruits import recruitwriter
+from ctrando.recruits import recruitassign
 
 
 from collections.abc import Iterable
@@ -1237,7 +1237,7 @@ def get_default_map():
     loc_regions = locregions.get_all_loc_regions()
     exit_connectors = get_default_exit_connectors()
     region_connectors = get_default_region_connectors(
-        recruit_assign_dict=recruitwriter.get_default_recruit_assignment_dict(),
+        recruit_assign_dict=recruitassign.get_default_recruit_assignment_dict(),
         logic_options=logicoptions.LogicOptions()
     )
 
