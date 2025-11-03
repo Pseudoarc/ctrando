@@ -1082,7 +1082,8 @@ def add_boss_counter_to_rewards(
             # EID.SUPER_SLASH,
             EID.TERRA_MUTANT_HEAD, EID.GOLEM, EID.GOLEM_BOSS,
             EID.YAKRA, EID.YAKRA_XIII, EID.ZOMBOR_BOTTOM,
-            EID.GREAT_OZZIE, EID.ZEAL, EID.GUARDIAN
+            EID.GREAT_OZZIE, EID.ZEAL, EID.GUARDIAN,
+            EID.MAGUS_NORTH_CAPE
         ]
 
     boss_list_b = bytes(boss_list)
