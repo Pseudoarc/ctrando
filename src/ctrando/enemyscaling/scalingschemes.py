@@ -88,6 +88,12 @@ def generate_loc_id_level_lut(
         new_val = round(min_level + val*(max_level-min_level)/(end_sphere-start_sphere))
         init_dict[key] = new_val
 
+    for loc_id in (
+        ctenums.LocID.LAVOS, ctenums.LocID.LAVOS_TUNNEL, ctenums.LocID.LAVOS_CORE,
+        ctenums.LocID.TESSERACT
+    ):
+        init_dict[loc_id] = 50
+
     out_b = bytes(
         [init_dict[x] for x in range(0x200)]
     )
