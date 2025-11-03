@@ -505,6 +505,10 @@ _boss_spot_locator_dict: dict[bty.BossSpotID, HookLocator] = {
     bty.BossSpotID.BLACK_OMEN_ZEAL: CommandSequenceLocator(
         ctenums.LocID.BLACK_OMEN_ZEAL, 8, FID.STARTUP,
         [0xD8], True
+    ),
+    bty.BossSpotID.NORTH_CAPE: CommandSequenceLocator(
+        ctenums.LocID.NORTH_CAPE, 9, FID.ACTIVATE, [0xD8],
+        True
     )
 }
 
