@@ -8,6 +8,7 @@ the weights, then return a random element of the pair's value_list.
 
 from __future__ import annotations
 # import random
+from collections.abc import Iterable
 import typing
 
 from ctrando.common.random import RNGType
@@ -101,6 +102,13 @@ class Distribution(typing.Generic[T]):
 
         raise ValueError('No choice made.')
 
+    def get_all_items(self) -> set[T]:
+        ret = set()
+        for weight, items in self.weight_object_pairs:
+            ret.update(items)
+
+        return ret
+
     def get_weight_object_pairs(self):
         """Returns list of (weight, object_list) pairs in the Distribution."""
         return list(self.weight_object_pairs)
@@ -117,3 +125,26 @@ class Distribution(typing.Generic[T]):
 
         if self.__total_weight == 0:
             raise ZeroWeightException
+
+    def get_restricted_distribution(
+            self, remove_values: Iterable[T],
+            remove_weight: bool = True
+    ) -> typing.Self:
+        """
+        Removes the given values from the distribution.  By default removes weight
+        proportional to the values removed.
+        """
+
+        new_pairs: list[WeightType, list[T]] = []
+        remove_values = set(remove_values)
+
+        for weight, vals in self.weight_object_pairs:
+            trimmed_vals = [x for x in vals if x not in remove_values]
+
+            if remove_weight:
+                weight = weight*(len(trimmed_vals)/len(vals))
+
+            if weight > 0:
+                new_pairs.append((weight, trimmed_vals))
+
+        return Distribution[T](*new_pairs)
