@@ -1133,12 +1133,13 @@ class TreasureID(StrIntEnum):
     # Weird ones
     TABAN_GIFT_SUIT = auto()
     TABAN_GIFT_HELM = auto()
-    TRADING_POST_RANGED_WEAPON = auto()
-    TRADING_POST_ACCESSORY = auto()
-    TRADING_POST_TAB = auto()
-    TRADING_POST_MELEE_WEAPON = auto()
-    TRADING_POST_ARMOR = auto()
-    TRADING_POST_HELM = auto()
+    # Removing until used
+    # TRADING_POST_RANGED_WEAPON = auto()
+    # TRADING_POST_ACCESSORY = auto()
+    # TRADING_POST_TAB = auto()
+    # TRADING_POST_MELEE_WEAPON = auto()
+    # TRADING_POST_ARMOR = auto()
+    # TRADING_POST_HELM = auto()
     JERKY_GIFT = auto()
     # Rocks not in chests
     DENADORO_ROCK = auto()
