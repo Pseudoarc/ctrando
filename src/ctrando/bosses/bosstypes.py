@@ -277,8 +277,8 @@ _default_schemes: dict[BossID, BossScheme] = {
     BossID.GATO: _BS(_BP(_EID.GATO, 6)),
     BossID.GIGA_GAIA: _BS(
         _BP(_EID.GIGA_GAIA_HEAD, 6),
-        _BP(_EID.GIGA_GAIA_LEFT, 7, (0x20, 0x20)),
-        _BP(_EID.GIGA_GAIA_RIGHT, 9, (-0x20, 0x20))
+        _BP(_EID.GIGA_GAIA_LEFT, 7, (0x30, 0x20)),
+        _BP(_EID.GIGA_GAIA_RIGHT, 9, (-0x30, 0x20))
     ),
     BossID.GIGA_MUTANT: BossScheme(
         BossPart(_EID.GIGA_MUTANT_HEAD, 3),
