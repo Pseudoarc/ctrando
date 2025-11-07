@@ -1,3 +1,4 @@
+import collections.abc
 import copy
 import enum
 import math
@@ -9,13 +10,6 @@ from ctrando.arguments import shopoptions, gearrandooptions
 from ctrando.common import ctenums, distribution
 from ctrando.common.ctenums import ItemID as IID
 from ctrando.common.random import RNGType
-
-
-def randomize_shops(
-        shop_manager: shoptypes.ShopManager,
-        shop_options: shopoptions.ShopOptions
-):
-    ...
 
 
 class ItemTier(enum.Enum):
@@ -42,12 +36,18 @@ class ItemTier(enum.Enum):
     ACCESSORY_ROCK = enum.auto()
     KEY_NONPROGRESSION = enum.auto()
     KEY_PROGRESSION = enum.auto()
+    GEAR_STARTER = enum.auto()
 
 
 ItemDist = distribution.Distribution[IID]
 
 
 _item_dist_dict: dict[ItemTier, ItemDist] = {
+    ItemTier.GEAR_STARTER: distribution.Distribution[IID](
+        (1, [IID.HIDE_TUNIC, IID.HIDE_CAP, IID.KARATE_GI,
+             IID.WOOD_SWORD, IID.BRONZEEDGE, IID.AIR_GUN, IID.BRONZE_BOW,
+             IID.TIN_ARM])
+    ),
     ItemTier.CONS_D: distribution.Distribution[IID](
         (1, [IID.POWER_MEAL, IID.TONIC])
     ),
@@ -55,17 +55,20 @@ _item_dist_dict: dict[ItemTier, ItemDist] = {
         (1, [IID.MID_TONIC, IID.SHELTER, IID.REVIVE, IID.HEAL])
     ),
     ItemTier.CONS_B: distribution.Distribution[IID](
-        (1, [IID.FULL_TONIC, IID.ETHER])
+        (6, [IID.FULL_TONIC]),
+        (13, [IID.ETHER])
     ),
     ItemTier.CONS_A: distribution.Distribution[IID](
-        (1, [IID.MID_ETHER, IID.LAPIS, IID.BARRIER, IID.SHIELD, IID.MAGIC_TAB,
-             IID.POWER_TAB])
+        (24, [IID.MID_ETHER]),
+        (31, [IID.POWER_TAB, IID.MAGIC_TAB]),
+        (9, [IID.LAPIS]),
+        (7, [IID.BARRIER, IID.SHIELD])
     ),
     ItemTier.CONS_S: distribution.Distribution[IID](
-        (5, IID.FULL_ETHER),
-        (3, IID.HYPERETHER),
-        (2, IID.ELIXIR),
-        (1, IID.MEGAELIXIR)
+        (14, IID.FULL_ETHER),
+        (8, IID.HYPERETHER),
+        (12, IID.ELIXIR),
+        (8, IID.MEGAELIXIR)
     ),
     ItemTier.ACCESSORY_D: distribution.Distribution[IID](
         (1, [IID.WALLET, IID.CHARM_TOP, IID.THIRD_EYE])
@@ -93,27 +96,29 @@ _item_dist_dict: dict[ItemTier, ItemDist] = {
         (1, IID.DRAGON_TEAR),
         (1, IID.VALOR_CREST),
     ),
+    ItemTier.ACCESSORY_ROCK: distribution.Distribution[IID](
+        (1, [IID.BLUE_ROCK, IID.BLACK_ROCK, IID.GOLD_ROCK, IID.WHITE_ROCK, IID.SILVERROCK])
+    ),
     ItemTier.WEAPON_D: distribution.Distribution[IID](
-        (1, [IID.WOOD_SWORD, IID.IRON_BLADE, IID.STEELSABER, IID.LODE_SWORD, IID.BOLT_SWORD,
-             IID.BRONZE_BOW, IID.IRON_BOW, IID.LODE_BOW,
-             IID.AIR_GUN, IID.DART_GUN, IID.AUTO_GUN,
-             IID.TIN_ARM, IID.HAMMER_ARM,
-             IID.BRONZEEDGE, IID.IRON_SWORD])
+        (1, [IID.IRON_BLADE, IID.STEELSABER, IID.LODE_SWORD, IID.BOLT_SWORD]),
+        (1, [IID.IRON_BOW, IID.LODE_BOW]),
+        (1, [IID.DART_GUN, IID.AUTO_GUN]),
+        (1, [IID.HAMMER_ARM]),
+        (1, [IID.IRON_SWORD])
     ),
     ItemTier.WEAPON_C: distribution.Distribution[IID](
-        (1, [IID.RED_KATANA, IID.FLINT_EDGE, IID.AEON_BLADE,
-             IID.ROBIN_BOW, IID.SAGE_BOW,
-             IID.PLASMA_GUN, IID.RUBY_GUN,
-             IID.MIRAGEHAND, IID.STONE_ARM, IID.DOOMFINGER, IID.MAGMA_HAND,
-             IID.FLASHBLADE, IID.PEARL_EDGE])
+        (1, [IID.RED_KATANA, IID.FLINT_EDGE, IID.AEON_BLADE]),
+        (1, [IID.ROBIN_BOW, IID.SAGE_BOW]),
+        (1, [IID.PLASMA_GUN, IID.RUBY_GUN]),
+        (1, [IID.MIRAGEHAND, IID.STONE_ARM, IID.DOOMFINGER, IID.MAGMA_HAND]),
+        (1, [IID.FLASHBLADE, IID.PEARL_EDGE])
     ),
     ItemTier.WEAPON_B: distribution.Distribution[IID](
-        (1, [IID.DEMON_EDGE, IID.ALLOYBLADE, IID.STAR_SWORD,
-             IID.DREAM_BOW, IID.COMETARROW,
-             IID.DREAM_GUN, IID.MEGABLAST,
-             IID.BIG_HAND, IID.KAISER_ARM, IID.GIGA_ARM,
-             IID.RUNE_BLADE, IID.DEMON_HIT,
-             IID.DARKSCYTHE])
+        (1, [IID.DEMON_EDGE, IID.ALLOYBLADE, IID.STAR_SWORD]),
+        (1,[IID.DREAM_BOW, IID.COMETARROW]),
+        (1, [IID.DREAM_GUN, IID.MEGABLAST]),
+        (1, [IID.BIG_HAND, IID.KAISER_ARM, IID.GIGA_ARM]),
+        (1, [IID.RUNE_BLADE, IID.DEMON_HIT]),
     ),
     ItemTier.WEAPON_A: distribution.Distribution[IID](
         (1, [IID.VEDICBLADE, IID.KALI_BLADE, IID.SHIVA_EDGE, IID.SLASHER_2]),
@@ -125,13 +130,13 @@ _item_dist_dict: dict[ItemTier, ItemDist] = {
     ),
     ItemTier.WEAPON_S: distribution.Distribution[IID](
         (1, [IID.RAINBOW, IID.VALKERYE, IID.WONDERSHOT, IID.CRISIS_ARM,
-             IID.DOOMSICKLE, #IID.MASAMUNE_2
+             IID.DOOMSICKLE, IID.MASAMUNE_2
             ])
     ),
     ItemTier.ARMOR_D: distribution.Distribution[IID](
-        (1, [IID.HIDE_TUNIC, IID.KARATE_GI, IID.BRONZEMAIL, IID.MAIDENSUIT,
+        (1, [IID.BRONZEMAIL, IID.MAIDENSUIT,
              IID.IRON_SUIT,
-             IID.HIDE_CAP, IID.BRONZEHELM, IID.IRON_HELM, IID.BERET]),
+             IID.BRONZEHELM, IID.IRON_HELM, IID.BERET]),
     ),
     ItemTier.ARMOR_C: distribution.Distribution[IID](
         (1, [IID.TITAN_VEST, IID.GOLD_SUIT, IID.DARK_MAIL, IID.MIST_ROBE,
@@ -165,38 +170,79 @@ _item_dist_dict: dict[ItemTier, ItemDist] = {
     ItemTier.KEY_NONPROGRESSION: distribution.Distribution[IID](
         (1, [IID.PETAL, IID.FANG, IID.HORN, IID.FEATHER,
              IID.PETALS_2, IID.FANGS_2, IID.HORNS_2, IID.FEATHERS_2,])
+    ),
+    ItemTier.KEY_PROGRESSION: distribution.Distribution[IID](
+        (1, [IID.C_TRIGGER, IID.CLONE, IID.PENDANT, IID.PENDANT_CHARGE,
+             IID.DREAMSTONE, IID.RUBY_KNIFE, IID.JETSOFTIME,
+             IID.TOOLS, IID.RAINBOW_SHELL, IID.PRISMSHARD, IID.JERKY,
+             IID.JERKY, IID.BENT_HILT, IID.BENT_SWORD, IID.HERO_MEDAL,
+             IID.MASAMUNE_1, IID.TOMAS_POP, IID.MOON_STONE, IID.SUN_STONE,
+             IID.BIKE_KEY, IID.SEED, IID.GATE_KEY])
     )
 }
 
 
+def get_items_in_tier(tier: ItemTier):
+    if tier in _item_dist_dict:
+        return _item_dist_dict[tier].get_all_items()
+    else:
+        return []
+
+
+def get_items_in_tiers(tiers: collections.abc.Iterable[ItemTier]) -> list[IID]:
+    ret = []
+    for tier in tiers:
+        ret += get_items_in_tier(tier)
+
+    return ret
+
+
+
+def get_item_dist_dict() -> dict[ItemTier, ItemDist]:
+    return dict(_item_dist_dict)
+
+
 _tier_dist: distribution.Distribution[ItemTier] = distribution.Distribution(
     (5, ItemTier.CONS_D),
-    (30, ItemTier.CONS_C),  # Staple consumables are here.
-    (5, ItemTier.CONS_B),
-    (2, ItemTier.CONS_A),
-    (1, ItemTier.CONS_S),
-    (5, ItemTier.WEAPON_D),
-    (10, ItemTier.WEAPON_C),
+    (34, ItemTier.CONS_C),  # Staple consumables are here.
+    (19, ItemTier.CONS_B),
+    (71, ItemTier.CONS_A),
+    (42, ItemTier.CONS_S),
+    (8, ItemTier.WEAPON_D),
+    (4, ItemTier.WEAPON_C),
     (5, ItemTier.WEAPON_B),
-    (2, ItemTier.WEAPON_A),
-    (1, ItemTier.WEAPON_S),
-    (5, ItemTier.ARMOR_D),
-    (10, ItemTier.ARMOR_C),
-    (5, ItemTier.ARMOR_B),
-    (2, ItemTier.ARMOR_A),
-    (1, ItemTier.ARMOR_S),
-    (5, ItemTier.ACCESSORY_D),
-    (10, ItemTier.ACCESSORY_C),
-    (5, ItemTier.ACCESSORY_B),
-    (2, ItemTier.ACCESSORY_A),
-    (1, ItemTier.ACCESSORY_S),
-
+    (9, ItemTier.WEAPON_A),
+    (6, ItemTier.WEAPON_S),
+    (3, ItemTier.ARMOR_D),
+    (8, ItemTier.ARMOR_C),
+    (11, ItemTier.ARMOR_B),
+    (17, ItemTier.ARMOR_A),
+    (13, ItemTier.ARMOR_S),
+    (3, ItemTier.ACCESSORY_D),
+    (2, ItemTier.ACCESSORY_C),
+    (7, ItemTier.ACCESSORY_B),
+    (12, ItemTier.ACCESSORY_A),
+    (8, ItemTier.ACCESSORY_S),
+    (5, ItemTier.ACCESSORY_ROCK),
+    (1, ItemTier.KEY_PROGRESSION)
 )
 
-# https://maxhalford.github.io/blog/weighted-sampling-without-replacement/
+def get_tier_dist() -> distribution.Distribution[ItemTier]:
+    return distribution.Distribution(*_tier_dist.weight_object_pairs)
+
+    # https://maxhalford.github.io/blog/weighted-sampling-without-replacement/
 
 
-def get_random_tiered_item(rng: RNGType) -> ctenums.ItemID:
+def get_random_tiered_item(
+        tier_dist: distribution.Distribution[ItemTier] | None,
+        item_dist_dict: dict[ItemTier, ItemDist] | None,
+        rng: RNGType
+) -> ctenums.ItemID:
+    if tier_dist is None:
+        tier_dist = _tier_dist
+    if item_dist_dict is None:
+        item_dist_dict = _item_dist_dict
+
     tier = _tier_dist.get_random_item(rng)
     dist = _item_dist_dict[tier]
     item_id = dist.get_random_item(rng)
@@ -205,15 +251,16 @@ def get_random_tiered_item(rng: RNGType) -> ctenums.ItemID:
 
 
 def get_random_tiered_shop_items(
+        tier_distribution: distribution.Distribution[ItemTier],
+        distribution_dict: dict[ItemTier, ItemDist],
         capacity: int,
-        restricted_items: list[ctenums.ItemID],
         rng: RNGType,
 ) -> list[ctenums.ItemID]:
     chosen_items: list[ctenums.ItemID] = []
 
     while len(chosen_items) < capacity:
-        next_item = get_random_tiered_item(rng)
-        if next_item not in chosen_items and next_item not in restricted_items:
+        next_item = get_random_tiered_item(tier_distribution, distribution_dict, rng)
+        if next_item not in chosen_items:
             chosen_items.append(next_item)
 
     return chosen_items
@@ -328,12 +375,13 @@ def randomize_shop_inventory(
             if item_id not in removed_items and item_id not in shop_options.not_buyable_items
         ]
 
+        dist_dict = get_restricted_dist_dict(removed_items + shop_options.not_buyable_items)
+
         inv_type = shop_options.shop_inventory_randomization
         for shop_id, capacity in shop_capacity_dict.items():
             if inv_type == shopoptions.ShopInventoryType.TIERED_RANDOM:
-                new_items = get_random_tiered_shop_items(capacity,
-                                                         shop_options.not_buyable_items,
-                                                         rng)
+                new_items = get_random_tiered_shop_items(
+                    _tier_dist, dist_dict, capacity, rng)
             elif inv_type == shopoptions.ShopInventoryType.FULL_RANDOM:
                 new_items = rng.sample(item_pool, k=capacity)
             else:
@@ -516,6 +564,24 @@ def update_unsellable(
             item.secondary_stats.is_unsellable = True
         else:
             item.secondary_stats.is_unsellable = False
+
+
+def get_restricted_dist_dict(
+        removed_items: collections.abc.Iterable[ctenums.ItemID]
+):
+    """
+    Restrict the tiered random distribution to remove certain items.
+    """
+    ret_dict: dict[ItemTier, ItemDist] = {}
+    for tier, dist in _item_dist_dict.items():
+        if tier in _item_dist_dict:
+            try:
+                new_dist = dist.get_restricted_distribution(removed_items)
+                ret_dict[tier] = new_dist
+            except distribution.ZeroWeightException:
+                pass
+
+    return ret_dict
 
 
 def apply_shop_settings(
