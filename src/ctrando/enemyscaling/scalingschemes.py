@@ -53,7 +53,7 @@ def generate_loc_id_level_lut(
 ) -> bytes:
     """Returns bytes (one per loc_id) with level for that location."""
 
-    init_dict = {loc_id: 0 for loc_id in range(0x200)}
+    init_dict = {ctenums.LocID(loc_id): 0 for loc_id in range(0x200)}
     sphere_dict = maptraversal.get_sphere_dict(
         region_map, treasure_assignment, recruit_assignment, starting_rewards
     )
@@ -70,7 +70,7 @@ def generate_loc_id_level_lut(
         sphere_dict[name] for name in obj_region_names
     )
     max_sphere = max(init_dict[x] for x in init_dict.keys())
-    end_sphere = min(end_sphere + 1, max_sphere)
+    end_sphere = round((end_sphere + max_sphere)/2)
 
     init_dict = {
         key: min(val, end_sphere) for key, val in init_dict.items()

@@ -234,7 +234,10 @@ def get_default_exit_connectors() -> list[ExitConnector]:
         ExitConnector(OWExit.NORTHERN_RUINS_1000, LocExit.NORTHERN_RUINS_1000),
         ExitConnector(OWExit.WEST_CAPE, LocExit.WEST_CAPE),
         # truce_600_ow
-        ExitConnector(OWExit.ZENAN_BRIDGE_600_NORTH, LocExit.ZENAN_BRIDGE_600_NORTH),
+        ExitConnector(
+            OWExit.ZENAN_BRIDGE_600_NORTH, LocExit.ZENAN_BRIDGE_600_NORTH,
+            rule=logictypes.LogicRule([ItemID.JERKY, ItemID.JERKY])
+        ),
         ExitConnector(OWExit.TRUCE_CANYON, LocExit.TRUCE_CANYON),
         ExitConnector(OWExit.TRUCE_COUPLE_RESIDENCE_600, LocExit.TRUCE_COUPLE_RESIDENCE_600),
         ExitConnector(OWExit.TRUCE_SMITH_RESIDENCE, LocExit.TRUCE_SMITH_RESIDENCE),
@@ -738,7 +741,13 @@ def get_default_region_connectors(
         ),
         RegionConnector(
             "giants_claw", "shared_tyrano_claw",
-            "shared_tyrano_claw"
+            "shared_tyrano_claw",
+            reversible=False
+        ),
+        RegionConnector(
+            "tyrano_lair", "shared_tyrano_claw",
+            "shared_tyrano_claw",
+            reversible=False
         ),
         RegionConnector(
             "magic_cave_entrance", "magic_cave",
@@ -867,12 +876,6 @@ def get_default_region_connectors(
                                        logictypes.ScriptReward.FLIGHT]),
             reversible=False
         ),
-        # RegionConnector(
-        #     "truce_1000_overworld", "porre_1000_overworld",
-        #     "zenan_bridge_1000",
-        #     rule=logictypes.LogicRule([logictypes.ScriptReward.EPOCH,
-        #                                logictypes.ScriptReward.FLIGHT])
-        # ),
         RegionConnector(
             "porre_1000_overworld", "medina_1000_overworld",
             "flight_1000",
