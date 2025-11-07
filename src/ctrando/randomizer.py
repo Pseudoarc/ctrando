@@ -308,6 +308,9 @@ def get_random_config(
         settings.treasure_options,
         settings.gear_rando_options.ds_item_pool,
         exclude_pool,
+        config.region_map,
+        config.recruit_dict,
+        settings.logic_options.starter_rewards,
         rng)
 
     ### Gear Rando

@@ -6,14 +6,15 @@ import typing
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from enum import auto, Enum
+import math
+
 from ctrando.locations.scriptmanager import ScriptManager
-
-
 from ctrando.arguments import treasureoptions, gearrandooptions
 from ctrando.common import ctenums, ctrom
 from ctrando.common.ctenums import TreasureID as TID
 from ctrando.common.random import RNGType
-from ctrando.entranceshuffler import entrancefiller
+from ctrando.entranceshuffler import entrancefiller, maptraversal, regionmap
+from ctrando.shops import shoprando
 from ctrando.treasures import treasuretypes as ttypes, itemtiers, treasurespottiers
 
 
@@ -106,11 +107,141 @@ def fill_chargeable_chests(
             # print(f"Assign {charge_item} to {charge_tid}")
 
 
+def get_vanilla_treasure_pool(
+    extra_ds_items: Sequence[gearrandooptions.DSItem],
+) -> list[ttypes.RewardType]:
+
+    base_assignment = ttypes.get_vanilla_assignment()
+    item_pool = list(base_assignment.values())
+    if gearrandooptions.DSItem.DRAGONS_TEAR in extra_ds_items:
+        item_pool[item_pool.index(ctenums.ItemID.MEGAELIXIR)] = ctenums.ItemID.DRAGON_TEAR
+    if gearrandooptions.DSItem.VALOR_CREST in extra_ds_items:
+        item_pool[item_pool.index(ctenums.ItemID.ELIXIR)] = ctenums.ItemID.VALOR_CREST
+
+    return item_pool
+
+
+def get_random_treasure_pool(
+        extra_ds_items: Sequence[gearrandooptions.DSItem],
+        rng: RNGType
+) -> list[ttypes.RewardType]:
+    pool: list[ttypes.RewardType] = []
+
+    dist_dict = shoprando.get_item_dist_dict()
+    total_items = set()
+    for tier, dist in dist_dict.items():
+        if tier not in (shoprando.ItemTier.KEY_NONPROGRESSION, shoprando.ItemTier.KEY_PROGRESSION):
+            total_items.update(dist.get_all_items())
+
+    for item in (ctenums.ItemID.DRAGON_TEAR, ctenums.ItemID.VALOR_CREST):
+        if item not in extra_ds_items:
+            total_items.discard(item)
+
+    item_list = list(total_items)
+    for tid in ctenums.TreasureID:
+        is_gold = rng.random() < 0.05
+
+        if is_gold:
+            gold_val = rng.randrange(1, 600) * 100
+            pool.append(ttypes.Gold(gold_val))
+        else:
+            item = rng.choice(item_list)
+            pool.append(item)
+
+    return pool
+
+
+def get_random_tiered_treasure_pool(
+        extra_ds_items: Sequence[gearrandooptions.DSItem],
+        rng: RNGType
+) -> list[ttypes.RewardType]:
+    pool: list[ttypes.RewardType] = []
+
+    restricted_items = shoprando.get_items_in_tiers(
+        [shoprando.ItemTier.KEY_PROGRESSION, shoprando.ItemTier.KEY_NONPROGRESSION]
+    )
+    for item_id in (ctenums.ItemID.DRAGON_TEAR, ctenums.ItemID.VALOR_CREST):
+        if item_id not in extra_ds_items:
+            restricted_items.append(item_id)
+
+    dist_dict = shoprando.get_restricted_dist_dict(restricted_items)
+    tier_dist = shoprando.get_tier_dist()
+
+    remove_tiers =  [x for x in shoprando.ItemTier if x not in dist_dict]
+    tier_dist = tier_dist.get_restricted_distribution(remove_tiers)
+
+    for tid in ctenums.TreasureID:
+        is_gold = rng.random() < 0.05
+
+        if is_gold:
+            gold_val = rng.randrange(1, 600) * 100
+            pool.append(ttypes.Gold(gold_val))
+        else:
+            while True:
+                item = shoprando.get_random_tiered_item(tier_dist, dist_dict, rng)
+                if (
+                        item not in (ctenums.ItemID.DRAGON_TEAR, ctenums.ItemID.VALOR_CREST) or
+                        item in extra_ds_items
+                ):
+                    pool.append(item)
+                    break
+
+    return pool
+
+
+_tier_dict: dict[int, list[ctenums.ItemID]] = {
+    0: shoprando.get_items_in_tiers(
+        (shoprando.ItemTier.CONS_D, shoprando.ItemTier.ACCESSORY_D,
+         shoprando.ItemTier.WEAPON_D, shoprando.ItemTier.ARMOR_D,
+         shoprando.ItemTier.KEY_NONPROGRESSION)
+    ),
+    1: shoprando.get_items_in_tiers(
+        (
+            shoprando.ItemTier.CONS_C, shoprando.ItemTier.ACCESSORY_C,
+            shoprando.ItemTier.WEAPON_C, shoprando.ItemTier.ARMOR_C
+        )
+    ),
+    2: shoprando.get_items_in_tiers(
+        (
+            shoprando.ItemTier.CONS_B, shoprando.ItemTier.ACCESSORY_B,
+            shoprando.ItemTier.WEAPON_B, shoprando.ItemTier.ARMOR_B
+        )
+    ),
+    3: shoprando.get_items_in_tiers(
+        (
+            shoprando.ItemTier.CONS_A, shoprando.ItemTier.ACCESSORY_A,
+            shoprando.ItemTier.WEAPON_A, shoprando.ItemTier.ARMOR_A
+        )
+    ),
+    4: shoprando.get_items_in_tiers(
+        (
+            shoprando.ItemTier.CONS_S, shoprando.ItemTier.ACCESSORY_S,
+            shoprando.ItemTier.WEAPON_S, shoprando.ItemTier.ARMOR_S,
+            shoprando.ItemTier.ACCESSORY_ROCK
+        )
+    )
+}
+
+def treasure_sort_key(
+        treasure: ttypes.RewardType
+) -> int:
+    if isinstance(treasure, ttypes.Gold):
+        return round(math.log(treasure/3500, 2))
+    elif isinstance(treasure, ctenums.ItemID):
+        for tier, item_list in _tier_dict.items():
+            if treasure in item_list:
+                return tier
+        return 0
+
+
 def default_assignment(
         existing_assignment: dict[ctenums.TreasureID, ctenums.ItemID],
         treasure_options: treasureoptions.TreasureOptions,
         extra_ds_items: Sequence[gearrandooptions.DSItem],
         exclude_pool: collections.abc.Sequence[ctenums.ItemID],
+        region_map: regionmap.RegionMap,
+        recruit_assignment: dict[ctenums.RecruitID, ctenums.CharID | None],
+        starter_rewards: list[typing.Any],
         rng: RNGType
 ) -> dict[ctenums.TreasureID, ttypes.RewardType]:
     """
@@ -121,9 +252,6 @@ def default_assignment(
 
     # This could be hardcoded
     base_assignment = ttypes.get_vanilla_assignment()
-
-
-    # This should only
     assigned_spots, assigned_item_pool = zip(*{key: val for key, val in existing_assignment.items()
                                                if val != ctenums.ItemID.NONE}.items())
 
@@ -132,12 +260,16 @@ def default_assignment(
     final_assignment: dict[ctenums.TreasureID, ttypes.RewardType] = {}
     final_assignment.update(existing_assignment)
 
+    if treasure_options.loot_pool == treasureoptions.TreasurePool.VANILLA:
+        item_pool = get_vanilla_treasure_pool(extra_ds_items)
+    elif treasure_options.loot_pool == treasureoptions.TreasurePool.RANDOM:
+        item_pool = get_random_treasure_pool(extra_ds_items, rng)
+    elif treasure_options.loot_pool == treasureoptions.TreasurePool.RANDOM_TIERED:
+        item_pool = get_random_tiered_treasure_pool(extra_ds_items, rng)
+    else:
+        raise ValueError
+
     forced_keys = entrancefiller.get_forced_key_items()
-    item_pool = list(base_assignment.values())
-    if gearrandooptions.DSItem.DRAGONS_TEAR in extra_ds_items:
-        item_pool[item_pool.index(ctenums.ItemID.MEGAELIXIR)] = ctenums.ItemID.DRAGON_TEAR
-    if gearrandooptions.DSItem.VALOR_CREST in extra_ds_items:
-        item_pool[item_pool.index(ctenums.ItemID.ELIXIR)] = ctenums.ItemID.VALOR_CREST
 
     for item in assigned_item_pool:
         # By default there are 2x Moonstone (SoS and Porre Mayor).
@@ -149,14 +281,7 @@ def default_assignment(
         # else:
         #     print(f"MISSING: {item}")
 
-    # Do some manual item pool manipulation
-    item_pool[item_pool.index(ctenums.ItemID.MEGAELIXIR)] = ctenums.ItemID.BRONZEFIST
-    item_pool[item_pool.index(ctenums.ItemID.ELIXIR)] = ctenums.ItemID.IRON_FIST
-    item_pool[item_pool.index(ctenums.ItemID.HYPERETHER)] = ctenums.ItemID.RUBY_ARMOR
-
-    spot_pool = [
-        tid for tid in base_assignment if tid not in assigned_spots
-    ]
+    spot_pool = [tid for tid in ctenums.TreasureID if tid not in assigned_spots]
 
     fill_good_stuff(item_pool, spot_pool, treasure_options.good_loot_spots, treasure_options.good_loot,
                     treasure_options.good_loot_rate, final_assignment, rng)
@@ -165,10 +290,49 @@ def default_assignment(
     num_filler = max(0, len(spot_pool) - len(item_pool))
     if num_filler > 0:
         item_pool.extend([ctenums.ItemID.TONIC]*num_filler)
-    rng.shuffle(item_pool)
 
-    for tid, reward in zip(spot_pool, item_pool):
-        final_assignment[tid] = reward
+    if treasure_options.loot_assignment_scheme == treasureoptions.TreasureScheme.SHUFFLE:
+        rng.shuffle(item_pool)
+
+        for tid, reward in zip(spot_pool, item_pool):
+            final_assignment[tid] = reward
+    elif treasure_options.loot_assignment_scheme == treasureoptions.TreasureScheme.LOGIC_DEPTH:
+        sphere_dict = maptraversal.get_sphere_dict(
+            region_map, existing_assignment, recruit_assignment, starter_rewards
+        )
+        max_sphere = max(sphere_dict.values())
+        sphere_tid_dict: dict[int, list[TID]] = {
+            ind: [] for ind in range(max_sphere+1)
+        }
+        temp_spot_pool = set(spot_pool)
+        for name, sphere in sphere_dict.items():
+            if name in region_map.loc_region_dict:
+                region = region_map.loc_region_dict[name]
+                sphere_tid_dict[sphere].extend(
+                    x for x in region.reward_spots
+                    if isinstance(x, TID) and x in temp_spot_pool
+                )
+
+        sorted_tids: list[TID] = []
+        for sphere, tid_list in sphere_tid_dict.items():
+            rng.shuffle(tid_list)
+            sorted_tids.extend(tid_list)
+
+        sorted_pool = sorted(item_pool, key=treasure_sort_key)
+        sorted_pool = sorted_pool[-len(sorted_tids):]
+
+        for item, spot in zip(sorted_pool, sorted_tids):
+            final_assignment[spot] = item
+
+        num_shuffle = round(len(sorted_tids) * treasure_options.post_assign_shuffle_rate)
+        shuffle_tids = rng.sample(sorted_tids, num_shuffle)
+        vals = [final_assignment[tid] for tid in shuffle_tids]
+        rng.shuffle(vals)
+
+        for tid, val in zip(shuffle_tids, vals):
+            final_assignment[tid] = val
+    else:
+        raise ValueError
 
     return final_assignment
 

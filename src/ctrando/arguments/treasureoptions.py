@@ -3,6 +3,7 @@
 import argparse
 from collections.abc import Iterable
 import functools
+import enum
 import typing
 
 from ctrando.arguments import argumenttypes
@@ -10,6 +11,17 @@ from ctrando.arguments.argumenttypes import str_to_enum, str_to_enum_dict
 from ctrando.arguments import shopoptions
 from ctrando.common.ctenums import ItemID, TreasureID as TID
 from ctrando.treasures.treasuretypes import RewardType
+
+
+class TreasurePool(enum.StrEnum):
+    VANILLA = "vanilla"
+    RANDOM = "random"
+    RANDOM_TIERED = "random_tiered"
+
+
+class TreasureScheme(enum.StrEnum):
+    SHUFFLE = "shuffle"
+    LOGIC_DEPTH = "logic_depth"
 
 
 class TreasureOptions:
@@ -68,35 +80,56 @@ class TreasureOptions:
         TID.CRONOS_MOM,
     )
     _default_good_loot_rate = 0.75
+    _default_post_assign_shuffle_rate = 0.5
+    _default_treasure_pool = TreasurePool.VANILLA
+    _default_treasure_scheme = TreasureScheme.SHUFFLE
 
     def __init__(
             self,
+            loot_assignment_scheme: TreasureScheme.SHUFFLE = _default_treasure_scheme,
             good_loot_spots: Iterable[TID] = _default_good_loot_spots,
             good_loot: Iterable[RewardType] = _default_good_loot,
             good_loot_rate: float = _default_good_loot_rate,
+            loot_pool = _default_treasure_pool,
+            post_assign_shuffle_rate = _default_post_assign_shuffle_rate
     ):
+        self.loot_pool = loot_pool
+        self.loot_assignment_scheme = loot_assignment_scheme
         self.good_loot_spots = tuple(set(good_loot_spots))
         self.good_loot = tuple(good_loot)
         self.good_loot_rate = good_loot_rate
+        self.post_assign_shuffle_rate = post_assign_shuffle_rate
 
     @classmethod
     def get_argument_spec(cls) -> argumenttypes.ArgSpec:
         return {
+            "loot_pool": argumenttypes.arg_from_enum(
+                TreasurePool, cls._default_treasure_pool,
+                "Method to determine which loot is available for assignment"
+            ),
+            "loot_assignment_scheme": argumenttypes.arg_from_enum(
+                TreasureScheme, cls._default_treasure_scheme,
+                "Method used to assign loot."
+            ),
             "good_loot": argumenttypes.arg_multiple_from_enum(
                 ItemID, cls._default_good_loot,
-                "Loot that is considered to be good",
+                "Loot that is considered to be good (ignored by vanilla)",
                 available_pool=[
                     x for x in ItemID if x not in shopoptions.ShopOptions.unused_items
                 ]
             ),
             "good_loot_spots": argumenttypes.arg_multiple_from_enum(
                 TID, cls._default_good_loot_spots,
-                "Spots which will be given a random good reward"
+                "Spots which will be given a random good reward (ignored by vanilla)"
             ),
             "good_loot_rate": argumenttypes.DiscreteNumericalArg(
                 0.0, 1.0, 0.05, cls._default_good_loot_rate,
                 "Percent chance to fill a good loot spot with good loot",
                 type_fn=float
+            ),
+            "post_assign_shuffle_rate": argumenttypes.DiscreteNumericalArg(
+              0.0, 1.0, 0.1, cls._default_post_assign_shuffle_rate,
+                "Percent chance to shuffle after basic assignment", type_fn=float
             )
         }
 
@@ -131,12 +164,27 @@ class TreasureOptions:
             default=argparse.SUPPRESS
         )
 
+        group.add_argument(
+            "--post-assign-shuffle-rate",
+            type=lambda val: float(sorted([0, float(val), 1.0])[1]),
+            help="Percent chance to shuffle after basic assignment",
+            default=argparse.SUPPRESS
+        )
+
+        argumenttypes.add_str_enum_to_group(
+            group, "--loot-pool", TreasurePool,
+            help_str="Method to determine which loot is available for assignment",
+        )
+
+        argumenttypes.add_str_enum_to_group(
+            group, "--loot-assignment-scheme", TreasureScheme,
+            help_str="Method used to assign loot",
+        )
+
 
     @classmethod
     def extract_from_namespace(cls, namespace: argparse.Namespace):
-        attr_names = [
-            "good_loot", "good_loot_spots", "good_loot_rate"
-        ]
+        attr_names = list(cls.get_argument_spec().keys())
 
         init_dict = {
             key: getattr(namespace, key)
