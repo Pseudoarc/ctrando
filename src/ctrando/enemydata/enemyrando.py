@@ -370,3 +370,12 @@ def fix_npc_graphics(
     robot_data_st = 0x24F023 + robot_id*5
     ct_rom.seek(robot_data_st)
     ct_rom.write(new_data.get_as_bytearray()[:5])
+
+
+def nerf_phys_immune(
+        enemy_data_dict: dict[EID, enemystats.EnemyStats]
+):
+    for enemy_id in (EID.SHADOW, EID.BASE, EID.SENTRY):
+        stats = enemy_data_dict[enemy_id]
+        stats.immune_physical = False
+        stats.defense = 0xFF

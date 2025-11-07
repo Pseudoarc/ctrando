@@ -420,6 +420,7 @@ def get_ctrom_from_config(
     )
     enemyrando.fix_npc_graphics(ct_rom, config.enemy_assign_dict,
                                 post_config.enemy_sprite_dict)
+    enemyrando.nerf_phys_immune(config.enemy_data_dict)
 
     apply_dynamic_scaling(ct_rom,
                           post_config.script_manager,

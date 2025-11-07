@@ -453,6 +453,17 @@ class EnemyStats:
         self._stat_data[0x14] &= mask
         self._stat_data[0x14] |= (0x20 * val)
 
+    @property
+    def immune_physical(self):
+        """Whether the enemy is immune to physical damage."""
+        return bool(self._stat_data[0x14] & 0x04)
+
+    @immune_physical.setter
+    def immune_physical(self, val: bool):
+        mask = 0xFF - 0x04
+        self._stat_data[0x14] &= mask
+        self._stat_data[0x14] |= (0x04 * val)
+
     # Properties for getting/setting rewards
     @property
     def xp(self):
