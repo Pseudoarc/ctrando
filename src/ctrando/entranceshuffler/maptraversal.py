@@ -50,6 +50,35 @@ class MapTraverser:
     def add_region_rewards(
             self,
             region_name: str,
+            rewards_to_skip: set[Any] = None,
+            flags_only: bool = False
+    ) -> list[str]:
+        rewards_summary: list[str] = []
+        if rewards_to_skip is None:
+            rewards_to_skip = set()
+
+        if region_name in self.region_map.loc_region_dict:
+            region = self.region_map.loc_region_dict[region_name]
+            region_rewards = set(region.region_rewards).difference(rewards_to_skip)
+            if flags_only:
+                region_rewards = region_rewards.difference(
+                    x for x in region_rewards
+                    if isinstance(x, memory.Flags)
+                )
+
+            for reward in region_rewards:
+                if isinstance(reward, memory.Flags) or reward in self.game.other_rewards:
+                    continue
+                if reward not in self.game.other_rewards:
+                    rewards_summary.append(f"Gained {reward} from {region_name}")
+
+            self.game.other_rewards.update(region_rewards)
+
+        return rewards_summary
+
+    def add_region_treasures(
+            self,
+            region_name: str,
             treasure_dict: dict[ctenums.TreasureID, ttypes.RewardType],
             recruit_dict: dict[ctenums.RecruitID, ctenums.CharID | None],
             rewards_to_skip: set[Any] = None,
@@ -65,15 +94,10 @@ class MapTraverser:
             # for reward in region.region_rewards:
             #     if reward not in self.game.other_rewards and reward not in rewards_to_skip:
             #         ... # print(f"Gained {reward} from {region_name}")
-            region_rewards = set(region.region_rewards).difference(rewards_to_skip)
 
-            for reward in region_rewards:
-                if isinstance(reward, memory.Flags) or reward in self.game.other_rewards:
-                    continue
-                if reward not in self.game.other_rewards:
-                    rewards_summary.append(f"Gained {reward} from {region_name}")
-
-            self.game.other_rewards.update(region_rewards)
+            rewards_summary.extend(
+                self.add_region_rewards(region_name, rewards_to_skip, False)
+            )
 
             for spot in region.reward_spots:
                 reward: Any = None
@@ -171,11 +195,14 @@ class MapTraverser:
             self.reached_regions.update(new_regions)
             for region in new_regions:
                 self.add_region_connectors(region)
+                step_summary.extend(
+                    self.add_region_rewards(region, rewards_to_skip, flags_only=True)
+                )
 
         # We use a list to keep the regions in traversal order.
         for region_name in step_regions:
             step_summary.extend(
-                self.add_region_rewards(region_name, treasure_dict, recruit_dict,
+                self.add_region_treasures(region_name, treasure_dict, recruit_dict,
                                         rewards_to_skip)
             )
         return step_summary
