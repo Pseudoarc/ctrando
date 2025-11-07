@@ -10,7 +10,7 @@ import math
 
 from ctrando.locations.scriptmanager import ScriptManager
 from ctrando.arguments import treasureoptions, gearrandooptions
-from ctrando.common import ctenums, ctrom
+from ctrando.common import ctenums, ctrom, distribution
 from ctrando.common.ctenums import TreasureID as TID
 from ctrando.common.random import RNGType
 from ctrando.entranceshuffler import entrancefiller, maptraversal, regionmap
@@ -22,6 +22,32 @@ from ctrando.treasures import treasuretypes as ttypes, itemtiers, treasurespotti
 class ChargeData:
     base_item: ctenums.ItemID
     upgrade_list: list[ctenums.ItemID] = field(default_factory=list)
+
+
+_treasure_tier_dist: distribution.Distribution[shoprando.ItemTier] = distribution.Distribution(
+    (5, shoprando.ItemTier.CONS_D),
+    (34, shoprando.ItemTier.CONS_C),  # Staple consumables are here.
+    (19, shoprando.ItemTier.CONS_B),
+    (71, shoprando.ItemTier.CONS_A),
+    (42, shoprando.ItemTier.CONS_S),
+    (8, shoprando.ItemTier.WEAPON_D),
+    (4, shoprando.ItemTier.WEAPON_C),
+    (5, shoprando.ItemTier.WEAPON_B),
+    (9, shoprando.ItemTier.WEAPON_A),
+    (6, shoprando.ItemTier.WEAPON_S),
+    (3, shoprando.ItemTier.ARMOR_D),
+    (8, shoprando.ItemTier.ARMOR_C),
+    (11, shoprando.ItemTier.ARMOR_B),
+    (17, shoprando.ItemTier.ARMOR_A),
+    (13, shoprando.ItemTier.ARMOR_S),
+    (3, shoprando.ItemTier.ACCESSORY_D),
+    (2, shoprando.ItemTier.ACCESSORY_C),
+    (7, shoprando.ItemTier.ACCESSORY_B),
+    (12, shoprando.ItemTier.ACCESSORY_A),
+    (8, shoprando.ItemTier.ACCESSORY_S),
+    (5, shoprando.ItemTier.ACCESSORY_ROCK),
+    (1, shoprando.ItemTier.KEY_PROGRESSION)
+)
 
 
 _IID = ctenums.ItemID
@@ -165,7 +191,7 @@ def get_random_tiered_treasure_pool(
             restricted_items.append(item_id)
 
     dist_dict = shoprando.get_restricted_dist_dict(restricted_items)
-    tier_dist = shoprando.get_tier_dist()
+    tier_dist = _treasure_tier_dist
 
     remove_tiers =  [x for x in shoprando.ItemTier if x not in dist_dict]
     tier_dist = tier_dist.get_restricted_distribution(remove_tiers)
