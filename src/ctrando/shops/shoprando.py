@@ -243,8 +243,8 @@ def get_random_tiered_item(
     if item_dist_dict is None:
         item_dist_dict = _item_dist_dict
 
-    tier = _tier_dist.get_random_item(rng)
-    dist = _item_dist_dict[tier]
+    tier = tier_dist.get_random_item(rng)
+    dist = item_dist_dict[tier]
     item_id = dist.get_random_item(rng)
 
     return item_id
@@ -376,12 +376,14 @@ def randomize_shop_inventory(
         ]
 
         dist_dict = get_restricted_dist_dict(removed_items + shop_options.not_buyable_items)
+        removed_tiers = [tier for tier in ItemTier if tier not in dist_dict]
+        tier_dist = _tier_dist.get_restricted_distribution(removed_tiers)
 
         inv_type = shop_options.shop_inventory_randomization
         for shop_id, capacity in shop_capacity_dict.items():
             if inv_type == shopoptions.ShopInventoryType.TIERED_RANDOM:
                 new_items = get_random_tiered_shop_items(
-                    _tier_dist, dist_dict, capacity, rng)
+                    tier_dist, dist_dict, capacity, rng)
             elif inv_type == shopoptions.ShopInventoryType.FULL_RANDOM:
                 new_items = rng.sample(item_pool, k=capacity)
             else:
