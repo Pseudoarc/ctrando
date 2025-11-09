@@ -18,7 +18,8 @@ from ctrando.logic import logictweaks, logictypes
 from ctrando.shops import shoptypes, shoprando
 
 from ctrando.attacks import (
-    pctechrandomizer, techdescriptions, pctech, animationscript, scriptreassign
+    pctechrandomizer, techdescriptions, pctech, animationscript, scriptreassign,
+    techmenu
 )
 from ctrando.base import basepatch, xptpmod, modifymaps, chesttext
 from ctrando.bosses import staticbossscaling, bossrando, bosstypes
@@ -380,7 +381,9 @@ def get_ctrom_from_config(
     b=time.time()
     print(f"({b-a})")
     basepatch.add_set_level_command(ct_rom, config.pcstat_manager)
-
+    if settings.tech_options.show_full_tech_list:
+        techmenu.show_all_techs_in_menu(ct_rom)
+        techmenu.write_cumulative_tp_in_menu(ct_rom)
     effecttypes.write_bh_percent(ct_rom, config.pctech_manager,
                                  settings.tech_options.black_hole_min,
                                  settings.tech_options.black_hole_factor

@@ -28,6 +28,7 @@ class TechOptions:
     _default_preserve_magic: typing.ClassVar[bool] = False
     _default_black_hole_factor: typing.ClassVar[float] = 8/3
     _default_black_hole_min: typing.ClassVar[float] = 0.0
+    _default_show_full_tech_list = False
 
     def __init__(
             self,
@@ -38,6 +39,7 @@ class TechOptions:
             preserve_magic: bool = False,
             black_hole_min: float = _default_black_hole_min,
             black_hole_factor: float = _default_black_hole_factor,
+            show_full_tech_list: bool = _default_show_full_tech_list
     ):
 
         self.tech_order = tech_order
@@ -54,6 +56,7 @@ class TechOptions:
         self.preserve_magic = preserve_magic
         self.black_hole_min = black_hole_min
         self.black_hole_factor = black_hole_factor
+        self.show_full_tech_list = show_full_tech_list
 
     @classmethod
     def get_argument_spec(cls) -> argumenttypes.ArgSpec:
@@ -94,6 +97,9 @@ class TechOptions:
                 "Base percent kill chance for black hole, total is base + mp*factor",
                 type_fn=float
             ),
+            "show_full_tech_list": argumenttypes.FlagArg(
+                "The tech page of the menu will show all single techs"
+            )
         }
 
     @classmethod
@@ -144,13 +150,19 @@ class TechOptions:
             help="Base percent kill chance for black hole.  Total is base + mp*factor."
         )
 
+        group.add_argument(
+            "--show-full-tech-list", action="store_true",
+            help="The tech page of the menu will show all single techs",
+            default=argparse.SUPPRESS
+        )
+
     @classmethod
     def extract_from_namespace(
             cls, namespace: argparse.Namespace
     ) -> typing.Self:
         attr_names = ["tech_order", "tech_damage", "tech_damage_random_factor_min",
                       "tech_damage_random_factor_max", "preserve_magic",
-                      "black_hole_min", "black_hole_factor"]
+                      "black_hole_min", "black_hole_factor", "show_full_tech_list"]
 
         return argumenttypes.extract_from_namespace(
             cls,
@@ -165,9 +177,10 @@ class TechOptions:
             f"tech_damage={self.tech_damage}, "
             f"tech_damage_random_factor_min={self.tech_damage_random_factor_min}, "
             f"tech_damage_random_factor_max={self.tech_damage_random_factor_max}, "
-            f"preserve_magic={self.preserve_magic}"
-            f"black_hole_min={self.black_hole_min}"
-            f"black_hole_factor={self.black_hole_factor}"
+            f"preserve_magic={self.preserve_magic}, "
+            f"black_hole_min={self.black_hole_min}, "
+            f"black_hole_factor={self.black_hole_factor}, "
+            f"show_full_tech_list={self.show_full_tech_list}"
             ")"
         )
 
