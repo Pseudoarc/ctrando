@@ -513,7 +513,8 @@ class SpriteScriptTreasure(ScriptTreasure):
         ctenums.ItemID.SUN_STONE: ctenums.NpcID.MOONSTONE,
         ctenums.ItemID.RAINBOW_SHELL: ctenums.NpcID.RAINBOW_SHELL,
         ctenums.ItemID.C_TRIGGER: ctenums.NpcID.C_TRIGGER,
-        ctenums.ItemID.JETSOFTIME: ctenums.NpcID.FLYING_EPOCH_OW
+        ctenums.ItemID.JETSOFTIME: ctenums.NpcID.FLYING_EPOCH_OW,
+        ctenums.ItemID.SEED: ctenums.NpcID.POTTED_PLANT
     }
     def __init__(
             self,
