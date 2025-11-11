@@ -1,6 +1,7 @@
 """
 Module for randomizing tech order, tech damage, and so on.
 """
+import bisect
 import math
 from typing import Callable, Union
 
@@ -163,6 +164,9 @@ def modify_all_single_tech_powers(
         damage_tech_mps = rng.choices(list(damage_tech_mps), k=len(damage_tech_mps))
         heal_tech_mps = rng.choices(list(heal_tech_mps), k=len(heal_tech_mps))
 
+    if tech_options.balance_tech_mps:
+        balance_tech_powers(damage_tech_ids, damage_tech_mps, rng)
+
     min_mod = tech_options.tech_damage_random_factor_min
     max_mod = tech_options.tech_damage_random_factor_max
 
@@ -272,3 +276,61 @@ def modify_single_tech_power(
         pass
 
     tech.effect_mps[0] = new_mp
+
+
+def balance_tech_powers(
+        tech_ids: list[int],
+        tech_mps: list[int],
+        rng: RNGType
+):
+    def get_tech_pc(tech: int):
+        return ctenums.CharID((tech - 1) // 8)
+
+    char_tech_count: dict[ctenums.CharID, int] = {
+        char_id: 0 for char_id in ctenums.CharID
+    }
+
+    for tech_id in tech_ids:
+        char_id = get_tech_pc(tech_id)
+        char_tech_count[char_id] += 1
+
+    char_sorted_tech_ids = sorted(tech_ids, key=get_tech_pc)
+    power_sorted_mps = sorted(tech_mps)
+
+    char_assigned_mps: dict[ctenums.CharID, list[int]] = {
+        char_id: [] for char_id in ctenums.CharID
+    }
+
+    top_7 = [power_sorted_mps.pop() for _ in range(7)]
+    random_chars = list(ctenums.CharID)
+    rng.shuffle(random_chars)
+    min_val, max_val = top_7[-1], top_7[0]
+
+
+    for char_id in random_chars:
+        top_mp = top_7.pop()
+        char_assigned_mps[char_id].append(top_mp)
+
+        if top_mp != max_val and char_tech_count[char_id] > 1:
+            ind = bisect.bisect_left(power_sorted_mps, 8)
+            if ind < len(power_sorted_mps):
+                good_mp = rng.choice(power_sorted_mps[ind:])
+                char_assigned_mps[char_id].append(good_mp)
+                power_sorted_mps.remove(good_mp)
+
+    rng.shuffle(power_sorted_mps)
+    for char_id in random_chars:
+        num_techs_needed = char_tech_count[char_id] - len(char_assigned_mps[char_id])
+        for _ in range(num_techs_needed):
+            char_assigned_mps[char_id].append(power_sorted_mps.pop())
+
+    if power_sorted_mps:
+        raise ValueError
+
+    new_powers = []
+    for char_id, powers in char_assigned_mps.items():
+        rng.shuffle(powers)
+        new_powers.extend(powers)
+
+    tech_ids[:] = char_sorted_tech_ids
+    tech_mps[:] = new_powers

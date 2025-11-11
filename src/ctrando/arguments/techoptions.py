@@ -39,7 +39,8 @@ class TechOptions:
             preserve_magic: bool = False,
             black_hole_min: float = _default_black_hole_min,
             black_hole_factor: float = _default_black_hole_factor,
-            show_full_tech_list: bool = _default_show_full_tech_list
+            show_full_tech_list: bool = _default_show_full_tech_list,
+            balance_tech_mps: bool = False
     ):
 
         self.tech_order = tech_order
@@ -57,6 +58,7 @@ class TechOptions:
         self.black_hole_min = black_hole_min
         self.black_hole_factor = black_hole_factor
         self.show_full_tech_list = show_full_tech_list
+        self.balance_tech_mps = balance_tech_mps
 
     @classmethod
     def get_argument_spec(cls) -> argumenttypes.ArgSpec:
@@ -99,6 +101,9 @@ class TechOptions:
             ),
             "show_full_tech_list": argumenttypes.FlagArg(
                 "The tech page of the menu will show all single techs"
+            ),
+            "balance_tech_mps": argumenttypes.FlagArg(
+                "Ensure every character has at least one strong tech."
             )
         }
 
@@ -156,13 +161,20 @@ class TechOptions:
             default=argparse.SUPPRESS
         )
 
+        group.add_argument(
+            "--balance-tech-mps", action="store_true",
+            help="Ensure every character has at least one strong tech.",
+            default=argparse.SUPPRESS
+        )
+
     @classmethod
     def extract_from_namespace(
             cls, namespace: argparse.Namespace
     ) -> typing.Self:
         attr_names = ["tech_order", "tech_damage", "tech_damage_random_factor_min",
                       "tech_damage_random_factor_max", "preserve_magic",
-                      "black_hole_min", "black_hole_factor", "show_full_tech_list"]
+                      "black_hole_min", "black_hole_factor", "show_full_tech_list",
+                      "balance_tech_mps"]
 
         return argumenttypes.extract_from_namespace(
             cls,
@@ -181,6 +193,7 @@ class TechOptions:
             f"black_hole_min={self.black_hole_min}, "
             f"black_hole_factor={self.black_hole_factor}, "
             f"show_full_tech_list={self.show_full_tech_list}"
+            f"balance_tech_mps={self.balance_tech_mps}"
             ")"
         )
 
