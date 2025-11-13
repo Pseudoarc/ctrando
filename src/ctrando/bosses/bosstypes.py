@@ -21,7 +21,7 @@ class BossSpotID(enum.StrEnum):
     REPTITE_LAIR = enum.auto()
     MAGUS_CASTLE_FLEA = enum.auto()
     MAGUS_CASTLE_SLASH = enum.auto()
-    MAGUS_CASTLE_MAGUS = enum.auto()
+    # MAGUS_CASTLE_MAGUS = enum.auto()  # Removing until actually needed
     GIANTS_CLAW = enum.auto()
     TYRANO_LAIR_NIZBEL = enum.auto()
     ZEAL_PALACE = enum.auto()
