@@ -164,9 +164,6 @@ def modify_all_single_tech_powers(
         damage_tech_mps = rng.choices(list(damage_tech_mps), k=len(damage_tech_mps))
         heal_tech_mps = rng.choices(list(heal_tech_mps), k=len(heal_tech_mps))
 
-    if tech_options.balance_tech_mps:
-        balance_tech_powers(damage_tech_ids, damage_tech_mps, rng)
-
     min_mod = tech_options.tech_damage_random_factor_min
     max_mod = tech_options.tech_damage_random_factor_max
 
@@ -184,6 +181,8 @@ def modify_all_single_tech_powers(
     damage_tech_mps = [
         round(mp * random_mp_mod()) for mp in damage_tech_mps
     ]
+    if tech_options.balance_tech_mps:
+        balance_tech_powers(damage_tech_ids, damage_tech_mps, rng)
 
     heal_tech_mps = [
         round(mp * random_mp_mod()) for mp in heal_tech_mps
@@ -311,12 +310,10 @@ def balance_tech_powers(
         top_mp = top_7.pop()
         char_assigned_mps[char_id].append(top_mp)
 
-        if top_mp != max_val and char_tech_count[char_id] > 1:
+        if (top_mp/max_val) <= 0.90 and char_tech_count[char_id] > 1:
             ind = bisect.bisect_left(power_sorted_mps, 8)
-            if ind < len(power_sorted_mps):
-                good_mp = rng.choice(power_sorted_mps[ind:])
-                char_assigned_mps[char_id].append(good_mp)
-                power_sorted_mps.remove(good_mp)
+            ind = min(ind, len(power_sorted_mps)-1)
+            char_assigned_mps[char_id].append(power_sorted_mps.pop(ind))
 
     rng.shuffle(power_sorted_mps)
     for char_id in random_chars:
