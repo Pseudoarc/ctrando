@@ -68,6 +68,19 @@ static_hp_scale_lavos=false
 element_safety_level=30
 obstacle_safety_level=30
 
+# Region Scaling Mods
+# Valid Regions:  "millennial_fair", "guardia_forest_1000", "guardia_forest_600",
+#    "crono_trial", "heckran_cave", "truce_canyon", "manoria_catheral",
+#    "denadoro_mountains", "cursed_woods", "lab_16", "lab_32",
+#    "sewers", "death_peak", "arris_dome", "proto_dome", "factory_ruins",
+#    "mystic_mountains", "hunting_range", "dactyl_nest", "shell_trial",
+#    "zenan_bridge", "northern_ruins", "giants_claw", "ozzies_fort",
+#    "magus_castle", "magic_cave", "sunken_desert", "sun_palace", "geno_dome",
+#    "forest_maze", "reptite_lair", "tyrano_lair", "black_omen", "north_cape",
+#    "epoch_battle", "blackbird", "enhasa", "ocean_palace", "mt_woe",
+# denadoro_mountains_mod = 5  # Adds 5 levels to Denadoro scaling
+# crono_trial_mod = -5
+
 ### Logic Options
 # The forced key items are:
 # [
