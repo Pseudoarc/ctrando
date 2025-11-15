@@ -13,7 +13,7 @@ from ctrando.locations.eventcommand import EventCommand as EC
 from ctrando.asm import instructions as inst, assemble
 from ctrando.asm.instructions import AddressingMode as AM  #, SpecialRegister as SR
 from ctrando.common import asmpatcher, byteops, ctenums, ctrom, memory, piecewiselinear as pwl
-from ctrando.entranceshuffler import regionmap
+from ctrando.entranceshuffler import regionmap, maptraversal
 from ctrando.enemydata.enemystats import EnemyStats
 from ctrando.enemyscaling import scalingschemes
 from ctrando.treasures import treasuretypes as ttypes
@@ -1314,6 +1314,7 @@ def apply_full_scaling_patch(
         scaling_general_options: enemyscaling.DynamicScalingOptions,
         scaling_scheme_type: enemyscaling.DynamicScalingScheme,
         scaling_scheme_options: enemyscaling.DyanamicScaleSchemeOptions,
+        region_scaling_options: enemyscaling.RegionScalingOptions,
         script_manager: scriptmanager.ScriptManager,
         enemy_stat_dict: dict[ctenums.EnemyID, EnemyStats],
         region_map: regionmap.RegionMap,
@@ -1337,6 +1338,10 @@ def apply_full_scaling_patch(
     slow_div_rt_rom_addr = byteops.to_rom_ptr(slow_div_rt_addr)
     slow_mult_rt_rom_addr = 0xC1FDBF
 
+    sphere_dict = maptraversal.get_sphere_dict(
+        region_map, treasure_assignment, recruit_assignment, starting_rewards
+    )
+
     if scaling_scheme_type == enemyscaling.DynamicScalingScheme.PROGRESSION:
         if not isinstance(scaling_scheme_options, enemyscaling.ProgressionScalingData):
             raise TypeError
@@ -1345,9 +1350,7 @@ def apply_full_scaling_patch(
             scaling_scheme_options, slow_mult_rt_rom_addr
         )
     elif scaling_scheme_type == enemyscaling.DynamicScalingScheme.LOGIC_DEPTH:
-        loc_level_b = scalingschemes.generate_loc_id_level_lut(
-            region_map, treasure_assignment, recruit_assignment, starting_rewards
-        )
+        loc_level_b = scalingschemes.generate_loc_id_level_lut(region_map, sphere_dict)
 
         loc_level_addr = ct_rom.space_manager.get_free_addr(len(loc_level_b), 0x410000)
         ct_rom.seek(loc_level_addr)
@@ -1357,14 +1360,31 @@ def apply_full_scaling_patch(
     else:
         raise ValueError
 
+    region_mod_lut_b = scalingschemes.generate_loc_id_level_mod_lut(
+        region_map, sphere_dict, region_scaling_options, 0
+    )
+    region_mod_lut_addr = ct_rom.space_manager.get_free_addr(len(region_mod_lut_b))
+    ct_rom.seek(region_mod_lut_addr)
+    ct_rom.write(region_mod_lut_b, ctrom.freespace.FSWriteType.MARK_USED)
+    region_mod_lut_rom_addr = byteops.to_rom_ptr(region_mod_lut_addr)
 
     scaling_scheme += [
-        inst.LDA(memory.Memory.SCALING_LEVEL, AM.LNG),
+        inst.LDA(0x7E0100, AM.LNG),
+        inst.TAX(),
+        inst.LDA(region_mod_lut_rom_addr, AM.LNG_X),
+        inst.CLC(),
+        inst.ADC(memory.Memory.SCALING_LEVEL, AM.LNG),
+        inst.BEQ("min"),
+        inst.BPL("not_min"),
+        "min",
+        inst.LDA(0x01, AM.IMM8),
+        inst.BRA("end_scaling"),
+        "not_min",
         inst.CMP(scaling_general_options.max_scaling_level, AM.IMM8),
         inst.BCC("end_scaling"),
         inst.LDA(scaling_general_options.max_scaling_level, AM.IMM8),
-        inst.STA(memory.Memory.SCALING_LEVEL, AM.LNG),
         "end_scaling",
+        inst.STA(memory.Memory.SCALING_LEVEL, AM.LNG),
     ]
 
     scaling_exclusion_list = [

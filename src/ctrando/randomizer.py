@@ -84,6 +84,7 @@ def apply_dynamic_scaling(
         scaling_general_options=settings.scaling_options.dynamic_scaling_general_options,
         scaling_scheme_type=settings.scaling_options.dynamic_scaling_scheme,
         scaling_scheme_options=settings.scaling_options.dynamic_scaling_scheme_options,
+        region_scaling_options=settings.scaling_options.region_scaling_options,
         script_manager=script_manager,
         region_map=region_map,
         treasure_assignment=treasure_assignment,

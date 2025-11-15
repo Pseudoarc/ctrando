@@ -10,6 +10,103 @@ import enum
 from ctrando.arguments import argumenttypes
 
 
+_combat_zone_name_dict: dict[str, tuple[str,...]] = {
+    "millennial_fair": ("millennial_fair",),
+    "guardia_forest_1000": ("guardia_forest_1000",),
+    "guardia_forest_600": ("guardia_forest_600",),
+    "crono_trial": ("crono_trial", "crono_trial_boss"),
+    "heckran_cave": ("heckran_cave",),
+    "truce_canyon": ("truce_canyon",),
+    "manoria_catheral": ("manoria_catheral",),
+    "denadoro_mountains": ("denadoro_mts",),
+    "cursed_woods": ("cursed_woods",),
+    "lab_16": ("lab_16",),
+    "lab_32": ("lab_32_west", "lab_32_middle", "lab_32_east"),
+    "sewers": ("sewers",),
+    "death_peak": ("death_peak",),
+    "arris_dome": ("arris_dome",),
+    "proto_dome": ("proto_dome",),
+    "factory_ruins": ("factory_ruins_inside",),
+    "mystic_mountains": ("mystic_mts",),
+    "hunting_range": ("hunting_range",),
+    "dactyl_nest": ("dactyl_nest",),
+    "shell_trial": ("guardia_castle_treasury", "kings_trial_resolution"),
+    "zenan_bridge": ("zenan_bridge_600",),
+    "northern_ruins": ("northern_ruins_600", "northern_ruins_600_repaired"),
+    "giants_claw": ("giants_claw",),
+    "ozzies_fort": ("ozzies_fort",),
+    "magus_castle": ("magus_castle",),
+    "magic_cave": ("magic_cave", ),
+    "sunken_desert": ("sunken_desert",),
+    "sun_palace": ("sun_palace", ),
+    "geno_dome": ("geno_dome_inside", "geno_dome_entrance"),
+    "forest_maze": ("forest_maze",),
+    "reptite_lair": ("reptite_lair",),
+    "tyrano_lair": ("tyrano_lair_entrance", "tyrano_lair"),
+    "black_omen": ("black_omen",),
+    "north_cape": ("last_village_north_cape",),
+    "epoch_battle": ("epoch_reborn",),
+    "blackbird": ("blackbird",),
+    "enhasa": ("enhasa",),
+    "ocean_palace": ("ocean_palace",),
+    "mt_woe": ("mt_woe",),
+}
+
+
+class RegionScalingOptions:
+    """Class for controlling scaling mod per region"""
+    def __init__(self, **kwargs: int):
+        self.region_mod_dict: dict[str, int] = {
+            name+"_mod":0 for name in _combat_zone_name_dict
+        }
+        for key, val in kwargs.items():
+            if not key.endswith("_mod"):
+                raise ValueError
+            region_name = key.removesuffix("_mod")
+            if region_name not in _combat_zone_name_dict:
+                raise ValueError
+
+            self.region_mod_dict[key] = val
+
+    @classmethod
+    def get_arg_spec(cls) -> argumenttypes.ArgSpec:
+        arg_spec: argumenttypes.ArgSpec = {}
+        for region_name in _combat_zone_name_dict:
+            arg_name = region_name + "_mod"
+            arg_spec[arg_name] = argumenttypes.DiscreteNumericalArg(
+                -50, 50, 1, 0,
+                f"Additional scaling levels for {region_name}",
+                type_fn=int
+            )
+
+        return arg_spec
+
+    @classmethod
+    def add_group_to_parser(cls, parser: argparse.ArgumentParser):
+        spec = cls.get_arg_spec()
+
+        group = parser.add_argument_group("Region Scaling Options")
+        for attr_name, arg in spec.items():
+            arg_name = argumenttypes.attr_name_to_arg_name(attr_name)
+            group.add_argument(
+                arg_name, action="store", default=argparse.SUPPRESS,
+                help=arg.help_text,
+                type= lambda x: int(sorted([-50, int(x), 50])[1])
+            )
+
+    @classmethod
+    def extract_from_namespace(cls, namespace: argparse.Namespace) -> typing.Self:
+        arg_dict: dict[str, int] = {}
+
+        for name in _combat_zone_name_dict.keys():
+            arg_name = name+"_mod"
+            if hasattr(namespace, arg_name):
+                arg_dict[arg_name] = getattr(namespace, arg_name)
+
+        return cls(**arg_dict)
+
+
+
 class DynamicScalingScheme(enum.StrEnum):
     NONE = "none"
     PROGRESSION = "progression"
@@ -54,12 +151,12 @@ class DynamicScalingOptions:
                 type_fn=int
             ),
             "defense_safety_max_level": argumenttypes.DiscreteNumericalArg(
-                1, 99, 1, 10,
+                1, 99, 1, 30,
                 "Level after which enemies have their normal phys defense",
                 type_fn=int
             ),
             "obstacle_safety_level": argumenttypes.DiscreteNumericalArg(
-                1, 99, 1, 10,
+                1, 99, 1, 30,
                 "Level before which Obstacle is single target",
                 type_fn=int
             ),
@@ -180,13 +277,15 @@ class ScalingOptions:
             dynamic_scaling_scheme: DynamicScalingScheme = DynamicScalingScheme.PROGRESSION,
             dynamic_scaling_scheme_options: DyanamicScaleSchemeOptions = ProgressionScalingData(),
             dynamic_scaling_general_options: DynamicScalingOptions = DynamicScalingOptions(),
-            static_scaling_options: StaticScalingOptions = StaticScalingOptions()
+            static_scaling_options: StaticScalingOptions = StaticScalingOptions(),
+            region_scaling_options: RegionScalingOptions = RegionScalingOptions(),
     ):
         """All scaling options"""
         self.dynamic_scaling_scheme = dynamic_scaling_scheme
         self.dynamic_scaling_scheme_options = dynamic_scaling_scheme_options
         self.dynamic_scaling_general_options = dynamic_scaling_general_options
         self.static_scaling_options = static_scaling_options
+        self.region_scaling_options =region_scaling_options
 
     @classmethod
     def get_argument_spec(cls) -> argumenttypes.ArgSpec:
@@ -194,6 +293,7 @@ class ScalingOptions:
         ret_dict["dynamic_scaling_scheme_options"] = ProgressionScalingData.get_argument_spec()
         ret_dict["dynamic_scaling_general_options"] = DynamicScalingOptions.get_argument_spec()
         ret_dict["static_scaling_options"] = StaticScalingOptions.get_argument_spec()
+        ret_dict["region_scaling_options"] = RegionScalingOptions.get_arg_spec()
 
         return ret_dict
 
@@ -239,6 +339,8 @@ class ScalingOptions:
                 )
                 argumenttypes.add_dataclass_to_group(datatype, group)
 
+        RegionScalingOptions.add_group_to_parser(parser)
+
     @classmethod
     def extract_from_namespace(cls, namespace: argparse.Namespace) -> typing.Self:
         scale_opts = ScalingOptions()
@@ -262,5 +364,6 @@ class ScalingOptions:
         scale_opts.static_scaling_options = \
             argumenttypes.extract_dataclass_from_namespace(StaticScalingOptions, namespace)
 
+        scale_opts.region_scaling_options = RegionScalingOptions.extract_from_namespace(namespace)
         return scale_opts
 

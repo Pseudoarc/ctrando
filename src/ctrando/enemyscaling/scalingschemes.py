@@ -12,15 +12,14 @@ Module for producing assmembly that can compute the desired level of enemies.
 - Do not assume that player data is in its usual place for battle.
 - The debugger shows that [$34, $45) should be free for temp values.
 """
-import typing
+import bisect
 
 from ctrando.arguments import enemyscaling
 from ctrando.asm import assemble
 from ctrando.asm import instructions as inst
 from ctrando.asm.instructions import AddressingMode as AM, SpecialRegister as SR
 from ctrando.common import memory, ctenums, byteops
-from ctrando.entranceshuffler import maptraversal, regionmap
-from ctrando.treasures import treasuretypes as ttypes
+from ctrando.entranceshuffler import regionmap
 
 
 # Notes:
@@ -45,43 +44,89 @@ def get_progression_scaler_from_opts(
     )
 
 
+def generate_loc_id_level_mod_lut(
+        region_map: regionmap.RegionMap,
+        sphere_dict: dict[str, int],
+        scaling_options: enemyscaling.RegionScalingOptions,
+        levels_per_sphere: int
+) -> bytes:
+    """Returns a lut for additional scaling per location id"""
+    init_dict = {ctenums.LocID(loc_id): 0 for loc_id in range(0x200)}
+    region_mod_dict = scaling_options.region_mod_dict
+
+    mod_dict: dict[ctenums.LocID, int] = dict(init_dict)
+    combat_spheres: set[int] = set()
+    for region_name, sphere in sphere_dict.items():
+        if region_name in region_map.loc_region_dict:
+            region = region_map.loc_region_dict[region_name]
+            if region.is_combat_region:
+                combat_spheres.add(sphere)
+
+            for loc_id in region.region_loc_ids:
+                init_dict[loc_id] = sphere
+                mod_dict[loc_id] = region_mod_dict.get(region_name+"_mod", 0)
+
+    combat_sphere_list = sorted(combat_spheres)
+    for loc_id, sphere in init_dict.items():
+        if sphere not in combat_spheres:
+            ind = bisect.bisect_left(combat_sphere_list, sphere)
+            ind = max(ind - 1, 0)
+            init_dict[loc_id] = combat_sphere_list[ind]
+
+    values = sorted(set(init_dict.values()))
+    value_dict = {val: ind for ind, val in enumerate(values)}
+    for key, val in init_dict.items():
+        new_val = value_dict[val]*levels_per_sphere + mod_dict[key]
+        new_val = sorted([-50, int(new_val), 50])[1]
+        if new_val < 0:
+            new_val = ((abs(new_val) ^ 0xFF) + 1) & 0xFF
+        init_dict[key] = new_val
+
+    return bytes(init_dict[ctenums.LocID(x)] for x in range(0x200))
+
+
 def generate_loc_id_level_lut(
         region_map: regionmap.RegionMap,
-        treasure_assignment: dict[ctenums.TreasureID, ttypes.RewardType],
-        recruit_assignment: dict[ctenums.RecruitID, ctenums.CharID | None],
-        starting_rewards: list[typing.Any]
+        sphere_dict: dict[str, int]
 ) -> bytes:
     """Returns bytes (one per loc_id) with level for that location."""
 
     init_dict = {ctenums.LocID(loc_id): 0 for loc_id in range(0x200)}
-    sphere_dict = maptraversal.get_sphere_dict(
-        region_map, treasure_assignment, recruit_assignment, starting_rewards
-    )
 
+    combat_spheres: set[int] = set()
     for region_name, sphere in sphere_dict.items():
         if region_name in region_map.loc_region_dict:
             region = region_map.loc_region_dict[region_name]
+            if region.is_combat_region:
+                combat_spheres.add(sphere)
+
             for loc_id in region.region_loc_ids:
                 init_dict[loc_id] = sphere
-    obj_region_names = (
-        "unlock_omen_objectives", "unlock_bucket_objectives", "timegauge_1999_objectives"
-    )
-    end_sphere = max(
-        sphere_dict[name] for name in obj_region_names
-    )
-    max_sphere = max(init_dict[x] for x in init_dict.keys())
-    end_sphere = round((end_sphere + max_sphere)/2)
 
-    init_dict = {
-        key: min(val, end_sphere) for key, val in init_dict.items()
-    }
+    combat_sphere_list = sorted(combat_spheres)
+    for loc_id, sphere in init_dict.items():
+        if sphere not in combat_spheres:
+            ind = bisect.bisect_left(combat_sphere_list, sphere)
+            ind = max(ind-1, 0)
+            init_dict[loc_id] = combat_sphere_list[ind]
+
+
     values = sorted(set(init_dict.values()))
     value_dict = {val: ind for ind, val in enumerate(values)}
     for key, val in init_dict.items():
         init_dict[key] = value_dict[val]
 
-    end_sphere = value_dict[end_sphere]
-    min_level, max_level = 5, 50
+    max_sphere = max(init_dict[x] for x in init_dict.keys())
+    end_sphere = round(max(max_sphere-2, max_sphere * 0.90))
+    # end_sphere = round((end_sphere + max_sphere)/2)
+
+    init_dict = {
+        key: min(val, end_sphere) for key, val in init_dict.items()
+    }
+
+
+    # end_sphere = value_dict[end_sphere]
+    min_level, max_level = 3, 50
     start_sphere = 0
 
     for key, val in init_dict.items():
@@ -95,7 +140,7 @@ def generate_loc_id_level_lut(
         init_dict[loc_id] = 50
 
     out_b = bytes(
-        [init_dict[x] for x in range(0x200)]
+        [init_dict[ctenums.LocID(x)] for x in range(0x200)]
     )
     return out_b
 
