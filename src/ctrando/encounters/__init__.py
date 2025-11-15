@@ -2,7 +2,8 @@ from ctrando.locations.scriptmanager import ScriptManager
 from ctrando.encounters.encountermods import (
     beastcave,
     blackomen, dactylnest, denadoromts, genodome, giantsclaw, heckrancave,
-    lab32, maguscastle, mtwoe, oceanpalace, reptitelair
+    lab32, maguscastle, mtwoe, oceanpalace, reptitelair, protodome,
+    magiccave, sunkendesert
 )
 
 def apply_all_encounter_mods(script_manager: ScriptManager):
@@ -18,3 +19,6 @@ def apply_all_encounter_mods(script_manager: ScriptManager):
     giantsclaw.apply_all_encounter_reduction(script_manager)
     blackomen.apply_all_encounter_reduction(script_manager)
     lab32.apply_all_encounter_reduction(script_manager)
+    protodome.apply_all_encounter_reduction(script_manager)
+    magiccave.apply_all_encounter_reduction(script_manager)
+    sunkendesert.apply_all_encounter_reduction(script_manager)
