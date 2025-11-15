@@ -26,8 +26,8 @@ class TechOptions:
     _default_tech_order: typing.ClassVar[TechOrder] = TechOrder.VANILLA
     _default_tech_damage: typing.ClassVar[TechDamage] = TechDamage.VANILLA
     _default_preserve_magic: typing.ClassVar[bool] = False
-    _default_black_hole_factor: typing.ClassVar[float] = 8/3
-    _default_black_hole_min: typing.ClassVar[float] = 0.0
+    _default_black_hole_factor: typing.ClassVar[float] = 2.0
+    _default_black_hole_min: typing.ClassVar[float] = 10.0
     _default_show_full_tech_list = False
 
     def __init__(
@@ -95,7 +95,7 @@ class TechOptions:
                 type_fn=float
             ),
             "black_hole_min": argumenttypes.DiscreteNumericalArg(
-                0.0, 100.0, 0.5, cls._default_black_hole_factor,
+                0.0, 100.0, 1.0, cls._default_black_hole_factor,
                 "Base percent kill chance for black hole, total is base + mp*factor",
                 type_fn=float
             ),
