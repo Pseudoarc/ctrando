@@ -17,13 +17,15 @@ class LocRegion:
             loc_exits: set[LocExit] | None = None,
             reward_spots: set[typing.Any] | None = None,
             region_rewards: list[typing.Any] | None = None,
-            region_loc_ids: set[LocID] | None = None
+            region_loc_ids: set[LocID] | None = None,
+            is_combat_region: bool = False
     ):
         self.name = name
         self.loc_exits = set() if loc_exits is None else set(loc_exits)
         self.reward_spots = set() if reward_spots is None else set(reward_spots)
         self.region_rewards = [] if region_rewards is None else list(region_rewards)
         self.region_loc_ids = set() if region_loc_ids is None else set(region_loc_ids)
+        self.is_combat_region = is_combat_region
 
 
 def get_all_loc_regions() -> list[LocRegion]:
@@ -156,7 +158,8 @@ def get_all_loc_regions() -> list[LocRegion]:
         reward_spots={BSID.MILLENNIAL_FAIR_GATO, TID.FAIR_PENDANT},
         region_rewards=[memory.Flags.HAS_TRUCE_PORTAL],
         region_loc_ids={LocID.MILLENNIAL_FAIR, LocID.GATO_EXHIBIT,
-                        LocID.LEENE_SQUARE, LocID.TELEPOD_EXHIBIT}
+                        LocID.LEENE_SQUARE, LocID.TELEPOD_EXHIBIT},
+        is_combat_region=True
     )
     ret_list.append(millennial_fair)
 
@@ -178,7 +181,8 @@ def get_all_loc_regions() -> list[LocRegion]:
         loc_exits={LocExit.GUARDIA_FOREST_NORTH_1000, LocExit.GUARDIA_FOREST_SOUTH_1000},
         reward_spots={TID.GUARDIA_FOREST_POWER_TAB_1000},
         region_rewards=[memory.Flags.HAS_BANGOR_PORTAL],
-        region_loc_ids={LocID.GUARDIA_FOREST_1000, LocID.GUARDIA_FOREST_DEAD_END}
+        region_loc_ids={LocID.GUARDIA_FOREST_1000, LocID.GUARDIA_FOREST_DEAD_END},
+        is_combat_region=True
     )
     ret_list.append(guardia_forest_1000)
 
@@ -205,12 +209,14 @@ def get_all_loc_regions() -> list[LocRegion]:
                         LocID.PRISON_SUPERVISORS_OFFICE,
                         LocID.PRISON_TORTURE_STORAGE_ROOM,
                         LocID.PRISON_EXTERIOR},
-        region_rewards=[QuestID.CRONO_TRIAL]
+        region_rewards=[QuestID.CRONO_TRIAL],
+        is_combat_region=True
     )
     crono_trial_boss = LocRegion(
         "crono_trial_boss",
         loc_exits=set(),
-        reward_spots={BSID.PRISON_CATWALKS}
+        reward_spots={BSID.PRISON_CATWALKS},
+        is_combat_region=True
     )
     ret_list.append(crono_trial)
     ret_list.append(crono_trial_boss)
@@ -225,7 +231,8 @@ def get_all_loc_regions() -> list[LocRegion]:
         },
         region_rewards=[memory.Flags.HECKRAN_DEFEATED],
         region_loc_ids={LocID.HECKRAN_CAVE_BOSS, LocID.HECKRAN_CAVE_PASSAGEWAYS,
-                        LocID.HECKRAN_CAVE_UNDERGROUND_RIVER, LocID.HECKRAN_CAVE_ENTRANCE}
+                        LocID.HECKRAN_CAVE_UNDERGROUND_RIVER, LocID.HECKRAN_CAVE_ENTRANCE},
+        is_combat_region=True
     )
     ret_list.append(heckran_cave)
 
@@ -239,7 +246,8 @@ def get_all_loc_regions() -> list[LocRegion]:
         LocRegion(
             "medina_market", {LocExit.MEDINA_MARKET},
             region_rewards=[ShopID.MEDINA_MARKET],
-            region_loc_ids={LocID.MEDINA_PORTAL}
+            region_loc_ids={LocID.MEDINA_MARKET},
+            is_combat_region=True
         )
     )
     ret_list.append(LocRegion("medina_inn", {LocExit.MEDINA_INN},
@@ -307,7 +315,8 @@ def get_all_loc_regions() -> list[LocRegion]:
         loc_exits={LocExit.TRUCE_CANYON},
         reward_spots={TID.TRUCE_CANYON_1, TID.TRUCE_CANYON_2},
         region_rewards=[memory.Flags.HAS_TRUCE_PORTAL],
-        region_loc_ids={LocID.TRUCE_CANYON, LocID.TRUCE_CANYON_PORTAL}
+        region_loc_ids={LocID.TRUCE_CANYON, LocID.TRUCE_CANYON_PORTAL},
+        is_combat_region=True
     )
     ret_list.append(truce_canyon)
 
@@ -346,7 +355,8 @@ def get_all_loc_regions() -> list[LocRegion]:
         "guardia_forest_600",
         loc_exits={LocExit.GUARDIA_FOREST_NORTH_600, LocExit.GUARDIA_FOREST_SOUTH_600},
         reward_spots={TID.GUARDIA_FOREST_POWER_TAB_600},
-        region_loc_ids={LocID.GUARDIA_FOREST_600}
+        region_loc_ids={LocID.GUARDIA_FOREST_600},
+        is_combat_region=True
     )
     ret_list.append(guardia_forest_600)
 
@@ -381,7 +391,8 @@ def get_all_loc_regions() -> list[LocRegion]:
                         QuestID.MANORIA_CATHEDRAL],
         region_loc_ids={LocID.MANORIA_SANCTUARY, LocID.MANORIA_SHRINE,
                         LocID.MANORIA_SHRINE, LocID.MANORIA_SHRINE_ANTECHAMBER,
-                        LocID.MANORIA_STORAGE, LocID.MANORIA_KITCHEN}
+                        LocID.MANORIA_STORAGE, LocID.MANORIA_KITCHEN},
+        is_combat_region=True
     )
     ret_list.extend([manoria_front, manoria_cathedral])
 
@@ -415,7 +426,8 @@ def get_all_loc_regions() -> list[LocRegion]:
         region_loc_ids={LocID.DENADORO_SOUTH_FACE, LocID.DENADORO_CAVE_OF_MASAMUNE_EXTERIOR,
                         LocID.DENADORO_CAVE_OF_MASAMUNE, LocID.DENADORO_NORTH_FACE,
                         LocID.DENADORO_ENTRANCE, LocID.DENADORO_LOWER_EAST_FACE,
-                        LocID.DENADORO_UPPER_EAST_FACE, LocID.DENADORO_WEST_FACE}
+                        LocID.DENADORO_UPPER_EAST_FACE, LocID.DENADORO_WEST_FACE},
+        is_combat_region=True
     )
     ret_list.append(denadoro_mts)
 
@@ -459,7 +471,8 @@ def get_all_loc_regions() -> list[LocRegion]:
         loc_exits={LocExit.CURSED_WOODS},
         reward_spots={TID.CURSED_WOODS_1, TID.CURSED_WOODS_2,
                       TID.FROGS_BURROW_RIGHT},
-        region_loc_ids={LocID.CURSED_WOODS, LocID.FROGS_BURROW}
+        region_loc_ids={LocID.CURSED_WOODS, LocID.FROGS_BURROW},
+        is_combat_region=True
     )
     ret_list.append(cursed_woods)
 
@@ -493,7 +506,8 @@ def get_all_loc_regions() -> list[LocRegion]:
         "lab_16",
         loc_exits={LocExit.LAB_16_EAST, LocExit.LAB_16_WEST},
         reward_spots={TID.LAB_16_1, TID.LAB_16_2, TID.LAB_16_3, TID.LAB_16_4},
-        region_loc_ids={LocID.LAB_16_WEST, LocID.LAB_16_EAST}
+        region_loc_ids={LocID.LAB_16_WEST, LocID.LAB_16_EAST},
+        is_combat_region=True
     )
     ret_list.append(lab_16)
 
@@ -509,7 +523,8 @@ def get_all_loc_regions() -> list[LocRegion]:
         "lab_32_east",
         loc_exits={LocExit.LAB_32_EAST},
         reward_spots=set(),
-        region_loc_ids={LocID.LAB_32_EAST}
+        region_loc_ids={LocID.LAB_32_EAST},
+        is_combat_region=True
     )
     ret_list.append(lab_32_east)
 
@@ -517,7 +532,8 @@ def get_all_loc_regions() -> list[LocRegion]:
         "lab_32_middle",
         loc_exits=set(),
         reward_spots={TID.LAB_32_RACE_LOG},
-        region_loc_ids={LocID.LAB_32}
+        region_loc_ids={LocID.LAB_32},
+        is_combat_region=True
     )
     ret_list.append(lab_32_middle)
 
@@ -525,7 +541,8 @@ def get_all_loc_regions() -> list[LocRegion]:
         "sewers",
         loc_exits={LocExit.SEWER_ACCESS_ARRIS, LocExit.SEWER_ACCESS_KEEPERS},
         reward_spots={TID.SEWERS_1, TID.SEWERS_2, TID.SEWERS_3, BSID.SEWERS_KRAWLIE},
-        region_loc_ids={LocID.SEWERS_B1, LocID.SEWERS_B2}
+        region_loc_ids={LocID.SEWERS_B1, LocID.SEWERS_B2},
+        is_combat_region=True
     )
     ret_list.append(sewers)
 
@@ -553,7 +570,8 @@ def get_all_loc_regions() -> list[LocRegion]:
                         LocID.DEATH_PEAK_NORTHWEST_FACE, LocID.DEATH_PEAK_LOWER_NORTH_FACE,
                         LocID.DEATH_PEAK_CAVE, LocID.DEATH_PEAK_GUARDIAN_SPAWN,
                         LocID.DEATH_PEAK_SUMMIT_AFTER, LocID.DEATH_PEAK_SOUTH_FACE},
-        region_rewards=[QuestID.DEATH_PEAK]
+        region_rewards=[QuestID.DEATH_PEAK],
+        is_combat_region=True
     )
     ret_list.append(death_peak)
 
@@ -567,7 +585,8 @@ def get_all_loc_regions() -> list[LocRegion]:
         region_loc_ids={LocID.ARRIS_DOME_COMMAND, LocID.ARRIS_DOME_RAFTERS,
                         LocID.ARRIS_DOME_INFESTATION,
                         LocID.ARRIS_DOME_AUXILIARY_CONSOLE, LocID.ARRIS_DOME,
-                        LocID.ARRIS_DOME_GUARDIAN_CHAMBER, LocID.ARRIS_DOME_LOWER_COMMONS}
+                        LocID.ARRIS_DOME_GUARDIAN_CHAMBER, LocID.ARRIS_DOME_LOWER_COMMONS},
+        is_combat_region=True
     )
     ret_list.append(arris_dome)
 
@@ -591,7 +610,8 @@ def get_all_loc_regions() -> list[LocRegion]:
         "proto_dome",
         loc_exits={LocExit.PROTO_DOME},
         reward_spots={RecruitID.PROTO_DOME},
-        region_loc_ids={LocID.PROTO_DOME}
+        region_loc_ids={LocID.PROTO_DOME},
+        is_combat_region=True
     )
     ret_list.append(proto_dome)
     ret_list.append(
@@ -616,7 +636,8 @@ def get_all_loc_regions() -> list[LocRegion]:
         region_loc_ids={LocID.FACTORY_RUINS_ENTRANCE, LocID.FACTORY_RUINS_AUXILIARY_CONSOLE,
                         LocID.FACTORY_RUINS_SECURITY_CENTER, LocID.FACTORY_RUINS_INFESTATION,
                         LocID.FACTORY_RUINS_CRANE_ROOM, LocID.FACTORY_RUINS_CRANE_CONTROL,
-                        LocID.FACTORY_RUINS_DATA_CORE, LocID.FACTORY_RUINS_ROBOT_STORAGE}
+                        LocID.FACTORY_RUINS_DATA_CORE, LocID.FACTORY_RUINS_ROBOT_STORAGE},
+        is_combat_region=True
     )
     ret_list.append(factory_ruins)
     ret_list.append(factory_ruins_inside)
@@ -644,7 +665,8 @@ def get_all_loc_regions() -> list[LocRegion]:
         reward_spots={
             TID.DACTYL_NEST_1, TID.DACTYL_NEST_2, TID.DACTYL_NEST_3,
         },
-        region_loc_ids={LocID.DACTYL_NEST_LOWER, LocID.DACTYL_NEST_UPPER}
+        region_loc_ids={LocID.DACTYL_NEST_LOWER, LocID.DACTYL_NEST_UPPER},
+        is_combat_region=True
     )
     ret_list.append(dactyl_nest)
 
@@ -661,7 +683,8 @@ def get_all_loc_regions() -> list[LocRegion]:
         loc_exits={LocExit.MYSTIC_MTS},
         reward_spots={TID.MYSTIC_MT_STREAM},
         region_loc_ids={LocID.MYSTIC_MTN_BASE, LocID.MYSTIC_MTN_PORTAL,
-                        LocID.MYSTIC_MTN_GULCH}
+                        LocID.MYSTIC_MTN_GULCH},
+        is_combat_region=True
     )
     ret_list.append(mystic_mts)
 
@@ -669,7 +692,8 @@ def get_all_loc_regions() -> list[LocRegion]:
         "hunting_range",
         loc_exits={LocExit.HUNTING_RANGE},
         reward_spots={TID.HUNTING_RANGE_NU_REWARD},
-        region_loc_ids={LocID.HUNTING_RANGE}
+        region_loc_ids={LocID.HUNTING_RANGE},
+        is_combat_region=True
     )
     ret_list.append(hunting_range)
 
@@ -787,7 +811,8 @@ def get_all_loc_regions() -> list[LocRegion]:
             TID.GUARDIA_TREASURY_1, TID.GUARDIA_TREASURY_2, TID.GUARDIA_TREASURY_3,
             TID.GUARDIA_BASEMENT_1, TID.GUARDIA_BASEMENT_2, TID.GUARDIA_BASEMENT_3
         },
-        region_loc_ids={LocID.GUARDIA_BASEMENT, LocID.GUARDIA_REAR_STORAGE}
+        region_loc_ids={LocID.GUARDIA_BASEMENT, LocID.GUARDIA_REAR_STORAGE},
+        is_combat_region=True
     )
     ret_list.append(guardia_castle_treasury)
 
@@ -801,7 +826,8 @@ def get_all_loc_regions() -> list[LocRegion]:
         "kings_trial_resolution",
         reward_spots={BSID.KINGS_TRIAL, TID.MELCHIOR_RAINBOW_SHELL},
         region_loc_ids={LocID.COURTROOM},
-        region_rewards=[QuestID.KINGS_TRIAL]
+        region_rewards=[QuestID.KINGS_TRIAL],
+        is_combat_region=True
     )
     ret_list.append(kings_trial_resolution)
 
@@ -889,7 +915,8 @@ def get_all_loc_regions() -> list[LocRegion]:
         loc_exits={LocExit.ZENAN_BRIDGE_600_NORTH},  # Ignore South Exit
         reward_spots={BSID.ZENAN_BRIDGE, TID.ZENAN_BRIDGE_CAPTAIN},
         region_loc_ids={LocID.ZENAN_BRIDGE_600, LocID.ZENAN_BRIDGE_BOSS},
-        region_rewards=[QuestID.ZENAN_BRIDGE]
+        region_rewards=[QuestID.ZENAN_BRIDGE],
+        is_combat_region=True
     )
     ret_list.append(zenan_bridge_600)
 
@@ -954,7 +981,8 @@ def get_all_loc_regions() -> list[LocRegion]:
         "northern_ruins_600",
         loc_exits={LocExit.NORTHERN_RUINS_600},
         reward_spots={TID.NORTHERN_RUINS_BASEMENT_600},
-        region_loc_ids={LocID.NORTHERN_RUINS_BASEMENT, LocID.NORTHERN_RUINS_ENTRANCE}
+        region_loc_ids={LocID.NORTHERN_RUINS_BASEMENT, LocID.NORTHERN_RUINS_ENTRANCE},
+        is_combat_region=True
     )
     ret_list.append(northern_ruins_600)
     ret_list.append(
@@ -962,7 +990,8 @@ def get_all_loc_regions() -> list[LocRegion]:
             "northern_ruins_600_repaired",
             reward_spots={TID.NORTHERN_RUINS_ANTECHAMBER_LEFT_600},
             region_loc_ids={LocID.NORTHERN_RUINS_ANTECHAMBER, LocID.NORTHERN_RUINS_VESTIBULE,
-                            LocID.NORTHERN_RUINS_BACK_ROOM, LocID.NORTHERN_RUINS_LANDING}
+                            LocID.NORTHERN_RUINS_BACK_ROOM, LocID.NORTHERN_RUINS_LANDING},
+            is_combat_region=True
         )
     )
 
@@ -990,7 +1019,9 @@ def get_all_loc_regions() -> list[LocRegion]:
                         LocID.GIANTS_CLAW_TYRANO, LocID.ANCIENT_TYRANO_LAIR,
                         LocID.ANCIENT_TYRANO_LAIR_VERTIGO, LocID.ANCIENT_TYRANO_LAIR_VERTIGO,
                         LocID.ANCIENT_TYRANO_LAIR_NIZBELS_ROOM},
-        region_rewards=[QuestID.GIANTS_CLAW]
+        region_rewards=[QuestID.GIANTS_CLAW],
+        is_combat_region=True
+
     )
     ret_list.append(giants_claw)
 
@@ -1016,7 +1047,8 @@ def get_all_loc_regions() -> list[LocRegion]:
                         LocID.OZZIES_FORT_GUILLOTINE, LocID.OZZIES_FORT_THRONE_INCOMPETENCE,
                         LocID.OZZIES_FORT_HALL_DISREGARD, LocID.OZZIES_FORT_FLEA_PLUS,
                         LocID.OZZIES_FORT_SUPER_SLASH},
-        region_rewards=[QuestID.OZZIES_FORT]
+        region_rewards=[QuestID.OZZIES_FORT],
+        is_combat_region=True
     )
     ret_list.append(ozzies_fort)
 
@@ -1048,14 +1080,16 @@ def get_all_loc_regions() -> list[LocRegion]:
                         LocID.MAGUS_CASTLE_HALL_APPREHENSION, LocID.MAGUS_CASTLE_HALL_OF_AMBUSH,
                         LocID.MAGUS_CASTLE_LOWER_BATTLEMENTS, LocID.MAGUS_CASTLE_FLEA,
                         LocID.MAGUS_CASTLE_SLASH, LocID.MAGUS_CASTLE_CORRIDOR_OF_COMBAT,
-                        LocID.MAGUS_CASTLE_PITS, LocID.MAGUS_CASTLE_OZZIE}
+                        LocID.MAGUS_CASTLE_PITS, LocID.MAGUS_CASTLE_OZZIE},
+        is_combat_region=True
     )
     ret_list.append(magus_castle)
 
     magic_cave = LocRegion(
         "magic_cave",
         loc_exits={LocExit.MAGIC_CAVE_MAGUS},
-        region_loc_ids={LocID.MAGIC_CAVE_INTERIOR}
+        region_loc_ids={LocID.MAGIC_CAVE_INTERIOR},
+        is_combat_region=True
     )
     ret_list.append(magic_cave)
 
@@ -1088,7 +1122,8 @@ def get_all_loc_regions() -> list[LocRegion]:
         },
         region_rewards=[memory.Flags.SUNKEN_DESERT_BOSS_DEFEATED],
         region_loc_ids={LocID.SUNKEN_DESERT_DEVOURER, LocID.SUNKEN_DESERT_PARASITES,
-                        LocID.SUNKEN_DESERT_ENTRANCE}
+                        LocID.SUNKEN_DESERT_ENTRANCE},
+        is_combat_region=True
     )
     ret_list.append(sunken_desert)
 
@@ -1149,7 +1184,8 @@ def get_all_loc_regions() -> list[LocRegion]:
         loc_exits={LocExit.SUN_PALACE},
         reward_spots={TID.SUN_PALACE_KEY, BSID.SUN_PALACE},
         region_loc_ids={LocID.SUN_PALACE},
-        region_rewards=[QuestID.SUN_PALACE]
+        region_rewards=[QuestID.SUN_PALACE],
+        is_combat_region=True
     )
     ret_list.append(sun_palace)
 
@@ -1190,8 +1226,10 @@ def get_all_loc_regions() -> list[LocRegion]:
                         LocID.GENO_DOME_ROBOT_HUB, LocID.GENO_DOME_ROBOT_ELEVATOR_ACCESS,
                         LocID.GENO_DOME_ROBOT_ELEVATOR_ACCESS, LocID.GENO_DOME_WASTE_DISPOSAL,
                         LocID.GENO_DOME_CONVEYOR, LocID.GENO_DOME_CONVEYOR_EXIT,
+                        LocID.GENO_DOME_MAINFRAME,
                         LocID.GENO_DOME_CONVEYOR_ENTRANCE},
-        region_rewards=[QuestID.GENO_DOME]
+        region_rewards=[QuestID.GENO_DOME],
+        is_combat_region=True
     )
     ret_list.append(geno_dome)
     ret_list.append(geno_dome_inside)
@@ -1210,7 +1248,8 @@ def get_all_loc_regions() -> list[LocRegion]:
             TID.FOREST_MAZE_4, TID.FOREST_MAZE_5, TID.FOREST_MAZE_6,
             TID.FOREST_MAZE_7, TID.FOREST_MAZE_8, TID.FOREST_MAZE_9,
         },
-        region_loc_ids={LocID.FOREST_MAZE}
+        region_loc_ids={LocID.FOREST_MAZE},
+        is_combat_region=True
     )
     ret_list.append(forest_maze)
 
@@ -1230,7 +1269,8 @@ def get_all_loc_regions() -> list[LocRegion]:
                         LocID.REPTITE_LAIR_2F, LocID.REPTITE_LAIR_1F,
                         LocID.REPTITE_LAIR_WEEVIL_BURROWS_B1, LocID.REPTITE_LAIR_WEEVIL_BURROWS_B2,
                         LocID.REPTITE_LAIR_AZALA_ROOM, LocID.REPTITE_LAIR_ACCESS_SHAFT,},
-        region_rewards=[QuestID.REPTITE_LAIR]
+        region_rewards=[QuestID.REPTITE_LAIR],
+        is_combat_region=True
     )
     ret_list.append(reptite_lair)
 
@@ -1238,7 +1278,8 @@ def get_all_loc_regions() -> list[LocRegion]:
         "tyrano_lair_entrance",
         loc_exits={LocExit.TYRANO_LAIR},
         region_loc_ids={LocID.TYRANO_LAIR_ENTRANCE, LocID.TYRANO_LAIR_MAIN_CELL,
-                        LocID.TYRANO_LAIR_ANTECHAMBERS}
+                        LocID.TYRANO_LAIR_ANTECHAMBERS},
+        is_combat_region=True
     )
     ret_list.append(tyrano_lair_entrance)
 
@@ -1253,7 +1294,8 @@ def get_all_loc_regions() -> list[LocRegion]:
                         QuestID.TYRANO_LAIR],
         region_loc_ids={LocID.TYRANO_LAIR_KEEP, LocID.TYRANO_LAIR_THRONEROOM,
                         LocID.TYRANO_LAIR_EXTERIOR, LocID.TYRANO_LAIR_ROOM_OF_VERTIGO,
-                        LocID.TYRANO_LAIR_STORAGE, LocID.TYRANO_LAIR_NIZBEL}
+                        LocID.TYRANO_LAIR_STORAGE, LocID.TYRANO_LAIR_NIZBEL},
+        is_combat_region=True
     )
     ret_list.append(tyrano_lair)
 
@@ -1286,7 +1328,8 @@ def get_all_loc_regions() -> list[LocRegion]:
             LocID.BLACK_OMEN_ELEVATOR_UP, LocID.BLACK_OMEN_ELEVATOR_DOWN,
             LocID.BLACK_OMEN_GIGA_MUTANT, LocID.BLACK_OMEN_TERRA_MUTANT,
             LocID.BLACK_OMEN_ELDER_SPAWN
-        }
+        },
+        is_combat_region=True
     )
     ret_list.append(black_omen)
 
@@ -1294,7 +1337,8 @@ def get_all_loc_regions() -> list[LocRegion]:
         "last_village_north_cape",
         loc_exits={LocExit.NORTH_CAPE},
         reward_spots={RecruitID.NORTH_CAPE},
-        region_loc_ids={LocID.NORTH_CAPE}
+        region_loc_ids={LocID.NORTH_CAPE},
+        is_combat_region=True,
     )
     ret_list.append(last_village_north_cape)
 
@@ -1321,7 +1365,8 @@ def get_all_loc_regions() -> list[LocRegion]:
         region_rewards=[logictypes.ScriptReward.FLIGHT,
                         logictypes.ScriptReward.EPOCH,
                         QuestID.EPOCH_REBORN_BATTLE],
-        region_loc_ids={LocID.REBORN_EPOCH}
+        region_loc_ids={LocID.REBORN_EPOCH},
+        is_combat_region=True
     )
     ret_list.extend([blackbird_scaffolding, blackbird_scaffolding_epoch])
 
@@ -1337,7 +1382,8 @@ def get_all_loc_regions() -> list[LocRegion]:
             LocID.BLACKBIRD_ACCESS_SHAFT, LocID.BLACKBIRD_ARMORY_2,
             LocID.BLACKBIRD_ARMORY_1,
         },
-        region_rewards=[QuestID.BLACKBIRD]
+        region_rewards=[QuestID.BLACKBIRD],
+        is_combat_region=True
     )
     ret_list.append(blackbird)
 
@@ -1360,7 +1406,8 @@ def get_all_loc_regions() -> list[LocRegion]:
         loc_exits={LocExit.ENHASA},
         reward_spots={TID.ENHASA_NU_BATTLE_MAGIC_TAB, TID.ENHASA_NU_BATTLE_SPEED_TAB,
                       ShopID.ENHASA},
-        region_loc_ids={LocID.ENHASA, LocID.ENHASA_NU_ROOM}
+        region_loc_ids={LocID.ENHASA, LocID.ENHASA_NU_ROOM},
+        is_combat_region=True
     )
     ret_list.append(enhasa)
 
@@ -1390,14 +1437,16 @@ def get_all_loc_regions() -> list[LocRegion]:
             BSID.OCEAN_PALACE_TWIN_GOLEM, BSID.OCEAN_PALACE_TWIN_GOLEM_ALT
         },
         region_loc_ids={
-            LocID.ZEAL_PALACE_THRONE,
+            LocID.ZEAL_PALACE_THRONE, LocID.ZEAL_PALACE_THRONE_NIGHT,
             LocID.OCEAN_PALACE_PIAZZA, LocID.OCEAN_PALACE_SIDE_ROOMS,
             LocID.OCEAN_PALACE_FORWARD_AREA, LocID.OCEAN_PALACE_B3_LANDING,
             LocID.OCEAN_PALACE_GRAND_STAIRWELL,  # Remove masa
             LocID.OCEAN_PALACE_ELEVATOR_BATTLES,
             LocID.OCEAN_PALACE_B20_LANDING, LocID.OCEAN_PALACE_SOUTHERN_ACCESS_LIFT,
+            LocID.OCEAN_PALACE_REGAL_ANTECHAMBER,
         },
-        region_rewards=[QuestID.ZEAL_PALACE_THRONE]
+        region_rewards=[QuestID.ZEAL_PALACE_THRONE],
+        is_combat_region=True
     )
     ret_list.append(ocean_palace)
 
@@ -1434,7 +1483,8 @@ def get_all_loc_regions() -> list[LocRegion]:
             LocID.MT_WOE_LOWER_EASTERN_FACE, LocID.MT_WOE_UPPER_EASTERN_FACE,
             LocID.MT_WOE_WESTERN_FACE, LocID.MT_WOE_MIDDLE_EASTERN_FACE,
         },
-        region_rewards=[QuestID.MT_WOE]
+        region_rewards=[QuestID.MT_WOE],
+        is_combat_region=True
     )
     ret_list.append(mt_woe)
     ret_list.append(LocRegion("truce_single_residence", {LocExit.TRUCE_SINGLE_RESIDENCE}))
