@@ -113,7 +113,8 @@ def get_key_item_fill(
 
             break
         else:
-            print("not viable")
+            pass
+            # print("not viable")
             # input()
 
     entrance_assignment = entrancerandomizer.get_ow_exit_assign_dict(exit_connectors)
