@@ -95,7 +95,7 @@ class TechOptions:
                 type_fn=float
             ),
             "black_hole_min": argumenttypes.DiscreteNumericalArg(
-                0.0, 100.0, 1.0, cls._default_black_hole_factor,
+                0.0, 100.0, 1.0, cls._default_black_hole_min,
                 "Base percent kill chance for black hole, total is base + mp*factor",
                 type_fn=float
             ),

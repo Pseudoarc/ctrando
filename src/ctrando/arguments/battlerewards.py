@@ -278,9 +278,9 @@ class XPTPGRewards:
 
         ret_dict: dict[str, argumenttypes.Argument[typing.Any]] = {}
 
-        for arg_name in ("xp_scale", "tp_scale", "g_scale"):
+        for arg_name in ("xp_scale", "tp_scale"):
             ret_dict[arg_name] = argumenttypes.DiscreteNumericalArg(
-                0.50, 10.00, 0.05, 3.0,
+                0.50, 10.00, 0.05, 4.0,
                 cls._help_dict[arg_name], type_fn=float
             )
 
