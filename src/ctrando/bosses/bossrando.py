@@ -292,8 +292,12 @@ def resolve_character_conflicts(
     elif len(bad_spots) == 1:
         bad_spot = bad_spots[0]
         bad_boss = boss_assign_dict[bad_spot]
+        midboss_ids = bty.get_midboss_ids()
 
-        spots = [x for x in boss_assign_dict.keys() if x not in vanilla_spots]
+        spots = [
+            spot for spot, boss in boss_assign_dict.items()
+            if spot not in vanilla_spots and boss not in midboss_ids
+        ]
         rng.shuffle(spots)
         for spot in spots:
             boss = boss_assign_dict[spot]
