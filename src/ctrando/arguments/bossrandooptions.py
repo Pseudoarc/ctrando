@@ -135,7 +135,8 @@ class BossRandoOptions:
         group.add_argument(
             "--midboss-pool",
             nargs="+",
-            type=functools.partial(aty.str_to_enum, enum_type=bosstypes.BossID),
+            type=functools.partial(aty.str_to_enum, enum_type=bosstypes.BossID,
+                                   force_enum_names=True),
             help="Midbosses to include in assignment (only when --midboss-rando-scheme=\"random\")",
             default=argparse.SUPPRESS
         )
