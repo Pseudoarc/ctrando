@@ -84,12 +84,12 @@ def is_map_viable(
     }
     ow_coverage = len(reached_ow_regions)/len(region_map.ow_region_dict.keys())
     if ow_coverage < pre_flight_percent:
-        print(f"Failed Pre-Flight: {ow_coverage} < {pre_flight_percent}")
+        # print(f"Failed Pre-Flight: {ow_coverage} < {pre_flight_percent}")
         return False
 
     flight_regions = {"blackbird_scaffolding_epoch", "blackbird"}
     if not flight_regions.intersection(traverser.reached_regions):
-        print("Flight unavailable.")
+        # print("Flight unavailable.")
         return False
 
     # print("No Flight Regions:")
@@ -101,7 +101,7 @@ def is_map_viable(
 
     # For return via reset, epoch needs to be walkable
     if "porre_1000_overworld" not in traverser.reached_regions:
-        print("no porre 1000")
+        # print("no porre 1000")
         return False
 
     traverser.game.other_rewards.add(memory.Flags.OBTAINED_EPOCH_FLIGHT)
