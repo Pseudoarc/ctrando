@@ -483,7 +483,7 @@ def get_default_region_connectors(
         RegionConnector(
             "guardia_castle_1000", "kings_trial_resolution",
             "fight_yakra_xiii",
-            rule=logictypes.LogicRule([CharID.MARLE]) & progressive_shell_rule(2)
+            rule=logictypes.LogicRule([CharID.MARLE, memory.Flags.GUARDIA_TREASURY_EXISTS]) & progressive_shell_rule(2)
         ),
         RegionConnector(
             "kings_trial_resolution", "melchior_forge_castle",
