@@ -8,9 +8,10 @@ from dataclasses import dataclass, field
 from enum import auto, Enum
 import math
 
+from ctrando.arguments.gearrandooptions import DSItem
 from ctrando.locations.scriptmanager import ScriptManager
 from ctrando.arguments import treasureoptions, gearrandooptions
-from ctrando.common import ctenums, ctrom, distribution
+from ctrando.common import ctenums, ctrom, distribution, piecewiselinear as pwl
 from ctrando.common.ctenums import TreasureID as TID
 from ctrando.common.random import RNGType
 from ctrando.entranceshuffler import entrancefiller, maptraversal, regionmap
@@ -159,9 +160,11 @@ def get_random_treasure_pool(
         if tier not in (shoprando.ItemTier.KEY_NONPROGRESSION, shoprando.ItemTier.KEY_PROGRESSION):
             total_items.update(dist.get_all_items())
 
-    for item in (ctenums.ItemID.DRAGON_TEAR, ctenums.ItemID.VALOR_CREST):
-        if item not in extra_ds_items:
-            total_items.discard(item)
+    if DSItem.DRAGONS_TEAR not in extra_ds_items:
+        total_items.discard(ctenums.ItemID.DRAGON_TEAR)
+
+    if DSItem.VALOR_CREST not in extra_ds_items:
+        total_items.discard(ctenums.ItemID.VALOR_CREST)
 
     item_list = list(total_items)
     for tid in ctenums.TreasureID:
@@ -177,6 +180,17 @@ def get_random_treasure_pool(
     return pool
 
 
+_gold_inv_cdf = pwl.PiecewiseLinear(
+    (0.0, 10),
+    (0.25, 10),
+    (0.50, 100),
+    (0.75, 150),
+    (0.90, 350),
+    (0.95, 500),
+    (0.99, 600)
+)
+
+
 def get_random_tiered_treasure_pool(
         extra_ds_items: Sequence[gearrandooptions.DSItem],
         rng: RNGType
@@ -186,9 +200,12 @@ def get_random_tiered_treasure_pool(
     restricted_items = shoprando.get_items_in_tiers(
         [shoprando.ItemTier.KEY_PROGRESSION, shoprando.ItemTier.KEY_NONPROGRESSION]
     )
-    for item_id in (ctenums.ItemID.DRAGON_TEAR, ctenums.ItemID.VALOR_CREST):
-        if item_id not in extra_ds_items:
-            restricted_items.append(item_id)
+
+    if DSItem.VALOR_CREST not in extra_ds_items:
+        restricted_items.append(ctenums.ItemID.VALOR_CREST)
+
+    if DSItem.DRAGONS_TEAR not in extra_ds_items:
+        restricted_items.append(ctenums.ItemID.DRAGON_TEAR)
 
     dist_dict = shoprando.get_restricted_dist_dict(restricted_items)
     tier_dist = _treasure_tier_dist
@@ -200,17 +217,12 @@ def get_random_tiered_treasure_pool(
         is_gold = rng.random() < 0.05
 
         if is_gold:
-            gold_val = rng.randrange(1, 600) * 100
+            x = rng.random()
+            gold_val = _gold_inv_cdf(x) * 100
             pool.append(ttypes.Gold(gold_val))
         else:
-            while True:
-                item = shoprando.get_random_tiered_item(tier_dist, dist_dict, rng)
-                if (
-                        item not in (ctenums.ItemID.DRAGON_TEAR, ctenums.ItemID.VALOR_CREST) or
-                        item in extra_ds_items
-                ):
-                    pool.append(item)
-                    break
+            item = shoprando.get_random_tiered_item(tier_dist, dist_dict, rng)
+            pool.append(item)
 
     return pool
 
