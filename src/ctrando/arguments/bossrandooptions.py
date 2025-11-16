@@ -35,12 +35,12 @@ class BossRandoOptions:
         bosstypes.BossID.MEGA_MUTANT, bosstypes.BossID.GIGA_MUTANT, bosstypes.BossID.TERRA_MUTANT,
         bosstypes.BossID.RETINITE, bosstypes.BossID.SON_OF_SUN, bosstypes.BossID.MOTHER_BRAIN,
         bosstypes.BossID.GUARDIAN, bosstypes.BossID.GIGA_GAIA, bosstypes.BossID.MUD_IMP, bosstypes.BossID.R_SERIES,
-        bosstypes.BossID.DRAGON_TANK
+        bosstypes.BossID.DRAGON_TANK, bosstypes.BossID.ZEAL, bosstypes.BossID.MAGUS_NORTH_CAPE,
     )
     _default_midboss_pool: typing.ClassVar[tuple[bosstypes.BossID, ...]] = (
         bosstypes.BossID.GATO, bosstypes.BossID.DALTON,
         bosstypes.BossID.KRAWLIE, bosstypes.BossID.SUPER_SLASH,
-        bosstypes.BossID.FLEA_PLUS
+        bosstypes.BossID.FLEA_PLUS, bosstypes.BossID.ATROPOS_XR,
     )
 
 
@@ -71,12 +71,14 @@ class BossRandoOptions:
         "boss_pool": aty.arg_multiple_from_enum(
             bosstypes.BossID, _default_boss_pool,
             "Bosses to include in assignment (only when boss type is \"random\")",
-            force_enum_names=True
+            force_enum_names=True,
+            available_pool=list(_default_boss_pool)
         ),
         "midboss_pool": aty.arg_multiple_from_enum(
             bosstypes.BossID, _default_midboss_pool,
             "Midbosses to include in assignment (only when boss type is \"random\")",
-            force_enum_names=True
+            force_enum_names=True,
+            available_pool=list(_default_midboss_pool)
         ),
     }
     def __init__(
