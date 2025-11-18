@@ -84,12 +84,17 @@ class ObjectiveOptions:
                 type_fn=int
             ),
             "num_omen_objectives": argumenttypes.DiscreteNumericalArg(
-                0, 8, 1, 3,
+                0, 8, 1, 4,
                 "Number of objectives needed to unlock the final door in the Black Omen",
                 type_fn=int
             ),
             "num_bucket_objectives": argumenttypes.DiscreteNumericalArg(
-                0, 8, 1, 3,
+                0, 8, 1, 5,
+                "Number of objectives needed to unlock the bucket in the End of Time",
+                type_fn=int
+            ),
+            "num_timegauge_objectives": argumenttypes.DiscreteNumericalArg(
+                0, 8, 1, 6,
                 "Number of objectives needed to unlock the bucket in the End of Time",
                 type_fn=int
             ),
