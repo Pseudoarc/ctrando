@@ -17,7 +17,7 @@ _combat_zone_name_dict: dict[str, tuple[str,...]] = {
     "crono_trial": ("crono_trial", "crono_trial_boss"),
     "heckran_cave": ("heckran_cave",),
     "truce_canyon": ("truce_canyon",),
-    "manoria_catheral": ("manoria_catheral",),
+    "manoria_cathedral": ("manoria_cathedral",),
     "denadoro_mountains": ("denadoro_mts",),
     "cursed_woods": ("cursed_woods",),
     "lab_16": ("lab_16",),

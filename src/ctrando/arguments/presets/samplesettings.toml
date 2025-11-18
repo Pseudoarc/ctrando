@@ -70,7 +70,7 @@ obstacle_safety_level=30
 
 # Region Scaling Mods
 # Valid Regions:  "millennial_fair", "guardia_forest_1000", "guardia_forest_600",
-#    "crono_trial", "heckran_cave", "truce_canyon", "manoria_catheral",
+#    "crono_trial", "heckran_cave", "truce_canyon", "manoria_cathedral",
 #    "denadoro_mountains", "cursed_woods", "lab_16", "lab_32",
 #    "sewers", "death_peak", "arris_dome", "proto_dome", "factory_ruins",
 #    "mystic_mountains", "hunting_range", "dactyl_nest", "shell_trial",
