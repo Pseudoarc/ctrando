@@ -52,6 +52,9 @@ _combat_zone_name_dict: dict[str, tuple[str,...]] = {
     "mt_woe": ("mt_woe",),
 }
 
+def get_combat_zone_dict() -> dict[str, tuple[str,...]]:
+    return dict(_combat_zone_name_dict)
+
 
 class RegionScalingOptions:
     """Class for controlling scaling mod per region"""

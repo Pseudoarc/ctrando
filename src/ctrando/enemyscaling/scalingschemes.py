@@ -52,7 +52,12 @@ def generate_loc_id_level_mod_lut(
 ) -> bytes:
     """Returns a lut for additional scaling per location id"""
     init_dict = {ctenums.LocID(loc_id): 0 for loc_id in range(0x200)}
-    region_mod_dict = scaling_options.region_mod_dict
+
+    region_mod_dict: dict[str, int] = {}
+    for zone, region_names in enemyscaling.get_combat_zone_dict().items():
+        mod_entry = zone+"_mod"
+        for region_name in region_names:
+            region_mod_dict[region_name] = scaling_options.region_mod_dict[mod_entry]
 
     mod_dict: dict[ctenums.LocID, int] = dict(init_dict)
     combat_spheres: set[int] = set()
@@ -64,7 +69,7 @@ def generate_loc_id_level_mod_lut(
 
             for loc_id in region.region_loc_ids:
                 init_dict[loc_id] = sphere
-                mod_dict[loc_id] = region_mod_dict.get(region_name+"_mod", 0)
+                mod_dict[loc_id] = region_mod_dict.get(region_name, 0)
 
     combat_sphere_list = sorted(combat_spheres)
     for loc_id, sphere in init_dict.items():
