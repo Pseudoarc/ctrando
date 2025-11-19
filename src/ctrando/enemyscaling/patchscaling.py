@@ -1369,6 +1369,7 @@ def apply_full_scaling_patch(
     region_mod_lut_rom_addr = byteops.to_rom_ptr(region_mod_lut_addr)
 
     scaling_scheme += [
+        inst.TDC(),
         inst.LDA(0x7E0100, AM.LNG),
         inst.TAX(),
         inst.LDA(region_mod_lut_rom_addr, AM.LNG_X),
@@ -1632,7 +1633,7 @@ def make_hp_lut(alt_table: bool = False):
         # )
         hp_func = pwl.PiecewiseLinear(
             (1, 175),
-            (4, 920),
+            (6, 920),
             (12, 2000),
             (20, 4500),
             (27, 7000),
