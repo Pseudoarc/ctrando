@@ -116,6 +116,7 @@ class LogicOptions:
     )
     _default_force_early_flight: typing.ClassVar[bool] = False
     _default_starter_rewards: typing.ClassVar[tuple[RewardType,...]] = (ScriptReward.EPOCH,)
+    _default_out_of_logic_starter_rewards: typing.ClassVar[tuple[RewardType, ...]] = tuple()
 
     name: typing.ClassVar[str] = "Logic Options"
     description: typing.ClassVar[str] = "Options for the distribution of key items"
@@ -130,6 +131,7 @@ class LogicOptions:
             hard_lavos_end_boss: bool = _default_hard_lavos_end_boss,
             force_early_flight: bool = _default_force_early_flight,
             starter_rewards: Sequence[RewardType] = _default_starter_rewards,
+            out_of_logic_starter_rewards: Sequence[RewardType] = _default_out_of_logic_starter_rewards,
             boats_of_time: bool = False
     ):
         self.additional_key_items = sorted(additional_key_items)
@@ -141,6 +143,7 @@ class LogicOptions:
         self.hard_lavos_final_boss = hard_lavos_end_boss
         self.force_early_flight = force_early_flight
         self.starter_rewards = starter_rewards
+        self.out_of_logic_starter_rewards = out_of_logic_starter_rewards
         self.boats_of_time = boats_of_time
 
 
@@ -183,6 +186,14 @@ class LogicOptions:
                 ] + list(_reward_dict.values()),
                 cls._default_starter_rewards,
                 "Rewards to grant at game start",
+                str_to_reward, reward_to_str
+            ),
+            "out_of_logic_starter_rewards": argumenttypes.MultipleDiscreteSelection(
+                [
+                    x for x in ctenums.ItemID if x not in shopoptions.ShopOptions.unused_items
+                ] + list(_reward_dict.values()),
+                cls._default_starter_rewards,
+                "Rewards to grant at game start which are not considered by logic",
                 str_to_reward, reward_to_str
             ),
             # "force_early_flight": argumenttypes.FlagArg(
@@ -259,6 +270,14 @@ class LogicOptions:
         )
 
         group.add_argument(
+            "--out-of-logic-starter-rewards",
+            nargs="*",
+            type=str_to_reward,
+            help="Rewards to grant at game start.",
+            default=argparse.SUPPRESS
+        )
+
+        group.add_argument(
             "--force-early-flight", action="store_true",
             help="The JetsOfTime will be guaranteed in a pre-flight locataion.",
             default=argparse.SUPPRESS
@@ -282,8 +301,8 @@ class LogicOptions:
         attr_names = [
             "additional_key_items", "forced_spots", "incentive_spots",
             "incentive_factor", "excluded_spots", "decay_factor",
-            "hard_lavos_end_boss", "starter_rewards", "force_early_flight",
-            "boats_of_time",
+            "hard_lavos_end_boss", "starter_rewards", "out_of_logic_starter_rewards",
+            "force_early_flight", "boats_of_time",
         ]
 
         init_dict: dict[str, typing.Any] = dict()

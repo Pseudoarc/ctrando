@@ -1,4 +1,5 @@
 """Module to turn a vanilla CT Rom into an open world one"""
+import copy
 import io
 import itertools
 from typing import Optional
@@ -333,17 +334,9 @@ def mark_vanilla_dialogue_free(vanilla_rom: ctrom.CTRom):
         vanilla_rom.space_manager.mark_block(block, MARK_FREE)
 
 
-def add_key_item_count(
-        ct_rom: ctrom.CTRom,
-        key_item_list: Optional[list[ctenums.ItemID]] = None
-):
-    """
-    Increment the key item count when a key item is received.
-    """
-
-    if key_item_list is None:
-        ItemID = ctenums.ItemID
-        key_item_list = [
+def get_scaling_key_items() -> list[ctenums.ItemID]:
+    ItemID = ctenums.ItemID
+    return [
             ItemID.C_TRIGGER, ItemID.CLONE,
             ItemID.PENDANT, ItemID.PENDANT_CHARGE, ItemID.DREAMSTONE,
             ItemID.RUBY_KNIFE, ItemID.JETSOFTIME,
@@ -354,6 +347,18 @@ def add_key_item_count(
             ItemID.TOMAS_POP, ItemID.MOON_STONE, ItemID.SUN_STONE,
             ItemID.BIKE_KEY, ItemID.SEED, ItemID.GATE_KEY
         ]
+
+
+def add_key_item_count(
+        ct_rom: ctrom.CTRom,
+        key_item_list: Optional[list[ctenums.ItemID]] = None
+):
+    """
+    Increment the key item count when a key item is received.
+    """
+
+    if key_item_list is None:
+        key_item_list = get_scaling_key_items()
 
     key_item_b = bytes(key_item_list)
     key_item_addr = ct_rom.space_manager.get_free_addr(len(key_item_b))
@@ -403,6 +408,19 @@ def add_key_item_count(
         byteops.to_file_ptr(return_rom_addr)
     )
 
+
+_progressive_items = [
+        [ctenums.ItemID.PENDANT, ctenums.ItemID.PENDANT_CHARGE],
+        [ctenums.ItemID.MASAMUNE_1, ctenums.ItemID.MASAMUNE_2],
+        [ctenums.ItemID.RAINBOW_SHELL, ctenums.ItemID.PRISMSHARD],
+        [ctenums.ItemID.C_TRIGGER, ctenums.ItemID.CLONE]
+    ]
+
+
+def get_progressive_item_groups():
+    return copy.deepcopy(_progressive_items)
+
+
 def patch_progressive_items(ct_rom: ctrom.CTRom):
     """
     Add progression:
@@ -410,12 +428,8 @@ def patch_progressive_items(ct_rom: ctrom.CTRom):
     - Masamune -> Grandleon
     """
 
-    progression = [
-        [ctenums.ItemID.PENDANT, ctenums.ItemID.PENDANT_CHARGE],
-        [ctenums.ItemID.MASAMUNE_1, ctenums.ItemID.MASAMUNE_2],
-        [ctenums.ItemID.RAINBOW_SHELL, ctenums.ItemID.PRISMSHARD],
-        [ctenums.ItemID.C_TRIGGER, ctenums.ItemID.CLONE]
-    ]
+    progression = get_progressive_item_groups()
+
     # original addresses
     gained_item_id_addr = 0xAEF7
     empty_item_index_addr = 0xAEF9

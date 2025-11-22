@@ -317,7 +317,29 @@ def get_reward_event_code(
 
 def get_initial_rewards_ef(intial_rewards: list[logictypes.RewardType]) -> EF:
     ret_ef = EF()
+
+    normal_item_reward_count: dict[ctenums.ItemID, int] = dict()
+    other_rewards: list[logictypes.RewardType] = []
+    scaling_items = basepatch.get_scaling_key_items()
+
     for reward in intial_rewards:
+        if isinstance(reward, ctenums.ItemID) and reward not in scaling_items:
+            count = normal_item_reward_count.get(reward, 0)
+            normal_item_reward_count[reward] = count + 1
+        else:
+            other_rewards.append(reward)
+
+
+    item_bytes = bytes(list(normal_item_reward_count.keys()))
+    count_bytes = bytes(list(normal_item_reward_count.values()))
+
+    if item_bytes:
+        item_st = 0x7E2400
+        count_st = item_st + 0x000100
+        ret_ef.add(EC.copy_memory(item_st, item_bytes))
+        ret_ef.add(EC.copy_memory(count_st, count_bytes))
+
+    for reward in other_rewards:
         ret_ef.append(get_reward_event_code(reward))
 
     return ret_ef
