@@ -276,8 +276,15 @@ def get_random_config(
         config.pcstat_manager, settings.battle_rewards.xp_tp_rewards.tp_scale)
 
     ### Logic (KI Fill, Entrances)
+    entrancefiller.update_starting_rewards(settings.logic_options.starter_rewards,
+                                           settings.entrance_options)
     config.starting_rewards = list(settings.logic_options.starter_rewards)
-    entrancefiller.update_starting_rewards(config.starting_rewards, settings.entrance_options)
+    for reward in settings.logic_options.out_of_logic_starter_rewards:
+        if isinstance(reward, ctenums.ItemID):
+            config.starting_rewards.append(reward)
+        elif reward not in config.starting_rewards:
+            config.starting_rewards.append(reward)
+
     treasure_assignment, entrance_assignment, region_map = entrancefiller.get_key_item_fill(
         dict(),
         config.boss_assignment_dict,
