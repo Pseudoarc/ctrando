@@ -1226,7 +1226,7 @@ def get_all_loc_regions() -> list[LocRegion]:
                         LocID.GENO_DOME_ROBOT_HUB, LocID.GENO_DOME_ROBOT_ELEVATOR_ACCESS,
                         LocID.GENO_DOME_ROBOT_ELEVATOR_ACCESS, LocID.GENO_DOME_WASTE_DISPOSAL,
                         LocID.GENO_DOME_CONVEYOR, LocID.GENO_DOME_CONVEYOR_EXIT,
-                        LocID.GENO_DOME_MAINFRAME,
+                        LocID.GENO_DOME_MAINFRAME, LocID.GENO_DOME_ENTRANCE,
                         LocID.GENO_DOME_CONVEYOR_ENTRANCE},
         region_rewards=[QuestID.GENO_DOME],
         is_combat_region=True
