@@ -1370,8 +1370,10 @@ def apply_full_scaling_patch(
 
     scaling_scheme += [
         inst.TDC(),
+        inst.REP(0x20),
         inst.LDA(0x7E0100, AM.LNG),
         inst.TAX(),
+        inst.SEP(0x20),
         inst.LDA(region_mod_lut_rom_addr, AM.LNG_X),
         inst.CLC(),
         inst.ADC(memory.Memory.SCALING_LEVEL, AM.LNG),
