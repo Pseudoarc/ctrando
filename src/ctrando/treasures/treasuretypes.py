@@ -5,13 +5,14 @@ appropriate treasure objects.
 """
 import typing
 
+from ctrando.base.openworld import iokatradingpost
 from ctrando.common import byteops, ctenums, ctrom, cttypes as ctt, memory
 from ctrando.locations import locationevent, eventcommand
 from ctrando.strings import ctstrings
 
-from ctrando.locations.scriptmanager import ScriptManager
+from ctrando.locations.scriptmanager import ScriptManager, LocationEvent
 from ctrando.locations.locationevent import FunctionID as FID
-from ctrando.locations.eventcommand import EventCommand as EC
+from ctrando.locations.eventcommand import EventCommand as EC, Operation as OP, get_command
 from ctrando.locations.eventfunction import EventFunction as EF
 
 class Gold(int):
@@ -821,6 +822,72 @@ class HuntingRangeNuTreasure(ScriptTreasure):
             return Gold(cmd.args[0])
 
 
+class TradingPostTreasure:
+    def __init__(
+            self,
+            selection_index: int,
+            is_base_item: bool,
+            reward: RewardType = ctenums.ItemID.MOP
+    ):
+        self.selection_index = selection_index
+        self.is_base_item = is_base_item
+        self.reward = reward
+
+
+    def _get_reward_cmd(self) -> EC:
+        if not isinstance(self.reward, ctenums.ItemID):
+            raise TypeError("Reward must be an item.")
+
+        return EC.assign_val_to_mem(self.reward, 0x7F0200, 1)
+
+
+    def _get_script_and_pos(self, script_manager: ScriptManager) -> tuple[LocationEvent, int]:
+        loc_id = ctenums.LocID.IOKA_TRADING_POST
+        obj_id, func_id = 0xC, FID.ARBITRARY_1
+        selection_addr = iokatradingpost.EventMod.trade_selection
+
+        if not isinstance(self.reward, ctenums.ItemID):
+            raise TypeError("Trading Post must have items.")
+
+        script = script_manager[loc_id]
+        pos = script.get_function_start(obj_id, func_id)
+        pos = script.find_exact_command(
+            EC.if_mem_op_value(selection_addr, OP.EQUALS, self.selection_index),
+            pos
+        )
+        new_cmd = self._get_reward_cmd()
+
+        pos, cmd = script.find_command([new_cmd.command], pos)
+        if not self.is_base_item:
+            pos += len(cmd)
+            pos, cmd = script.find_command([new_cmd.command], pos)
+
+        return script, pos
+
+    def write_to_ct_rom(self, ct_rom, script_manager: typing.Optional[ScriptManager]):
+        if script_manager is None:
+            raise ValueError
+
+        script, pos = self._get_script_and_pos(script_manager)
+        new_cmd = self._get_reward_cmd()
+
+        script.data[pos: pos + len(new_cmd)] = new_cmd.to_bytearray()
+
+    def read_reward_from_ct_rom(
+            self,
+            ct_rom: ctrom.CTRom,
+            script_manager: typing.Optional[ScriptManager] = None
+    ) -> RewardType:
+        if script_manager is None:
+            raise ValueError
+
+        script, pos = self._get_script_and_pos(script_manager)
+        cmd = get_command(script.data, pos)
+
+        return ctenums.ItemID(cmd.args[0])
+
+
+
 def get_base_treasure_dict() -> dict[ctenums.TreasureID, RewardSpot]:
     """
     Return a dictionary of all possible TreasureIDs to their corresponding
@@ -1534,7 +1601,19 @@ def get_base_treasure_dict() -> dict[ctenums.TreasureID, RewardSpot]:
         ),
         TID.TRUCE_MAYOR_2F_OLD_MAN: ScriptTreasure(
             LocID.TRUCE_MAYOR_2F, 8, FID.ACTIVATE
-        )
+        ),
+        TID.TRADING_POST_PETAL_FANG_BASE: TradingPostTreasure(3, True),
+        TID.TRADING_POST_PETAL_FANG_UPGRADE: TradingPostTreasure(3, False),
+        TID.TRADING_POST_PETAL_HORN_BASE: TradingPostTreasure(5, True),
+        TID.TRADING_POST_PETAL_HORN_UPGRADE: TradingPostTreasure(5, True),
+        TID.TRADING_POST_PETAL_FEATHER_BASE: TradingPostTreasure(9, True),
+        TID.TRADING_POST_PETAL_FEATHER_UPGRADE: TradingPostTreasure(9, True),
+        TID.TRADING_POST_FANG_HORN_BASE: TradingPostTreasure(6, True),
+        TID.TRADING_POST_FANG_HORN_UPGRADE: TradingPostTreasure(6, True),
+        TID.TRADING_POST_FANG_FEATHER_BASE: TradingPostTreasure(0xA, True),
+        TID.TRADING_POST_FANG_FEATHER_UPGRADE: TradingPostTreasure(0xA, True),
+        TID.TRADING_POST_HORN_FEATHER_BASE: TradingPostTreasure(0xC, True),
+        TID.TRADING_POST_HORN_FEATHER_UPGRADE: TradingPostTreasure(0xC, True),
     }
 
     return ret_dict
@@ -1663,11 +1742,12 @@ _treasure_count_dict: dict[ctenums.LocID, int] = {
 
 _chest_id_loc_id_dict: dict[int, ctenums.LocID] = {}
 _temp = 0
-for loc_id in sorted(_treasure_count_dict.keys()):
-    for _ in range(_treasure_count_dict[loc_id]):
-        _chest_id_loc_id_dict[_temp] = loc_id
+for _loc_id in sorted(_treasure_count_dict.keys()):
+    for _ in range(_treasure_count_dict[_loc_id]):
+        _chest_id_loc_id_dict[_temp] = _loc_id
         _temp += 1
 del _temp
+del _loc_id
 
 
 def get_chest_loc_id(chest_id: int) -> ctenums.LocID:
@@ -2032,4 +2112,16 @@ def get_vanilla_assignment() -> dict[ctenums.TreasureID, RewardType]:
         ctenums.TreasureID.PROTO_DOME_PORTAL_TAB: ctenums.ItemID.POWER_TAB,
         ctenums.TreasureID.CRONOS_MOM: Gold(400),
         ctenums.TreasureID.TRUCE_MAYOR_2F_OLD_MAN: Gold(300),
+        ctenums.TreasureID.TRADING_POST_PETAL_FANG_BASE: ctenums.ItemID.RUBY_GUN,
+        ctenums.TreasureID.TRADING_POST_PETAL_FANG_UPGRADE: ctenums.ItemID.DREAM_GUN,
+        ctenums.TreasureID.TRADING_POST_PETAL_HORN_BASE: ctenums.ItemID.SAGE_BOW,
+        ctenums.TreasureID.TRADING_POST_PETAL_HORN_UPGRADE: ctenums.ItemID.DREAM_BOW,
+        ctenums.TreasureID.TRADING_POST_PETAL_FEATHER_BASE: ctenums.ItemID.STONE_ARM,
+        ctenums.TreasureID.TRADING_POST_PETAL_FEATHER_UPGRADE: ctenums.ItemID.MAGMA_HAND,
+        ctenums.TreasureID.TRADING_POST_FANG_HORN_BASE: ctenums.ItemID.FLINT_EDGE,
+        ctenums.TreasureID.TRADING_POST_FANG_HORN_UPGRADE: ctenums.ItemID.AEON_BLADE,
+        ctenums.TreasureID.TRADING_POST_FANG_FEATHER_BASE: ctenums.ItemID.RUBY_VEST,
+        ctenums.TreasureID.TRADING_POST_FANG_FEATHER_UPGRADE: ctenums.ItemID.RUBY_VEST,
+        ctenums.TreasureID.TRADING_POST_HORN_FEATHER_BASE: ctenums.ItemID.ROCK_HELM,
+        ctenums.TreasureID.TRADING_POST_HORN_FEATHER_UPGRADE: ctenums.ItemID.ROCK_HELM,
     }

@@ -10,14 +10,16 @@ import math
 
 from ctrando.arguments.gearrandooptions import DSItem
 from ctrando.locations.scriptmanager import ScriptManager
+from ctrando.locations.locationevent import FunctionID as FID
 from ctrando.arguments import treasureoptions, gearrandooptions
 from ctrando.common import ctenums, ctrom, distribution, piecewiselinear as pwl
 from ctrando.common.ctenums import TreasureID as TID
 from ctrando.common.random import RNGType
+from ctrando.items import itemdata
 from ctrando.entranceshuffler import entrancefiller, maptraversal, regionmap
 from ctrando.shops import shoprando
 from ctrando.treasures import treasuretypes as ttypes, itemtiers, treasurespottiers
-
+from ctrando.strings import ctstrings
 
 @dataclass
 class ChargeData:
@@ -72,6 +74,114 @@ _charge_progressions: list[tuple[ctenums.ItemID, ctenums.ItemID]] = [
     (_IID.RAGE_BAND, _IID.FRENZYBAND),
     (_IID.LUMIN_ROBE, _IID.ZODIACCAPE)
 ]
+
+
+def fill_trading_post(
+        assignment: dict[ctenums.TreasureID, ttypes.RewardType],
+        item_pool: list[ttypes.RewardType],
+        spot_pool: list[ctenums.TreasureID],
+        rng: RNGType
+):
+    equipment_pool = list(set([
+        reward for reward in item_pool
+        if isinstance(reward, ctenums.ItemID) and reward < ctenums.ItemID.ACCESSORY_END_BC
+    ]))
+
+    post_spots = [
+        TID.TRADING_POST_PETAL_FANG_BASE, TID.TRADING_POST_HORN_FEATHER_BASE,
+        TID.TRADING_POST_PETAL_HORN_BASE, TID.TRADING_POST_FANG_FEATHER_BASE,
+        TID.TRADING_POST_PETAL_FEATHER_BASE, TID.TRADING_POST_FANG_HORN_BASE,
+
+        TID.TRADING_POST_PETAL_FANG_UPGRADE, TID.TRADING_POST_FANG_HORN_UPGRADE,
+        TID.TRADING_POST_PETAL_HORN_UPGRADE, TID.TRADING_POST_FANG_FEATHER_UPGRADE,
+        TID.TRADING_POST_PETAL_FEATHER_UPGRADE, TID.TRADING_POST_HORN_FEATHER_UPGRADE,
+
+    ]
+    available_spots = [x for x in post_spots if x in spot_pool]
+
+    num_taken_items = min(len(equipment_pool), len(available_spots))
+    taken_items = rng.sample(equipment_pool, num_taken_items)
+    for item in taken_items:
+        item_pool.remove(item)
+
+    while len(taken_items) < len(available_spots):
+        while True:
+            tier = rng.choice([shoprando.ItemTier.WEAPON_A, shoprando.ItemTier.ARMOR_A,
+                               shoprando.ItemTier.WEAPON_B, shoprando.ItemTier.ARMOR_B])
+            item = shoprando.get_item_dist_dict()[tier].get_random_item(rng)
+            if item not in taken_items:
+                break
+        taken_items.append(item)
+
+    rng.shuffle(taken_items)
+    taken_items = sorted(taken_items, key=treasure_sort_key)
+
+    for spot, item in zip(available_spots, taken_items):
+        assignment[spot] = item
+        spot_pool.remove(spot)
+
+
+
+def make_trading_post_spoiler_string(
+        petal_fang_item: ctenums.ItemID,
+        petal_horn_item: ctenums.ItemID,
+        petal_feather_item: ctenums.ItemID,
+        fang_horn_item: ctenums.ItemID,
+        fang_feather_item: ctenums.ItemID,
+        horn_feather_item: ctenums.ItemID,
+        item_man: itemdata.ItemDB
+) -> str:
+
+    return (
+        'Many things for trade!{line break}'
+        f'Petal, Fang: {item_man.item_dict[petal_fang_item].get_name_as_str(True)}'
+        '{line break}'
+        f'Petal, Horn: {item_man.item_dict[petal_horn_item].get_name_as_str(True)}'
+        '{line break}'
+        f'Petal, Feather: {item_man.item_dict[petal_feather_item].get_name_as_str(True)}'
+        '{page break}'
+        f'Fang, Horn: {item_man.item_dict[fang_horn_item].get_name_as_str(True)}'
+        '{line break}'
+        f'Fang, Feather: {item_man.item_dict[fang_feather_item].get_name_as_str(True)}'
+        '{line break}'
+        f'Horn, Feather: {item_man.item_dict[horn_feather_item].get_name_as_str(True)}'
+        '{null}'
+    )
+
+
+def update_trading_post_strings(
+        assignment: dict[ctenums.TreasureID, ttypes.RewardType],
+        script_manager: ScriptManager,
+        item_manager: itemdata.ItemDB
+):
+    script = script_manager[ctenums.LocID.IOKA_TRADING_POST]
+    pos, cmd = script.find_command([0xBB], script.get_function_start(9, FID.ACTIVATE))
+
+    base_string_id = cmd.args[0]
+    new_string = make_trading_post_spoiler_string(
+        assignment[TID.TRADING_POST_PETAL_FANG_BASE],
+        assignment[TID.TRADING_POST_PETAL_HORN_BASE],
+        assignment[TID.TRADING_POST_PETAL_FEATHER_BASE],
+        assignment[TID.TRADING_POST_FANG_HORN_BASE],
+        assignment[TID.TRADING_POST_FANG_FEATHER_BASE],
+        assignment[TID.TRADING_POST_HORN_FEATHER_BASE],
+        item_manager
+    )
+    script.strings[base_string_id] = ctstrings.CTString.from_str(new_string, True)
+
+    pos += len(cmd)
+    pos, cmd = script.find_command([0xBB], pos)
+    upgrade_str_id = cmd.args[0]
+    new_string = make_trading_post_spoiler_string(
+        assignment[TID.TRADING_POST_PETAL_FANG_UPGRADE],
+        assignment[TID.TRADING_POST_PETAL_HORN_UPGRADE],
+        assignment[TID.TRADING_POST_PETAL_FEATHER_UPGRADE],
+        assignment[TID.TRADING_POST_FANG_HORN_UPGRADE],
+        assignment[TID.TRADING_POST_FANG_FEATHER_UPGRADE],
+        assignment[TID.TRADING_POST_HORN_FEATHER_UPGRADE],
+        item_manager
+    )
+    script.strings[upgrade_str_id] = ctstrings.CTString.from_str(new_string, True)
 
 
 def fill_chargeable_chests(
@@ -324,6 +434,7 @@ def default_assignment(
     fill_good_stuff(item_pool, spot_pool, treasure_options.good_loot_spots, treasure_options.good_loot,
                     treasure_options.good_loot_rate, final_assignment, rng)
     fill_chargeable_chests(final_assignment, item_pool, spot_pool, rng)
+    fill_trading_post(final_assignment, item_pool, spot_pool, rng)
 
     num_filler = max(0, len(spot_pool) - len(item_pool))
     if num_filler > 0:
