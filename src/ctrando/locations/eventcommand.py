@@ -726,6 +726,15 @@ class EventCommand:
         return EventCommand.generic_command(cmd_id, offset)
 
     @staticmethod
+    def decrement_mem(script_addr: int):
+        """Return an event command that decrements an address"""
+        if not is_script_mem(script_addr):
+            raise ValueError("Can only decrement script memory")
+
+        offset = get_offset(script_addr)
+        return EventCommand.generic_command(0x73, offset)
+
+    @staticmethod
     def add_value_to_mem(value: int, script_addr: int):
         if not is_script_mem(script_addr):
             raise ValueError('Can only add to script memory')
