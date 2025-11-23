@@ -1014,6 +1014,11 @@ def get_default_region_connectors(
             reversible=False
         ),
         RegionConnector(
+            "ioka_trading_post", "ioka_trading_post_upgrade",
+            "upgraded_trading_post",
+            rule=logictypes.LogicRule([memory.Flags.HAS_DARK_AGES_TIMEGAUGE_ACCESS])
+        ),
+        RegionConnector(
             "ioka_overworld", "reptite_lair_overworld",
             "flight_prehistory_dactyl",
             rule=logictypes.LogicRule([memory.Flags.OBTAINED_DACTYLS]),

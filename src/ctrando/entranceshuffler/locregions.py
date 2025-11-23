@@ -719,7 +719,23 @@ def get_all_loc_regions() -> list[LocRegion]:
         LocRegion(
             "ioka_trading_post", {LocExit.TRADING_POST},
             region_rewards=[ShopID.IOKA_VILLAGE],
-            region_loc_ids={LocID.IOKA_CHIEFS_HUT}
+            reward_spots={
+                TID.TRADING_POST_PETAL_FANG_BASE, TID.TRADING_POST_PETAL_HORN_BASE,
+                TID.TRADING_POST_PETAL_FEATHER_BASE, TID.TRADING_POST_FANG_FEATHER_BASE,
+                TID.TRADING_POST_FANG_HORN_BASE, TID.TRADING_POST_HORN_FEATHER_BASE,
+            },
+            region_loc_ids={LocID.IOKA_TRADING_POST},
+        )
+    )
+    ret_list.append(
+        LocRegion(
+            "ioka_trading_post_upgrade", {LocExit.TRADING_POST},
+            region_rewards=[ShopID.IOKA_VILLAGE],
+            reward_spots={
+                TID.TRADING_POST_PETAL_FANG_UPGRADE, TID.TRADING_POST_PETAL_HORN_UPGRADE,
+                TID.TRADING_POST_PETAL_FEATHER_UPGRADE, TID.TRADING_POST_FANG_FEATHER_UPGRADE,
+                TID.TRADING_POST_FANG_HORN_UPGRADE, TID.TRADING_POST_HORN_FEATHER_UPGRADE
+            },
         )
     )
     ret_list.append(LocRegion("ioka_sw_hut", {LocExit.IOKA_SW_HUT},
