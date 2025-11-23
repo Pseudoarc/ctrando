@@ -509,6 +509,10 @@ def get_ctrom_from_config(
 
         treasure.reward = assigned_treasure
 
+    treasureassign.update_trading_post_strings(
+        config.treasure_assignment, post_config.script_manager,
+        config.item_db
+    )
     randostate.write_initial_rewards(config.starting_rewards, post_config.script_manager)
 
     recruitwriter.write_recruits_to_ct_rom(
