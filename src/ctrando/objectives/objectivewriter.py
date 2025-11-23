@@ -170,13 +170,14 @@ def write_quest_objective(
     # quest_data = oty.get_quest_data(quest_id)
     quest_locator = oty.get_quest_locator(quest_id)
 
-    write_simple_objective_to_ct_rom(
-        script_manager,
-        objective_item_id,
-        objective_flag,
-        quest_locator,
-        objective_settings,
-    )
+    for locator in quest_locator:
+        write_simple_objective_to_ct_rom(
+            script_manager,
+            objective_item_id,
+            objective_flag,
+            locator,
+            objective_settings,
+        )
 
 
 def get_random_objectives(
@@ -319,13 +320,13 @@ def write_test_objectives(
             quest_data = oty.get_quest_data(obj_id)
             item_name = quest_data.name
             item_desc = quest_data.desc
-            locator = oty.get_quest_locator(obj_id)
+            locators = oty.get_quest_locator(obj_id)
         elif isinstance(obj_id, bty.BossID):
             boss_name_abbrev = oty.get_boss_item_name(obj_id)
             boss_name = obj_id.name.replace("_", " ").title()
             item_name = f"*{boss_name_abbrev}"
             item_desc = f"Defeat {boss_name}"
-            locator = oty.get_boss_locator(obj_id, boss_assign_dict)
+            locators = oty.get_boss_locator(obj_id, boss_assign_dict)
         else:
             raise TypeError
 
@@ -335,13 +336,15 @@ def write_test_objectives(
         item_manager[item_id].secondary_stats.is_unsellable = True
 
         descs.append(item_desc)
-        write_simple_objective_to_ct_rom(
-            script_manager,
-            item_id,
-            flag,
-            locator,
-            objective_settings
-        )
+
+        for locator in locators:
+            write_simple_objective_to_ct_rom(
+                script_manager,
+                item_id,
+                flag,
+                locator,
+                objective_settings
+            )
 
     add_items_func = EF()
     for (item_id, obj_key) in zip(item_pool, objectives):
@@ -479,17 +482,18 @@ def write_quest_counters(
         if quest_id in excluded_quests:
             continue
 
-        locator = oty.get_quest_locator(quest_id)
-        hook_data = locator(script_manager)
+        locators = oty.get_quest_locator(quest_id)
+        for locator in locators:
+            hook_data = locator(script_manager)
 
-        script = hook_data.script
-        pos = hook_data.pos
+            script = hook_data.script
+            pos = hook_data.pos
 
-        script.insert_commands(
-            EF()
-            .add(EC.assign_mem_to_mem(memory.Memory.QUESTS_COMPLETED, temp_addr, 1))
-            .add(EC.increment_mem(temp_addr))
-            .add(EC.assign_mem_to_mem(temp_addr, memory.Memory.QUESTS_COMPLETED, 1))
-            .get_bytearray(), pos
-        )
+            script.insert_commands(
+                EF()
+                .add(EC.assign_mem_to_mem(memory.Memory.QUESTS_COMPLETED, temp_addr, 1))
+                .add(EC.increment_mem(temp_addr))
+                .add(EC.assign_mem_to_mem(temp_addr, memory.Memory.QUESTS_COMPLETED, 1))
+                .get_bytearray(), pos
+            )
 

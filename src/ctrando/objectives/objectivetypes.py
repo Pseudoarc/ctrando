@@ -1,5 +1,6 @@
 """Module containing types for creating objectives"""
 from enum import Enum, auto
+from collections.abc import Iterable
 import copy
 from dataclasses import dataclass
 import typing
@@ -125,6 +126,7 @@ class QuestID(Enum):
     GENO_DOME = auto()
     DEATH_PEAK = auto()
     SPEKKIO = auto()
+    DEFEAT_JOHNNY = auto()
 
 
 @dataclass
@@ -239,7 +241,8 @@ _quest_data_dict: dict[QuestID, QuestData] = {
     QuestID.SUNKEN_DESERT: QuestData("*SunkenDsrt", "Have Lucca Face Her Past"),
     QuestID.GENO_DOME: QuestData("*Geno Dome", "Defeat Geno Dome Boss"),
     QuestID.DEATH_PEAK: QuestData("*DeathPeak", "Clear Death Peak"),
-    QuestID.SPEKKIO: QuestData("*Spekkio", "Defeat Spekkio")
+    QuestID.SPEKKIO: QuestData("*Spekkio", "Defeat Spekkio"),
+    QuestID.DEFEAT_JOHNNY: QuestData("*JohnnyRace", "Defeat Johnny in a Race")
 }
 
 _boss_abbrev: dict[bty.BossID, str] = {
@@ -293,7 +296,7 @@ def get_quest_data(quest_id: QuestID) -> QuestData:
     return QuestData(data.name, data.desc)
 
 
-_quest_locator_dict: dict[QuestID, HookLocator] = {
+_quest_locator_dict: dict[QuestID, HookLocator | list[HookLocator]] = {
     QuestID.MANORIA_CATHEDRAL: CommandSequenceLocator(
         ctenums.LocID.MANORIA_COMMAND, 8, FID.STARTUP,
         [EC.break_cmd()], False
@@ -407,7 +410,13 @@ _quest_locator_dict: dict[QuestID, HookLocator] = {
     QuestID.SPEKKIO: CommandSequenceLocator(
         ctenums.LocID.SPEKKIO, 0, FID.ARBITRARY_0,
         cmd_sequence=[EC.set_byte(0x7F0232)], place_after_last=True
-    )
+    ),
+    QuestID.DEFEAT_JOHNNY: [
+        CommandSequenceLocator(ctenums.LocID.LAB_32_EAST, 0, FID.STARTUP,
+                               [EC.if_flag(memory.Flags.LAST_RACE_SPECIAL_SCORE)], False),
+        CommandSequenceLocator(ctenums.LocID.LAB_32_WEST, 0, FID.STARTUP,
+                               [EC.if_flag(memory.Flags.LAST_RACE_SPECIAL_SCORE)], False),
+    ]
 }
 
 ObjectiveType = QuestID | bty.BossID | None
@@ -526,12 +535,12 @@ def get_boss_locator_dict() -> dict[bty.BossSpotID, HookLocator]:
     return _boss_spot_locator_dict
 
 
-def get_boss_spot_locator(boss_spot_id: bty.BossSpotID) -> HookLocator:
-    return _boss_spot_locator_dict[boss_spot_id]
+def get_boss_spot_locator(boss_spot_id: bty.BossSpotID) -> list[HookLocator]:
+    return [_boss_spot_locator_dict[boss_spot_id]]
 
 
 def get_boss_locator(boss_id: bty.BossID,
-                     boss_assign_dict: dict[bty.BossSpotID, bty.BossID]) -> HookLocator:
+                     boss_assign_dict: dict[bty.BossSpotID, bty.BossID]) -> list[HookLocator]:
     locators: list[HookLocator] = []
 
     for spot, boss in boss_assign_dict.items():
@@ -542,16 +551,18 @@ def get_boss_locator(boss_id: bty.BossID,
         raise KeyError(f"Unable to find {boss_id}.")
 
     # If multi-assign... return them all?
-    return locators[0]
+    return locators
 
 
 def get_associated_objectives() -> list[tuple[ObjectiveType, ...]]:
     return list(_associated_objs)
 
 
-def get_quest_locator(quest_id: QuestID) -> HookLocator:
+def get_quest_locator(quest_id: QuestID) -> list[HookLocator]:
     """Get a quest's hook locator"""
     locator = _quest_locator_dict[quest_id]
+    if not isinstance(locator, Iterable):
+        locator = [locator]
     return copy.deepcopy(locator)
 
 
