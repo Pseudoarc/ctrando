@@ -125,6 +125,13 @@ forced_spots = [
 # - At present there is no protection from other chests that become unavailable
 # - The spots below give softlock protection
 excluded_spots=[
+    # Trading Post
+    "trading_post_petal_fang_base", "trading_post_petal_fang_upgrade",
+    "trading_post_petal_horn_base", "trading_post_petal_horn_upgrade",
+    "trading_post_petal_feather_base", "trading_post_petal_feather_upgrade",
+    "trading_post_fang_horn_base", "trading_post_fang_horn_upgrade",
+    "trading_post_fang_feather_base", "trading_post_fang_feather_upgrade",
+    "trading_post_horn_feather_base", "trading_post_horn_feather_upgrade",
     # Magus
     "magus_castle_right_hall", "magus_castle_guillotine_1", "magus_castle_guillotine_2",
     "magus_castle_slash_room_1", "magus_castle_slash_room_2", "magus_castle_slash_sword_floor",
