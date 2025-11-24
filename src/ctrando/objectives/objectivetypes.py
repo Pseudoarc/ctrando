@@ -591,7 +591,7 @@ def get_obj_keys(obj_str: str) -> list[ObjectiveType]:
             QuestID.MT_WOE, QuestID.FACTORY_RUINS, QuestID.ARRIS_DOME,
             QuestID.TYRANO_LAIR, QuestID.JERKY_TRADE, QuestID.ZENAN_BRIDGE,
             QuestID.REPTITE_LAIR, QuestID.EPOCH_REBORN_BATTLE, QuestID.ZEAL_PALACE_THRONE,
-            QuestID.KINGS_TRIAL,
+            QuestID.KINGS_TRIAL, QuestID.SPEKKIO, QuestID.DEFEAT_JOHNNY
         ]
     elif obj_str == "flight_gated_quest":
         return [
