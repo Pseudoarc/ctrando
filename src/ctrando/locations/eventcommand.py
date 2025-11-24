@@ -281,6 +281,17 @@ class EventCommand:
 
 
     @staticmethod
+    def sub_from_memory(lhs_address: int, rhs_address: int):
+        """
+        Returns an eventcommand for rhs_addr -= lhs_addr.  Both must be script addresses.
+        """
+        lhs_offset = get_offset(lhs_address)
+        rhs_offset = get_offset(rhs_address)
+
+        return EventCommand.generic_command(0x61, rhs_offset, lhs_offset)
+
+
+    @staticmethod
     def set_reset_bits(address: int, bitmask: int,
                        set_bits: bool = True) -> EventCommand:
         if not is_script_mem(address):
