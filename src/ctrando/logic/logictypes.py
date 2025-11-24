@@ -16,6 +16,10 @@ class ScriptReward(enum.Enum):
     FLIGHT = enum.auto()
 
 
+class StrangeReward(enum.Enum):
+    TRADING_MATERIALS = enum.auto()
+
+
 # OtherReward = typing.Union[ScriptReward, Flags]
 OtherReward = typing.Any
 
@@ -155,11 +159,7 @@ class LogicRule:
         if initial_rules is None:
             self._rules = []
         else:
-            if all(
-                isinstance(x, ItemID) or isinstance(x, CharID)
-                or isinstance(x, ScriptReward) or isinstance(x, Flags)
-                for x in initial_rules
-            ):
+            if all(isinstance(x,enum.Enum) for x in initial_rules):
                 initial_rules = [initial_rules]
             self._rules = [rule for rule in initial_rules]
 

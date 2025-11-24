@@ -1014,14 +1014,23 @@ def get_default_region_connectors(
             reversible=False
         ),
         RegionConnector(
+            "ioka_trading_post", "ioka_trading_post_base",
+            "upgraded_trading_post",
+            rule=logictypes.LogicRule([logictypes.StrangeReward.TRADING_MATERIALS])
+        ),
+        RegionConnector(
             "ioka_trading_post", "ioka_trading_post_upgrade",
             "upgraded_trading_post",
-            rule=logictypes.LogicRule([memory.Flags.HAS_DARK_AGES_TIMEGAUGE_ACCESS])
+            rule=logictypes.LogicRule([memory.Flags.HAS_DARK_AGES_TIMEGAUGE_ACCESS,
+                                       logictypes.StrangeReward.TRADING_MATERIALS
+                                       ])
         ),
         RegionConnector(
             "ioka_trading_post", "ioka_trading_post_special",
             "special_trading_post",
-            rule=logictypes.LogicRule([memory.Flags.HAS_ALGETTY_PORTAL])
+            rule=logictypes.LogicRule([memory.Flags.HAS_ALGETTY_PORTAL,
+                                       # logictypes.StrangeReward.TRADING_MATERIALS
+                                       ])
         ),
         RegionConnector(
             "ioka_overworld", "reptite_lair_overworld",
