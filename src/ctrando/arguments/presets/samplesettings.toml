@@ -401,6 +401,11 @@ good_loot_spots = []  # Spots which will be given a random good reward.
 good_loot_rate=0.5    # Proportion (between 0 and 1) of good loot spots which receive good loot.
 # post_assign_shuffle_rate = 0.5  # Percent of spots to shuffle after assignment (no good_spots)
 
+trading_post_base_cost = 2      # Base trades cost this many for two item types [default 3]
+trading_post_upgrade_cost = 3   # Upgraded trades cost this many for two item types [default 3]
+trading_post_special_cost = 6   # The Special trade costs this much for all item tyes [default 10]
+
+
 # Enemy Options: Options relating to Enemies
 sightscope_all=true     # Enable sightscope usage on all enemies.
 forced_sightscope=true  # Sightscope effect will be present without the item equipped.
