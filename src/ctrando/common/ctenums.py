@@ -1145,6 +1145,7 @@ class TreasureID(StrIntEnum):
     TRADING_POST_FANG_FEATHER_UPGRADE = auto()
     TRADING_POST_HORN_FEATHER_BASE = auto()
     TRADING_POST_HORN_FEATHER_UPGRADE = auto()
+    TRADING_POST_SPECIAL = auto()
     JERKY_GIFT = auto()
     # Rocks not in chests
     DENADORO_ROCK = auto()

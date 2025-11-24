@@ -513,6 +513,12 @@ def get_ctrom_from_config(
         config.treasure_assignment, post_config.script_manager,
         config.item_db
     )
+    treasureassign.update_trading_post_costs(
+        settings.treasure_options.trading_post_base_cost,
+        settings.treasure_options.trading_post_upgrade_cost,
+        settings.treasure_options.trading_post_special_cost,
+        post_config.script_manager
+    )
     randostate.write_initial_rewards(config.starting_rewards, post_config.script_manager)
 
     recruitwriter.write_recruits_to_ct_rom(

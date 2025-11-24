@@ -12,6 +12,7 @@ from ctrando.arguments.gearrandooptions import DSItem
 from ctrando.locations.scriptmanager import ScriptManager
 from ctrando.locations.locationevent import FunctionID as FID
 from ctrando.arguments import treasureoptions, gearrandooptions
+from ctrando.base.openworld import iokatradingpost
 from ctrando.common import ctenums, ctrom, distribution, piecewiselinear as pwl
 from ctrando.common.ctenums import TreasureID as TID
 from ctrando.common.random import RNGType
@@ -95,7 +96,7 @@ def fill_trading_post(
         TID.TRADING_POST_PETAL_FANG_UPGRADE, TID.TRADING_POST_FANG_HORN_UPGRADE,
         TID.TRADING_POST_PETAL_HORN_UPGRADE, TID.TRADING_POST_FANG_FEATHER_UPGRADE,
         TID.TRADING_POST_PETAL_FEATHER_UPGRADE, TID.TRADING_POST_HORN_FEATHER_UPGRADE,
-
+        TID.TRADING_POST_SPECIAL
     ]
     available_spots = [x for x in post_spots if x in spot_pool]
 
@@ -146,6 +147,18 @@ def make_trading_post_spoiler_string(
         '{line break}'
         f'Horn, Feather: {item_man.item_dict[horn_feather_item].get_name_as_str(True)}'
         '{null}'
+    )
+
+
+def update_trading_post_costs(
+        base_cost: int | None,
+        upgrade_cost: int | None,
+        special_cost: int | None,
+        script_manager: ScriptManager
+):
+    script = script_manager[ctenums.LocID.IOKA_TRADING_POST]
+    iokatradingpost.EventMod.set_materials_required(
+        script, base_cost, upgrade_cost, special_cost
     )
 
 

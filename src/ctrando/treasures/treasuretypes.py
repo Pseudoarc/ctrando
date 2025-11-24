@@ -887,6 +887,56 @@ class TradingPostTreasure:
         return ctenums.ItemID(cmd.args[0])
 
 
+class TradingPostSpecialTreasure:
+    def __init__(self, reward: RewardType = ctenums.ItemID.MOP):
+        self.reward = reward
+
+    def _get_reward_cmd(self) -> EC:
+        if not isinstance(self.reward, ctenums.ItemID):
+            raise TypeError("Reward must be an item.")
+
+        return EC.assign_val_to_mem(self.reward, 0x7F0200, 1)
+
+    def _get_script_and_pos(self, script_manager: ScriptManager) -> tuple[LocationEvent, int]:
+        loc_id = ctenums.LocID.IOKA_TRADING_POST
+        obj_id, func_id = 0xC, FID.ARBITRARY_2
+
+        if not isinstance(self.reward, ctenums.ItemID):
+            raise TypeError("Trading Post must have items.")
+
+        script = script_manager[loc_id]
+        new_cmd = self._get_reward_cmd()
+
+        pos = script.find_exact_command(
+            EC.play_sound(0xB0), script.get_function_start(obj_id, func_id)
+        )
+        pos, _ = script.find_command([new_cmd.command], pos)
+
+        return script, pos
+
+    def read_reward_from_ct_rom(
+            self,
+            ct_rom: ctrom.CTRom,
+            script_manager: typing.Optional[ScriptManager] = None
+    ) -> RewardType:
+
+        script, pos = self._get_script_and_pos(script_manager)
+        cmd = get_command(script.data, pos)
+        return cmd.args[0]
+
+    def write_to_ct_rom(self, ct_rom, script_manager: typing.Optional[ScriptManager]):
+        if script_manager is None:
+            raise ValueError
+
+        script, pos = self._get_script_and_pos(script_manager)
+        new_cmd = self._get_reward_cmd()
+        script.data[pos: pos + len(new_cmd)] = new_cmd.to_bytearray()
+
+        pos, _ = script.find_command([new_cmd.command],
+                                  script.get_function_start(8, FID.ACTIVATE))
+        script.data[pos: pos + len(new_cmd)] = new_cmd.to_bytearray()
+
+
 
 def get_base_treasure_dict() -> dict[ctenums.TreasureID, RewardSpot]:
     """
@@ -1605,15 +1655,16 @@ def get_base_treasure_dict() -> dict[ctenums.TreasureID, RewardSpot]:
         TID.TRADING_POST_PETAL_FANG_BASE: TradingPostTreasure(3, True),
         TID.TRADING_POST_PETAL_FANG_UPGRADE: TradingPostTreasure(3, False),
         TID.TRADING_POST_PETAL_HORN_BASE: TradingPostTreasure(5, True),
-        TID.TRADING_POST_PETAL_HORN_UPGRADE: TradingPostTreasure(5, True),
+        TID.TRADING_POST_PETAL_HORN_UPGRADE: TradingPostTreasure(5, False),
         TID.TRADING_POST_PETAL_FEATHER_BASE: TradingPostTreasure(9, True),
-        TID.TRADING_POST_PETAL_FEATHER_UPGRADE: TradingPostTreasure(9, True),
+        TID.TRADING_POST_PETAL_FEATHER_UPGRADE: TradingPostTreasure(9, False),
         TID.TRADING_POST_FANG_HORN_BASE: TradingPostTreasure(6, True),
-        TID.TRADING_POST_FANG_HORN_UPGRADE: TradingPostTreasure(6, True),
+        TID.TRADING_POST_FANG_HORN_UPGRADE: TradingPostTreasure(6, False),
         TID.TRADING_POST_FANG_FEATHER_BASE: TradingPostTreasure(0xA, True),
-        TID.TRADING_POST_FANG_FEATHER_UPGRADE: TradingPostTreasure(0xA, True),
+        TID.TRADING_POST_FANG_FEATHER_UPGRADE: TradingPostTreasure(0xA, False),
         TID.TRADING_POST_HORN_FEATHER_BASE: TradingPostTreasure(0xC, True),
-        TID.TRADING_POST_HORN_FEATHER_UPGRADE: TradingPostTreasure(0xC, True),
+        TID.TRADING_POST_HORN_FEATHER_UPGRADE: TradingPostTreasure(0xC, False),
+        TID.TRADING_POST_SPECIAL: TradingPostSpecialTreasure(),
     }
 
     return ret_dict
@@ -2124,4 +2175,5 @@ def get_vanilla_assignment() -> dict[ctenums.TreasureID, RewardType]:
         ctenums.TreasureID.TRADING_POST_FANG_FEATHER_UPGRADE: ctenums.ItemID.RUBY_VEST,
         ctenums.TreasureID.TRADING_POST_HORN_FEATHER_BASE: ctenums.ItemID.ROCK_HELM,
         ctenums.TreasureID.TRADING_POST_HORN_FEATHER_UPGRADE: ctenums.ItemID.ROCK_HELM,
+        ctenums.TreasureID.TRADING_POST_SPECIAL: ctenums.ItemID.RUBY_ARMOR,
     }

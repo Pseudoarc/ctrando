@@ -83,6 +83,9 @@ class TreasureOptions:
     _default_post_assign_shuffle_rate = 0.5
     _default_treasure_pool = TreasurePool.VANILLA
     _default_treasure_scheme = TreasureScheme.SHUFFLE
+    _default_trading_post_base_cost = 3
+    _default_trading_post_upgrade_cost = 3
+    _default_trading_post_special_cost = 10
 
     def __init__(
             self,
@@ -91,7 +94,10 @@ class TreasureOptions:
             good_loot: Iterable[RewardType] = _default_good_loot,
             good_loot_rate: float = _default_good_loot_rate,
             loot_pool = _default_treasure_pool,
-            post_assign_shuffle_rate = _default_post_assign_shuffle_rate
+            post_assign_shuffle_rate = _default_post_assign_shuffle_rate,
+            trading_post_base_cost = _default_trading_post_base_cost,
+            trading_post_upgrade_cost = _default_trading_post_upgrade_cost,
+            trading_post_special_cost=_default_trading_post_special_cost
     ):
         self.loot_pool = loot_pool
         self.loot_assignment_scheme = loot_assignment_scheme
@@ -99,6 +105,9 @@ class TreasureOptions:
         self.good_loot = tuple(good_loot)
         self.good_loot_rate = good_loot_rate
         self.post_assign_shuffle_rate = post_assign_shuffle_rate
+        self.trading_post_base_cost = trading_post_base_cost
+        self.trading_post_upgrade_cost = trading_post_upgrade_cost
+        self.trading_post_special_cost = trading_post_special_cost
 
     @classmethod
     def get_argument_spec(cls) -> argumenttypes.ArgSpec:
@@ -130,6 +139,21 @@ class TreasureOptions:
             "post_assign_shuffle_rate": argumenttypes.DiscreteNumericalArg(
               0.0, 1.0, 0.1, cls._default_post_assign_shuffle_rate,
                 "Percent chance to shuffle after basic assignment", type_fn=float
+            ),
+            "trading_post_base_cost": argumenttypes.DiscreteNumericalArg(
+                1, 10, 1, cls._default_trading_post_base_cost,
+                "Number of materials of each type required for base trade",
+                type_fn=lambda x: max(int(x), 1)
+            ),
+            "trading_post_upgrade_cost": argumenttypes.DiscreteNumericalArg(
+                1, 10, 1, cls._default_trading_post_upgrade_cost,
+                "Number of materials of each type required for upgraded trade",
+                type_fn=lambda x: max(int(x), 1)
+            ),
+            "trading_post_special_cost": argumenttypes.DiscreteNumericalArg(
+                1, 15, 1, cls._default_trading_post_upgrade_cost,
+                "Number of materials of each type required for special trade",
+                type_fn=lambda x: max(int(x), 1)
             )
         }
 
@@ -180,6 +204,14 @@ class TreasureOptions:
             group, "--loot-assignment-scheme", TreasureScheme,
             help_str="Method used to assign loot",
         )
+
+        spec = cls.get_argument_spec()
+        attr_names = ("trading_post_base_cost", "trading_post_upgrade_cost",
+                      "trading_post_special_cost")
+        for attr_name in attr_names:
+            arg = spec[attr_name]
+            arg_name = argumenttypes.attr_name_to_arg_name(attr_name)
+            arg.add_to_argparse(arg_name, group)
 
 
     @classmethod
