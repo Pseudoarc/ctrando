@@ -8,9 +8,7 @@ from ctrando.locations.locationevent import LocationEvent as Event
 
 class EventMod(locationevent.LocEventMod):
     """EventMod for Algetty Inn"""
-    loc_id = ctenums.LocID.BANGOR_DOME
-    temp_addr = 0x7F0220
-    can_eot_addr = 0x7F0222
+    loc_id = ctenums.LocID.ALGETTY_INN
 
     @classmethod
     def modify(cls, script: Event):
