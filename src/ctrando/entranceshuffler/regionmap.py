@@ -326,7 +326,9 @@ def get_default_exit_connectors() -> list[ExitConnector]:
         # Various
         ExitConnector(OWExit.SUN_KEEP_PREHISTORY, LocExit.SUN_KEEP_PREHISTORY),
         ExitConnector(OWExit.TYRANO_LAIR, LocExit.TYRANO_LAIR),
-        ExitConnector(OWExit.LAIR_RUINS, LocExit.LAIR_RUINS),
+        ExitConnector(OWExit.LAIR_RUINS, LocExit.LAIR_RUINS,
+                      rule=logictypes.LogicRule([memory.Flags.OW_LAVOS_HAS_FALLEN])
+                      ),
         # dark_ages_portal_overworld
         ExitConnector(OWExit.DARK_AGES_PORTAL, LocExit.DARK_AGES_PORTAL_DEFAULT),
         ExitConnector(OWExit.TERRA_CAVE, LocExit.TERRA_CAVE),
