@@ -391,7 +391,11 @@ def get_all_loc_regions() -> list[LocRegion]:
                         QuestID.MANORIA_CATHEDRAL],
         region_loc_ids={LocID.MANORIA_SANCTUARY, LocID.MANORIA_SHRINE,
                         LocID.MANORIA_SHRINE, LocID.MANORIA_SHRINE_ANTECHAMBER,
-                        LocID.MANORIA_STORAGE, LocID.MANORIA_KITCHEN},
+                        LocID.MANORIA_STORAGE, LocID.MANORIA_KITCHEN,
+                        LocID.MANORIA_COMMAND, LocID.MANORIA_MAIN_HALL,
+                        LocID.MANORIA_HEADQUARTERS, LocID.MANORIA_CONFINEMENT,
+                        LocID.MANORIA_ROYAL_GUARD_HALL
+                        },
         is_combat_region=True
     )
     ret_list.extend([manoria_front, manoria_cathedral])
