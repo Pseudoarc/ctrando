@@ -137,12 +137,18 @@ class PostRandoOptions:
                 "Default window background", type_fn=int
             )
         }
+
+        # defaults = (cls._default_crono_palette, cls._default_marle_palette,
+        #             cls._default_lucca_palette, cls._default_robo_palette,
+        #             cls._default_frog_palette, cls._default_ayla_palette,
+        #             cls._default_ayla_palette)
         for arg_name in ("crono_palette", "marle_palette", "lucca_palette", "robo_palette",
                          "frog_palette", "ayla_palette", "magus_palette",):
             char_name = arg_name.split("_")[0].capitalize()
             ret_dict[arg_name] = argumenttypes.StringArgument[SNESPalette](
                 help_text=f"Hex format palette for {char_name}",
-                parser=SNESPalette.from_hex_sequence
+                parser=SNESPalette.from_hex_sequence,
+                default_value=""
             )
 
         ret_dict["ending"] = argumenttypes.arg_from_enum(

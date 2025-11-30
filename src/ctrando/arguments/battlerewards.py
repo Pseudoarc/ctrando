@@ -16,8 +16,6 @@ class RewardPoolType(enum.StrEnum):
     VANILLA = "vanilla"
     SHUFFLE = "shuffle"
     RANDOM = "random"
-    # RANDOM_TIERED = "random_tiered"
-    # RANDOM_TIERED_CONSUMABLE = "random_tiered_consumable"
 
 
 class DropOptions:
