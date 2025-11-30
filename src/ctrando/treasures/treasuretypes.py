@@ -167,6 +167,17 @@ class ChestTreasureData(ctt.BinaryData):
 
         return self._is_empty
 
+    @is_empty.setter
+    def is_empty(self, val: bool):
+        if not val:
+            if self.has_gold:
+                self.has_gold = False
+        else:
+            self.has_gold = False
+            self.reward = ctenums.ItemID.MOP
+
+        self._is_empty = val
+
     _held_item = ctt.bytes_prop(2, 2, 0x3FFF, ret_type=ctenums.ItemID)
 
     @property
@@ -276,6 +287,9 @@ class ChestTreasure:
             )
         )
         current_data.reward = self.reward
+        if current_data.reward == ctenums.ItemID.NONE:
+            current_data.is_empty = True
+
         chest_rw.write_data_to_ct_rom(
             ct_rom, current_data, self.chest_index, data_start
         )

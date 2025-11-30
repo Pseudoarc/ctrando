@@ -494,8 +494,8 @@ def get_ctrom_from_config(
 
     for tid, treasure in post_config.treasure_data_dict.items():
         assigned_treasure = config.treasure_assignment[tid]
-        if assigned_treasure == ctenums.ItemID.NONE:
-            assigned_treasure = ctenums.ItemID.MOP
+        # if assigned_treasure == ctenums.ItemID.NONE:
+        #     assigned_treasure = ctenums.ItemID.MOP
 
         # TODO: Do progressive items more gracefully...
         if assigned_treasure == ctenums.ItemID.PENDANT_CHARGE:
