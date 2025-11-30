@@ -258,21 +258,30 @@ def fill_chargeable_chests(
 
 
 def get_vanilla_treasure_pool(
-    extra_ds_items: Sequence[gearrandooptions.DSItem],
+        extra_ds_items: Sequence[gearrandooptions.DSItem],
+        num_items: int,
+        rng: RNGType
+
 ) -> list[ttypes.RewardType]:
 
     base_assignment = ttypes.get_vanilla_assignment()
+
+    if num_items > len(base_assignment.keys()):
+        raise ValueError
+
     item_pool = list(base_assignment.values())
     if gearrandooptions.DSItem.DRAGONS_TEAR in extra_ds_items:
         item_pool[item_pool.index(ctenums.ItemID.MEGAELIXIR)] = ctenums.ItemID.DRAGON_TEAR
     if gearrandooptions.DSItem.VALOR_CREST in extra_ds_items:
         item_pool[item_pool.index(ctenums.ItemID.ELIXIR)] = ctenums.ItemID.VALOR_CREST
 
-    return item_pool
+    rng.shuffle(item_pool)
+    return item_pool[:num_items]
 
 
 def get_random_treasure_pool(
         extra_ds_items: Sequence[gearrandooptions.DSItem],
+        num_items: int,
         rng: RNGType
 ) -> list[ttypes.RewardType]:
     pool: list[ttypes.RewardType] = []
@@ -290,7 +299,10 @@ def get_random_treasure_pool(
         total_items.discard(ctenums.ItemID.VALOR_CREST)
 
     item_list = list(total_items)
-    for tid in ctenums.TreasureID:
+    if num_items > len(list(ctenums.TreasureID)):
+        raise ValueError
+
+    for _ in range(num_items):
         is_gold = rng.random() < 0.05
 
         if is_gold:
@@ -304,7 +316,7 @@ def get_random_treasure_pool(
 
 
 _gold_inv_cdf = pwl.PiecewiseLinear(
-    (0.0, 10),
+    (0.0, 1),
     (0.25, 10),
     (0.50, 100),
     (0.75, 150),
@@ -314,8 +326,22 @@ _gold_inv_cdf = pwl.PiecewiseLinear(
 )
 
 
+def get_tab_treasure_pool(num_items: int, rng: RNGType):
+    pool: list[ttypes.RewardType] = []
+    for _ in range(num_items):
+        if rng.random() < 0.45:
+            pool.append(ctenums.ItemID.POWER_TAB)
+        elif rng.random() < 0.9:
+            pool.append(ctenums.ItemID.MAGIC_TAB)
+        else:
+            pool.append(ctenums.ItemID.SPEED_TAB)
+
+    return pool
+
+
 def get_random_tiered_treasure_pool(
         extra_ds_items: Sequence[gearrandooptions.DSItem],
+        num_items: int,
         rng: RNGType
 ) -> list[ttypes.RewardType]:
     pool: list[ttypes.RewardType] = []
@@ -336,12 +362,16 @@ def get_random_tiered_treasure_pool(
     remove_tiers =  [x for x in shoprando.ItemTier if x not in dist_dict]
     tier_dist = tier_dist.get_restricted_distribution(remove_tiers)
 
-    for tid in ctenums.TreasureID:
+    if num_items > len(ctenums.TreasureID):
+        raise ValueError
+
+
+    for _ in range(num_items):
         is_gold = rng.random() < 0.05
 
         if is_gold:
             x = rng.random()
-            gold_val = _gold_inv_cdf(x) * 100
+            gold_val = round(_gold_inv_cdf(x)) * 100
             pool.append(ttypes.Gold(gold_val))
         else:
             item = shoprando.get_random_tiered_item(tier_dist, dist_dict, rng)
@@ -421,14 +451,26 @@ def default_assignment(
     final_assignment: dict[ctenums.TreasureID, ttypes.RewardType] = {}
     final_assignment.update(existing_assignment)
 
-    if treasure_options.loot_pool == treasureoptions.TreasurePool.VANILLA:
-        item_pool = get_vanilla_treasure_pool(extra_ds_items)
-    elif treasure_options.loot_pool == treasureoptions.TreasurePool.RANDOM:
-        item_pool = get_random_treasure_pool(extra_ds_items, rng)
-    elif treasure_options.loot_pool == treasureoptions.TreasurePool.RANDOM_TIERED:
-        item_pool = get_random_tiered_treasure_pool(extra_ds_items, rng)
-    else:
-        raise ValueError
+    spec_dict = treasureoptions.parse_pool_specifier(treasure_options.custom_loot_pool)
+    if not spec_dict:
+        spec_dict = {1.0: treasure_options.loot_pool}
+
+    item_pool: list[ttypes.RewardType] = []
+
+    for weight, pool_type in spec_dict.items():
+        num_items = math.ceil(len(ctenums.TreasureID) * weight)
+        if pool_type == treasureoptions.TreasurePool.VANILLA:
+            item_pool.extend(get_vanilla_treasure_pool(extra_ds_items, num_items, rng))
+        elif pool_type == treasureoptions.TreasurePool.RANDOM:
+            item_pool.extend(get_random_treasure_pool(extra_ds_items, num_items, rng))
+        elif pool_type == treasureoptions.TreasurePool.TIERED_RANDOM:
+            item_pool.extend(get_random_tiered_treasure_pool(extra_ds_items, num_items, rng))
+        elif pool_type == treasureoptions.PoolModifiers.TAB:
+            item_pool.extend(get_tab_treasure_pool(num_items, rng))
+        elif pool_type == treasureoptions.PoolModifiers.EMPTY:
+            item_pool.extend([ctenums.ItemID.NONE]*num_items)
+        else:
+            raise ValueError
 
     forced_keys = entrancefiller.get_forced_key_items()
 
