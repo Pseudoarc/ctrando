@@ -435,10 +435,12 @@ class StringArgument[_T]:
     def __init__(
             self,
             help_text: str,
-            parser: Callable[[str], _T]
+            parser: Callable[[str], _T],
+            default_value: str
     ):
         self.help_text = help_text
         self.parser = parser
+        self.default_value = default_value
 
     def add_to_argparse(
             self,

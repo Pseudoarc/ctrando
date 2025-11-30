@@ -16,12 +16,66 @@ from ctrando.treasures.treasuretypes import RewardType
 class TreasurePool(enum.StrEnum):
     VANILLA = "vanilla"
     RANDOM = "random"
-    RANDOM_TIERED = "random_tiered"
+    TIERED_RANDOM = "tiered_random"
+
+
+class PoolModifiers(enum.StrEnum):
+    EMPTY = "empty"
+    TAB = "tab"
 
 
 class TreasureScheme(enum.StrEnum):
     SHUFFLE = "shuffle"
     LOGIC_DEPTH = "logic_depth"
+
+
+def verify_pool_specifier(spec: str) -> str:
+    spec = "".join(spec.lower().split())
+    parse_pool_specifier(spec)
+    return spec
+
+
+def parse_pool_specifier(spec: str) -> dict[float, TreasurePool | PoolModifiers]:
+    spec = "".join(spec.lower().split())
+
+    if spec == "none":
+        return dict()
+
+    parts = spec.split(",")
+
+    total_weight = 0
+    temp_dict: dict[float, TreasurePool | PoolModifiers] = dict()
+
+    for part in parts:
+        split = part.split(":")
+        if len(split) == 1:
+            weight = 1.0
+            token = split[0]
+        elif len(split) == 2:
+            weight, token = split
+        else:
+            raise ValueError(f"Too many \":\" in {part}")
+
+        if (weight_float := float(weight)) <= 0:
+            raise ValueError
+
+        total_weight += weight_float
+        enum_item: TreasurePool | PoolModifiers
+        if token in TreasurePool:
+            enum_item = TreasurePool(token)
+        elif token in PoolModifiers:
+            enum_item = PoolModifiers(token)
+        else:
+            raise ValueError
+
+        temp_dict[weight_float] = enum_item
+
+    if total_weight <= 0:
+        raise ValueError
+
+    return {
+        key/total_weight: val for (key, val) in temp_dict.items()
+    }
 
 
 class TreasureOptions:
@@ -86,6 +140,7 @@ class TreasureOptions:
     _default_trading_post_base_cost = 3
     _default_trading_post_upgrade_cost = 3
     _default_trading_post_special_cost = 10
+    _default_custom_loot_pool = "none"
 
     def __init__(
             self,
@@ -97,7 +152,8 @@ class TreasureOptions:
             post_assign_shuffle_rate = _default_post_assign_shuffle_rate,
             trading_post_base_cost = _default_trading_post_base_cost,
             trading_post_upgrade_cost = _default_trading_post_upgrade_cost,
-            trading_post_special_cost=_default_trading_post_special_cost
+            trading_post_special_cost=_default_trading_post_special_cost,
+            custom_loot_pool=_default_custom_loot_pool
     ):
         self.loot_pool = loot_pool
         self.loot_assignment_scheme = loot_assignment_scheme
@@ -108,6 +164,7 @@ class TreasureOptions:
         self.trading_post_base_cost = trading_post_base_cost
         self.trading_post_upgrade_cost = trading_post_upgrade_cost
         self.trading_post_special_cost = trading_post_special_cost
+        self.custom_loot_pool = custom_loot_pool
 
     @classmethod
     def get_argument_spec(cls) -> argumenttypes.ArgSpec:
@@ -115,6 +172,12 @@ class TreasureOptions:
             "loot_pool": argumenttypes.arg_from_enum(
                 TreasurePool, cls._default_treasure_pool,
                 "Method to determine which loot is available for assignment"
+            ),
+            "custom_loot_pool": argumenttypes.StringArgument(
+                "Custom distribution for loot pool (e.g. 75:\"vanilla\", 25:\"random\")."
+                " Overrides loot_pool.  Leave \"none\" to ignore.",
+                parser=verify_pool_specifier,
+                default_value=cls._default_custom_loot_pool
             ),
             "loot_assignment_scheme": argumenttypes.arg_from_enum(
                 TreasureScheme, cls._default_treasure_scheme,
@@ -207,7 +270,7 @@ class TreasureOptions:
 
         spec = cls.get_argument_spec()
         attr_names = ("trading_post_base_cost", "trading_post_upgrade_cost",
-                      "trading_post_special_cost")
+                      "trading_post_special_cost", "custom_loot_pool")
         for attr_name in attr_names:
             arg = spec[attr_name]
             arg_name = argumenttypes.attr_name_to_arg_name(attr_name)
