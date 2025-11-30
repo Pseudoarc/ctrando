@@ -62,7 +62,7 @@ def parse_objective_str(obj_str: str) -> str:
                 f"Could not parse objective name: {objective}."
             )
 
-        return obj_str
+    return obj_str
 
 
 @dataclass
@@ -106,7 +106,8 @@ class ObjectiveOptions:
             help_text = f"Specifier for objective {obj_num}"
             ret_dict[arg_name] = argumenttypes.StringArgument[str](
                 help_text=help_text,
-                parser=parse_objective_str
+                parser=parse_objective_str,
+                default_value=cls._default_objective_specifier
             )
 
         return ret_dict
