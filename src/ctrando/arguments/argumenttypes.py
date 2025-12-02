@@ -326,11 +326,15 @@ class DiscreteNumericalArg[_Number]:
         else:
             type_fn = self.type_fn
 
+        def arg_type_fn(val: str) -> typing.Any:
+            num_val = type_fn(val)
+            return sorted([self.min_value, num_val, self.max_value])[1]
+
         argparse_obj.add_argument(
             argparse_name,
             default=argparse.SUPPRESS,
             action="store",
-            type=type_fn,
+            type=arg_type_fn,
             help=self.help_text
         )
 

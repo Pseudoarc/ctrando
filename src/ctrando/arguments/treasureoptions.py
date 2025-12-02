@@ -66,7 +66,7 @@ def parse_pool_specifier(spec: str) -> dict[float, TreasurePool | PoolModifiers]
         elif token in PoolModifiers:
             enum_item = PoolModifiers(token)
         else:
-            raise ValueError
+            raise ValueError(f"Invalid specifier: {token}")
 
         temp_dict[weight_float] = enum_item
 
@@ -206,17 +206,17 @@ class TreasureOptions:
             "trading_post_base_cost": argumenttypes.DiscreteNumericalArg(
                 1, 10, 1, cls._default_trading_post_base_cost,
                 "Number of materials of each type required for base trade",
-                type_fn=lambda x: max(int(x), 1)
+                type_fn=int
             ),
             "trading_post_upgrade_cost": argumenttypes.DiscreteNumericalArg(
                 1, 10, 1, cls._default_trading_post_upgrade_cost,
                 "Number of materials of each type required for upgraded trade",
-                type_fn=lambda x: max(int(x), 1)
+                type_fn=int
             ),
             "trading_post_special_cost": argumenttypes.DiscreteNumericalArg(
                 1, 15, 1, cls._default_trading_post_upgrade_cost,
                 "Number of materials of each type required for special trade",
-                type_fn=lambda x: max(int(x), 1)
+                type_fn=int
             )
         }
 
