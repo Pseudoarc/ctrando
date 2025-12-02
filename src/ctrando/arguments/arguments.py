@@ -49,6 +49,20 @@ class PresetData:
 class Presets(enum.Enum):
     BEGINNER = PresetData("Beginner Settings", "samplesettings.toml")
     DUNGEON_SHUFFLE = PresetData("Dungeon Shuffle", "dungeonshuffle.toml")
+    FF1R = PresetData("FF1R Winter 2025", "ffr-winter-marathon-main.toml")
+
+
+class ModCategories(enum.Flag):
+    KEY_ITEM = enum.auto()
+
+
+@dataclass()
+class SettingsMod(PresetData):
+    categories: ModCategories
+
+
+class PartialPresets(enum.Enum):
+    ...
 
 
 def get_preset(preset: Presets) -> dict[str, typing.Any]:

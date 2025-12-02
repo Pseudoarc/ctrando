@@ -1,0 +1,287 @@
+
+### General Settings
+input_file="./ct.sfc"
+output_directory="./"  # If omitted, will be the directory of input_file
+
+sightscope_all=true
+forced_sightscope=true
+
+### Battle Rewards
+xp_scale=4.0  # [default = 5.0]
+tp_scale=4.0  # [default = 4.0]
+g_scale=1.0  # Not implemented yet
+split_xp=false  # XP is split among living party members rather than shared evenly
+split_tp=false  # TP is split among living party members rather than shared evenly
+fix_tp_doubling=true  # TP rewards are not duplicated for every gained tech level
+xp_penalty_level = 45
+xp_penalty_percent = 25
+level_cap = 50
+
+boss_xp_factor = 1.25
+boss_tp_factor = 2.00
+midboss_reward_factor = 1.0 #Midboss xp is additionally multiplied by this factor
+normalize_boss_xp = true #Bosses give their level's worth of xp.  TP reward is untouched by this.
+
+### Tech Options
+tech_order="mp_type"
+tech_damage="shuffle"
+tech_damage_random_factor_min=0.75
+tech_damage_random_factor_max=1.25
+preserve_magic=false
+black_hole_factor=4.0
+black_hole_min=20
+balance_tech_mps=true
+show_full_tech_list=true
+
+### Scaling Options
+dynamic_scaling_scheme = "progression"  # Options: "none", "progression", "logic_depth"
+max_scaling_level=50
+dynamic_scale_lavos=true
+defense_safety_min_level=10
+defense_safety_max_level=30
+
+## Settings for dynamic_scaling_scheme="progression"
+levels_per_boss=3.0
+levels_per_quest=0.0
+levels_per_key_item=1.0
+levels_per_objective=3.0
+levels_per_character=1.0
+
+## Static Scaling Options
+# normal_enemy_hp_scale=1.0  # Not implemented yet
+static_boss_hp_scale=1.00
+static_hp_scale_lavos=false
+element_safety_level=30
+obstacle_safety_level=30
+
+### Logic Options
+additional_key_items=["masamune_2"]
+forced_spots = [
+    # "eot_gaspar_reward",
+    "death_peak_south_face_summit",
+    "sun_palace_key",
+    "bekkler_key",
+    "fair_pendant",
+    "zeal_mammon_machine",
+    "mt_woe_key",
+    "giants_claw_key",
+    "kings_trial_key",
+    "yakras_room",
+    "snail_stop_key",
+    "denadoro_mts_key",
+    "frogs_burrow_left",
+    "melchior_forge_masa",
+    "cyrus_grave_key",
+    "tata_reward",
+    "fiona_key",
+    "sun_keep_2300",
+    "jerky_gift",
+    "arris_dome_doan_key",
+    "arris_dome_food_locker_key",
+    "reptite_lair_key",
+    "taban_gift_vest",  # After Heckran
+    "geno_dome_boss_1"
+]
+hard_lavos_end_boss=false
+
+excluded_spots=[
+    # Trading Post
+    "trading_post_petal_fang_base", "trading_post_petal_fang_upgrade",
+    "trading_post_petal_horn_base", "trading_post_petal_horn_upgrade",
+    "trading_post_petal_feather_base", "trading_post_petal_feather_upgrade",
+    "trading_post_fang_horn_base", "trading_post_fang_horn_upgrade",
+    "trading_post_fang_feather_base", "trading_post_fang_feather_upgrade",
+    "trading_post_horn_feather_base", "trading_post_horn_feather_upgrade",
+    # Magus
+    "magus_castle_right_hall", "magus_castle_guillotine_1", "magus_castle_guillotine_2",
+    "magus_castle_slash_room_1", "magus_castle_slash_room_2", "magus_castle_slash_sword_floor",
+    "magus_castle_statue_hall", "magus_castle_four_kids", "magus_castle_ozzie_1",
+    "magus_castle_ozzie_2", "magus_castle_enemy_elevator", "magus_castle_left_hall",
+    "magus_castle_unskippables", "magus_castle_pit_e", "magus_castle_pit_ne",
+    "magus_castle_pit_nw", "magus_castle_pit_w", "magus_castle_flea_magic_tab",
+    "magus_castle_dungeons_magic_tab",
+    # Sunken Desert
+    "sunken_desert_b1_ne", "sunken_desert_b1_se",
+    "sunken_desert_b1_nw", "sunken_desert_b1_sw",
+    "sunken_desert_b2_n", "sunken_desert_b2_nw",
+    "sunken_desert_b2_w", "sunken_desert_b2_sw",
+    "sunken_desert_b2_se", "sunken_desert_b2_e",
+    "sunken_desert_b2_center", "sunken_desert_power_tab",
+    # Tyrano Lair
+    "tyrano_lair_maze_1", "tyrano_lair_maze_2",
+    "tyrano_lair_maze_3", "tyrano_lair_maze_4",
+    # Toma Reward from Cafe
+    "toma_reward"
+]
+
+# incentive_spots -- A list of spots with increased chance of having a key item
+# incentive_spots=[
+# incentive_factor=5.0  # 5x more weight for incentive spots.
+# decay_factor = 0.7  # How much the weight decays each time a key item is put into a region
+
+starter_rewards = ["epoch"]
+boats_of_time=true
+
+## Objectives
+#Can be boss by name, any_boss, any_miniboss, any_quest, open_quest, gated_quest, flight_gated_quest, very_gated_quest
+#open_quests are manoria_cathedral, heckran_cave, crono_trial, denadoro_mountains
+#gated_quests are mt_woe, factory_ruins, arris_dome, tyrano_lair, jerky_trade, zenan_bridge, reptite_lair, epoch_reborn_battle, zeal_palace_throne
+#flight_gated_quests are sun_palace, cyrus_grave, ozzies_fort, charge_moonstone, geno_dome, giants_claw
+#very_gated_quests are blackbird, sunken_desert, forge_masamune, death_peak, ocean_palace, magus_castle
+#objective_1="ozzies_fort"
+#objective_2="sunken_desert"
+#objective_3="any_quest"
+#objective_4="any_quest"
+#objective_5="any_quest"
+#objective_6="any_quest"
+#objective_7="any_quest"
+#objective_8="any_quest"
+
+### Boss Rando Options
+boss_randomization_type = "shuffle"
+midboss_randomization_type = "shuffle"
+
+
+# vanilla_boss_spots -- spots to retain their vanilla boss assignment
+#                       The line below has all possible boss spots in it.
+#vanilla_boss_spots = [
+#    "manoria_catherdal", "heckran_cave", "denadoro_mts",
+#    "zenan_bridge", "reptite_lair", "magus_castle_flea",
+#    "magus_castle_slash", "giants_claw", "tyrano_lair_nizbel",
+#    "zeal_palace", "death_peak", "black_omen_mega_mutant",
+#    "black_omen_giga_mutant", "black_omen_terra_mutant",
+#    "black_omen_elder_spawn", "kings_trial",
+#    "ozzies_fort_flea_plus", "ozzies_fort_super_slash",
+#    "sun_palace", "sunken_desert", "ocean_palace_twin_golem",
+#    "geno_dome_final", "beast_cave", "mt_woe",
+#    "arris_dome", "factory_ruins", "prison_catwalks",
+#    "blackbird_left_wing", "epoch_reborn"
+#]
+
+# boss_pool -- If boss_randomization_scheme is "random", select each spot's boss
+#              from this list.  All bosses are listed on the line below.
+#boss_pool = [
+#    "dalton_plus", "elder_spawn", "flea",
+#    "giga_mutant", "golem", "golem_boss",
+#    "heckran", "lavos_spawn",
+#    "masa_mune", "mega_mutant", "mud_imp",
+#    "nizbel", "nizbel_2", "retinite",
+#    "r_series", "rust_tyrano", "slash_sword",
+#    "son_of_sun", "terra_mutant", "yakra",
+#    "yakra_xiii", "zombor",
+#    "mother_brain", "dragon_tank",
+#    "giga_gaia", "guardian",
+#]
+
+### Shop Options
+shop_inventory_randomization = "tiered_random"
+# shop_capacity_randomization = "shuffle"
+
+not_buyable_items = [
+    "masamune_1", "masamune_2", "bent_hilt", "bent_sword", "hero_medal",
+    "bike_key", "pendant", "gate_key", "prismshard", "c_trigger", "tools",
+    "jerky", "race_log", "moon_stone", "sun_stone", "ruby_knife", "yakra_key",
+    "clone", "tomas_pop", "pendant_charge", "rainbow_shell", "jetsoftime",
+    "seed", "dreamstone"
+]
+
+not_sellable_items = [
+    "masamune_1", "masamune_2", "bent_hilt", "bent_sword", "hero_medal", "petal", "horn", "fang", "feather", "seed",
+    "bike_key", "pendant", "gate_key", "prismshard", "c_trigger", "tools", "jerky", "race_log", "moon_stone",
+    "sun_stone", "ruby_knife", "yakra_key", "clone", "tomas_pop", "petals_2", "fangs_2", "horns_2", "feathers_2",
+    "pendant_charge", "rainbow_shell", "jetsoftime", "dreamstone"
+]
+
+item_base_prices = "balanced"
+item_price_randomization = "random_multiplier"
+item_price_min_multiplier = 0.75
+item_price_max_multiplier = 2.00
+# item_price_randomization_exclusions = []
+
+### Objective Reward Options
+num_algetty_portal_objectives = 2
+num_omen_objectives = 1
+num_bucket_objectives = 4
+num_timegauge_objectives = 5
+
+
+### Enemy Drop Settings:
+drop_enemy_pool = "vanilla"
+drop_reward_pool = "vanilla"
+drop_rate=1.0
+mark_dropping_enemies = true
+
+### Enemy Charm Settings:
+charm_enemy_pool="vanilla"
+charm_reward_pool="vanilla"
+charm_rate = 1.0  # 100%
+mark_charmable_enemies=true
+
+shuffle_enemies=true
+
+### Entrance Options
+#shuffle_entrances=true
+#preserve_dungeons=true
+
+### Recruit Options
+scale_level_to_leader=true
+scale_techlevel_to_leader=true
+scale_gear=true
+
+use_phys_marle=true
+use_haste_all=true
+use_reraise=true
+
+use_phys_lucca=true
+use_protect_all=true
+
+use_magus_dual_techs=true
+#use_daltonized_magus=true
+
+
+good_loot = [
+    "megaelixir", "hyperether", "elixir", "speed_tab",  # consumables
+    "rainbow", "shiva_edge", "swallow",  # Crono gear
+    "valkerye", "siren",  # Marle gear
+    "wondershot", "taban_suit",  # Lucca gear
+    "crisis_arm", "terra_arm",  # Robo gear
+    "masamune_2",  # Frog gear
+    "bronzefist",  # Ayla gear
+    "doomsickle", "gloom_helm", "gloom_cape",  # Magus gear
+    "prism_helm", "vigil_hat", "safe_helm", "haste_helm",  # top tier helms
+    "rbow_helm", "mermaidcap", "dark_helm",  #  elemental helms
+    "moon_armor", "nova_armor",  # top tier boy armor
+    "prismdress", "zodiaccape",  # top tier girl armor
+    "ruby_armor",  # top tier everyone armor
+    "prismspecs", "sun_shades", "gold_stud", "gold_erng", "greendream",  # top accs
+    "blue_rock", "gold_rock", "black_rock", "white_rock", "silverrock",  #rocks
+]
+
+#  --good-loot-spots GOOD_LOOT_SPOTS [GOOD_LOOT_SPOTS ...]
+#                        Spots which will be given a random good reward.
+
+# The list below contains most spots of interest
+good_loot_spots = []
+
+# Gear Randomization Options: Options for how the stats of weapons may be randomized
+ds_item_pool =  [   # DS Items which may appear.
+    "dreamseeker", "venus_bow", "turboshot", "spellslinger", "dragon_arm", "apocalypse_arm",
+    "dinoblade", "judgement_scythe", "dreamreaper",
+    "reptite_dress", "dragon_armor", "regal_plate", "regal_gown", "shadowplume_robe",
+    "elemental_aegis", "saurian_leathers",
+    "dragonhead", "reptite_tiara", "masters_crown", "angels_tiara",
+    "valor_crest", "dragons_tear"
+]
+ds_replacement_chance = 30  # Percent chance (e.g. 10 for 10 percent) to replace an item with a ds counterpart.
+
+weapon_rando_pool = [  # Weapons whose effects should be shuffled
+    "rainbow", "shiva_edge", "swallow", "red_katana", "slasher",
+    "valkerye", "siren", "sonicarrow",
+    "wondershot",
+    "terra_arm", "crisis_arm",
+    "masamune_1", "masamune_2", "bravesword", "rune_blade", "demon_hit",
+    "iron_fist", "bronzefist",
+    "doomsickle"
+]
+bronze_fist_policy = "random_other"  # {vanilla,remove,4x_crit,random_other} How to modify BronzeFist pre-shuffle
+
