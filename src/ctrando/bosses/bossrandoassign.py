@@ -739,6 +739,13 @@ def assign_sunken_desert_boss(
     # Remove the 0xF (Bottom) Object which rises up  instead make copies of 0xE which fades in.
     script.remove_object(0xF)
 
+    # R-Series turns invisible with the normal animation 0x7
+    if boss.parts[0].enemy_id == ctenums.EnemyID.R_SERIES:
+        pos = script.get_function_start(0xF, FID.ARBITRARY_0)
+        for _ in range(5):
+            pos = script.find_exact_command(EC.play_animation(0x7), pos)
+            script.data[pos+1] = 0x13
+
     # After this is deleted, 0x10 (Bottom) drops down to 0xF.
     # The eye is still in 0xE, and this is the part we copy for new parts.
     boss_obj_data = [BossObjectData(0xF), BossObjectData(0xE)]  # Shifted up
