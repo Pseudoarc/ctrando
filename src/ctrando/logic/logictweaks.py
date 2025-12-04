@@ -96,7 +96,7 @@ def apply_boats_of_time(
 
         main_decbox_str = (
             "If you bring a gate key, we can expand{line break}"
-            "sevice to 600AD.{full break}"
+            "service to 600AD.{full break}"
             "Where to? {linebreak+0}" +
             get_option_str(1) + "{linebreak+0}" +
             get_option_str(2) + "{null}"
