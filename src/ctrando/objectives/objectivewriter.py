@@ -418,7 +418,7 @@ def write_test_objectives(
 
     obj_str = ""
     for ind, desc in enumerate(descs):
-        obj_str += f"{ind}: {desc}"
+        obj_str += f"{ind+1}: {desc}"
         if ind == len(descs) - 1:
             obj_str += "{null}"
         elif (ind + 1) % 4 == 0:
