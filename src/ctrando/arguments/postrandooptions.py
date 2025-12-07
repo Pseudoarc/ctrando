@@ -247,7 +247,7 @@ class PostRandoOptions:
         )
 
         group.add_argument(
-            "--remove_flashes", action="store_true",
+            "--remove-flashes", action="store_true",
             help="Remove flashes from many animations."
         )
 
