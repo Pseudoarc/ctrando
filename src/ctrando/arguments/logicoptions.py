@@ -192,7 +192,7 @@ class LogicOptions:
                 [
                     x for x in ctenums.ItemID if x not in shopoptions.ShopOptions.unused_items
                 ] + list(_reward_dict.values()),
-                cls._default_starter_rewards,
+                cls._default_out_of_logic_starter_rewards,
                 "Rewards to grant at game start which are not considered by logic",
                 str_to_reward, reward_to_str
             ),
@@ -247,7 +247,7 @@ class LogicOptions:
 
         group.add_argument(
             "--excluded-spots",
-            nargs="+",
+            nargs="*",
             type=functools.partial(str_to_enum, enum_type=ctenums.TreasureID),
             help="Spots which are forbidden to have key items.",
             default=argparse.SUPPRESS

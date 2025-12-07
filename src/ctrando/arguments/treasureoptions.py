@@ -214,7 +214,7 @@ class TreasureOptions:
                 type_fn=int
             ),
             "trading_post_special_cost": argumenttypes.DiscreteNumericalArg(
-                1, 15, 1, cls._default_trading_post_upgrade_cost,
+                1, 15, 1, cls._default_trading_post_special_cost,
                 "Number of materials of each type required for special trade",
                 type_fn=int
             )

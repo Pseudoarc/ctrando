@@ -116,7 +116,7 @@ class BossRandoOptions:
 
         group.add_argument(
             "--vanilla-boss-spots",
-            nargs="+",
+            nargs="*",
             type=functools.partial(aty.str_to_enum, enum_type=bosstypes.BossSpotID,
                                    force_enum_names=True),
             help="Spots which must keep their vanilla boss (also midboss).",

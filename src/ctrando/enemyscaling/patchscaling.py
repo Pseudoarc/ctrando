@@ -1255,11 +1255,12 @@ def get_true_levels_bytes(
     # Boss adjustment for difficulty
     true_levels[ctenums.EnemyID.R_SERIES] = 5
     true_levels[ctenums.EnemyID.YAKRA] = 4
+    true_levels[ctenums.EnemyID.KRAWLIE] = 6
     true_levels[ctenums.EnemyID.GUARDIAN] = 6
     true_levels[ctenums.EnemyID.GUARDIAN_BIT] = 6
     true_levels[ctenums.EnemyID.HECKRAN] = 12
-    true_levels[ctenums.EnemyID.ZOMBOR_TOP] = 10
-    true_levels[ctenums.EnemyID.ZOMBOR_BOTTOM] = 10
+    true_levels[ctenums.EnemyID.ZOMBOR_TOP] = 9
+    true_levels[ctenums.EnemyID.ZOMBOR_BOTTOM] = 9
     true_levels[ctenums.EnemyID.MASA_MUNE] = 15
     true_levels[ctenums.EnemyID.NIZBEL] = 17
     true_levels[ctenums.EnemyID.FLEA] = 19
@@ -1286,17 +1287,23 @@ def get_true_levels_bytes(
     true_levels[ctenums.EnemyID.LAVOS_SPAWN_HEAD] = 32
     true_levels[ctenums.EnemyID.MOTHERBRAIN] = 32
     true_levels[ctenums.EnemyID.DISPLAY] = 32
+    true_levels[ctenums.EnemyID.ATROPOS_XR] = 33
     true_levels[ctenums.EnemyID.GREAT_OZZIE] = 33
     true_levels[ctenums.EnemyID.FLEA_PLUS_TRIO] = 33
     true_levels[ctenums.EnemyID.SUPER_SLASH_TRIO] = 33
     true_levels[ctenums.EnemyID.SON_OF_SUN_EYE] = 43
     true_levels[ctenums.EnemyID.SON_OF_SUN_FLAME] = 43
-    true_levels[ctenums.EnemyID.YAKRA_XIII] = 45
+    true_levels[ctenums.EnemyID.MAMMON_M] = 44
+    true_levels[ctenums.EnemyID.YAKRA_XIII] = 39
+    true_levels[ctenums.EnemyID.MEGA_MUTANT_HEAD] = 46
+    true_levels[ctenums.EnemyID.MEGA_MUTANT_BOTTOM] = 46
     true_levels[ctenums.EnemyID.GIGA_MUTANT_HEAD] = 47
     true_levels[ctenums.EnemyID.GIGA_MUTANT_BOTTOM] = 47
     true_levels[ctenums.EnemyID.TERRA_MUTANT_HEAD] = 48
     true_levels[ctenums.EnemyID.TERRA_MUTANT_BOTTOM] = 48
-    true_levels[ctenums.EnemyID.ZEAL_2_RIGHT] = 0x30
+    true_levels[ctenums.EnemyID.ZEAL_2_RIGHT] = 0x32
+    true_levels[ctenums.EnemyID.ZEAL_2_LEFT] = 0x32
+    true_levels[ctenums.EnemyID.ZEAL_2_CENTER] = 0x32
     true_levels[ctenums.EnemyID.LAVOS_1] = 50
     true_levels[ctenums.EnemyID.LAVOS_OCEAN_PALACE] = 50
 

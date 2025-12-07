@@ -28,7 +28,7 @@ class RecruitOptions:
     _default_cathedral_data = RecruitData(5, 0)
     _default_castle_data = RecruitData(5, 1)
     _default_trial_data = RecruitData(7, 1)
-    _default_proto_data = RecruitData(10, 0)
+    _default_proto_data = RecruitData(10, 2)
     _default_north_cape_data = RecruitData(37, 3)
     _default_burrow_data = RecruitData(18, 2)
     _default_dactyl_data = RecruitData(20, 2)
