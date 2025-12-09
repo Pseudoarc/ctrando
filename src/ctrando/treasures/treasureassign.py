@@ -329,9 +329,10 @@ _gold_inv_cdf = pwl.PiecewiseLinear(
 def get_tab_treasure_pool(num_items: int, rng: RNGType):
     pool: list[ttypes.RewardType] = []
     for _ in range(num_items):
-        if rng.random() < 0.45:
+        x = rng.random()
+        if x < 0.45:
             pool.append(ctenums.ItemID.POWER_TAB)
-        elif rng.random() < 0.9:
+        elif x < 0.90:
             pool.append(ctenums.ItemID.MAGIC_TAB)
         else:
             pool.append(ctenums.ItemID.SPEED_TAB)
