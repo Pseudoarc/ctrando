@@ -864,7 +864,7 @@ def get_all_loc_regions() -> list[LocRegion]:
 
     melchior_forge_castle = LocRegion(
         "melchior_forge_castle",
-        reward_spots={TID.MELCHIOR_RAINBOW_SHELL, TID.MELCHIOR_SUNSTONE_SPECS}
+        reward_spots={TID.MELCHIOR_SUNSTONE_RAINBOW, TID.MELCHIOR_SUNSTONE_SPECS}
     )
     ret_list.append(melchior_forge_castle)
 
