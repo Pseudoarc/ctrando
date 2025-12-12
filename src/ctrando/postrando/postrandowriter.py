@@ -41,6 +41,46 @@ def set_auto_run(ct_rom: ctrom.CTRom):
         ct_rom.write(b'\xD0') # BNE instead of the 0xF0 BEQ
 
 
+def fix_auto_run_scripts(script_manager: ScriptManager):
+    """
+    Fix scripts that check for running.
+    - Proto Dome encounter
+    - Geno Dome switch
+    """
+
+    script = script_manager[ctenums.LocID.PROTO_DOME]
+    pos = script.find_exact_command(
+        EC.check_run_button(), script.get_function_start(0x13, FID.STARTUP)
+    )
+    block = script.get_jump_block(pos, False)
+    new_block = (
+        EF().add_if_else(
+            EC.check_run_button(),
+            EF(),
+            block
+        )
+    )
+    script.insert_commands(new_block.get_bytearray(), pos)
+    pos += len(new_block)
+    script.delete_jump_block(pos)
+
+    script = script_manager[ctenums.LocID.GENO_DOME_MAINFRAME]
+    pos = script.find_exact_command(
+        EC.check_run_button(), script.get_function_start(0x9, FID.STARTUP)
+    )
+    block = script.get_jump_block(pos, False)
+    new_block = (
+        EF().add_if_else(
+            EC.check_run_button(),
+            EF(),
+            block
+        )
+    )
+    script.insert_commands(new_block.get_bytearray(), pos)
+    pos += len(new_block)
+    script.delete_jump_block(pos)
+
+
 def write_palettes(
         ct_rom: ctrom.CTRom,
         post_rando_options: postrandooptions.PostRandoOptions
@@ -176,6 +216,8 @@ def write_post_rando_options(
         post_rando_options.default_fast_ow_movement,
         post_rando_options.default_fast_epoch_movement
     )
+    if post_rando_options.default_fast_loc_movement:
+        fix_auto_run_scripts(script_man)
 
     default_opts = gameoptions.Options.read_from_ctrom(ct_rom)
     default_opts.save_battle_cursor = post_rando_options.battle_memory_cursor
