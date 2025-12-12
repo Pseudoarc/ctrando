@@ -1378,6 +1378,12 @@ class EventCommand:
         cmd_b = bytes.fromhex(''.join(f"{x:02X}" for x in cmd_list))
         return get_command(cmd_b)
 
+
+    @staticmethod
+    def check_run_button(bytes_jump: int = 0) -> EventCommand:
+        return EventCommand.generic_command(0x30, bytes_jump)
+
+
     @staticmethod
     def set_level(pc_id, level: int):
         """
