@@ -585,6 +585,8 @@ def patch_enemy_tech_power(
     # This is only called for enemy techs (not attacks).
     phys_lut_rom_addr = byteops.to_rom_ptr(phys_lut_addr)
     mag_lut_rom_addr = byteops.to_rom_ptr(mag_lut_addr)
+    heal_lut_rom_addr = byteops.to_rom_ptr(heal_lut_addr)
+
     hook_addr = 0x01D836
     # C1D836  7B             TDC
     # C1D837  A8             TAY
@@ -644,35 +646,35 @@ def patch_enemy_tech_power(
         inst.JSL(scale8_rom_addr, AM.LNG),
         inst.STA(eff_st_abs + 0x09, AM.ABS),
         "no scale",
-        # inst.LDA(eff_st_abs, AM.ABS),
-        # inst.BNE("skip heal"),
-        # inst.LDA(slot_addr_abs, AM.ABS),
-        # inst.ASL(mode=AM.NO_ARG),
-        # inst.TAX(),
-        # inst.REP(0x20),
-        # inst.LDA(0xFDA80B, AM.LNG_X),
-        # inst.TAX(),
-        # inst.SEP(0x20),
-        # inst.TDC(),
-        # inst.LDA(0x0001, AM.ABS_X),
-        # inst.STA(memory.Memory.ORIGINAL_LEVEL_TEMP & 0xFFFF, AM.ABS),
-        # inst.TAX(),
-        # inst.LDA(heal_lut_addr, AM.LNG_X),
-        # inst.STA(memory.Memory.FROM_SCALE_TEMP & 0xFFFF, AM.ABS),
-        # inst.LDA(memory.Memory.SCALING_LEVEL & 0xFFFF, AM.ABS),
-        # inst.TAX(),
-        # inst.LDA(heal_lut_addr, AM.LNG_X),
-        # inst.STA(memory.Memory.TO_SCALE_TEMP & 0xFFFF, AM.ABS),
-        # inst.LDA(eff_st_abs + 0x01, AM.ABS),
-        # inst.CMP(15, AM.IMM8),
-        # inst.BEQ("skip heal"),
-        # inst.JSL(scale8_rom_addr, AM.LNG),
-        # inst.CMP(15, AM.IMM8),
-        # inst.BNE("avoid max heal"),
-        # inst.INC(mode=AM.NO_ARG),
-        # "avoid max heal",
-        # inst.STA(eff_st_abs + 0x01, AM.ABS),
-        # "skip heal",
+        inst.LDA(eff_st_abs, AM.ABS),
+        inst.BNE("skip heal"),
+        inst.LDA(slot_addr_abs, AM.ABS),
+        inst.ASL(mode=AM.NO_ARG),
+        inst.TAX(),
+        inst.REP(0x20),
+        inst.LDA(0xFDA80B, AM.LNG_X),
+        inst.TAX(),
+        inst.SEP(0x20),
+        inst.TDC(),
+        inst.LDA(0x0001, AM.ABS_X),
+        inst.STA(memory.Memory.ORIGINAL_LEVEL_TEMP & 0xFFFF, AM.ABS),
+        inst.TAX(),
+        inst.LDA(heal_lut_rom_addr, AM.LNG_X),
+        inst.STA(memory.Memory.FROM_SCALE_TEMP & 0xFFFF, AM.ABS),
+        inst.LDA(memory.Memory.SCALING_LEVEL & 0xFFFF, AM.ABS),
+        inst.TAX(),
+        inst.LDA(heal_lut_rom_addr, AM.LNG_X),
+        inst.STA(memory.Memory.TO_SCALE_TEMP & 0xFFFF, AM.ABS),
+        inst.LDA(eff_st_abs + 0x01, AM.ABS),
+        inst.CMP(15, AM.IMM8),
+        inst.BEQ("skip heal"),
+        inst.JSL(scale8_rom_addr, AM.LNG),
+        inst.CMP(15, AM.IMM8),
+        inst.BNE("avoid max heal"),
+        inst.INC(mode=AM.NO_ARG),
+        "avoid max heal",
+        inst.STA(eff_st_abs + 0x01, AM.ABS),
+        "skip heal",
         inst.TDC(),
         inst.JMP(byteops.to_rom_ptr(return_addr), AM.LNG)
     ]
@@ -1446,7 +1448,7 @@ def apply_full_scaling_patch(
 
     phys_lut_b = bytes(make_lut(get_phys_effective_hp, _atk_affine_constant))
     mag_lut_b = bytes(make_lut(get_mag_effective_hp, _mag_affine_constant))
-    heal_lut_b = bytes(make_lut(get_heal_effetive_hp, _mag_affine_constant))
+    heal_lut_b = bytes(make_lut(_hp_func, _mag_affine_constant))
 
     phys_lut_addr = ct_rom.space_manager.get_free_addr(len(phys_lut_b), 0x410000)
     ct_rom.seek(phys_lut_addr)
@@ -1606,6 +1608,15 @@ def make_xp_lut() -> list[int]:
 
     return xp_lut
 
+_hp_func = pwl.PiecewiseLinear(
+            (1, 175),
+            (6, 920),
+            (12, 2000),
+            (20, 4500),
+            (27, 7000),
+            (40, 11000),
+            (50, 14000)
+        )
 
 def make_hp_lut(alt_table: bool = False):
     def linspace(start: float, stop: float, num_vals: int) -> list[float]:
@@ -1640,16 +1651,16 @@ def make_hp_lut(alt_table: bool = False):
         #     (20, 25),
         #     (45, 100)
         # )
-        hp_func = pwl.PiecewiseLinear(
-            (1, 175),
-            (6, 920),
-            (12, 2000),
-            (20, 4500),
-            (27, 7000),
-            (40, 11000),
-            (50, 14000)
-        )
-
+        # hp_func = pwl.PiecewiseLinear(
+        #     (1, 175),
+        #     (6, 920),
+        #     (12, 2000),
+        #     (20, 4500),
+        #     (27, 7000),
+        #     (40, 11000),
+        #     (50, 14000)
+        # )
+        hp_func = _hp_func
         max_hp = hp_func(50)
 
         hp_table = [
