@@ -232,6 +232,15 @@ def make_ds_replacement_weapons(
         else:
             raise ValueError
 
+    # Crisis to Apocalypse
+    if DSItem.APOCALYPSE_ARM in ds_weapon_pool and rng.random() <replacement_chance:
+        crisis_arm = item_db[ctenums.ItemID.CRISIS_ARM]
+        crisis_arm.stats.attack = 0
+        crisis_arm.stats.critical_rate = 10
+        crisis_arm.stats.has_effect = True
+        crisis_arm.stats.effect_id = WeaponEffects.CRIT_9999
+        crisis_arm.set_name_from_str(f"{arm}Apoc. Arm")
+
 
     # Doomsickle to Judgement/Reaper
     doomsickle_targets = [
