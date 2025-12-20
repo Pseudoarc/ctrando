@@ -208,7 +208,7 @@ def get_all_loc_regions() -> list[LocRegion]:
         region_loc_ids={LocID.PRISON_CATWALKS, LocID.PRISON_CELLS,
                         LocID.PRISON_SUPERVISORS_OFFICE,
                         LocID.PRISON_TORTURE_STORAGE_ROOM,
-                        LocID.PRISON_EXTERIOR},
+                        LocID.PRISON_EXTERIOR, LocID.PRISON_STAIRWELLS},
         region_rewards=[QuestID.CRONO_TRIAL],
         is_combat_region=True
     )
