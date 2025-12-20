@@ -37,7 +37,7 @@ def extract_from_namespace(
         arg_names: Iterable[str],
         namespace: argparse.Namespace
 ) -> _T:
-    opt_dict: dict[str, typing.AnyStr] = {
+    opt_dict: dict[str, typing.Any] = {
         name: getattr(namespace, name)
         for name in arg_names
         if hasattr(namespace, name)
@@ -174,9 +174,9 @@ def add_dataclass_to_group(
 
         opt_dict: dict[str, typing.Any] = dict()
         if inspect.isclass(field.type) and issubclass(field.type, bool):
-            if field.default == True:
+            if field.default:
                 opt_dict['action'] = 'store_false'
-            elif field.default == False:
+            elif not field.default:
                 opt_dict['action'] = 'store_true'
             else:
                 raise ValueError
@@ -184,10 +184,6 @@ def add_dataclass_to_group(
         else:
             opt_dict['type'] = field.type
             opt_dict['action'] = 'store'
-            # if isinstance(field.default, field.type):
-            #     opt_dict['default'] = field.default
-            # else:
-            #     opt_dict['required'] = True
             opt_dict['default'] = argparse.SUPPRESS
 
         if help_str is not None:
