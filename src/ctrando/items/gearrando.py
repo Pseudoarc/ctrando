@@ -4,7 +4,7 @@ from collections.abc import Callable
 
 from ctrando.arguments import gearrandooptions
 from ctrando.arguments.gearrandooptions import DSItem
-from ctrando.common import ctenums, ctrom
+from ctrando.common import ctenums, ctrom, distribution
 from ctrando.common.ctenums import ArmorEffects, WeaponEffects, BoostID
 from ctrando.common.random import RNGType
 from ctrando.items import itemdata
@@ -415,6 +415,78 @@ def modify_bronze_fist(
              BoostID.MAGIC_10, BoostID.SPEED_1, BoostID.NOTHING]
         )
 
+
+_special_atk_effects = (WeaponEffects.CRISIS, WeaponEffects.SPELLSLINGER,
+                        WeaponEffects.CRIT_9999, WeaponEffects.VENUS_BOW)
+
+
+def randomize_weapons_group(
+        item_db: itemdata.ItemDB,
+        group_options: gearrandooptions.WeaponRandoGroup,
+        rng: RNGType
+):
+    weapon_pool = group_options.pool
+    weapon_pool = sorted(weapon_pool)
+
+    if (
+            group_options.effect_scheme == gearrandooptions.GearRandoScheme.SHUFFLE_LINKED or
+            group_options.boost_scheme == gearrandooptions.GearRandoScheme.SHUFFLE_LINKED
+    ):
+        rng.shuffle(weapon_pool)
+        effects = [item_db[weapon].stats.effect_id for weapon in weapon_pool]
+        boosts = [item_db[weapon].secondary_stats.stat_boost_index for weapon in weapon_pool]
+    else:
+        if group_options.effect_scheme == gearrandooptions.GearRandoScheme.SHUFFLE:
+            effects = [item_db[weapon].stats.effect_id for weapon in weapon_pool]
+            # boosts = [item_db[weapon].secondary_stats.stat_boost_index for weapon in weapon_pool]
+            rng.shuffle(effects)
+        elif group_options.effect_scheme == gearrandooptions.GearRandoScheme.RANDOM:
+            effects = list(group_options.forced_effects)
+            effect_dist = gearrandooptions.get_weapon_effect_distribution(
+                group_options.random_effect_spec
+            )
+            while len(effects) < len(weapon_pool):
+                effects.append(effect_dist.get_random_item(rng))
+            rng.shuffle(effects)
+        else:
+            effects = []
+
+        if group_options.boost_scheme == gearrandooptions.GearRandoScheme.SHUFFLE:
+            boosts = [item_db[weapon].secondary_stats.stat_boost_index for weapon in weapon_pool]
+            rng.shuffle(boosts)
+        elif group_options.boost_scheme == gearrandooptions.GearRandoScheme.RANDOM:
+            boosts = list(group_options.forced_boosts)
+            boost_dist = gearrandooptions.get_stat_boot_distribution(
+                group_options.random_boost_spec
+            )
+            while len(boosts) < len(weapon_pool):
+                boosts.append(boost_dist.get_random_item(rng))
+            rng.shuffle(boosts)
+        else:
+            boosts = []
+
+
+    special_atk_effects = _special_atk_effects
+
+    if group_options.effect_scheme != gearrandooptions.GearRandoScheme.NO_CHANGE:
+        for item_id, effect in zip(weapon_pool, effects):
+            cur_stats = item_db[item_id].stats
+            cur_stats.has_effect = False
+
+            if effect != WeaponEffects.NONE:
+                cur_stats.has_effect = True
+                cur_stats.effect_id = effect
+                if effect in special_atk_effects:
+                    cur_stats.attack = 0
+                    if effect == WeaponEffects.CRIT_9999:
+                        cur_stats.critical_rate = 10
+
+    if group_options.boost_scheme != gearrandooptions.GearRandoScheme.NO_CHANGE:
+        for item_id, boost in zip(weapon_pool, boosts):
+            cur_secondary_stats = item_db[item_id].secondary_stats
+            cur_secondary_stats.stat_boost_index = boost
+
+
 def randomize_gear(
         item_db: itemdata.ItemDB,
         gear_rando_options: gearrandooptions.GearRandoOptions,
@@ -431,44 +503,22 @@ def randomize_gear(
     #     IID.IRON_FIST, IID.BRONZEFIST,
     #     IID.DOOMSICKLE
     # ]
-    weapon_pool = gear_rando_options.weapon_rando_pool
-    ds_replacement_rate = gear_rando_options.ds_replacement_chance/100
+
+    ds_replacement_rate = gear_rando_options.ds_replacement_chance / 100
 
     make_ds_replacement_weapons(
         item_db, gear_rando_options.ds_item_pool,
-        gear_rando_options.ds_replacement_chance/100, rng)
+        gear_rando_options.ds_replacement_chance / 100, rng)
     make_ds_replacement_armors(
         item_db, gear_rando_options.ds_item_pool,
-        gear_rando_options.ds_replacement_chance/100, rng)
+        gear_rando_options.ds_replacement_chance / 100, rng)
 
     modify_bronze_fist(item_db, gear_rando_options.bronze_fist_policy, rng)
 
-    stats_pool = [
-        (item_db[item_id].stats.get_copy(), item_db[item_id].secondary_stats.get_copy())
-        for item_id in weapon_pool
-    ]
+    for group in gear_rando_options.rando_groups:
+        randomize_weapons_group(item_db, group, rng)
 
-    rng.shuffle(stats_pool)
-
-    special_atk_effects = (WeaponEffects.CRISIS, WeaponEffects.SPELLSLINGER,
-                           WeaponEffects.CRIT_9999, WeaponEffects.VENUS_BOW)
-
-    for item_id, (stats, sec_stats) in zip(weapon_pool, stats_pool):
-        cur_stats = item_db[item_id].stats
-        cur_secondary_stats = item_db[item_id].secondary_stats
-
-        cur_stats.has_effect = False
-
-        if stats.has_effect:
-            cur_stats.has_effect = True
-            cur_stats.effect_id = stats.effect_id
-            if stats.effect_id in special_atk_effects:
-                cur_stats.attack = 0
-                if stats.effect_id == WeaponEffects.CRIT_9999:
-                    cur_stats.critical_rate = 10
-
-        cur_secondary_stats.stat_boost_index = sec_stats.stat_boost_index
-
+    special_atk_effects = _special_atk_effects
     # Do Ultimate weapon checks
     crisis_arm = item_db[ctenums.ItemID.CRISIS_ARM]
     if crisis_arm.stats.effect_id not in special_atk_effects and crisis_arm.stats.attack <= 1:
