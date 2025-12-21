@@ -1790,7 +1790,8 @@ class WeaponEffects(StrIntEnum):
     ADD_WATER = 0x41
     ADD_FIRE = 0x42
     IRON_ORB = 0x43
-
+    VALIANT = 0x44
+    MP_CRIT = 0x45
 
 class NpcID(StrIntEnum):
     """Graphics IDs for NPCs"""
