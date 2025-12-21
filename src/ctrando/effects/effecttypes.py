@@ -18,11 +18,16 @@ _vanilla_effect_start = 0x0C2A05
 _vanilla_effect_count = 0x39
 _max_vanilla_routine_index = 0x42
 
+_current_attacker_slot = 0xB18B
 _current_damage_offset = 0xAD89
 _current_element_offset = 0xB190
 _current_attack_status_offset = 0xAE9B
 _current_attacker_offset = 0xB1F4
 _current_target_offset = 0xB1F6
+
+_cur_hp_offset = 0x5E30
+_max_hp_offset = 0x5E32
+_cur_mp_offset = 0x5E34
 
 _crown_offset = 0x5E51
 _crown_bit = 0x80
@@ -52,7 +57,9 @@ def gather_new_effects_and_rts(orb_percent: int) -> tuple[list[EffectMod], list[
         get_venus_bow_rt(),
         get_spellslinger_rt(),
         get_add_element_effect(),
-        get_iron_orb_rt()
+        get_iron_orb_rt(),
+        get_valiant_effect_rt(),
+        get_mp_crit_effect_rt(),
     ]
 
     effects = [
@@ -67,7 +74,9 @@ def gather_new_effects_and_rts(orb_percent: int) -> tuple[list[EffectMod], list[
         EffectMod(bytes([_max_vanilla_routine_index + 3, 0x40, 0])),  # Add shadow
         EffectMod(bytes([_max_vanilla_routine_index + 3, 0x20, 0])),  # Add water
         EffectMod(bytes([_max_vanilla_routine_index + 3, 0x10, 0])),  # Add fire
-        EffectMod(bytes([_max_vanilla_routine_index + 4, orb_percent//10, 0]))  # ORB
+        EffectMod(bytes([_max_vanilla_routine_index + 4, orb_percent//10, 0])),  # ORB
+        EffectMod(bytes([_max_vanilla_routine_index + 5, 0, 0])),  # Valiant
+        EffectMod(bytes([_max_vanilla_routine_index + 6, 0, 0])),  # MP crit
     ]
 
     return effects, routines
@@ -539,6 +548,80 @@ def get_iron_orb_rt() -> assemble.ASMList:
 
     return rt
 
+
+# Effects use timers which don't map obviously
+# Haste: Max at $B0F5, X  (pc_id), Current at $AF48, X
+def get_haste_on_crit_rt() -> assemble.ASMList:
+    """
+    Return an assembly routine which grants haste on a critical hit.
+    """
+
+
+def get_valiant_effect_rt() -> assemble.ASMList:
+    """
+    Returns an assembly routine which deals bonus damage based on missing hp.
+    """
+
+    rt: assemble.ASMList = [
+        inst.TDC(),
+        inst.LDX(_current_attacker_offset, AM.ABS),
+        inst.REP(0x20),
+        inst.LDA(_max_hp_offset, AM.ABS_X),
+        inst.SEC(),
+        inst.SBC(_cur_hp_offset, AM.ABS_X),
+        inst.CLC(),
+        inst.ADC(_current_damage_offset, AM.ABS),
+        inst.CMP(9999, AM.IMM16),
+        inst.BCC("no_max"),
+        inst.LDA(9999, AM.IMM16),
+        "no_max",
+        inst.STA(_current_damage_offset, AM.ABS),
+        inst.SEP(0x20),
+        inst.RTS()
+    ]
+
+    return rt
+
+
+def get_mp_crit_effect_rt() -> assemble.ASMList:
+    """
+    Return an assembly routine that gives a guaranteed crit for mp.
+    - MP cost in first argument (0x16)
+    """
+
+    rt: assemble.ASMList = [
+        inst.TDC(),
+        # Check whether the current attacker is doing a basic attack
+        inst.LDA(_current_attacker_slot, AM.ABS),
+        inst.TAX(),
+        inst.LDA(0xAEFF, AM.ABS_X),  # Slot to PCID
+        inst.CMP(0xFF, AM.IMM8),
+        inst.BEQ("end"),
+        inst.TAX(),
+        inst.LDA(0xCC2583, AM.LNG_X),  # PCID to Attack Index
+        inst.CMP(0xB18C, AM.ABS),
+        inst.BNE("end"),  # Ignore unless basic attack
+        inst.LDX(_current_attacker_offset, AM.ABS),
+        inst.REP(0x20),
+        inst.LDA(_cur_mp_offset, AM.ABS_X),
+        inst.CMP(5, AM.IMM16),
+        inst.BCC("no_mp"),
+        inst.SEC(),
+        inst.SBC(5, AM.IMM16),
+        inst.STA(_cur_mp_offset, AM.ABS_X),
+        inst.SEP(0x20),
+        inst.LDA(0x80, AM.IMM8),
+        inst.TSB(_current_attack_status_offset, AM.ABS),
+        inst.BNE("end"),
+        inst.REP(0x20),
+        inst.ASL(_current_damage_offset, AM.ABS),
+        "no_mp",
+        inst.SEP(0x20),
+        "end",
+        inst.RTS()
+    ]
+
+    return rt
 
 
 def get_on_crit_rt() -> assemble.ASMList:

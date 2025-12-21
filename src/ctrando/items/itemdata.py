@@ -96,7 +96,9 @@ _weapon_effect_abbrev_dict: dict[WeaponEffects, str] = {
     WeaponEffects.ADD_LIT: "+Lit",
     WeaponEffects.ADD_SHADOW: "+Shd",
     WeaponEffects.ADD_WATER: "+Wat",
-    WeaponEffects.ADD_FIRE: "+Fir"
+    WeaponEffects.ADD_FIRE: "+Fir",
+    WeaponEffects.VALIANT: "Valiant",
+    WeaponEffects.MP_CRIT: "5MP Crit"
 }
 
 
