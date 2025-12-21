@@ -421,6 +421,10 @@ ds_item_pool =  [   # DS Items which may appear.
     "valor_crest", "dragons_tear"
 ]
 ds_replacement_chance = 50  # Percent chance (e.g. 10 for 10 percent) to replace an item with a ds counterpart.
+bronze_fist_policy = "vanilla"  # {vanilla,remove,4x_crit,random_other} How to modify BronzeFist pre-shuffle
+
+# Randomization of weapons consists of five parts
+# 1) The pool of weapons whose effects will be changed
 weapon_rando_pool = [  # Weapons whose effects should be shuffled
     "rainbow", "shiva_edge", "swallow", "red_katana", "slasher",
     "valkerye", "siren", "sonicarrow",
@@ -429,7 +433,80 @@ weapon_rando_pool = [  # Weapons whose effects should be shuffled
     "iron_fist", "bronzefist",
     "doomsickle"
 ]
-bronze_fist_policy = "vanilla"  # {vanilla,remove,4x_crit,random_other} How to modify BronzeFist pre-shuffle
+
+# 2) A scheme for reassigning the effects (crisis, doom,etc)
+#      - "shuffle_linked" will shuffle the effects of the weapons in the pool
+#         and will keep the associated stat boosts during the shuffle.
+#      - "shuffle" will shuffle the effects of the weapons
+#      - "random" will choose the effects randomly (specified below)
+#      - "no_change" will leave the effect alone (but may change the stat boost)
+#    If "shuffle_linked" is chosen (is default), then you're done.
+weapon_rando_effect_scheme = "shuffle_linked"
+
+# 3) If random is chosen, a list of effects which must be present
+# The total list of effects is:
+#    "none", "wonder", "doom", "crisis", "stop_60", "slow_60", "chaos_80",
+#    "stop_80_machines", "4x_crit", "9999_crit", "777_dmg", "crisis_mp"
+#    "valiant",     (Additional max_hp-cur_hp damage)
+#    "mp_crit",     (Spend 5MP for a guaranteed critical)
+#    "mp_crit4x"    (Spenc 20MP for a guaranteed 4x critical)
+forced_weapon_effects = ["doom", "crisis", "wonder"]  # Ignored because of "shuffle_linked" above
+
+# 4) A scheme for choosing the effects randomly if "random" was chosen and
+#    not enogh forced effects were chosen. The scheme is a comma-separated list
+#    of weight: effect  The default is:
+random_weapon_effect_spec = """
+80: none,
+15: [stop_60, chaos_80, slow_60],
+4: [4x_crit, wonder, doom, crisis, crisis_mp],
+1: [9999_crit, 777_dmg]"""  # Ignored because of "shuffle_linked" above
+# Each line gives percent chance: [list of effects to be chosen from]
+
+# Now we repeat the same for stat boosts (+2 power, +1 speed, etc)
+# 4) A scheme for reassigning stat boosts.  Choosing "shuffle_linked" for either
+#    scheme overrides everything else
+weapon_rando_stat_boost_scheme = "random"  # Ignored because of "shuffle_linked" above
+
+# 5) If random is chosen, a list of stat boosts which must be present
+# The total list of stat boosts is:
+#   "none", "speed_1", "hit_2", "power_2", "stamina_2", "magic_2", "mdef_5",
+#   "speed_3", "hit_10", "power_6", "magic_6", "mdef_10", "power_4", "speed_2",
+#   "mdef_20", "stamina_6", "magic_4", "mdef_12", "magic_mdef_5", "power_stamina_10",
+#   "mdef_stamina_10", "mdef_9", "magic_10", "power_10", "speed_power_3", "power_5",
+#   "magic_5"
+forced_weapon_stat_boosts = ["speed_3"]  # Ignored because of "shuffle_linked" above
+
+# 6) A scheme for choosing the effects randomly if "random" was chosen and
+#    not enogh forced effects were chosen. The scheme is a comma-separated list
+#    of weight: effect  The default is:
+random_weapon_stat_boost_spec = """
+64: none,
+20: [stamina_2, hit_2, magic_2, power_2],
+10: [stamina_6, power_4, magic_4, hit_10, mdef_5, speed_1],
+5: [power_stamina_10, mdef_stamina_10, mdef_12, speed_2, magic_10],
+1: [speed_3, mdef_20]"""
+
+# All of the above options can be suffixed with _2 up to _16 to define additional
+# groups to shuffle.  For example, heres a group which makes a super-mop.
+#weapon_rando_pool_2 = ["mop"]
+#weapon_rando_effect_scheme_2 = "random"
+#forced_weapon_effects_2 = []
+#random_weapon_effect_spec_2 = "1: [crisis, crisis_mp, valiant]"
+#
+#forced_weapon_stat_boosts_2 = []
+#weapon_rando_stat_boost_scheme_2 = "random"
+#random_weapon_stat_boost_spec_2 ="""
+#5: [power_stamina_10, mdef_stamina_10, mdef_12, speed_2],
+#1: [speed_power_3, speed_3, mdef_20]"""
+
+# Here's a group which puts magic-type effects on Crono's weaker weapons
+#weapon_rando_pool_3 = ["wood_sword", "iron_sword", "steelsaber", "lode_sword", "red_katana", "dark_saber", "aeon_blade"]
+#weapon_rando_effect_scheme_3 = "random"
+#weapon_rando_stat_boost_scheme_3 = "random"
+#forced_weapon_effects_3 = []
+#forced_weapon_stat_boosts_3 = []
+#random_weapon_effect_spec_3 = "10: none, 9: mp_crit, 1: mp_crit4x"
+#random_weapon_stat_boost_spec_3 = "5: [magic_2, magic_4], 2: [magic_6, magic_mdef_5]"
 
 # Post-Randomization Options
 # If running offline, you can use this in the same options file.  Otherwise, these options

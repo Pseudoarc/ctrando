@@ -1792,6 +1792,8 @@ class WeaponEffects(StrIntEnum):
     IRON_ORB = 0x43
     VALIANT = 0x44
     MP_CRIT = 0x45
+    MP_CRIT4X = 0x46
+
 
 class NpcID(StrIntEnum):
     """Graphics IDs for NPCs"""

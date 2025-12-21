@@ -76,7 +76,8 @@ def gather_new_effects_and_rts(orb_percent: int) -> tuple[list[EffectMod], list[
         EffectMod(bytes([_max_vanilla_routine_index + 3, 0x10, 0])),  # Add fire
         EffectMod(bytes([_max_vanilla_routine_index + 4, orb_percent//10, 0])),  # ORB
         EffectMod(bytes([_max_vanilla_routine_index + 5, 0, 0])),  # Valiant
-        EffectMod(bytes([_max_vanilla_routine_index + 6, 0, 0])),  # MP crit
+        EffectMod(bytes([_max_vanilla_routine_index + 6, 5, 0])),  # MP crit
+        EffectMod(bytes([_max_vanilla_routine_index + 6, 20, 1])),  # MP crit4x
     ]
 
     return effects, routines
@@ -586,7 +587,8 @@ def get_valiant_effect_rt() -> assemble.ASMList:
 def get_mp_crit_effect_rt() -> assemble.ASMList:
     """
     Return an assembly routine that gives a guaranteed crit for mp.
-    - MP cost in first argument (0x16)
+    - MP cost in first argument (0x1C)
+    - Use 4x damage if second argument (0x1E) is 01
     """
 
     rt: assemble.ASMList = [
@@ -604,16 +606,19 @@ def get_mp_crit_effect_rt() -> assemble.ASMList:
         inst.LDX(_current_attacker_offset, AM.ABS),
         inst.REP(0x20),
         inst.LDA(_cur_mp_offset, AM.ABS_X),
-        inst.CMP(5, AM.IMM16),
+        inst.CMP(0x1C, AM.DIR),
         inst.BCC("no_mp"),
         inst.SEC(),
-        inst.SBC(5, AM.IMM16),
+        inst.SBC(0x1C, AM.DIR),
         inst.STA(_cur_mp_offset, AM.ABS_X),
         inst.SEP(0x20),
         inst.LDA(0x80, AM.IMM8),
         inst.TSB(_current_attack_status_offset, AM.ABS),
         inst.BNE("end"),
         inst.REP(0x20),
+        inst.ASL(_current_damage_offset, AM.ABS),
+        inst.LDA(0x1E, AM.DIR),
+        inst.BEQ("no_mp"),
         inst.ASL(_current_damage_offset, AM.ABS),
         "no_mp",
         inst.SEP(0x20),
