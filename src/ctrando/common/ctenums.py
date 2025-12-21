@@ -2051,3 +2051,35 @@ class NpcID(StrIntEnum):
     # {FD} UNUSED
     # {FE} UNUSED
     # {FF} UNUSED
+
+
+class BoostID(StrIntEnum):
+    NOTHING = 0x00
+    SPEED_1 = 0x01
+    HIT_2 = 0x02
+    POWER_2 = 0x03
+    STAMINA_2 = 0x04
+    MAGIC_2 = 0x05
+    MDEF_5 = 0x06
+    SPEED_3 = 0x07
+    HIT_10 = 0x08
+    POWER_6 = 0x09
+    MAGIC_6 = 0x0A
+    MDEF_10 = 0x0B
+    POWER_4 = 0x0C
+    SPEED_2 = 0x0D
+    # MDEF_15 = 0x0E
+    MDEF_20 = 0x0E
+    STAMINA_6 = 0x0F
+    MAGIC_4 = 0x10
+    MDEF_12 = 0x11
+    MAG_MDEF_5 = 0x12
+    POWER_STAMINA_10 = 0x13
+    # MDEF_5_DUP = 0x14
+    MDEF_STAMINA_10 = 0x14
+    MDEF_9 = 0x15
+    MAGIC_10 = 0x16
+    POWER_10 = 0x17
+    SPD_POW_3 = 0x18
+    POWER_5 = 0x19
+    MAGIC_5 = 0x1A
