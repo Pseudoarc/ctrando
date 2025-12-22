@@ -432,9 +432,10 @@ def randomize_weapons_group(
             group_options.effect_scheme == gearrandooptions.GearRandoScheme.SHUFFLE_LINKED or
             group_options.boost_scheme == gearrandooptions.GearRandoScheme.SHUFFLE_LINKED
     ):
-        rng.shuffle(weapon_pool)
-        effects = [item_db[weapon].stats.effect_id for weapon in weapon_pool]
-        boosts = [item_db[weapon].secondary_stats.stat_boost_index for weapon in weapon_pool]
+        temp_pool = list(weapon_pool)
+        rng.shuffle(temp_pool)
+        effects = [item_db[weapon].stats.effect_id for weapon in temp_pool]
+        boosts = [item_db[weapon].secondary_stats.stat_boost_index for weapon in temp_pool]
     else:
         if group_options.effect_scheme == gearrandooptions.GearRandoScheme.SHUFFLE:
             effects = [item_db[weapon].stats.effect_id for weapon in weapon_pool]
