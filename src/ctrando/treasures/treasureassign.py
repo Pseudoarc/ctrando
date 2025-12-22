@@ -492,6 +492,13 @@ def default_assignment(
     fill_chargeable_chests(final_assignment, item_pool, spot_pool, rng)
     fill_trading_post(final_assignment, item_pool, spot_pool, rng)
 
+    removable_consumables = [ctenums.ItemID.TONIC, ctenums.ItemID.POWER_MEAL,
+                             ctenums.ItemID.HEAL, ctenums.ItemID.SHELTER,
+                             ctenums.ItemID.REVIVE]
+    for consumable in removable_consumables:
+        while consumable in item_pool and len(item_pool) > len(spot_pool):
+            item_pool.remove(consumable)
+
     num_filler = max(0, len(spot_pool) - len(item_pool))
     if num_filler > 0:
         item_pool.extend([ctenums.ItemID.TONIC]*num_filler)
