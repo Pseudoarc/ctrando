@@ -230,6 +230,19 @@ class EventMod(locationevent.LocEventMod):
         )
         script.delete_commands_range(pos, del_end)
 
+        cmd = get_command(script.data, pos)
+        pos += len(cmd)
+        block = (
+            EF()
+            .add_if(
+                EC.if_not_flag(memory.Flags.BUCKET_AVAILABLE),
+                EF()
+                .add(EC.play_sound(1))
+                .add(EC.set_explore_mode(True))
+                .add(EC.return_cmd())
+            )
+        )
+        script.insert_commands(block.get_bytearray(), pos)
         # Note: We can repurpose this flag for bucket availability.
 
     @classmethod
