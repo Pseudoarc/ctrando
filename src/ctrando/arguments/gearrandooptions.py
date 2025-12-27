@@ -291,11 +291,11 @@ class GearRandoOptions:
                     choice_from_str_fn=functools.partial(aty.str_to_enum, enum_type=ItemID),
                     str_from_choice_fn=functools.partial(aty.enum_to_str, enum_type=ItemID)
                 ),
-                "weapon_rando_effect_scheme": aty.arg_from_enum(
+                "weapon_rando_effect_scheme"+suffix: aty.arg_from_enum(
                     GearRandoScheme, cls._default_rando_scheme,
                     "How to randomize weapon effects", True
                 ),
-                "weapon_rando_stat_boost_scheme": aty.arg_from_enum(
+                "weapon_rando_stat_boost_scheme"+suffix: aty.arg_from_enum(
                     GearRandoScheme, cls._default_rando_scheme,
                     "How to randomize weapon stat boosts", True
                 ),
