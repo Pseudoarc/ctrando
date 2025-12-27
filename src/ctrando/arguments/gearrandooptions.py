@@ -300,14 +300,14 @@ class GearRandoOptions:
                     "How to randomize weapon stat boosts", True
                 ),
                 "forced_weapon_effects"+suffix: aty.MultipleDiscreteSelection(
-                    _weapon_effect_dist_generator.singleton_dict.keys(),
+                    _weapon_effect_dist_generator.singleton_dict.values(),
                     cls._default_forced_weapon_effects,
                     "Effects guaranteed to exist in the weapon rando pool",
                     lambda x: _weapon_effect_dist_generator.singleton_dict[x],
                     lambda x: _weapon_effect_dist_generator.singleton_dict_inv[x]
                 ),
                 "forced_weapon_stat_boosts"+suffix: aty.MultipleDiscreteSelection(
-                    _boost_dist_generator.singleton_dict.keys(),
+                    _boost_dist_generator.singleton_dict.values(),
                     cls._default_forced_stat_boosts,
                     "Stat boosts guaranteed to exist in the weapon rando pool",
                     lambda x: _boost_dist_generator.singleton_dict[x],

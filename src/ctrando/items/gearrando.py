@@ -211,7 +211,7 @@ def make_ds_replacement_weapons(
             crisis_arm.stats.critical_rate = 10
             crisis_arm.stats.has_effect = True
             crisis_arm.stats.effect_id = WeaponEffects.CRIT_9999
-            crisis_arm.set_name_from_str(f"{arm}Apoc. Arm")
+            crisis_arm.set_name_from_str("{arm}Apoc. Arm")
         elif replacement == DSItem.DRAGON_ARM:
             crisis_arm.stats.has_effect = False
             crisis_arm.stats.attack = 170
