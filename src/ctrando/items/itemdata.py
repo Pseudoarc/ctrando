@@ -99,7 +99,11 @@ _weapon_effect_abbrev_dict: dict[WeaponEffects, str] = {
     WeaponEffects.ADD_FIRE: "+Fir",
     WeaponEffects.VALIANT: "Valiant",
     WeaponEffects.MP_CRIT: "5MP Crit",
-    WeaponEffects.MP_CRIT4X: "20MP Crit4x"
+    WeaponEffects.MP_CRIT4X: "20MP Crit4x",
+    WeaponEffects.HP_LEECH_5: "+5% HP Hit",
+    WeaponEffects.HP_LEECH_10: "+10% HP Hit",
+    WeaponEffects.MP_LEECH_2: "+2 MP Hit",
+    WeaponEffects.MP_LEECH_5: "+5 MP Hit",
 }
 
 

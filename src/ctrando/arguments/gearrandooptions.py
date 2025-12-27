@@ -64,7 +64,12 @@ _weapon_effect_symbol_dict: dict[str, list[WE]] = {
     "crisis_mp": [WE.SPELLSLINGER],
     "valiant": [WE.VALIANT],
     "mp_crit": [WE.MP_CRIT],
-    "mp_crit4x": [WE.MP_CRIT4X]
+    "mp_crit4x": [WE.MP_CRIT4X],
+    "hp_leech_5": [WE.HP_LEECH_5],
+    "hp_leech_10": [WE.HP_LEECH_10],
+    "mp_leech_2": [WE.MP_LEECH_2],
+    "mp_leech_5": [WE.MP_LEECH_5],
+
 }
 _weapon_effect_dist_generator = distribution.DistributionGenerator[WE](_weapon_effect_symbol_dict)
 def get_weapon_effect_distribution(spec_str: str):

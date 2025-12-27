@@ -28,9 +28,19 @@ _current_target_offset = 0xB1F6
 _cur_hp_offset = 0x5E30
 _max_hp_offset = 0x5E32
 _cur_mp_offset = 0x5E34
+_max_mp_offset = 0x5E36
 
 _crown_offset = 0x5E51
 _crown_bit = 0x80
+
+# Status Registers: B32A, B356, B382
+# These are probably supposed to be one per person involved in the tech
+#   - 0x4000 set means mp healing
+#   - $B27C used for position in tech?
+
+# Damage for display goes in
+# B382, X/Y - status for hp/mp healing?
+# B380, X/Y - quantity of hp/mp healing
 
 _local_status_offset = 0x5E50 - 0x5E2D
 _local_haste_offset = _local_status_offset + 2
@@ -60,6 +70,8 @@ def gather_new_effects_and_rts(orb_percent: int) -> tuple[list[EffectMod], list[
         get_iron_orb_rt(),
         get_valiant_effect_rt(),
         get_mp_crit_effect_rt(),
+        get_heal_on_hit_rt(),
+        get_mp_on_hit_rt()
     ]
 
     effects = [
@@ -78,6 +90,10 @@ def gather_new_effects_and_rts(orb_percent: int) -> tuple[list[EffectMod], list[
         EffectMod(bytes([_max_vanilla_routine_index + 5, 0, 0])),  # Valiant
         EffectMod(bytes([_max_vanilla_routine_index + 6, 5, 0])),  # MP crit
         EffectMod(bytes([_max_vanilla_routine_index + 6, 20, 1])),  # MP crit4x
+        EffectMod(bytes([_max_vanilla_routine_index + 7, 5, 0])),  # HP Leach 5%
+        EffectMod(bytes([_max_vanilla_routine_index + 7, 10, 0])),  # HP Leach 10%
+        EffectMod(bytes([_max_vanilla_routine_index + 8, 2, 0])),  # MP Leach 2
+        EffectMod(bytes([_max_vanilla_routine_index + 8, 5, 0])),  # MP Leach 5
     ]
 
     return effects, routines
@@ -623,6 +639,158 @@ def get_mp_crit_effect_rt() -> assemble.ASMList:
         "no_mp",
         inst.SEP(0x20),
         "end",
+        inst.RTS()
+    ]
+
+    return rt
+
+
+def get_heal_on_hit_rt() -> assemble.ASMList:
+    """
+    Gets a routine that gives health as a percentage of damage on hit.
+    """
+    _attacker_tech_position = 0xB27C
+
+    slow_mult_rom_addr = 0xC1FDBF
+    slow_div_rom_addr = 0xC1FDD3
+
+    temp_rem_addr = 0x34  # DIR
+    temp_dmg_addr = 0x36  # DIR
+
+    rt: assemble.ASMList = [
+        inst.TDC(),
+        inst.LDA(_attacker_tech_position, AM.ABS),
+        inst.TAX(),
+        inst.REP(0x20),
+        inst.STA(0x28, AM.DIR),
+        inst.LDA(0x28, AM.IMM16),
+        inst.CPX(0, AM.IMM16),
+        "addr_loop",
+        inst.BEQ("after_addr"),
+        inst.CLC(),
+        inst.ADC(0x28, AM.DIR),
+        inst.DEX(),
+        inst.BRA("addr_loop"),
+        "after_addr",
+        inst.TDC(),
+        inst.SEP(0x20),
+        inst.LDA(_current_attacker_slot, AM.ABS),
+        inst.REP(0x20),
+        inst.ASL(mode=AM.NO_ARG),
+        inst.ASL(mode=AM.NO_ARG),
+        inst.TAX(),
+        inst.LDA(_current_damage_offset, AM.ABS),
+        inst.STA(0x28, AM.DIR),
+        inst.LDA(100, AM.IMM16),
+        inst.STA(0x2A, AM.DIR),
+        inst.JSL(slow_div_rom_addr),
+        inst.LDA(0x2C, AM.DIR),
+        inst.STA(0x28, AM.DIR),
+        inst.LDA(0x1C, AM.DIR),
+        inst.AND(0x00FF, AM.IMM16),
+        inst.STA(0x2A, AM.DIR),
+        inst.LDA(0x32, AM.DIR),  # remainder
+        inst.STA(temp_rem_addr, AM.DIR),
+        inst.JSL(slow_mult_rom_addr, AM.LNG),
+        inst.REP(0x20),
+        inst.LDX(0x2C, AM.DIR),
+        inst.STX(temp_dmg_addr, AM.DIR),
+        inst.LDA(temp_rem_addr, AM.DIR),
+        inst.STA(0x28, AM.DIR),
+        inst.LDA(0x1C, AM.DIR),
+        inst.STA(0x2A, AM.DIR),
+        inst.JSL(slow_mult_rom_addr),
+        inst.LDX(0x2C, AM.DIR),
+        inst.STX(0x28, AM.DIR),
+        inst.LDX(100, AM.IMM16),
+        inst.STX(0x2A, AM.DIR),
+        inst.JSL(slow_div_rom_addr, AM.LNG),
+        inst.TDC(),
+        inst.SEP(0x20),
+        inst.LDA(_current_attacker_slot, AM.ABS),
+        inst.REP(0x20),
+        inst.ASL(mode=AM.NO_ARG),
+        inst.ASL(mode=AM.NO_ARG),
+        inst.TAX(),
+        inst.REP(0x20),
+        inst.LDA(0x2C, AM.DIR),
+        inst.CLC(),
+        inst.ADC(temp_dmg_addr, AM.DIR),
+        inst.STA(temp_dmg_addr, AM.DIR),
+        inst.CLC(),
+        inst.ADC(0xAD9C, AM.ABS_X),
+        inst.STA(0xAD9C, AM.ABS_X),
+        inst.LDA(0x01, AM.IMM16),
+        inst.STA(0xAD9E, AM.ABS_X),
+        inst.LDX(_current_attacker_offset, AM.ABS),
+        inst.LDA(_cur_hp_offset, AM.ABS_X),
+        inst.ADC(temp_dmg_addr, AM.DIR),
+        inst.CMP(_max_hp_offset, AM.ABS_X),
+        inst.BCC("no max"),
+        inst.LDA(_max_hp_offset, AM.ABS_X),
+        "no max",
+        inst.STA(_cur_hp_offset, AM.ABS_X),
+        inst.SEP(0x20),
+        inst.RTS()
+    ]
+
+    return rt
+
+
+def get_mp_on_hit_rt() -> assemble.ASMList:
+    """
+    Gets a routine that gives a fixed amount of mp on hit.
+    - Quantity MP leeched in first argument (0x2C)
+    """
+    _attacker_tech_position = 0xB27C
+
+    rt: assemble.ASMList = [
+        inst.TDC(),
+        inst.LDA(_attacker_tech_position, AM.ABS),
+        inst.TAX(),
+        inst.REP(0x20),
+        inst.STA(0x28, AM.DIR),
+        inst.LDA(0x28, AM.IMM16),
+        inst.CPX(0, AM.IMM16),
+        "addr_loop",
+        inst.BEQ("after_addr"),
+        inst.CLC(),
+        inst.ADC(0x28, AM.DIR),
+        inst.DEX(),
+        inst.BRA("addr_loop"),
+        "after_addr",
+        inst.TDC(),
+        inst.SEP(0x20),
+        inst.LDA(_current_attacker_slot, AM.ABS),
+        inst.REP(0x20),
+        inst.ASL(mode=AM.NO_ARG),
+        inst.ASL(mode=AM.NO_ARG),
+        inst.TAX(),
+        inst.LDA(0x1C, AM.DIR),
+        inst.CLC(),
+        inst.ADC(0xAD9C, AM.ABS_X),
+        inst.STA(0xAD9C, AM.ABS_X),
+        inst.LDA(0x02, AM.IMM16),
+        inst.STA(0xAD9E, AM.ABS_X),
+        inst.LDX(_current_attacker_offset, AM.ABS),
+        inst.LDA(_cur_mp_offset, AM.ABS_X),
+        inst.ADC(0x1C, AM.DIR),
+        inst.CMP(_max_mp_offset, AM.ABS_X),
+        inst.BCC("no max"),
+        inst.LDA(_max_mp_offset, AM.ABS_X),
+        "no max",
+        inst.STA(_cur_mp_offset, AM.ABS_X),
+
+        # If we ever restrict so that healing can calculated at the usual place, this template works.
+        # inst.LDA(_current_attacker_slot, AM.ABS),
+        # inst.ASL(mode=AM.NO_ARG),
+        # inst.ASL(mode=AM.NO_ARG),
+        # inst.CLC(),
+        # inst.ADC(0x28, AM.DIR),
+        # inst.LDX(0x28, AM.DIR),
+        # inst.LDA(10, AM.IMM16),
+        # inst.STA(0xB328, AM.ABS_X),
+        inst.SEP(0x20),
         inst.RTS()
     ]
 

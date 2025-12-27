@@ -1793,6 +1793,10 @@ class WeaponEffects(StrIntEnum):
     VALIANT = 0x44
     MP_CRIT = 0x45
     MP_CRIT4X = 0x46
+    HP_LEECH_5 = 0x47
+    HP_LEECH_10 = 0x48
+    MP_LEECH_2 = 0x49
+    MP_LEECH_5 = 0x4A
 
 
 class NpcID(StrIntEnum):
