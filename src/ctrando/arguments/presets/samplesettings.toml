@@ -1,7 +1,7 @@
 ### Beginner preset
 
 ### Battle Rewards
-xp_scale=3.0  # Factor by which to scale XP earned in battle
+xp_scale=4.0  # Factor by which to scale XP earned in battle
 tp_scale=6.0  # Factor by which to scale TP earned in battle
 # g_scale=1.0  # Not implemented yet
 split_xp=true  # XP is split among living party members so smaller parties get more
