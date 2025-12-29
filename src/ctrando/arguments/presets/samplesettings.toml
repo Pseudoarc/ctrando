@@ -553,3 +553,19 @@ ending = "the dream project"
 
 # If set to true, most flashing animations are removed
 remove_flashes = false
+
+### Plando Recruits
+#  - Use "crono", "marle", "lucca", "robo", "frog", "ayla", "magus" to force a character
+#    Each character can only be placed in one spot.
+#  - Use "none" to force a spot empty.  Seven spots must be nonempty
+#  - Use "..." to ignore this spot for plando.
+plando_recruit_starter = "..."
+plando_recruit_cathedral = "..."
+plando_recruit_castle = "..."
+plando_recruit_millennial_fair = "..."
+plando_recruit_dactyl_nest = "..."
+plando_recruit_proto_dome = "..."
+plando_recruit_frogs_burrow = "..."
+plando_recruit_crono_trial = "..."
+plando_recruit_death_peak = "..."
+plando_recruit_north_cape = "..."

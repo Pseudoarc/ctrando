@@ -25,7 +25,6 @@ def get_default_recruit_assignment_dict() -> dict[ctenums.RecruitID, ctenums.Cha
     }
 
 
-
 _char_music: dict[ctenums.CharID, int] = {
     ctenums.CharID.CRONO: 0x18,
     ctenums.CharID.MARLE: 0x7,

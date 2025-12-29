@@ -217,7 +217,8 @@ def get_random_config(
                                   rng)
 
     ### Recruits
-    config.recruit_dict = recruitwriter.get_random_recruit_assignment_dict(rng)
+    config.recruit_dict = recruitwriter.get_random_recruit_assignment_dict(
+        settings.plando_options.recruit_assignment, rng)
 
     ### Boss/Midboss
     config.boss_assignment_dict = bossrando.get_random_boss_assignment(settings.boss_rando_options, rng)

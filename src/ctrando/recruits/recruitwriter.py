@@ -4,7 +4,7 @@ import typing
 
 from ctrando.arguments.arguments import Settings
 from ctrando.arguments.recruitoptions import RecruitData
-from ctrando.common import ctrom
+from ctrando.common import ctenums, ctrom
 from ctrando.common.ctenums import CharID, RecruitID, ItemID
 from ctrando.common.random import RNGType
 from ctrando.locations.scriptmanager import ScriptManager
@@ -49,27 +49,26 @@ def get_recruit_spot_data(recruit_spot: RecruitID) -> RecruitSpotData:
 
 
 def get_random_recruit_assignment_dict(
+        plando_dict: dict[ctenums.RecruitID, ctenums.CharID],
         rng: RNGType
 ) -> dict[RecruitID, CharID]:
     """Random Except Starter Filled"""
-    ret_dict: dict[RecruitID, CharID | None] = {
-        spot: None for spot in RecruitID
-    }
+    ret_dict: dict[RecruitID, CharID | None] = {spot: None for spot in RecruitID}
+    ret_dict.update(plando_dict)
 
-    characters = list(CharID)
+    characters = list(x for x in CharID if x not in plando_dict.values())
+    assignable_spots = list(x for x in RecruitID if x not in plando_dict.keys())
     rng.shuffle(characters)
-    assignable_spots = list(RecruitID)
 
     for spot in (RecruitID.STARTER,):
-        # print(f"{spot}: {characters[-1]}")
-        ret_dict[spot] = characters.pop()
-        assignable_spots.remove(spot)
+        if spot in assignable_spots:
+            ret_dict[spot] = characters.pop()
+            assignable_spots.remove(spot)
 
     rng.shuffle(assignable_spots)
     for char in characters:
         spot = assignable_spots.pop()
         ret_dict[spot] = char
-        # print(f"{spot}: {char}")
 
     return ret_dict
 

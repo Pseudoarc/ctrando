@@ -29,7 +29,8 @@ from ctrando.arguments import (
     enemyoptions,
     postrandooptions,
     gearrandooptions,
-    characteroptions
+    characteroptions,
+    plandooptions,
 )
 
 
@@ -204,7 +205,8 @@ class Settings:
             post_rando_options: postrandooptions.PostRandoOptions = postrandooptions.PostRandoOptions(),
             gear_rando_options: gearrandooptions.GearRandoOptions = gearrandooptions.GearRandoOptions(),
             character_options: characteroptions.CharacterOptions = characteroptions.CharacterOptions(),
-            boss_scaling_options: enemyoptions.BossScalingOptions = enemyoptions.BossScalingOptions()
+            boss_scaling_options: enemyoptions.BossScalingOptions = enemyoptions.BossScalingOptions(),
+            plando_options: plandooptions.PlandoOptions = plandooptions.PlandoOptions(),
     ):
         self.general_options = general_options
         self.battle_rewards = battle_rewards
@@ -222,6 +224,7 @@ class Settings:
         self.gear_rando_options = gear_rando_options
         self.character_options = character_options
         self.boss_scaling_options = boss_scaling_options
+        self.plando_options = plando_options
 
     @classmethod
     def get_argument_spec(cls) -> argumenttypes.ArgSpec:
@@ -241,7 +244,8 @@ class Settings:
             "post_rando_options": postrandooptions.PostRandoOptions.get_argument_spec(),
             "gear_rando_options": gearrandooptions.GearRandoOptions.get_argument_spec(),
             "character_options": characteroptions.CharacterOptions.get_argument_spec(),
-            "boss_scaling_options": enemyoptions.BossScalingOptions.get_argument_spec()
+            "boss_scaling_options": enemyoptions.BossScalingOptions.get_argument_spec(),
+            "plando_options": plandooptions.PlandoOptions.get_argument_spec()
         }
 
     @classmethod
@@ -262,7 +266,8 @@ class Settings:
             post_rando_options=postrandooptions.PostRandoOptions.extract_from_namespace(namespace),
             gear_rando_options=gearrandooptions.GearRandoOptions.extract_from_namespace(namespace),
             character_options=characteroptions.CharacterOptions.extract_from_namespace(namespace),
-            boss_scaling_options=enemyoptions.BossScalingOptions.extract_from_namespace(namespace)
+            boss_scaling_options=enemyoptions.BossScalingOptions.extract_from_namespace(namespace),
+            plando_options=plandooptions.PlandoOptions.extract_from_namespace(namespace)
         )
 
 
@@ -297,5 +302,6 @@ def get_parser() -> argparse.ArgumentParser:
     gearrandooptions.GearRandoOptions.add_group_to_parser(parser)
     characteroptions.CharacterOptions.add_group_to_parser(parser)
     enemyoptions.BossScalingOptions.add_group_to_parser(parser)
+    plandooptions.PlandoOptions.add_group_to_argparse(parser)
 
     return parser
