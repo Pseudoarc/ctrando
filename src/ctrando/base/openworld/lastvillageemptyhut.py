@@ -42,7 +42,20 @@ class EventMod(locationevent.LocEventMod):
             memory.Flags.HAS_ALGETTY_PORTAL
         )
 
+        pos = script.get_object_start(0)
+        temp_addr, count_addr = 0x7F0230, 0x7F0232
+        count_fn = owu.get_count_pcs_func(temp_addr, count_addr)
+        script.insert_commands(count_fn.get_bytearray(), pos)
+
         # Fix exploremode/partyfollow
+        pos = script.get_function_start(0xB, FID.ACTIVATE)
+        pos = script.find_exact_command(
+            EC.if_mem_op_value(0x7F0214, OP.LESS_THAN, 3),
+            pos
+        )
+        script.replace_jump_cmd(
+            pos, EC.if_mem_op_mem(0x7F0214, OP.LESS_THAN, count_addr)
+        )
         pos = script.find_exact_command(
             EC.party_follow(),
             script.get_function_start(0xB, FID.ACTIVATE)

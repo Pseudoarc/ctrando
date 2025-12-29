@@ -269,7 +269,7 @@ class OWExitClass(enum.Enum):
                          OWExitEnum.TRUCE_MARKET_1000_S)
     TRUCE_MAYOR = (OWExitEnum.TRUCE_MAYOR_S, OWExitEnum.TRUCE_MAYOR_SW,
                    OWExitEnum.TRUCE_MAYOR)
-    LUCCAS_HOUSE = (OWExitEnum.LUCCAS_HOUSE,OWExitEnum.LUCCAS_HOUSE_E,
+    LUCCAS_HOUSE = (OWExitEnum.LUCCAS_HOUSE, OWExitEnum.LUCCAS_HOUSE_E,
                     OWExitEnum.LUCCAS_HOUSE_SE, OWExitEnum.LUCCAS_HOUSE_S,
                     OWExitEnum.LUCCAS_HOUSE_SW, OWExitEnum.LUCCAS_HOUSE_W)
     GUARDIA_CASTLE_1000 = (OWExitEnum.GUARDIA_CASTLE_1000,)
@@ -347,7 +347,7 @@ class OWExitClass(enum.Enum):
     PORRE_MARKET_600 = (OWExitEnum.PORRE_MARKET_600,)
     FIONAS_VILLA = (OWExitEnum.FIONAS_VILLA, OWExitEnum.FIONAS_VILLA_E,
                     OWExitEnum.FIONAS_VILLA_SE, OWExitEnum.FIONAS_VILLA_S,
-                    OWExitEnum.FIONAS_VILLA_SW, OWExitEnum.FIONAS_VILLA_E)
+                    OWExitEnum.FIONAS_VILLA_SW, OWExitEnum.FIONAS_VILLA_W)
     CHORAS_OLD_RESIDENCE_600 = (OWExitEnum.CHORAS_OLD_RESIDENCE_600_N,
                                 OWExitEnum.CHORAS_OLD_RESIDENCE_600)
     CHORAS_INN_600 = (OWExitEnum.CHORAS_INN_600, OWExitEnum.CHORAS_INN_600_E,
