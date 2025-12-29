@@ -46,6 +46,9 @@ class PlandoOptions:
         if len(none_recruit_spots) > (len(ctenums.RecruitID) - len(ctenums.CharID)):
             raise PlandoException("Too many empty recruit spots")
 
+        if ctenums.RecruitID.STARTER in none_recruit_spots:
+            raise PlandoException("Starter can not be empty")
+
         char_dict: dict[ctenums.CharID, ctenums.RecruitID] = {}
 
         for key, val in self.recruit_assignment.items():

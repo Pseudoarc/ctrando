@@ -354,7 +354,12 @@ class DiscreteCategorialArg[_T]:
         self.choices = list(choices)
         self.default_value = default_value
         self.help_text = help_text
+        if choice_from_str_fn is None:
+            choice_from_str_fn = default_value.__class__
         self.choice_from_str_fn = choice_from_str_fn
+
+        if str_from_choice_fn is None:
+            str_from_choice_fn = lambda x: str(x)
         self.str_from_choice_fn = str_from_choice_fn
 
     def add_to_argparse(
@@ -362,15 +367,15 @@ class DiscreteCategorialArg[_T]:
             argparse_name: str,
             argparse_obj: argparse.ArgumentParser | argparse._ArgumentGroup,
     ):
-        if self.choice_from_str_fn is None:
-            type_fn = self.default_value.__class__
-        else:
-            type_fn = self.choice_from_str_fn
+        # if self.choice_from_str_fn is None:
+        #     type_fn = self.default_value.__class__
+        # else:
+        #     type_fn = self.choice_from_str_fn
 
         argparse_obj.add_argument(
             argparse_name,
             default=argparse.SUPPRESS,
-            type=type_fn
+            type=self.choice_from_str_fn
         )
 
     def get_toml_value(self, value: typing.Any) -> typing.Any:
