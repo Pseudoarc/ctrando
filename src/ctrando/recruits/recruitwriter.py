@@ -49,26 +49,39 @@ def get_recruit_spot_data(recruit_spot: RecruitID) -> RecruitSpotData:
 
 
 def get_random_recruit_assignment_dict(
-        plando_dict: dict[ctenums.RecruitID, ctenums.CharID],
+        plando_dict: dict[ctenums.RecruitID, list[typing.Any]],
         rng: RNGType
-) -> dict[RecruitID, CharID]:
+) -> dict[RecruitID, list[CharID]]:
     """Random Except Starter Filled"""
-    ret_dict: dict[RecruitID, CharID | None] = {spot: None for spot in RecruitID}
-    ret_dict.update(plando_dict)
+    temp_dict: dict[RecruitID, list[CharID | None]] = {spot: [] for spot in RecruitID}
+    char_pool = list(ctenums.CharID)
+    rng.shuffle(char_pool)
 
-    characters = list(x for x in CharID if x not in plando_dict.values())
-    assignable_spots = list(x for x in RecruitID if x not in plando_dict.keys())
-    rng.shuffle(characters)
+    # First handle forced assignment
+    for spot, recruit_list in plando_dict.items():
+        forced_recruits = [x for x in recruit_list if x in ctenums.CharID]
+        for forced_recruit in forced_recruits:
+            temp_dict[spot].append(forced_recruit)
+            char_pool.remove(forced_recruit)
 
-    for spot in (RecruitID.STARTER,):
-        if spot in assignable_spots:
-            ret_dict[spot] = characters.pop()
-            assignable_spots.remove(spot)
+    # Now handle randoms/Nones
+    for spot, recruit_list in plando_dict.items():
+        for recruit_type in recruit_list:
+            if recruit_type == "random":
+                temp_dict[spot].append(char_pool.pop())
+            elif recruit_type is None:
+                temp_dict[spot].append(None)
 
-    rng.shuffle(assignable_spots)
-    for char in characters:
-        spot = assignable_spots.pop()
-        ret_dict[spot] = char
+    remaining_spots = [spot for spot, val in temp_dict.items() if not val]
+    rng.shuffle(remaining_spots)
+
+    for char_id, spot in zip(char_pool, remaining_spots):
+        temp_dict[spot].append(char_id)
+
+    # Clean up None placeholders
+    ret_dict: dict[RecruitID, list[CharID]] = dict()
+    for spot, recruit_list in temp_dict.items():
+        ret_dict[spot] = [x for x in recruit_list if x in ctenums.CharID]
 
     return ret_dict
 
@@ -140,12 +153,21 @@ def write_recruits_to_ct_rom(
     }
 
     for spot, writer in recruit_writer_dict.items():
-        recruit = recruit_dict[spot]
-        if recruit is None and spot in (RecruitID.STARTER,):
-            raise ValueError("{spot} reward can not be None")
+        recruits = recruit_dict[spot]
+        spot_data = spot_levels_dict[spot]
 
-        if recruit is not None:
-            spot_data = spot_levels_dict[spot]
+        if spot == ctenums.RecruitID.STARTER:
+            writer(
+                recruits, script_manager,
+                spot_data.min_level, spot_data.min_tech_level,
+                settings.recruit_options.scale_level_to_leader,
+                settings.recruit_options.scale_techlevel_to_leader,
+                settings.recruit_options.scale_gear
+            )
+        elif recruits:
+            if len(recruits) != 1:
+                raise ValueError(f"Multiple Assignment to {spot}")
+            recruit = recruits[0]
             writer(recruit, script_manager,
                    spot_data.min_level, spot_data.min_tech_level,
                    settings.recruit_options.scale_level_to_leader,

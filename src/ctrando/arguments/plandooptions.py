@@ -1,19 +1,21 @@
 """Options for forcing items and recruits"""
 import argparse
+import typing
 
 from ctrando.arguments import argumenttypes
 from ctrando.common import ctenums
 from ctrando.bosses import bosstypes
 from types import EllipsisType
 
-_plando_recruit_dict: dict[str, ctenums.CharID | None | EllipsisType] = {
+_plando_recruit_dict: dict[str, ctenums.CharID | None | EllipsisType | str] = {
     "..." : ...,
     "none": None,
+    "random": "random"
 }
-for char_id in ctenums.CharID:
-    _plando_recruit_dict[char_id.name.lower()] = char_id
+for _char_id in ctenums.CharID:
+    _plando_recruit_dict[_char_id.name.lower()] = _char_id
 _plando_recruit_dict_inv = {val: key for key, val in _plando_recruit_dict.items()}
-
+type RecruitType = ctenums.CharID | None | EllipsisType | typing.Literal["random"]
 
 class PlandoException(Exception):
     ...
@@ -23,13 +25,13 @@ class PlandoOptions:
     def __init__(
             self,
             treasure_assignment: dict[ctenums.TreasureID, ctenums.ItemID] | None = None,
-            recruit_assignment: dict[ctenums.RecruitID, ctenums.CharID | None] | None = None,
+            recruit_assignment: dict[ctenums.RecruitID, list[RecruitType]] | None = None,
             boss_assignment: dict[bosstypes.BossSpotID, bosstypes.BossID] | None = None,
     ):
         if treasure_assignment is None:
             treasure_assignment = dict()
         if recruit_assignment is None:
-            recruit_assignment = dict()
+            recruit_assignment = {ctenums.RecruitID.STARTER: ["random"]}
         if boss_assignment is None:
             boss_assignment = dict()
 
@@ -40,36 +42,67 @@ class PlandoOptions:
         self._validate()
 
     def _validate(self):
-        none_recruit_spots = [spot for spot, recruit in self.recruit_assignment.items()
-                              if recruit is None]
+        """Ensure the plando options can be implemented"""
 
-        if len(none_recruit_spots) > (len(ctenums.RecruitID) - len(ctenums.CharID)):
-            raise PlandoException("Too many empty recruit spots")
+        # Clean up the starter list in case of multiple characters listed.
+        starters = self.recruit_assignment[ctenums.RecruitID.STARTER]
+        if not starters:
+            starters = ["random"]
 
-        if ctenums.RecruitID.STARTER in none_recruit_spots:
-            raise PlandoException("Starter can not be empty")
+        starter_chars = [x for x in ctenums.CharID if x in starters]
+        starter_others = [x for x in starters if x == "random"]
+        if ... in starters:
+            starter_others.append("random")
 
-        char_dict: dict[ctenums.CharID, ctenums.RecruitID] = {}
+        self.recruit_assignment[ctenums.RecruitID.STARTER] = starters
 
-        for key, val in self.recruit_assignment.items():
-            if val in char_dict:
-                raise PlandoException(f"{val} assigned to {key} and {char_dict[val]}")
-            elif val in ctenums.CharID:
-                char_dict[val] = key
+        # Construct an inverse-ish dict to validate
+        placement_dict: dict[RecruitType, list[ctenums.RecruitID]] = {
+            x: [] for x in list(ctenums.CharID) + [None, ..., "random"]
+        }
+
+        for recruit_id, recruits in self.recruit_assignment.items():
+            for recruit in recruits:
+                if recruit in placement_dict:
+                    placement_dict[recruit] += [recruit_id]
+
+        for char_id in ctenums.CharID:
+            spots = set(placement_dict[char_id])
+            if len(spots) > 1:
+                spot_str = ", ".join(x.name.lower() for x in spots)
+                raise PlandoException(f"{char_id} assigned to {spot_str}")
+
+        num_placed = len([key for key in ctenums.CharID if placement_dict[key]])
+        num_random = len(set(placement_dict["random"]))
+        total_filled = num_placed + num_random
+
+        if total_filled > len(ctenums.CharID):
+            raise PlandoException(f"Placed {total_filled} spots (max {len(ctenums.CharID)}")
+
 
 
     @classmethod
     def get_argument_spec(cls) -> argumenttypes.ArgSpec:
         ret_dict: argumenttypes.ArgSpec = {}
+
         for recruit_id in ctenums.RecruitID:
             spot_name = recruit_id.name.lower()
             name = f"plando_recruit_{spot_name}"
-            ret_dict[name] = argumenttypes.DiscreteCategorialArg(
-                _plando_recruit_dict.values(), ...,
-                f"Loot to assign to {spot_name}",
-                lambda x: _plando_recruit_dict[x],
-                lambda x: _plando_recruit_dict_inv[x],
-            )
+
+            if recruit_id == ctenums.RecruitID.STARTER:
+                ret_dict[name] = argumenttypes.MultipleDiscreteSelection(
+                    list(ctenums.CharID) + ["random"], "random",
+                    "Characters to start with",
+                    lambda x: _plando_recruit_dict[x],
+                    lambda x: _plando_recruit_dict_inv[x],
+                )
+            else:
+                ret_dict[name] = argumenttypes.DiscreteCategorialArg(
+                    _plando_recruit_dict.values(), ...,
+                    f"Recruit to assign to {spot_name}",
+                    lambda x: _plando_recruit_dict[x],
+                    lambda x: _plando_recruit_dict_inv[x],
+                )
 
         return ret_dict
 
@@ -82,12 +115,21 @@ class PlandoOptions:
             if (val := getattr(namespace, key, ...)) != ...:
                 treasure_assignment[treasure_id] = val
 
-        recruit_assignment: dict[ctenums.RecruitID, ctenums.CharID | None] = dict()
+        recruit_assignment: dict[ctenums.RecruitID, list[RecruitType]] = {
+            x: [] for x in ctenums.RecruitID
+        }
+
         for recruit_id in ctenums.RecruitID:
             name = recruit_id.name.lower()
             key = f"plando_recruit_{name}"
+
             if (val := getattr(namespace, key, ...)) != ...:
-                recruit_assignment[recruit_id] = val
+                if recruit_id == ctenums.RecruitID.STARTER:
+                    # Maybe verify that it's really a list
+                    recruit_assignment[recruit_id] = val
+                else:
+                    # Maybe verify that it's really a single object
+                    recruit_assignment[recruit_id] = [val]
 
         boss_assignment: dict[bosstypes.BossSpotID, bosstypes.BossID] = dict()
 

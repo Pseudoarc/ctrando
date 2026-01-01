@@ -362,19 +362,19 @@ def get_default_exit_connectors() -> list[ExitConnector]:
 
 
 def get_default_region_connectors(
-        recruit_assign_dict: typing.Optional[dict[ctenums.RecruitID, typing.Optional[ctenums.CharID]]],
+        recruit_assign_dict: typing.Optional[dict[ctenums.RecruitID, list[typing.Optional[ctenums.CharID]]]],
         logic_options: logicoptions.LogicOptions
 ) -> list[RegionConnector]:
 
     if recruit_assign_dict is None:
-        recruit_assign_dict = {rid: None for rid in ctenums.RecruitID}
-        recruit_assign_dict[RecruitID.STARTER] = ctenums.CharID.CRONO
+        recruit_assign_dict = {rid: [None] for rid in ctenums.RecruitID}
+        recruit_assign_dict[RecruitID.STARTER] = [ctenums.CharID.CRONO]
 
     charge_rule = _charge_rule
     masa_rule = _masa_rule
 
     fair_recruit_rule = logictypes.LogicRule()
-    if (char_id := recruit_assign_dict[ctenums.RecruitID.MILLENNIAL_FAIR]) is not None:
+    if (char_id := recruit_assign_dict[ctenums.RecruitID.MILLENNIAL_FAIR][0]) is not None:
         recruit_item = logicfactory.get_fair_recruit_item(char_id)
         if recruit_item == ctenums.ItemID.PENDANT_CHARGE:
             fair_recruit_rule = charge_rule(2)

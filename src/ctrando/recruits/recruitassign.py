@@ -10,18 +10,18 @@ from ctrando.locations.eventcommand import EventCommand as EC, Operation as OP
 from ctrando.locations.eventfunction import EventFunction as EF
 
 
-def get_default_recruit_assignment_dict() -> dict[ctenums.RecruitID, ctenums.CharID | None]:
+def get_default_recruit_assignment_dict() -> dict[ctenums.RecruitID, list[ctenums.CharID]]:
     return {
-        ctenums.RecruitID.STARTER: ctenums.CharID.CRONO,
-        ctenums.RecruitID.MILLENNIAL_FAIR: ctenums.CharID.MARLE,
-        ctenums.RecruitID.CRONO_TRIAL: None,
-        ctenums.RecruitID.PROTO_DOME: ctenums.CharID.ROBO,
-        ctenums.RecruitID.FROGS_BURROW: ctenums.CharID.FROG,
-        ctenums.RecruitID.DACTYL_NEST: ctenums.CharID.AYLA,
-        ctenums.RecruitID.NORTH_CAPE: ctenums.CharID.MAGUS,
-        ctenums.RecruitID.CATHEDRAL: ctenums.CharID.LUCCA,
-        ctenums.RecruitID.DEATH_PEAK: None,
-        ctenums.RecruitID.CASTLE: None
+        ctenums.RecruitID.STARTER: [ctenums.CharID.CRONO],
+        ctenums.RecruitID.MILLENNIAL_FAIR: [ctenums.CharID.MARLE],
+        ctenums.RecruitID.CRONO_TRIAL: [],
+        ctenums.RecruitID.PROTO_DOME: [ctenums.CharID.ROBO],
+        ctenums.RecruitID.FROGS_BURROW: [ctenums.CharID.FROG],
+        ctenums.RecruitID.DACTYL_NEST: [ctenums.CharID.AYLA],
+        ctenums.RecruitID.NORTH_CAPE: [ctenums.CharID.MAGUS],
+        ctenums.RecruitID.CATHEDRAL: [ctenums.CharID.LUCCA],
+        ctenums.RecruitID.DEATH_PEAK: [],
+        ctenums.RecruitID.CASTLE: []
     }
 
 
@@ -145,7 +145,7 @@ def get_dynamic_gear_function(
         char_id: ctenums.CharID,
         temp_addr: int = 0x7F0308
 ) -> EF:
-
+    label=f"{char_id}_end"
     stat_block_start = 0x7E2600 + 0x50*char_id
     cur_level_offset = 0x12
     equip_offset = 0x27  # Helm, Arm, Weap, Acc
@@ -180,10 +180,10 @@ def get_dynamic_gear_function(
         else:
             func.add_if(
                 EC.if_mem_op_value(temp_addr, OP.LESS_THAN, level),
-                assign_func.jump_to_label(EC.jump_forward(), "end")
+                assign_func.jump_to_label(EC.jump_forward(), label)
             )
 
-    func.set_label("end")
+    func.set_label(label)
     func.add(EC.pause(0))
 
     return func

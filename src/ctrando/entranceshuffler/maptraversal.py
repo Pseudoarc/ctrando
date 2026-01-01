@@ -80,7 +80,7 @@ class MapTraverser:
             self,
             region_name: str,
             treasure_dict: dict[ctenums.TreasureID, ttypes.RewardType],
-            recruit_dict: dict[ctenums.RecruitID, ctenums.CharID | None],
+            recruit_dict: dict[ctenums.RecruitID, list[ctenums.CharID]],
             rewards_to_skip: set[Any] = None,
             log_flags: bool = False
     ) -> list[str]:
@@ -108,9 +108,9 @@ class MapTraverser:
                     else:
                         reward = None
                 elif isinstance(spot, ctenums.RecruitID):
-                    reward = recruit_dict[spot]
-                    if reward is not None and reward not in rewards_to_skip:
-                        self.game.characters.add(reward)
+                    for recruit in recruit_dict[spot]:
+                        if recruit not in rewards_to_skip:
+                            self.game.characters.add(recruit)
                 else:
                     ...
                     # print(spot)
@@ -123,7 +123,7 @@ class MapTraverser:
     def maximize(
             self,
             treasure_dict: dict[ctenums.TreasureID, ttypes.RewardType],
-            recruit_dict: dict[ctenums.RecruitID, ctenums.CharID | None],
+            recruit_dict: dict[ctenums.RecruitID, list[ctenums.CharID]],
             rewards_to_skip: set[Any] = None,
             regions_to_skip: set[str] = None
     ):
@@ -148,7 +148,7 @@ class MapTraverser:
     def step(
             self,
             treasure_dict: dict[ctenums.TreasureID, ttypes.RewardType],
-            recruit_dict: dict[ctenums.RecruitID, ctenums.CharID | None],
+            recruit_dict: dict[ctenums.RecruitID, list[ctenums.CharID]],
             rewards_to_skip: set[Any] = None,
             regions_to_skip: set[str] = None,
             log_connectors: bool = False

@@ -557,9 +557,16 @@ remove_flashes = false
 ### Plando Recruits
 #  - Use "crono", "marle", "lucca", "robo", "frog", "ayla", "magus" to force a character
 #    Each character can only be placed in one spot.
-#  - Use "none" to force a spot empty.  Seven spots must be nonempty
+#  - Use "none" to force a spot empty.
+#  - Use "random" to force a spot non-empty.
 #  - Use "..." to ignore this spot for plando.
+
 plando_recruit_starter = "..."
+# Starter can alternately be specified as a list
+#   - plando_recruit_starter = ["crono", "random"] would give Crono and a random other
+#   - plando_recruit_starter = "crono" is also value
+#   - "none" is not permitted for starter
+
 plando_recruit_cathedral = "..."
 plando_recruit_castle = "..."
 plando_recruit_millennial_fair = "..."

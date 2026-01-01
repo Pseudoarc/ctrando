@@ -267,7 +267,8 @@ def resolve_character_conflicts(
 
     bad_spots: list[bty.BossSpotID] = []
     for recruit_id, boss_spot_id in recruit_boss_spot_pairs:
-        recruit = recruit_assign_dict[recruit_id]
+        recruits = recruit_assign_dict[recruit_id]
+        recruit = recruits[0] if recruits else None
         boss = boss_assign_dict[boss_spot_id]
 
         lit_lock = (boss in nizbel_ids) and recruit == ctenums.CharID.CRONO

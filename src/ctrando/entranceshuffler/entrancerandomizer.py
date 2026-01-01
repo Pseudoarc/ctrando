@@ -68,7 +68,7 @@ def is_map_viable(
 
     traverser = maptraversal.MapTraverser(region_map, "starting_rewards")
     fake_treasure_dict = {tid: ctenums.ItemID.NONE for tid in ctenums.TreasureID}
-    fake_recruit_dict = {rid: None for rid in ctenums.RecruitID}
+    fake_recruit_dict = {rid: [] for rid in ctenums.RecruitID}
     traverser.maximize(fake_treasure_dict, fake_recruit_dict, rewards_to_skip)
     if len(traverser.reached_regions.intersection(interesting_regions)) < 2:
         return False

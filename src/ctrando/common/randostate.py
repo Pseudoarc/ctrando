@@ -42,7 +42,7 @@ class ConfigState:
     # enemy_sprite_dict: dict[ctenums.EnemyID, enemystats.EnemySpriteData]
     boss_assignment_dict: dict[bosstypes.BossSpotID, bosstypes.BossID]
     shop_manager: shoptypes.ShopManager
-    recruit_dict: dict[ctenums.RecruitID, ctenums.CharID | None]
+    recruit_dict: dict[ctenums.RecruitID, list[ctenums.CharID | None]]
     ow_exit_assignment_dict: dict[owexitdata.OWExitClass, owexitdata.OWExitClass]
     region_map: regionmap.RegionMap
     starting_rewards: list[logictypes.RewardType]

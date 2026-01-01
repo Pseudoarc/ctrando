@@ -616,8 +616,15 @@ def write_spoilers_to_file(
         config: randostate.ConfigState,
         outfile: TextIO
 ):
+        recruit_spoiler_dict: dict[typing.Any, str] = {}
+        for key, val in config.recruit_dict.items():
+            if not val:
+                out_str = "None"
+            else:
+                out_str = ", ".join(str(x) for x in val)
+            recruit_spoiler_dict[key] = out_str
 
-        write_rjust_dict(config.recruit_dict, "Recruit Spots", outfile)
+        write_rjust_dict(recruit_spoiler_dict, "Recruit Spots", outfile)
         outfile.write("\n")
 
         outfile.write("Tech Lists\n")

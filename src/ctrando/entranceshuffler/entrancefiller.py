@@ -35,7 +35,7 @@ def update_starting_rewards(
 def get_key_item_fill(
         initial_treasure_assignment: dict[ctenums.TreasureID, ctenums.ItemID],
         boss_assignment: dict[bty.BossSpotID, bty.BossID],
-        recruit_assignment: dict[ctenums.RecruitID, ctenums.CharID],
+        recruit_assignment: dict[ctenums.RecruitID, list[ctenums.CharID]],
         logic_options: logicoptions.LogicOptions,
         entrance_options: entranceoptions.EntranceShufflerOptions,
         rng: RNGType
@@ -124,7 +124,7 @@ def get_key_item_fill(
 def fill_key_items(
         region_map: regionmap.RegionMap,
         treasure_dict: dict[ctenums.TreasureID, ttypes.RewardType],
-        recruit_dict: dict[ctenums.RecruitID, ctenums.CharID],
+        recruit_dict: dict[ctenums.RecruitID, list[ctenums.CharID]],
         key_item_list: list[ctenums.ItemID],
         prohibited_spots: list[ctenums.TreasureID],
         forced_spots: list[ctenums.TreasureID],
@@ -218,7 +218,7 @@ def fill_weighted_random_decay(
         region_map: regionmap.RegionMap,
         items_to_assign: list[ctenums.ItemID],
         treasure_dict: dict[ctenums.TreasureID, ttypes.RewardType],
-        recruit_dict: dict[ctenums.RecruitID, ctenums.CharID],
+        recruit_dict: dict[ctenums.RecruitID, list[ctenums.CharID]],
         spot_weights: dict[ctenums.TreasureID, float],
         decay_factor: float,
         include_shops: bool,
@@ -247,7 +247,7 @@ def fill_weighted_random_decay(
             if key in traverser.reached_regions
         }
 
-        group_weights: dict[str: float] = dict()
+        group_weights: dict[str, float] = dict()
         for name, tids in available_groups.items():
             trimmed_tids = [tid for tid in tids
                             if tid in ret_dict and ret_dict[tid] == ctenums.ItemID.NONE]
@@ -272,7 +272,7 @@ def fill_weighted_random_decay(
 def verify_fill(
         region_map: regionmap.RegionMap,
         treasure_dict: dict[ctenums.TreasureID, ttypes.RewardType],
-        recruit_dict: dict[ctenums.RecruitID, ctenums.CharID],
+        recruit_dict: dict[ctenums.RecruitID, list[ctenums.CharID]],
         starting_region: str = "starting_rewards"
 ) -> bool:
     traverser = maptraversal.MapTraverser(
@@ -329,7 +329,7 @@ def forward_fill_key_items(
 
     forced_assignment = _forward_fill_forced_recursive(
         region_map, groups, key_item_list, forced_spots,
-        working_treasure_dict, recruit_dict
+        working_treasure_dict, recruit_dict, rng
     )
     if forced_assignment is None:
         return None
@@ -353,6 +353,8 @@ def forward_fill_key_items(
             spot_weights, decay_factor, include_shops=False, rng=rng
         )
         return assignment
+
+    return forced_assignment
 
 
 def _forward_fill_forced_recursive(

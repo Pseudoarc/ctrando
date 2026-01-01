@@ -85,7 +85,7 @@ class EventMod(locationevent.LocEventMod):
         script.data[pos:pos+len(new_cmd)] = new_cmd.to_bytearray()
 
         pos = script.find_exact_command(
-            EC.call_obj_function(1, FID.ARBITRARY_2, 4, FS.CONT)
+            EC.call_obj_function(1, FID.ARBITRARY_2, 4, FS.CONT), pos
         )
         new_cmd = EC.call_pc_function(0, FID.ARBITRARY_6, 4, FS.CONT)
         script.data[pos:pos+len(new_cmd)] = new_cmd.to_bytearray()
