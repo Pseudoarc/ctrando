@@ -91,7 +91,7 @@ class PlandoOptions:
 
             if recruit_id == ctenums.RecruitID.STARTER:
                 ret_dict[name] = argumenttypes.MultipleDiscreteSelection(
-                    list(ctenums.CharID) + ["random"], "random",
+                    list(ctenums.CharID) + ["random"], ["random"],
                     "Characters to start with",
                     lambda x: _plando_recruit_dict[x],
                     lambda x: _plando_recruit_dict_inv[x],
