@@ -100,7 +100,8 @@ class ShopOptions:
         ctenums.ItemID.NONE, ctenums.ItemID.WEAPON_END_5A,
         ctenums.ItemID.ARMOR_END_7B, ctenums.ItemID.HELM_END_94,
         ctenums.ItemID.ACCESSORY_END_BC,
-        ctenums.ItemID.SCALING_LEVEL
+        ctenums.ItemID.SCALING_LEVEL,
+        ctenums.ItemID.BUCKETFRAG
     )
     _default_item_base_price: typing.ClassVar[ItemBasePrice] = ItemBasePrice.VANILLA
     _default_item_price: typing.ClassVar[ItemSalePrice] = ItemSalePrice.VANILLA
