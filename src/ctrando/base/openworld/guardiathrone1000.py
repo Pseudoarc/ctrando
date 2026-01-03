@@ -65,6 +65,7 @@ class EventMod(locationevent.LocEventMod):
         cls.unlock_front_door(script)
         cls.modify_prison_tower_guards(script)
         cls.modify_throneroom_guards(script)
+        cls.update_other_castle_guards(script)
         cls.accelerate_melchior(script)
         cls.modify_king_object(script)
         cls.add_trial_activation(script)
@@ -446,7 +447,9 @@ class EventMod(locationevent.LocEventMod):
 
             pos = script.find_exact_command(
                 EC.if_storyline_counter_lt(0x30), pos)
-            script.delete_jump_block(pos)
+            script.replace_jump_cmd(
+                pos, EC.if_not_flag(memory.Flags.HAS_DEFEATED_DRAGON_TANK)
+            )
 
     @classmethod
     def add_trial_activation(cls, script: locationevent.LocationEvent):
