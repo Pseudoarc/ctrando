@@ -330,11 +330,11 @@ class CTString(bytearray):
 class CTNameString(bytearray):
     name_symbols = {
         0x00: '{none00}',
-        0x20: '{sword}',
+        0x20: '{blade}',
         0x21: '{bow}',
         0x22: '{gun}',
         0x23: '{arm}',
-        0x24: '{blade}',
+        0x24: '{sword}',
         0x25: '{fist}',
         0x26: '{scythe}',
         0x27: '{helm}',
