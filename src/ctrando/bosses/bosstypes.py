@@ -163,6 +163,148 @@ class BossID(enum.StrEnum):
         out = out.replace('_', ' ')
         return out
 
+_split_name_dict: dict[BossID, tuple[str,str]] = {
+    BossID.DALTON: ("dal", "ton"),
+    BossID.DALTON_PLUS: ("dalton", "plus"),
+    BossID.ELDER_SPAWN: ("elder", "spawn"),
+    BossID.FLEA: ("fl", "ea"),
+    BossID.GIGA_MUTANT: ("giga" "mutant"),
+    BossID.GOLEM: ("go", "lem"),
+    BossID.GOLEM_BOSS: ("golem", "boss"),
+    BossID.HECKRAN: ("heck", "ran"),
+    BossID.LAVOS_SPAWN: ("lavos", "spawn"),
+    # BossID.MAMMON_M: "mammon_machine",
+    BossID.MAGUS_NORTH_CAPE: ("mag", "us"),
+    BossID.MASA_MUNE: ("masa", "mune"),
+    BossID.MEGA_MUTANT: ("mega", "mutant"),
+    BossID.MUD_IMP: ("mud", "imp"),
+    BossID.NIZBEL: ("niz", "bel"),
+    BossID.NIZBEL_2: ("niz", "bel_2"),
+    BossID.RETINITE: ("retin", "ite"),
+    BossID.R_SERIES: ("r", "series"),
+    BossID.RUST_TYRANO: ("rust", "tyrano"),
+    BossID.SLASH_SWORD: ("sl", "ash"),
+    BossID.SON_OF_SUN: ("son_of", "sun"),
+    BossID.TERRA_MUTANT: ("terra", "mutant"),
+    BossID.YAKRA: ("yak", "ra"),
+    BossID.YAKRA_XIII: ("yakra", "XIII"),
+    BossID.ZOMBOR: ("zom", "bor"),
+
+    BossID.MOTHER_BRAIN: ("mother", "brain"),
+    BossID.DRAGON_TANK: ("dragon", "tank"),
+    BossID.GIGA_GAIA: ("giga", "gaia"),
+    BossID.GUARDIAN: ("guard", "ian"),
+    BossID.OZZIE_TRIO: ("ozzie", "trio"),
+    BossID.ZEAL: ("ze", "al"),
+}
+def get_split_name(boss_id: BossID) -> tuple[str, str]:
+    return _split_name_dict.get(boss_id, ("masa", "mune"))
+
+
+_abbrev_name_dict: dict[BossID, str] = {
+    BossID.DALTON: "Dalton",
+    BossID.DALTON_PLUS: "Dalton",
+    BossID.ELDER_SPAWN: "Spawn",
+    BossID.FLEA: "Flea",
+    BossID.GIGA_MUTANT: "Mutant",
+    BossID.GOLEM: "Golem",
+    BossID.GOLEM_BOSS: "Golem",
+    BossID.HECKRAN: "Heckran",
+    BossID.LAVOS_SPAWN: "Spawn",
+    # BossID.MAMMON_M: "mammon_machine",
+    BossID.MAGUS_NORTH_CAPE: "Magus",
+    BossID.MASA_MUNE: "Masamune",
+    BossID.MEGA_MUTANT: "Mutant",
+    BossID.MUD_IMP: "Mud Imp",
+    BossID.NIZBEL: "Nizbel",
+    BossID.NIZBEL_2: "Nizbel",
+    BossID.RETINITE: "Retinite",
+    BossID.R_SERIES: "R-Series",
+    BossID.RUST_TYRANO: ("Tyrano"),
+    BossID.SLASH_SWORD: ("Slash"),
+    BossID.SON_OF_SUN: ("Son of Sun"),
+    BossID.TERRA_MUTANT: ("Mutant"),
+    BossID.YAKRA: ("Yakra"),
+    BossID.YAKRA_XIII: ("Yakra"),
+    BossID.ZOMBOR: ("Zombor"),
+
+    BossID.MOTHER_BRAIN: ("Mother"),
+    BossID.DRAGON_TANK: ("dragon"),
+    BossID.GIGA_GAIA: ("GigaGaia"),
+    BossID.GUARDIAN: ("Guardian"),
+    BossID.OZZIE_TRIO: ("Ozzie"),
+    BossID.ZEAL: ("Zeal"),
+}
+def get_abbrev_name(boss_id: BossID) -> tuple[str, str]:
+    return _abbrev_name_dict.get(boss_id)
+
+
+_arris_categories: dict[str: list[BossID]] = {
+    "freaky mutants": [BossID.MEGA_MUTANT, BossID.GIGA_MUTANT, BossID.TERRA_MUTANT],
+    "robot guards": [BossID.R_SERIES, BossID.MOTHER_BRAIN, BossID.GUARDIAN, BossID.DRAGON_TANK],
+    "fancy folks": [BossID.ZEAL, BossID.DALTON, BossID.MAGUS_NORTH_CAPE, BossID.FLEA,
+                    BossID.SLASH_SWORD, BossID.OZZIE_TRIO],
+    # "crafty wizards": [BossID.ZEAL, BossID.DALTON, BossID.MAGUS_NORTH_CAPE, BossID.FLEA],
+    "muscleheads": [BossID.MASA_MUNE, BossID.HECKRAN, BossID.NIZBEL, BossID.NIZBEL_2],
+    "eyeball monsters": [BossID.RETINITE, BossID.SON_OF_SUN],
+    "magical beasts": [BossID.GOLEM, BossID.GOLEM_BOSS, BossID.GIGA_GAIA, BossID.HECKRAN],
+    "spiny beasts": [BossID.LAVOS_SPAWN, BossID.ELDER_SPAWN, BossID.YAKRA, BossID.YAKRA_XIII],
+    "giant brutes": [BossID.GIGA_GAIA, BossID.RUST_TYRANO, BossID.ZOMBOR, BossID.RETINITE],
+    "giant lizards": [BossID.NIZBEL, BossID.NIZBEL_2, BossID.RUST_TYRANO],
+    "goofy goons": [BossID.OZZIE_TRIO, BossID.DALTON_PLUS],
+    "boneheads": [BossID.ZOMBOR, BossID.RETINITE, BossID.OZZIE_TRIO],
+}
+def get_arris_categories() -> dict[str, list[BossID]]:
+    return dict(_arris_categories)
+
+
+_arris_name_dict: dict[BossID, str] = {
+    BossID.DALTON: "Dalton",
+    BossID.DALTON_PLUS: "crazy wizard",
+    BossID.ELDER_SPAWN: "Spawn",
+    BossID.FLEA: "Flea",
+    BossID.GIGA_MUTANT: "freaky mutants",
+    BossID.GOLEM: "Golem",
+    BossID.GOLEM_BOSS: "Golem",
+    BossID.HECKRAN: "Heckran",
+    BossID.LAVOS_SPAWN: "Spawn",
+    # BossID.MAMMON_M: "mammon_machine",
+    BossID.MAGUS_NORTH_CAPE: "Magus",
+    BossID.MASA_MUNE: "Masamune",
+    BossID.MEGA_MUTANT: "freaky mutants",
+    BossID.MUD_IMP: "Mud Imp",
+    BossID.NIZBEL: "giant lizards",
+    BossID.NIZBEL_2: "giant lizards",
+    BossID.RETINITE: "eyeball monster",
+    BossID.R_SERIES: "robot guards",
+    BossID.RUST_TYRANO: ("giant lizards"),
+    BossID.SLASH_SWORD: ("Slash"),
+    BossID.SON_OF_SUN: ("eyeball monster"),
+    BossID.TERRA_MUTANT: ("freaky mutants"),
+    BossID.YAKRA: ("Yakra"),
+    BossID.YAKRA_XIII: ("Yakra"),
+    BossID.ZOMBOR: ("Zombor"),
+
+    BossID.MOTHER_BRAIN: ("robot guards"),
+    BossID.DRAGON_TANK: ("dragon"),
+    BossID.GIGA_GAIA: ("GigaGaia"),
+    BossID.GUARDIAN: ("robot guards"),
+    BossID.OZZIE_TRIO: ("Ozzie"),
+    BossID.ZEAL: ("Zeal"),
+}
+def get_abbrev_name(boss_id: BossID) -> tuple[str, str]:
+    return _abbrev_name_dict.get(boss_id)
+
+
+_alt_name_dict: dict[BossID, str] = {
+    BossID.YAKRA_XIII: "Yakra XIII",
+    BossID.MAGUS_NORTH_CAPE: "Magus",
+}
+def get_boss_dialogue_name(boss_id: BossID):
+    name = boss_id.value.replace("_", " ")
+    name = " ".join(x.capitalize() for x in name.split())
+    return _alt_name_dict.get(boss_id, name)
+
 
 def get_midboss_ids() -> list[BossID]:
     return [

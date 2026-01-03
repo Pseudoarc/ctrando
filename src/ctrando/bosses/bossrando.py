@@ -1,4 +1,4 @@
-# import random
+from random import Random
 import typing
 
 from ctrando.arguments import bossrandooptions as bro
@@ -9,7 +9,8 @@ from ctrando.common import ctenums, random
 from ctrando.locations.scriptmanager import ScriptManager
 from ctrando.arguments import bossrandooptions as bro
 from ctrando.enemydata import enemystats
-
+from ctrando.strings import ctstrings
+from ctrando.overworlds import owmanager
 
 _default_assignment_dict: dict[bty.BossSpotID, bty.BossID] = {
     bty.BossSpotID.ARRIS_DOME: bty.BossID.GUARDIAN,
@@ -469,6 +470,113 @@ def determine_trio_scheme(
         scheme.parts[2].slot = 9
 
     return scheme
+
+
+def update_boss_names(
+        boss_assign_dict: dict[bty.BossSpotID, bty.BossID],
+        script_manager: ScriptManager,
+        enemy_dict: dict[ctenums.EnemyID, enemystats.EnemyStats],
+        ow_manager: owmanager.OWManager,
+):
+    """Add Peeks for various bosses."""
+    # Cathedral
+    spot_id = bty.BossSpotID.MANORIA_CATHERDAL
+    boss_id = boss_assign_dict[spot_id]
+    script = script_manager[ctenums.LocID.MANORIA_KITCHEN]
+
+    boss_name = bty.get_boss_dialogue_name(boss_id)
+    string = ctstrings.CTString.ct_bytes_to_ascii(script.strings[4])
+    string = string.replace("Yakra", boss_name)
+    if boss_id in (bty.BossID.ZEAL,):
+        string = string.replace("His", "Her")
+    script.strings[4] = ctstrings.CTString.from_str(string, True)
+
+    # Guardia Prison
+    spot_id = bty.BossSpotID.PRISON_CATWALKS
+    boss_id = boss_assign_dict[spot_id]
+    script = script_manager[ctenums.LocID.GUARDIA_THRONEROOM_1000]
+    boss_name = bty.get_boss_dialogue_name(boss_id)
+
+    new_ct_str = ctstrings.CTString.from_str(
+        "The Chancellor lost it right around the{linebreak+0}"
+        f"time he ordered that {boss_name} to{{linebreak+0}}"
+        "be built!{null}"
+    )
+    script.strings[105] = new_ct_str
+    script.strings[34] = ctstrings.CTString(new_ct_str)
+    # for ind, ct_str in enumerate(script.strings):
+    #     script.strings[ind] = ctstrings.CTString.from_str(string, True)
+    #     print(f"{ind}: {ctstrings.CTString.ct_bytes_to_ascii(ct_str)}")
+    # input()
+
+
+    # Heckran Cave
+    spot_id = bty.BossSpotID.HECKRAN_CAVE
+    boss_id = boss_assign_dict[spot_id]
+    script = script_manager[ctenums.LocID.MEDINA_INN]
+    boss_name = bty.get_boss_dialogue_name(boss_id)
+
+    string = ctstrings.CTString.ct_bytes_to_ascii(script.strings[9])
+    string = string.replace("Heckran", boss_name)
+    script.strings[9] = ctstrings.CTString.from_str(string, True)
+
+    if boss_id != bty.BossID.HECKRAN:
+        ow_manager.name_dict[19] = f"{bty.get_abbrev_name(boss_id)} Cave"
+
+
+    # Denadoro
+    spot_id = bty.BossSpotID.DENADORO_MTS
+    boss_id = boss_assign_dict[spot_id]
+    if boss_id != bty.BossID.MASA_MUNE:
+        script = script_manager[ctenums.LocID.DENADORO_CAVE_OF_MASAMUNE]
+        masa_part, mune_part = bty.get_split_name(boss_id)
+        enemy_dict[ctenums.EnemyID.MASA].name = masa_part.capitalize()
+        enemy_dict[ctenums.EnemyID.MUNE].name = mune_part.capitalize()
+
+        for ind, ct_str in enumerate(script.strings):
+            if ind == 2:
+                continue
+            string = ctstrings.CTString.ct_bytes_to_ascii(ct_str)
+            string = string.replace("MASA", masa_part.upper())
+            string = string.replace("Masa", masa_part.capitalize())
+            string = string.replace("MUNE", mune_part.upper())
+            string = string.replace("Mune", mune_part.capitalize())
+            script.strings[ind] = ctstrings.CTString.from_str(string, True)
+        #     print(f"{ind}: {ctstrings.CTString.ct_bytes_to_ascii(script.strings[ind])}")
+        # input()
+
+    # Ozzie
+    spot_id = bty.BossSpotID.OZZIES_FORT_TRIO
+    boss_id = boss_assign_dict[spot_id]
+    if boss_id != bty.BossID.OZZIE_TRIO:
+        boss_name = bty.get_boss_dialogue_name(boss_id)
+        ow_manager.name_dict[33] = f"{bty.get_abbrev_name(boss_id)}'s Fort"
+        # for key, val in ow_manager.name_dict.items():
+        #     print(key, val)
+        #
+        # input()
+
+    # Arris
+    spot_id = bty.BossSpotID.ARRIS_DOME
+    boss_id = boss_assign_dict[spot_id]
+    # This is dumb, but I don't want to carry the rng through to postconfig
+    rng = Random("".join(str(x) for x in boss_assign_dict.values()))
+    category_dict = bty.get_arris_categories()
+    categories = list(category_dict.keys())
+    rng.shuffle(categories)
+    chosen_category: str = ""
+    for category in categories:
+        if boss_id in category_dict[category]:
+            chosen_category = category
+            break
+    else:
+        chosen_category = bty.get_abbrev_name(boss_id)
+
+    script = script_manager[ctenums.LocID.ARRIS_DOME]
+    string = ctstrings.CTString.ct_bytes_to_ascii(script.strings[11])
+    string = string.replace("robot guards", chosen_category)
+    script.strings[11] = ctstrings.CTString.from_str(string, True)
+
 
 def write_bosses_to_ct_rom(
         boss_assign_dict: dict[bty.BossSpotID, bty.BossID],

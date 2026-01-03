@@ -224,7 +224,6 @@ def get_random_config(
     config.boss_assignment_dict = bossrando.get_random_boss_assignment(settings.boss_rando_options, rng)
     midboss_assignment = bossrando.get_random_midboss_assignment(settings.boss_rando_options, rng)
     config.boss_assignment_dict.update(midboss_assignment)
-
     bossrando.resolve_character_conflicts(config.boss_assignment_dict,
                                           config.recruit_dict,
                                           settings.boss_rando_options,
@@ -447,6 +446,10 @@ def get_ctrom_from_config(
 
     bossrando.fix_boss_sprites_given_assignment(config.boss_assignment_dict,
                                                 post_config.enemy_sprite_dict)
+    bossrando.update_boss_names(config.boss_assignment_dict,
+                                post_config.script_manager,
+                                config.enemy_data_dict,
+                                post_config.overworld_manager)
     bossrando.fix_atropos_ribbon_buff(config.boss_assignment_dict,
                                       post_config.script_manager)
     bossrando.bass.add_r_series_boss_defeat_check(config.boss_assignment_dict,
