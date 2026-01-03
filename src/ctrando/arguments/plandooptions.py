@@ -54,7 +54,7 @@ class PlandoOptions:
         if ... in starters:
             starter_others.append("random")
 
-        self.recruit_assignment[ctenums.RecruitID.STARTER] = starters
+        self.recruit_assignment[ctenums.RecruitID.STARTER] = starter_chars + starter_others
 
         # Construct an inverse-ish dict to validate
         placement_dict: dict[RecruitType, list[ctenums.RecruitID]] = {
