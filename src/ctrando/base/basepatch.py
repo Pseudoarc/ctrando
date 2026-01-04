@@ -1706,6 +1706,7 @@ def get_set_level_event_cmd_asm(
             inst.STA(0x7E0000+cur_stat_offset_dict[stat], AM.LNG_X),
             inst.BRA("no_max"+postlabel),
             "max"+postlabel,
+            inst.LDX(temp_addr, AM.DIR),
             inst.LDA(99, AM.IMM8),
             inst.STA(0x7E0000+cur_stat_offset_dict[stat], AM.LNG_X),
             "no_max"+postlabel
