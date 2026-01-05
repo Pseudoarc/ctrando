@@ -81,11 +81,11 @@ class EventMod(locationevent.LocEventMod):
             .add(EC.set_reset_bits(temp_epoch_status, 0xD1, True))
             .add(EC.set_reset_bits(temp_epoch_status, 0x02, False))
             .add_if(
-                EC.if_mem_op_value(0x7F0212, OP.GREATER_OR_EQUAL, 7),
+                EC.if_mem_op_value(0x7F0212, OP.LESS_THAN, 7),
                 EF().add(EC.increment_mem(temp_epoch_status))
             )
             .add_if(
-                EC.if_mem_op_value(0x7F0214, OP.GREATER_OR_EQUAL, 7),
+                EC.if_mem_op_value(0x7F0214, OP.LESS_THAN, 7),
                 EF().add(EC.increment_mem(temp_epoch_status))
             )
         )

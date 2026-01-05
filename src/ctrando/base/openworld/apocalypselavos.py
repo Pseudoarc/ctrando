@@ -28,6 +28,7 @@ class EventMod(locationevent.LocEventMod):
         - Skip the Lavos emerging cutscene.
         - Remove dialog except for the choice to fight or not.
         - Allow the scene to proceed with a single character.
+        - Reset Epoch/Overworld Flags in case coming from Flight Scene
         """
 
         owu.add_exploremode_to_partyfollows(script)
@@ -70,3 +71,15 @@ class EventMod(locationevent.LocEventMod):
         script.replace_jump_cmd(
             pos, EC.if_mem_op_value(cls.temp_pc_addr, OP.EQUALS, 6)
         )
+
+        # Reset Overworld/Epoch Flags
+        pos = script.get_object_start(0)
+        temp_addr = 0x7F0236
+        block = (
+            EF()
+            .add(EC.assign_val_to_mem(0x0000, 0x7E027E, 2))
+            .add(EC.assign_mem_to_mem(memory.Memory.EPOCH_STATUS, temp_addr, 1))
+            .add(EC.set_reset_bits(temp_addr, 0x4F, False))
+            .add(EC.assign_mem_to_mem(temp_addr, memory.Memory.EPOCH_STATUS, 1))
+        )
+        script.insert_commands(block.get_bytearray(), pos)
