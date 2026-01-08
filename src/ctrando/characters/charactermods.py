@@ -42,9 +42,9 @@ def make_phys_lucca(
     stat_man.set_stat_growth(ctenums.CharID.LUCCA, ctpcstats.PCStat.HIT, 140)
 
     tech_power_dict: dict[ctenums.TechID, int] = {
-        ctenums.TechID.FLAME_TOSS: 7,   # basic * 7/6
-        ctenums.TechID.NAPALM: 9,       # 1.5x basic
-        ctenums.TechID.MEGABOMB: 18     # 3x basic
+        ctenums.TechID.FLAME_TOSS: 8,   # 1.25x basic
+        ctenums.TechID.NAPALM: 12,      # 2x basic
+        ctenums.TechID.MEGABOMB: 21     # 3.5x basic
     }
 
     for tech_id, power in tech_power_dict.items():
@@ -54,6 +54,47 @@ def make_phys_lucca(
         tech.effect_headers[0].power = power
         tech_man.set_tech_by_id(tech, tech_id)
 
+    backup = tech_man.get_tech(ctenums.TechID.CONFUSE)
+
+    tech = tech_man.get_tech(ctenums.TechID.NAPALM)
+    tech.control_header = backup.control_header
+    tech.effect_headers[0] = backup.effect_headers[0]
+    tech.effect_headers[0][1] = 2
+    tech.effect_headers[0].power = 12
+    tech.graphics_header.script_id = animationscript.NewScriptID.DOUBLE_TAP
+    tech.graphics_header.sprite_packet_1 = 0xEB
+    tech.graphics_header.sprite_packet_2 = 0xEF
+    tech.graphics_header.assembly_packet_1 = 0x23
+    tech.graphics_header.assembly_packet_2 = 0x89
+    tech.graphics_header.palette = 0x89
+    tech.graphics_header.layer3_packet_id = 9
+
+    # tech.graphics_header.sprite_packet_1 = 0xC0
+    # tech.graphics_header.sprite_packet_2 = 0xC4
+    # tech.graphics_header.assembly_packet_1 = 0x09
+    # tech.graphics_header.assembly_packet_2 = 0xC5
+    # tech.graphics_header.palette = 0x89
+
+    # tech.graphics_header.sprite_packet_1 = 0xC0
+    # tech.graphics_header.sprite_packet_2 = 0x00
+    # tech.graphics_header.assembly_packet_1 = 0x23
+    # tech.graphics_header.assembly_packet_2 = 0x92
+    # tech.graphics_header.palette = 0x89
+
+    # tech.graphics_header.sprite_packet_1 = 0xeb
+    # tech.graphics_header.sprite_packet_2 = 0xef
+    # tech.graphics_header.assembly_packet_1 = 0x23
+    # tech.graphics_header.assembly_packet_2 = 0x81  # 83 85 89 92
+    # tech.graphics_header.palette = 0x9a
+
+    # tech.graphics_header.sprite_packet_1 = 0xCE
+    # tech.graphics_header.sprite_packet_2 = 0x00
+    # tech.graphics_header.assembly_packet_1 = 0x11
+    # tech.graphics_header.assembly_packet_2 = 0x15
+    # tech.graphics_header.palette = 0x15
+
+    tech.name = "Double Tap"
+    tech_man.set_tech_by_id(tech, ctenums.TechID.NAPALM)
 
 def make_haste_all(
         tech_man: pctech.PCTechManager

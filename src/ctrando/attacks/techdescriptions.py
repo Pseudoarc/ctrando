@@ -372,7 +372,8 @@ _single_tech_abbrev = {
     "Gale Slash": "GaleSl",
     "*Bluuurp!": "Blrp",
     "Iron Orb": "Orb",
-    "*Burst Ball": "BBall"
+    "*Burst Ball": "BBall",
+    "Double Tap": "DTap"
 }
 
 

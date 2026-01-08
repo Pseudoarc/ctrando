@@ -27,7 +27,7 @@ class NewScriptID(enum.IntEnum):
     BLURP = 0x89
     IRON_ORB = 0x8A
     BURST_BALL = 0x8B
-
+    DOUBLE_TAP = 0x8C
 
 
 def extract_object_script_from_buffer(
@@ -943,8 +943,162 @@ def make_iron_orb_script(ct_rom: ctrom.CTRom) -> AnimationScript:
     return script
 
 
+def make_double_tap_script(ct_rom: ctrom.CTRom):
+    script = AnimationScript.read_from_ctrom_addr(ct_rom,
+                                                  0x0d7a6d,
+                                                  #0x0E0810
+                                                  )
+    script.main_script.caster_objects[0] = [
+        ac.SetObjectFacing(facing=0xD),
+        ac.PlayAnimationFirstFrame(animation_id=0x31),
+        ac.LoadSpriteAtTarget3E(target=0x0C),
+        ac.LoadSpriteAtTarget3F(target=0x19),
+        ac.LoadSpriteAtTarget40(target=0x03),
+        ac.LoadSpriteAtTarget(target=0x9),
+        ac.PlaySound7A(sound=0x96, unknown=9),
+        ac.SetCounterToValue(counter=3, value=8),
+        ac.SetCounterToValue(counter=0xE, value=6),
+        ac.SetCounterToValue(counter=7, value=8),
+        ac.SetCounterToValue(counter=0xA, value=0x28),
+        ac.IncrementCounter(counter=0x1B),  ############
+        # ac.StoreTargetTo7E4AE8(target=0),
+        # ac.StoreTargetTo7E4AE9(target=3),
+        ac.ShakeSprite(unknown=2, speed=3, num_times=0x20),
+        ac.Pause(duration=0x5),
+        ac.SetCounterToValue(counter=0xE, value=5),
+        ac.Pause(duration=0x5),
+        ac.SetCounterToValue(counter=0xE, value=4),
+        ac.Pause(duration=0x5),
+        ac.SetCounterToValue(counter=0xE, value=3),
+        ac.Pause(duration=0x5),
+        ac.SetCounterToValue(counter=0xE, value=2),
+        ac.Pause(duration=0x10),
+        ac.PlaySound(sound=0xB),
+        ac.Pause(duration=20),
+        ac.IncrementCounter1D(),
+        ac.Unknown2D(),
+        ac.FlashScreenColor(bytes.fromhex("80 12 A8")),
+        ac.PlayAnimationOnce(animation_id=0x31),
+        ac.WaitForCounter1DValue(value=4),
+        ac.PlayAnimationFirstFrame(animation_id=3),
+        ac.Pause(duration=0x0F),
+        # ac.ShowDamage(),
+        ac.Unknown2E(),
+        ac.EndTech(),
+        ac.ReturnCommand()
+    ]
+    # script.main_script.caster_objects[0][0] = ac.PlaySound7A(sound=0x50)
+    # script.main_script.effect_objects = [] # script.main_script.effect_objects[:3]
+    indices =  [0, 3, 4] #[0, 3, 4, 7]
+    script.main_script.effect_objects = [script.main_script.effect_objects[ind]
+                                         for ind in indices]
+    # script.main_script.effect_objects[-1].insert(-2, ac.IncrementCounter1D())
+    # script.main_script.effect_objects[0].pop(0)
+    # script.main_script.effect_objects[0].insert(0, ac.Unknown61(bytes.fromhex("61 02 00 04")))
+
+    script.main_script.effect_objects[0] = [
+        ac.SetObjectFacing(facing=0),
+        ac.SetPriority(priority=0),
+        ac.WaitForCounter1DValue(value=1),
+        ac.SetSpeedFastestShort(),
+        ac.StoreTargetCoordinates(target=0x09),
+        ac.AddSubFromCounter(counter=0x1E, value=0x02),
+        ac.TeleportToStoredCoordinates(),
+        ac.DrawEffect(),
+        ac.PlayAnimationLoop(animation_id=0),
+        ac.PlaySound(sound=0x50),
+        ac.StoreTargetCoordinates(target=0x0C),
+        ac.AddSubFromCounter(counter=0x1E, value=0x02),
+        ac.SlideSpriteToStoredCoordinates(),
+        ac.IncrementCounter1D(),
+        ac.IncrementCounter(counter=0x1A),
+        ac.HideEffect(),
+        ac.ReturnCommand()
+    ]
+
+    script.main_script.effect_objects[1] = [
+        ac.SetObjectFacing(facing=0),
+        ac.SetPriority(priority=0),
+        ac.WaitForCounter1DValue(value=1),
+        ac.Pause(duration=0xC),
+        ac.SetSpeedFastestShort(),
+        ac.StoreTargetCoordinates(target=0x09),
+        ac.AddSubFromCounter(counter=0x1E, value=0x02),
+        ac.TeleportToStoredCoordinates(),
+        ac.DrawEffect(),
+        ac.PlayAnimationLoop(animation_id=0),
+        ac.PlaySound(sound=0x50),
+        ac.StoreTargetCoordinates(target=0x0C),
+        ac.AddSubFromCounter(counter=0x1E, value=0x02),
+        ac.SlideSpriteToStoredCoordinates(),
+        ac.HideEffect(),
+        ac.ReturnCommand()
+    ]
+
+    script.main_script.effect_objects[2] = [
+        ac.SetObjectFacing(facing=0),
+        ac.SetPriority(priority=0),
+        ac.WaitForCounter1DValue(value=1),
+        ac.Pause(duration=0xC),
+        ac.SetSpeedFastestShort(),
+        ac.TeleportToTarget(target=0x09),
+        ac.StoreTargetTo7E4AE8(target=0x1E),
+        ac.SlideSpriteToTarget(target=0x0C),
+        ac.IncrementCounter1D(),
+        ac.ReturnCommand()
+    ]
+
+    # for obj in script.main_script.effect_objects:
+    #     for ind, cmd in enumerate(obj):
+    #         if cmd.CMD_ID == ac.TeleportToTarget.CMD_ID:
+    #             pass
+    #             block = [
+    #                 ac.StoreTargetCoordinates(target=0x09),
+    #                 ac.AddSubFromCounter(counter=0x1E, value=0x08),
+    #                 ac.TeleportToStoredCoordinates()
+    #             ]
+    #             # obj[ind] = ac.TeleportToTarget(target=0x9)
+    #             obj[ind:ind+1] = block
+    #             ind += len(block)
+    #         elif cmd.CMD_ID == ac.SlideSpriteToTarget.CMD_ID:
+    #             pass
+    #             block = [
+    #                 ac.StoreTargetCoordinates(target=0x0C),
+    #                 ac.AddSubFromCounter(counter=0x1E, value=0x08),
+    #                 ac.SlideSpriteToStoredCoordinates()
+    #             ]
+    #             obj[ind:ind+1] = block
+    #         if cmd.CMD_ID == ac.PlayAnimationLoop.CMD_ID:
+    #             obj[ind] = ac.PlayAnimationLoop(animation_id=0)
+
+
+    script.main_script.target_objects[0] = [
+        ac.WaitForCounter1DValue(value=2),
+        # ac.SetObjectFacing(facing=0x0A),
+        ac.PlayAnimationFirstFrame(animation_id=5),
+        ac.SetObjectPalette(palette=0),
+        ac.SetAngle(angle=0),
+        ac.ShakeSprite(unknown=4, speed=2, num_times=0x20),
+        ac.Pause(duration=2),
+        ac.PlayAnimationFirstFrame(animation_id=3),
+        ac.Pause(duration=2),
+        ac.PlayAnimationFirstFrame(animation_id=5),
+        ac.WaitForCounter1DValue(value=3),
+        ac.Pause(duration=8),
+        ac.PlayAnimationFirstFrame(animation_id=3),
+        ac.ResetPalette(),
+        ac.ShowDamage(),
+        # ac.Pause(duration=4),
+        ac.ShowDamage51(),
+        # ac.Pause(duration=4),
+        ac.IncrementCounter1D(),
+        ac.ReturnCommand()
+    ]
+    return script
+
 
 def write_scripts_to_ct_rom(ct_rom: ctrom.CTRom):
+    dt_script = make_double_tap_script(ct_rom)
     arrow_hail_script = make_arrow_rain_script(ct_rom)
     haste_all_script = make_single_marle_haste_all_script(ct_rom)
     prot_all_script = make_single_lucca_prot_all_script(ct_rom)
@@ -954,6 +1108,7 @@ def write_scripts_to_ct_rom(ct_rom: ctrom.CTRom):
     haste_all_script.write_to_ctrom(ct_rom, NewScriptID.HASTE_ALL)
     prot_all_script.write_to_ctrom(ct_rom, NewScriptID.PROTECT_ALL)
     reraise_script.write_to_ctrom(ct_rom, NewScriptID.RERAISE)
+    dt_script.write_to_ctrom(ct_rom, NewScriptID.DOUBLE_TAP)
 
     gale_slash_script = make_gale_slash_script(ct_rom)
     gale_slash_script.write_to_ctrom(ct_rom, NewScriptID.GALE_SLASH)
@@ -968,7 +1123,6 @@ def write_scripts_to_ct_rom(ct_rom: ctrom.CTRom):
     burst_ball_script = read_enemy_tech_script_from_ctrom(ct_rom, 0x88)
     burst_ball_script.main_script.caster_objects[0][4] = ac.PlayAnimationOnce(animation_id=0x22)
     burst_ball_script.write_to_ctrom(ct_rom, NewScriptID.BURST_BALL)
-
 
 
 def main():
