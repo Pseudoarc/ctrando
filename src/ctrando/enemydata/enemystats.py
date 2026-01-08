@@ -62,6 +62,15 @@ class EnemySpriteData:
         self._data[0] = val
 
     @property
+    def sprite_assembly_id(self) -> int:
+        """Index of this sprite data's palette."""
+        return self._data[1]
+
+    @sprite_assembly_id.setter
+    def sprite_assembly_id(self, val: int):
+        self._data[1] = val
+
+    @property
     def palette(self) -> int:
         """Index of this sprite data's palette."""
         return self._data[2]

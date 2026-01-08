@@ -47,6 +47,13 @@ class CTColor(ctt.SizedBinaryData):
         val = f"{red:02X}{green:02X}{blue:02X}"
         return val
 
+    def get_html_hex(self):
+        red, green, blue = self.get_rgb()
+        return f"{red:02X}{green:02X}{blue:02X}"
+
+    def get_rgb(self) -> tuple[int, int, int]:
+        return round(self.red*255/31), round(self.green*255/31), round(self.blue*255/31)
+
 
 class CTPalette(ctt.SizedBinaryData):
     SIZE = 2*12
