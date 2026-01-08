@@ -58,8 +58,10 @@ def make_phys_lucca(
 
     tech = tech_man.get_tech(ctenums.TechID.NAPALM)
     tech.control_header = backup.control_header
+    tech.control_header.set_effect_mod(0, ctenums.WeaponEffects.DMG_50)
     tech.effect_headers[0] = backup.effect_headers[0]
     tech.effect_headers[0][1] = 2
+    tech.effect_headers[0].damage_formula_id = pctech.ctt.DamageFormula.PC_RANGED
     tech.effect_headers[0].power = 12
     tech.graphics_header.script_id = animationscript.NewScriptID.DOUBLE_TAP
     tech.graphics_header.sprite_packet_1 = 0xEB

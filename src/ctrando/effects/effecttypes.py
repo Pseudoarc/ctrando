@@ -94,6 +94,7 @@ def gather_new_effects_and_rts(orb_percent: int) -> tuple[list[EffectMod], list[
         EffectMod(bytes([_max_vanilla_routine_index + 7, 10, 0])),  # HP Leach 10%
         EffectMod(bytes([_max_vanilla_routine_index + 8, 2, 0])),  # MP Leach 2
         EffectMod(bytes([_max_vanilla_routine_index + 8, 5, 0])),  # MP Leach 5
+        EffectMod(bytes([2, 1, 2])),
     ]
 
     return effects, routines

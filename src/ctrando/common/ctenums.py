@@ -1799,6 +1799,7 @@ class WeaponEffects(StrIntEnum):
     HP_LEECH_10 = 0x48
     MP_LEECH_2 = 0x49
     MP_LEECH_5 = 0x4A
+    DMG_50 = 0x4B
 
 
 class NpcID(StrIntEnum):
