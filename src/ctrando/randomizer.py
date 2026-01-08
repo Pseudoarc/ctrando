@@ -323,7 +323,8 @@ def get_random_config(
         rng)
 
     ### Gear Rando
-    gearrando.randomize_good_accessory_effects(config.item_db, rng)
+    gearrando.randomize_good_accessory_effects(
+        config.item_db, settings.gear_rando_options.ds_replacement_chance, rng)
     gearrando.randomize_gear(config.item_db, settings.gear_rando_options, rng)
     config.item_db.update_all_descriptions()
 
