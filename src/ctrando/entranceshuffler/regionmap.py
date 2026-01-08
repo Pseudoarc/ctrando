@@ -362,19 +362,20 @@ def get_default_exit_connectors() -> list[ExitConnector]:
 
 
 def get_default_region_connectors(
-        recruit_assign_dict: typing.Optional[dict[ctenums.RecruitID, list[typing.Optional[ctenums.CharID]]]],
+        recruit_assign_dict: typing.Optional[dict[ctenums.RecruitID, list[ctenums.CharID]]],
         logic_options: logicoptions.LogicOptions
 ) -> list[RegionConnector]:
 
     if recruit_assign_dict is None:
-        recruit_assign_dict = {rid: [None] for rid in ctenums.RecruitID}
+        recruit_assign_dict = {rid: [] for rid in ctenums.RecruitID}
         recruit_assign_dict[RecruitID.STARTER] = [ctenums.CharID.CRONO]
 
     charge_rule = _charge_rule
     masa_rule = _masa_rule
 
     fair_recruit_rule = logictypes.LogicRule()
-    if (char_id := recruit_assign_dict[ctenums.RecruitID.MILLENNIAL_FAIR][0]) is not None:
+    if recruit_assign_dict[ctenums.RecruitID.MILLENNIAL_FAIR]:
+        char_id = recruit_assign_dict[ctenums.RecruitID.MILLENNIAL_FAIR][0]
         recruit_item = logicfactory.get_fair_recruit_item(char_id)
         if recruit_item == ctenums.ItemID.PENDANT_CHARGE:
             fair_recruit_rule = charge_rule(2)
@@ -389,7 +390,7 @@ def get_default_region_connectors(
             for char_id in ctenums.CharID if char_id != ctenums.CharID.LUCCA
         ]
     )
-    if (char_id := recruit_assign_dict[RecruitID.CRONO_TRIAL]) is not None:
+    if recruit_assign_dict[RecruitID.CRONO_TRIAL]:
         crono_trial_rule = logictypes.LogicRule()
 
     progressive_clone_rule = logicfactory.ProgressiveRule(
