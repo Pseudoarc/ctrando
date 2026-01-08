@@ -418,7 +418,7 @@ ds_item_pool =  [   # DS Items which may appear.
     "reptite_dress", "dragon_armor", "regal_plate", "regal_gown", "shadowplume_robe",
     "elemental_aegis", "saurian_leathers",
     "dragonhead", "reptite_tiara", "masters_crown", "angels_tiara",
-    "valor_crest", "dragons_tear"
+    "valor_crest", "dragons_tear", "champions_badge"
 ]
 ds_replacement_chance = 50  # Percent chance (e.g. 10 for 10 percent) to replace an item with a ds counterpart.
 bronze_fist_policy = "vanilla"  # {vanilla,remove,4x_crit,random_other} How to modify BronzeFist pre-shuffle

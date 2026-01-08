@@ -47,6 +47,7 @@ class DSItem(enum.Enum):
     # Accessories
     VALOR_CREST = enum.auto()
     DRAGONS_TEAR = enum.auto()
+    CHAMPIONS_BADGE = enum.auto
 
 
 _weapon_effect_symbol_dict: dict[str, list[WE]] = {

@@ -96,7 +96,7 @@ def assign_random_hp_mp_mod(
 
 def randomize_good_accessory_effects(
         item_db: itemdata.ItemDB,
-        ds_replacement_chance: float,
+        gear_rando_options: gearrandooptions.GearRandoOptions,
         rng: RNGType
 ):
     """Put random effects on rocks."""
@@ -105,7 +105,10 @@ def randomize_good_accessory_effects(
         ctenums.ItemID.GOLD_ROCK, ctenums.ItemID.SILVERROCK,
         ctenums.ItemID.WHITE_ROCK
     ]
-    if rng.random() < ds_replacement_chance:
+    if (
+            DSItem.CHAMPIONS_BADGE in gear_rando_options.ds_item_pool and
+            rng.random() < gear_rando_options.ds_replacement_chance
+    ):
         badge = item_db[ctenums.ItemID.HERO_MEDAL]
         badge.set_name_from_str("{acc}ChampBadge")
 
