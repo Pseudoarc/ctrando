@@ -1207,6 +1207,8 @@ class TreasureID(StrIntEnum):
     OCEAN_PALACE_ELEVATOR_MAGIC_TAB = auto()
     OZZIES_FORT_GUILLOTINES_TAB = auto()
     PROTO_DOME_PORTAL_TAB = auto()
+    NORTHERN_RUINS_HEROS_GRAVE_MAGIC_TAB = auto()
+    NORTHERN_RUINS_LANDING_POWER_TAB = auto()
 
 
 class EnemyID(StrIntEnum):

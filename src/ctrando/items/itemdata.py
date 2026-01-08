@@ -881,14 +881,17 @@ class AccessoryStats(ItemData):
     @property
     def hp_mod(self) -> int:
         if self.has_hp_mod:
-            return self._data[2]
+            return ((self._data[3] >> 4) + 1)*5
 
         raise ValueError("HP Mod Not Set")
 
     @hp_mod.setter
     def hp_mod(self, val: int):
         if self.has_hp_mod:
-            self._data[2] = val
+            val = sorted([0, val//5, 0x10])[1]
+            val = (val - 1) << 4
+            self._data[3] &= 0x0F
+            self._data[3] |= val
             return
 
         raise ValueError("HP Mod Not Set")
@@ -907,17 +910,18 @@ class AccessoryStats(ItemData):
     @property
     def mp_mod(self) -> int:
         if self.has_mp_mod:
-            return 25*(self._data[3]+1)
+            return 25*((self._data[3]&0x0F)+1)
 
         raise ValueError("MP Mod Not Set")
 
     @mp_mod.setter
     def mp_mod(self, val: int):
         if self.has_mp_mod:
+            self._data[3] &= 0xF0
             if val == 50:
-                self._data[3] = 1
+                self._data[3] |= 1
             elif val == 75:
-                self._data[3] = 2
+                self._data[3] |= 2
             else:
                 raise ValueError("Only 50 and 75 are valid values")
             return

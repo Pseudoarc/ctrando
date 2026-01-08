@@ -1660,6 +1660,12 @@ def get_base_treasure_dict() -> dict[ctenums.TreasureID, RewardSpot]:
         TID.PROTO_DOME_PORTAL_TAB: ScriptTreasure(
             LocID.PROTO_DOME_PORTAL, 0xD, FID.ACTIVATE
         ),
+        TID.NORTHERN_RUINS_HEROS_GRAVE_MAGIC_TAB: ScriptTreasure(
+            LocID.NORTHERN_RUINS_HEROS_GRAVE, 0xF, FID.ACTIVATE
+        ),
+        TID.NORTHERN_RUINS_LANDING_POWER_TAB: ScriptTreasure(
+            LocID.NORTHERN_RUINS_LANDING, 8, FID.ACTIVATE
+        ),
         TID.CRONOS_MOM: ScriptTreasure(
             LocID.CRONOS_KITCHEN, 0xF, FID.TOUCH
         ),
@@ -2175,6 +2181,8 @@ def get_vanilla_assignment() -> dict[ctenums.TreasureID, RewardType]:
         ctenums.TreasureID.OCEAN_PALACE_ELEVATOR_MAGIC_TAB: ctenums.ItemID.MAGIC_TAB,
         ctenums.TreasureID.OZZIES_FORT_GUILLOTINES_TAB: ctenums.ItemID.MAGIC_TAB,
         ctenums.TreasureID.PROTO_DOME_PORTAL_TAB: ctenums.ItemID.POWER_TAB,
+        ctenums.TreasureID.NORTHERN_RUINS_HEROS_GRAVE_MAGIC_TAB: ctenums.ItemID.MAGIC_TAB,
+        ctenums.TreasureID.NORTHERN_RUINS_LANDING_POWER_TAB: ctenums.ItemID.POWER_TAB,
         ctenums.TreasureID.CRONOS_MOM: Gold(400),
         ctenums.TreasureID.TRUCE_MAYOR_2F_OLD_MAN: Gold(300),
         ctenums.TreasureID.TRADING_POST_PETAL_FANG_BASE: ctenums.ItemID.RUBY_GUN,

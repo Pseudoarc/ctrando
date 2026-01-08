@@ -96,13 +96,49 @@ def assign_random_hp_mp_mod(
 
 def randomize_good_accessory_effects(
         item_db: itemdata.ItemDB,
+        ds_replacement_chance: float,
         rng: RNGType
 ):
     """Put random effects on rocks."""
+    good_accesories = [
+        ctenums.ItemID.BLUE_ROCK, ctenums.ItemID.BLACK_ROCK,
+        ctenums.ItemID.GOLD_ROCK, ctenums.ItemID.SILVERROCK,
+        ctenums.ItemID.WHITE_ROCK
+    ]
+    if rng.random() < ds_replacement_chance:
+        badge = item_db[ctenums.ItemID.HERO_MEDAL]
+        badge.set_name_from_str("{acc}ChampBadge")
+
+        # Badge gets a good effect or hp/mp and stats.
+        if rng.random() < 0.0:
+            badge_buff_dist: dict[itemdata.BuffIterable, float] = {
+                (T5.GREENDREAM,): 10,
+                (T6.PROT_BLIND, T6.PROT_CHAOS, T6.PROT_HPDOWN, T6.PROT_LOCK,
+                 T6.PROT_POISON, T6.PROT_SLEEP, T6.PROT_SLOW, T6.PROT_STOP): 4,
+                (T8.HASTE,): 2,
+                (T9.BARRIER,): 10,
+                (T9.SHIELD,): 10,
+                (T9.BARRIER, T9.SHIELD): 2,
+                (T9.SHADES,): 5,
+                (T9.SPECS,): 2
+            }
+            buffs, weights = zip(*acc_buff_dist.items())
+            battle_buffs = rng.choices(buffs, weights=weights, k=1)[0]
+        else:
+            assign_random_hp_mp_mod(badge.stats, rng)
+            badge_boosts = (
+                BoostID.SPEED_2, BoostID.SPEED_3, BoostID.MDEF_12,
+                BoostID.MAG_MDEF_5, BoostID.POWER_STAMINA_10,
+                BoostID.SPD_POW_3, BoostID.MDEF_STAMINA_10
+            )
+            boost = rng.choice(badge_boosts)
+            badge.stats.has_stat_boost = True
+            badge.stats.stat_boost_index = boost
+
+
     for item_id in (ctenums.ItemID.BLUE_ROCK, ctenums.ItemID.BLACK_ROCK,
                     ctenums.ItemID.GOLD_ROCK, ctenums.ItemID.SILVERROCK,
-                    ctenums.ItemID.WHITE_ROCK,
-                    ctenums.ItemID.HERO_MEDAL):
+                    ctenums.ItemID.WHITE_ROCK):
         item = item_db[item_id]
         item.stats = get_random_acc_stats(0.4, 0.4, 0.2, rng)
 

@@ -65,6 +65,8 @@ class EventMod(locationevent.LocEventMod):
         cls.modify_cyrus_scene(script)
         cls.modify_item_pickup(script)
 
+        owu.update_add_item(script, script.get_function_start(0xF, FID.ACTIVATE))
+
 
     @classmethod
     def modify_item_pickup(cls, script: Event):
