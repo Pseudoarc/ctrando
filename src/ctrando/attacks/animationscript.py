@@ -496,7 +496,8 @@ def make_single_lucca_prot_all_script(ct_rom: ctrom.CTRom):
         ac.TeleportToTarget(target=0),
         ac.SetObjectFacing(facing=3),
         ac.SetPriority(priority=3),
-        ac.Unknown61([0x61, 0x02, 0x00]),
+        ac.Unknown61([0x61, 0x02, 0x00, 0x04]),
+        ac.TeleportToTarget(target=0x0C),
         ac.PlayAnimationFirstFrame(animation_id=0x1B),
         ac.SetSpeedFastest(),
         ac.WaitForCounter1DValue(value=1),  # When caster has animated

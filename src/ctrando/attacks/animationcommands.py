@@ -560,6 +560,16 @@ class CopyCounterToCounter(AnimationCommand):
     source = cty.byte_prop(1)
     destination = cty.byte_prop(2)
 
+    def __init__(self, *args,
+                 source: int = None,
+                 destination: int = None,
+                 **kwargs):
+        AnimationCommand.__init__(self,*args, **kwargs)
+        self._set_properties(
+            ("source", source),
+            ("destination", destination)
+        )
+
 
 # 42 cc Copy Counter 0x1c to Counter cc
 class CopyCounter1CToCounter(AnimationCommand):
@@ -798,7 +808,7 @@ class SwitchToPalette(AnimationCommand):
 
 # 61 xx yy zz Unknown
 class Unknown61(AnimationCommand):
-    SIZE = 3
+    SIZE = 4
     CMD_ID = 0x61
 
 
@@ -969,6 +979,15 @@ class SetAngleBetweenTargets(AnimationCommand):
     source_target = cty.byte_prop(1)
     destination_target = cty.byte_prop(2)
 
+    def __init__(self, *args,
+                 source_target: int = None,
+                 destination_target: int = None,
+                 **kwargs):
+        AnimationCommand.__init__(self, *args, **kwargs)
+        self._set_properties(
+            ("source_target", source_target),
+            ("destination_target", destination_target),
+        )
 
 # 77 aa Set Angle, add aa to current Angle
 class AddToCurrentAngle(AnimationCommand):
@@ -1081,6 +1100,12 @@ class StoreTargetTo7E4AE8(AnimationCommand):
 
     target = cty.byte_prop(1)
 
+    def __init__(self, *args, target: int = None, **kwargs):
+        AnimationCommand.__init__(self, *args, **kwargs)
+        self._set_properties(
+            ("target", target),
+        )
+
 
 # 82 tt Store Target tt to RAM at $7E:A4E9
 class StoreTargetTo7E4AE9(AnimationCommand):
@@ -1088,6 +1113,12 @@ class StoreTargetTo7E4AE9(AnimationCommand):
     CMD_ID = 0x82
 
     target = cty.byte_prop(1)
+
+    def __init__(self, *args, target: int = None, **kwargs):
+        AnimationCommand.__init__(self, *args, **kwargs)
+        self._set_properties(
+            ("target", target),
+        )
 
 
 
@@ -1098,6 +1129,12 @@ class StoreTargetTo7E4AEA(AnimationCommand):
 
     target = cty.byte_prop(1)
 
+    def __init__(self, *args, target: int = None, **kwargs):
+        AnimationCommand.__init__(self, *args, **kwargs)
+        self._set_properties(
+            ("target", target),
+        )
+
 
 # 84 tt Store Target tt to RAM at $7E:A4EB
 class StoreTargetTo7E4AEB(AnimationCommand):
@@ -1105,6 +1142,12 @@ class StoreTargetTo7E4AEB(AnimationCommand):
     CMD_ID = 0x84
 
     target = cty.byte_prop(1)
+
+    def __init__(self, *args, target: int = None, **kwargs):
+        AnimationCommand.__init__(self, *args, **kwargs)
+        self._set_properties(
+            ("target", target),
+        )
 
 
 # 85 aa Set Angle Absolute aa - angle
@@ -1310,6 +1353,16 @@ class DrawSpacedCopies(AnimationCommand):
 
     spacing = cty.byte_prop(1)
     transparency = cty.byte_prop(2)
+
+    def __init__(self, *args,
+                 spacing: int = None,
+                 transparency: int = None,
+                 **kwargs):
+        AnimationCommand.__init__(self, *args, **kwargs)
+        self._set_properties(
+            ("spacing", spacing),
+            ("transparency", transparency),
+        )
 
 
 # A5 Reset Copies
@@ -1630,8 +1683,21 @@ class ShakeSprite(AnimationCommand):
     SIZE = 4
     CMD_ID = 0xD8
 
+    unknown = cty.byte_prop(1)
     speed = cty.byte_prop(2)
     num_times = cty.byte_prop(3)
+
+    def __init__(self, *args,
+                 unknown: int = None,
+                 speed: int = None,
+                 num_times: int = None,
+                 **kwargs):
+        AnimationCommand.__init__(self, *args, **kwargs)
+        self._set_properties(
+            ("unknown", unknown),
+            ("speed", speed),
+            ("num_times", num_times)
+        )
 
 
 # D9 xx Load Graphics Packet 1.
