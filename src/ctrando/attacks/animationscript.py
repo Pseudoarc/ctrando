@@ -948,6 +948,7 @@ def make_double_tap_script(ct_rom: ctrom.CTRom):
                                                   0x0d7a6d,
                                                   #0x0E0810
                                                   )
+
     script.main_script.caster_objects[0] = [
         ac.SetObjectFacing(facing=0xD),
         ac.PlayAnimationFirstFrame(animation_id=0x31),
@@ -956,13 +957,9 @@ def make_double_tap_script(ct_rom: ctrom.CTRom):
         ac.LoadSpriteAtTarget40(target=0x03),
         ac.LoadSpriteAtTarget(target=0x9),
         ac.PlaySound7A(sound=0x96, unknown=9),
-        ac.SetCounterToValue(counter=3, value=8),
         ac.SetCounterToValue(counter=0xE, value=6),
-        ac.SetCounterToValue(counter=7, value=8),
         ac.SetCounterToValue(counter=0xA, value=0x28),
         ac.IncrementCounter(counter=0x1B),  ############
-        # ac.StoreTargetTo7E4AE8(target=0),
-        # ac.StoreTargetTo7E4AE9(target=3),
         ac.ShakeSprite(unknown=2, speed=3, num_times=0x20),
         ac.Pause(duration=0x5),
         ac.SetCounterToValue(counter=0xE, value=5),
@@ -997,6 +994,7 @@ def make_double_tap_script(ct_rom: ctrom.CTRom):
     # script.main_script.effect_objects[0].insert(0, ac.Unknown61(bytes.fromhex("61 02 00 04")))
 
     script.main_script.effect_objects[0] = [
+        ac.SwitchToPalette(palette=0),
         ac.SetObjectFacing(facing=0),
         ac.SetPriority(priority=0),
         ac.WaitForCounter1DValue(value=1),
@@ -1004,12 +1002,13 @@ def make_double_tap_script(ct_rom: ctrom.CTRom):
         ac.StoreTargetCoordinates(target=0x09),
         ac.AddSubFromCounter(counter=0x1E, value=0x02),
         ac.TeleportToStoredCoordinates(),
-        ac.DrawEffect(),
         ac.PlayAnimationLoop(animation_id=0),
+        ac.DrawEffect(),
         ac.PlaySound(sound=0x50),
         ac.StoreTargetCoordinates(target=0x0C),
         ac.AddSubFromCounter(counter=0x1E, value=0x02),
         ac.SlideSpriteToStoredCoordinates(),
+        ac.SlideSpriteToTarget(target=3),
         ac.IncrementCounter1D(),
         ac.IncrementCounter(counter=0x1A),
         ac.HideEffect(),
