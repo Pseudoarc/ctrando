@@ -70,6 +70,7 @@ def make_phys_lucca(
     tech.graphics_header.assembly_packet_2 = 0x89
     tech.graphics_header.palette = 0x89
     tech.graphics_header.layer3_packet_id = 9
+    tech.target_data[0], tech.target_data[1] = 7, 0
 
     # tech.graphics_header.sprite_packet_1 = 0xC0
     # tech.graphics_header.sprite_packet_2 = 0xC4
