@@ -47,6 +47,7 @@ dynamic_scaling_scheme = "progression"  # Options: "none", "progression"
 ## Dynamic Scaling Options (Only if dynamic scaling is not none)
 max_scaling_level=50
 dynamic_scale_lavos=true
+dynamic_scale_lavos_gauntlet=false
 defense_safety_min_level=10     # If the scaling is below this level, defense cannot exceed 50% reduction(usual)
 defense_safety_max_level=30     # Enemies have vanilla defense at this level.
                                 # Between min and max, linearly scale if defense would exceed 50% reduction
@@ -286,7 +287,8 @@ item_price_max_multiplier = 4.00  # Only for use with "random_multiplier" prices
 ### Objective Options
 num_algetty_portal_objectives = 2  # Number of objectives needed to unlock the portal in Algetty's entrance
 num_omen_objectives = 2            # Number of objectives needed to unlock the final door in the Black Omen
-num_bucket_objectives = 4          # Number of objectives needed to unlock the bucket in the End of Time.
+num_bucket_objectives = 3          # Number of objectives needed to unlock the bucket in the End of Time.
+num_gauntlet_objectives = 4        # Number of objectives needed to disable the Lavos boss rush
 num_timegauge_objectives = 5       # Number of objectives needed to unlock 1999 on the time gauge.
 
 # Objective specifications are complicated

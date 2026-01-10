@@ -1430,6 +1430,27 @@ def apply_full_scaling_patch(
             ctenums.EnemyID.LAVOS_OCEAN_PALACE,
         ]
 
+    if not scaling_general_options.dynamic_scale_lavos_gauntlet:
+        scaling_exclusion_list += [
+            # Lavos - Dragon Tank
+            ctenums.EnemyID.LAVOS_DRAGON_TANK, ctenums.EnemyID.LAVOS_TANK_LEFT_HEAD,
+            ctenums.EnemyID.LAVOS_TANK_RIGHT_GRINDER,
+            # Lavos - Guardian
+            ctenums.EnemyID.LAVOS_GUARDIAN, ctenums.EnemyID.LAVOS_GUARDIAN_LEFT,
+            ctenums.EnemyID.LAVOS_GUARDIAN_RIGHT,
+            ctenums.EnemyID.LAVOS_HECKRAN,  # Lavos - Heckran
+            # Lavos - Zombor
+            ctenums.EnemyID.LAVOS_ZOMBOR_UPPER, ctenums.EnemyID.LAVOS_ZOMBOR_BOTTOM,
+            ctenums.EnemyID.LAVOS_MASA_MUNE,  # Lavos - Masa & Munue
+            ctenums.EnemyID.LAVOS_NIZBEL,  # Lavos - Nizbel
+            ctenums.EnemyID.LAVOS_MAGUS,  # Lavos - Magus
+            # Lavos - Black Tyrano
+            ctenums.EnemyID.LAVOS_TYRANO, ctenums.EnemyID.LAVOS_TYRANO_AZALA,
+            # Lavos - Giga Gaia
+            ctenums.EnemyID.LAVOS_GIGA_GAIA_HEAD, ctenums.EnemyID.LAVOS_GIGA_GAIA_LEFT,
+            ctenums.EnemyID.LAVOS_GIGA_GAIA_RIGHT,
+        ]
+
     slow_scale8_addr = asmpatcher.add_jsl_routine(
         scalingschemes.get_slow_scale8_routine(slow_mult_rt_rom_addr, slow_div_rt_rom_addr),
         ct_rom
