@@ -59,7 +59,6 @@ class EventMod(locationevent.LocEventMod):
                 .add(EC.return_cmd())
             )
             .add(EC.assign_val_to_mem(4, memory.Memory.LAVOS_STATUS, 1))
-            # .add(EC.assign_val_to_mem(8, memory.Memory.FLYING_EPOCH_CUTSCENE_COUNTER, 1))
             .add(EC.set_bit(0x7F00AA, 0x04))
             .add(EC.reset_bit(0x7F00AA, 0x08))
         )

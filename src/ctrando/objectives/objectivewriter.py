@@ -46,6 +46,18 @@ def get_objective_count_checks(
                 )).add(EC.set_flag(memory.Flags.BUCKET_AVAILABLE))
             )
         ).add_if(
+            EC.if_not_flag(memory.Flags.LAVOS_GAUNTLET_DISABLED),
+            EF()
+            .add_if(
+                EC.if_mem_op_value(memory.Memory.OBJECTIVES_COMPLETED,
+                                   OP.GREATER_OR_EQUAL,
+                                   obj_settings.num_gauntlet_objectives),
+                EF()
+                .add(EC.auto_text_box(
+                    script.add_py_string("{line break}     Lavos Gauntlet Disabled!{null}")
+                )).add(EC.set_flag(memory.Flags.LAVOS_GAUNTLET_DISABLED))
+            )
+        ).add_if(
             EC.if_not_flag(memory.Flags.BLACK_OMEN_ZEAL_AVAILABLE),
             EF()
             .add_if(
@@ -386,6 +398,7 @@ def write_test_objectives(
     obj_rewards = {
         "Algetty Portal": objective_settings.num_algetty_portal_objectives,
         "Bucket": objective_settings.num_bucket_objectives,
+        "Lavos Gauntlet": objective_settings.num_gauntlet_objectives,
         "Omen Boss": objective_settings.num_omen_objectives,
         "1999 Time Gauge": objective_settings.num_timegauge_objectives,
     }

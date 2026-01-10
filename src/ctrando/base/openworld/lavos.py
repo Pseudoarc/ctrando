@@ -30,6 +30,19 @@ class EventMod(locationevent.LocEventMod):
         Modify Lavos for an Open World.
         - Always jump right into the Lavos fight.
         """
+        pos = script.get_object_start(0)
+        script.insert_commands(
+            EF()
+            .add_if(
+                EC.if_mem_op_value(memory.Memory.LAVOS_STATUS, OP.NOT_EQUALS, 3),
+                EF()
+                .add_if(
+                    EC.if_not_flag(memory.Flags.LAVOS_GAUNTLET_DISABLED),
+                    EF()
+                    .add(EC.assign_val_to_mem(8, memory.Memory.LAVOS_STATUS, 1))
+                )
+            ).get_bytearray(), pos
+        )
 
         pos = script.find_exact_command(
             EC.if_mem_op_value(memory.Memory.LAVOS_STATUS, OP.EQUALS, 3),
@@ -70,6 +83,13 @@ class EventMod(locationevent.LocEventMod):
         ) - 1
         script.delete_commands(pos, 1)
 
+        script.insert_commands(
+            EF().add_if(
+                EC.if_mem_op_value(memory.Memory.LAVOS_STATUS, OP.EQUALS, 8),
+                EF().add(EC.set_own_drawing_status(False))
+            ).get_bytearray(), pos
+        )
+
         # force play the lavos song when interacted with from Black Omen
         pos = script.find_exact_command(
             cmd := EC.if_mem_op_value(0x7F0214, OP.EQUALS, 1),
@@ -77,3 +97,26 @@ class EventMod(locationevent.LocEventMod):
         )
         pos += len(cmd)
         script.insert_commands(EC.play_song(0xD).to_bytearray(), pos)
+
+        pos = script.find_exact_command(
+            EC.if_mem_op_value(memory.Memory.LAVOS_STATUS, OP.EQUALS, 4),
+            script.get_function_start(9, FID.STARTUP)
+        )
+        script.replace_jump_cmd(pos, EC.if_mem_op_value(memory.Memory.LAVOS_STATUS, OP.NOT_EQUALS, 3))
+        # target_pos = script.find_exact_command(EC.set_explore_mode(False), pos)
+        # jump_cmd = EC.jump_forward(1+(target_pos-pos))
+        # script.insert_commands(
+        #     EF()
+        #     .add_if(
+        #         EC.if_mem_op_value(memory.Memory.LAVOS_STATUS, OP.EQUALS, 8),
+        #         EF().add(jump_cmd)
+        #     ).get_bytearray(), pos
+        # )
+
+        pos = script.find_exact_command(
+            EC.party_follow(),
+            script.get_function_start(8, FID.ARBITRARY_2)
+        ) + 1
+        script.insert_commands(
+            EC.set_explore_mode(True).to_bytearray(), pos
+        )

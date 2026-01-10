@@ -71,7 +71,8 @@ class ObjectiveOptions:
 
     num_algetty_portal_objectives: int = 3
     num_omen_objectives: int = 4
-    num_bucket_objectives: int = 5
+    num_bucket_objectives: int = 4
+    num_gauntlet_objectives: int = 5
     num_timegauge_objectives: int = 6
     objective_specifiers: list[str] = field(default_factory=list)
 
@@ -91,6 +92,11 @@ class ObjectiveOptions:
             "num_bucket_objectives": argumenttypes.DiscreteNumericalArg(
                 0, 8, 1, 5,
                 "Number of objectives needed to unlock the bucket in the End of Time",
+                type_fn=int
+            ),
+            "num_gauntlet_objectives": argumenttypes.DiscreteNumericalArg(
+                0, 8, 1, 5,
+                "Number of objectives needed to remove the lavos boss gauntlet",
                 type_fn=int
             ),
             "num_timegauge_objectives": argumenttypes.DiscreteNumericalArg(
@@ -128,6 +134,7 @@ class ObjectiveOptions:
             "num_omen_objectives": "Number of objectives needed to unlock the final door in the Black Omen.",
             "num_bucket_objectives": "Number of objectives needed to unlock the bucket in the End of Time.",
             "num_timegauge_objectives": "Number of objectives needed to unlock 1999 on the time gauge.",
+            "num_gauntlet_objectives": "Number of objectives needed to remove the lavos boss gauntlet",
         }
         argumenttypes.add_dataclass_to_group(cls, group, help_dict=help_dict)
 
