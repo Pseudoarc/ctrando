@@ -120,6 +120,7 @@ class DynamicScalingScheme(enum.StrEnum):
 class DynamicScalingOptions:
     max_scaling_level: int = 50
     dynamic_scale_lavos: bool = False
+    dynamic_scale_lavos_gauntlet: bool = False
     defense_safety_min_level: int = 10
     defense_safety_max_level: int = 30
     obstacle_safety_level: int = 30
@@ -148,6 +149,8 @@ class DynamicScalingOptions:
             ),
             "dynamic_scale_lavos": argumenttypes.FlagArg(
                 "Include Lavos in the dynamic scaling (if not none)"),
+            "dynamic_scale_lavos_gauntlet": argumenttypes.FlagArg(
+                "Include Lavos attack modes in the dynamic scaling (if not none)"),
             "defense_safety_min_level": argumenttypes.DiscreteNumericalArg(
                 1, 99, 1, 10,
                 "Level before which enemies have standard phys defense",

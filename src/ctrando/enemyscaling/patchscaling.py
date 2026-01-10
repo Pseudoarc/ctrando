@@ -114,7 +114,6 @@ def patch_scaling_inventory(
 
 def patch_enemy_rewards(
         ct_rom: ctrom.CTRom, *,
-        scaling_exclusion_list: Optional[list[ctenums.EnemyID,]] = None,
         scale_8_addr: int,
         scale_16_addr: int,
         xp_lut_addr: int,
@@ -146,9 +145,6 @@ def patch_enemy_rewards(
     # FDAC05  7B             TDC
     # FDAC06  E2 20          SEP #$20
     # FDAC08  BF 04 5E CC    LDA $CC5E04,X
-
-    if scaling_exclusion_list is None:
-        scaling_exclusion_list = []
 
     if scale_16_addr is None:
         scale_16_rt = scalingschemes.get_scale16_routine(True)
@@ -454,16 +450,32 @@ def patch_enemy_stat_loads(
         ])
         return routine
 
-    scale_part = [
-        # ignore scaling for some enemies
-        inst.LDA(index_offset, AM.ABS_Y),
+    is_scaled_list = [
+        not (ctenums.EnemyID(x) in scaling_exclusion_list) for x in range(0x100)
     ]
+    is_scaled_b = bytes(is_scaled_list)
+    is_scaled_addr = ct_rom.space_manager.get_free_addr(
+        len(is_scaled_b), 0x410000
+    )
+    is_scaled_rom_addr = byteops.to_rom_ptr(is_scaled_addr)
+    ct_rom.seek(is_scaled_addr)
+    ct_rom.write(is_scaled_b, ctrom.freespace.FSWriteType.MARK_USED)
 
-    for enemy_id in scaling_exclusion_list:
-        scale_part += [
-            inst.CMP(enemy_id, AM.IMM8),
-            inst.BEQ("skip_scaling")
-        ]
+    # scale_part = [
+    #     # ignore scaling for some enemies
+    #     inst.LDA(index_offset, AM.ABS_Y),
+    # ]
+    #
+    # for enemy_id in scaling_exclusion_list:
+    #     scale_part += [
+    #         inst.CMP(enemy_id, AM.IMM8),
+    #         inst.BEQ("skip_scaling")
+    #     ]
+    scale_part = [
+        inst.LDX(index_offset, AM.ABS_Y),
+        inst.LDA(is_scaled_rom_addr, AM.LNG_X),
+        inst.BEQ("skip_scaling")
+    ]
 
     hp_lut_rom_addr = byteops.to_rom_ptr(hp_lut_addr)
     get_hp_scalers = scalingschemes.get_lut_scale_values_routine(
@@ -1481,7 +1493,6 @@ def apply_full_scaling_patch(
         hp_lut_addr
     )
     patch_enemy_rewards(ct_rom,
-                        scaling_exclusion_list=scaling_exclusion_list,
                         scale_8_addr=slow_scale8_addr,
                         scale_16_addr=slow_scale16_addr,
                         xp_lut_addr=xp_lut_addr)
