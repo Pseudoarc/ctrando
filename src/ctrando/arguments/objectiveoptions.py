@@ -72,7 +72,7 @@ class ObjectiveOptions:
     num_algetty_portal_objectives: int = 3
     num_omen_objectives: int = 4
     num_bucket_objectives: int = 4
-    num_gauntlet_objectives: int = 5
+    num_gauntlet_objectives: int = 0
     num_timegauge_objectives: int = 6
     objective_specifiers: list[str] = field(default_factory=list)
 
