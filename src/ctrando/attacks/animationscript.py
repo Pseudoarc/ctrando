@@ -1008,10 +1008,9 @@ def make_double_tap_script(ct_rom: ctrom.CTRom):
         ac.StoreTargetCoordinates(target=0x0C),
         ac.AddSubFromCounter(counter=0x1E, value=0x02),
         ac.SlideSpriteToStoredCoordinates(),
-        ac.SlideSpriteToTarget(target=3),
+        ac.HideEffect(),
         ac.IncrementCounter1D(),
         ac.IncrementCounter(counter=0x1A),
-        ac.HideEffect(),
         ac.ReturnCommand()
     ]
 
