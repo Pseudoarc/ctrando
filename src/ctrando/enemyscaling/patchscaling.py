@@ -472,7 +472,9 @@ def patch_enemy_stat_loads(
     #         inst.BEQ("skip_scaling")
     #     ]
     scale_part = [
-        inst.LDX(index_offset, AM.ABS_Y),
+        inst.TDC(),
+        inst.LDA(index_offset, AM.ABS_Y),
+        inst.TAX(),
         inst.LDA(is_scaled_rom_addr, AM.LNG_X),
         inst.BEQ("skip_scaling")
     ]
