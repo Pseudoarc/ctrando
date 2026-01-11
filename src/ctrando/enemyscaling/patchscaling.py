@@ -489,8 +489,7 @@ def patch_enemy_stat_loads(
 
     true_levels_rom_addr = byteops.to_rom_ptr(true_levels_addr)
     scale_part += [
-        inst.CMP(0xFF, AM.IMM8),  # placeholder empty enemy
-        inst.BNE("scale_enemy"),
+        inst.BRA("scale_enemy"),
         "skip_scaling",
         inst.LDA(memory.Memory.SCALING_LEVEL, AM.LNG),
         inst.STA(index_offset+1, AM.ABS_Y),  # Store scaling level as fake orig
@@ -498,6 +497,7 @@ def patch_enemy_stat_loads(
         "scale_enemy",
         # Write scaled level in for enemy's level stat
         # Also populate the from/to multipliers for HP scaling.
+        inst.LDA(index_offset, AM.ABS_Y),
         inst.LDX(0x0000, AM.IMM16),
         inst.TAX(),
         inst.LDA(true_levels_rom_addr, AM.LNG_X),
