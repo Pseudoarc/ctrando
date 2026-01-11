@@ -168,7 +168,7 @@ _split_name_dict: dict[BossID, tuple[str,str]] = {
     BossID.DALTON_PLUS: ("dalton", "plus"),
     BossID.ELDER_SPAWN: ("elder", "spawn"),
     BossID.FLEA: ("fl", "ea"),
-    BossID.GIGA_MUTANT: ("giga" "mutant"),
+    BossID.GIGA_MUTANT: ("giga", "mutant"),
     BossID.GOLEM: ("go", "lem"),
     BossID.GOLEM_BOSS: ("golem", "boss"),
     BossID.HECKRAN: ("heck", "ran"),
