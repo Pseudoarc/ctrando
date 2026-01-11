@@ -108,7 +108,8 @@ def set_element_safety_level(ai_man: aim.EnemyAIManager, safe_level: int):
     # - This seems to be a CT bug.  Maybe not all conditions work correctly in compound checks.
     # - Or maybe there's some subtle freespace bug going on... Keep a watch.
 
-    for enemy_id in (ctenums.EnemyID.NIZBEL, ctenums.EnemyID.NIZBEL_II):
+    for enemy_id in (ctenums.EnemyID.NIZBEL, ctenums.EnemyID.NIZBEL_II,
+                     ctenums.EnemyID.LAVOS_NIZBEL):
         nizbel_script = ai_man.script_dict[enemy_id]
         lit_cond = aity.IfAttackElement(element=aity.AIElement.LIGHTNING,
                                         is_not_equal=False)
