@@ -4,13 +4,14 @@ import random
 
 from ctrando.arguments import postrandooptions
 from ctrando.base.basepatch import apply_fast_ow_movement
-from ctrando.common import ctenums, ctrom, memory
+from ctrando.common import byteops, ctenums, ctrom, memory
 from ctrando.overworlds.owmanager import OWManager
 from ctrando.locations.scriptmanager import ScriptManager
 from ctrando.locations.locationevent import LocationEvent, FunctionID as FID
 from ctrando.locations.eventcommand import EventCommand as EC, Operation as OP
 from ctrando.locations.eventfunction import EventFunction as EF
 from ctrando.postrando import gameoptions, palettes, flashreduce
+from ctrando.strings import ctstrings
 
 
 def set_auto_run(ct_rom: ctrom.CTRom):
@@ -79,6 +80,32 @@ def fix_auto_run_scripts(script_manager: ScriptManager):
     script.insert_commands(new_block.get_bytearray(), pos)
     pos += len(new_block)
     script.delete_jump_block(pos)
+
+
+def use_alt_house_warp(ct_rom: ctrom.CTRom,
+                       script_manager: ScriptManager):
+    """Use L+select instead of start+select"""
+    hook_addr = 0x0235FC
+    ct_rom.seek(hook_addr+1)
+    jump_rom_addr = int.from_bytes(ct_rom.read(3), "little")
+    jump_addr = byteops.to_file_ptr(jump_rom_addr)
+
+    ct_rom.seek(jump_addr + 4)  # stupid precomputed offset from the jump target
+    ct_rom.write(b'\x20')
+
+    script = script_manager[ctenums.LocID.TRUCE_MAYOR_2F]
+    new_str = (
+        'Hold {"1}L{"2} and press {"1}Select{"2} on the{linebreak+0}'
+        'overworld to warp home.{null}'
+    )
+    script.strings[3] = ctstrings.CTString.from_str(new_str)
+
+    script = script_manager[ctenums.LocID.CRONOS_ROOM]
+    home_warp_text = (
+        "MOM: Press L and select on the{line break}"
+        "overworld to come straight home.{null}"
+    )
+    script.strings[7] = ctstrings.CTString.from_ascii(home_warp_text)
 
 
 def write_palettes(
@@ -232,3 +259,6 @@ def write_post_rando_options(
 
     if post_rando_options.remove_flashes:
         flashreduce.apply_all_flash_hacks(script_man, ow_manager, ct_rom)
+
+    if post_rando_options.use_l_select_warp:
+        use_alt_house_warp(ct_rom, script_man)

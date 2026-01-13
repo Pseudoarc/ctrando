@@ -556,6 +556,9 @@ ending = "the dream project"
 # If set to true, most flashing animations are removed
 remove_flashes = false
 
+# If set to true, useu L+Select instead of Start+Select to house warp
+use_l_select_warp = false
+
 ### Plando Recruits
 #  - Use "crono", "marle", "lucca", "robo", "frog", "ayla", "magus" to force a character
 #    Each character can only be placed in one spot.

@@ -38,7 +38,7 @@ class PostRandoOptions:
         "window_background",
         "crono_palette", "marle_palette", "lucca_palette", "robo_palette",
         "frog_palette", "ayla_palette", "magus_palette",
-        "ending", "remove_flashes"
+        "ending", "remove_flashes", "use_l_select_warp"
     )
     _default_fast_loc_movement: typing.ClassVar[bool] = False
     _default_fast_ow_movement: typing.ClassVar[bool] = False
@@ -108,6 +108,7 @@ class PostRandoOptions:
 
     ending: EndingID = EndingID("the dream project")
     remove_flashes: bool = False
+    use_l_select_warp: bool = False
 
     def __post_init__(self):
         self.battle_speed = sorted([1, int(self.battle_speed), 8])[1]
@@ -135,6 +136,9 @@ class PostRandoOptions:
             "window_background": argumenttypes.DiscreteNumericalArg(
                 1, 8, 1, cls._default_window_background,
                 "Default window background", type_fn=int
+            ),
+            "use_l_select_warp": argumenttypes.FlagArg(
+                "Use L+Select instead of Start+Select for house warp"
             )
         }
 
@@ -249,6 +253,10 @@ class PostRandoOptions:
         group.add_argument(
             "--remove-flashes", action="store_true",
             help="Remove flashes from many animations."
+        )
+
+        cls.get_argument_spec()["use_l_select_warp"].add_to_argparse(
+            "--use-l-select-warp", group
         )
 
     @classmethod
