@@ -76,7 +76,10 @@ class EventMod(locationevent.LocEventMod):
 
         new_end = (
             EF()
-            .add(EC.assign_val_to_mem(0xA, 0x7F00DE, 1))
+            .add_if(
+                EC.if_flag(memory.Flags.LAVOS_GAUNTLET_DISABLED),
+                EF().add(EC.assign_val_to_mem(0xA, 0x7F00DE, 1))
+            )
             .add(EC.assign_val_to_mem(4, memory.Memory.LAVOS_STATUS, 1))
             .add(EC.change_location(ctenums.LocID.LAVOS, 7, 0xA))
         )
