@@ -99,6 +99,7 @@ class EventMod(locationevent.LocEventMod):
         cls.modify_gaspar(script)
         cls.modify_npc_robo(script)
         cls.modify_jump_from_hangar(script)
+        cls.add_epoch_summon(script)
 
         owu.add_exploremode_to_partyfollows(script)
 
@@ -330,3 +331,41 @@ class EventMod(locationevent.LocEventMod):
 
         pos = script.find_exact_command(EC.if_storyline_counter_lt(0x49), pos)
         script.delete_jump_block(pos)
+
+    @classmethod
+    def add_epoch_summon(cls, script: Event):
+        """
+        Allow summoning the epoch to the End of Time
+        """
+
+        pos = script.find_exact_command(
+            EC.if_flag(memory.Flags.EPOCH_IN_EOT),
+            script.get_function_start(0x24, FID.TOUCH)
+        )
+
+        block = (
+            EF().add_if(
+                EC.if_not_flag(memory.Flags.EPOCH_IN_EOT),
+                EF()
+                .add_if(
+                    EC.if_flag(memory.Flags.EPOCH_OBTAINED_LOC),
+                    EF()
+                    .add(EC.decision_box(
+                        script.add_py_string(
+                            "Summon {epoch}?{line break}"
+                            "   Yes{line break}"
+                            "   No{null}"
+                        ), 1, 2
+                    ))
+                    .add_if(
+                        EC.if_result_equals(1),
+                        EF()
+                        .add(EC.assign_val_to_mem(0x01D9, memory.Memory.EPOCH_MAP_LO, 2))
+                        .add(EC.set_flag(memory.Flags.EPOCH_OUT_OF_HANGAR))
+                        .add(EC.set_flag(memory.Flags.EPOCH_IN_EOT))
+                    )
+                )
+            )
+        )
+
+        script.insert_commands(block.get_bytearray(), pos)
