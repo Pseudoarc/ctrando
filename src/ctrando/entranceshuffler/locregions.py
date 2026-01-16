@@ -229,7 +229,7 @@ def get_all_loc_regions() -> list[LocRegion]:
             TID.HECKRAN_CAVE_ENTRANCE, TID.HECKRAN_CAVE_SIDETRACK,
             BSID.HECKRAN_CAVE
         },
-        region_rewards=[memory.Flags.HECKRAN_DEFEATED],
+        region_rewards=[memory.Flags.HECKRAN_DEFEATED, QuestID.HECKRAN_CAVE],
         region_loc_ids={LocID.HECKRAN_CAVE_BOSS, LocID.HECKRAN_CAVE_PASSAGEWAYS,
                         LocID.HECKRAN_CAVE_UNDERGROUND_RIVER, LocID.HECKRAN_CAVE_ENTRANCE},
         is_combat_region=True
@@ -540,6 +540,13 @@ def get_all_loc_regions() -> list[LocRegion]:
         is_combat_region=True
     )
     ret_list.append(lab_32_middle)
+
+    johnny_race = LocRegion(
+        "johnny_race",
+        loc_exits=set(),
+        region_rewards=[QuestID.DEFEAT_JOHNNY]
+    )
+    ret_list.append(johnny_race)
 
     sewers = LocRegion(
         "sewers",
@@ -1364,6 +1371,10 @@ def get_all_loc_regions() -> list[LocRegion]:
             LocID.BLACK_OMEN_GIGA_MUTANT, LocID.BLACK_OMEN_TERRA_MUTANT,
             LocID.BLACK_OMEN_ELDER_SPAWN
         },
+        region_rewards=[
+            QuestID.OMEN_ELDER_SPAWN, QuestID.OMEN_TERRA_MUTANT, QuestID.OMEN_GIGA_MUTANT,
+            QuestID.OMEN_MEGA_MUTANT
+        ],
         is_combat_region=True
     )
     ret_list.append(black_omen)
@@ -1487,7 +1498,7 @@ def get_all_loc_regions() -> list[LocRegion]:
 
     ocean_palace_mammon_m = LocRegion(
         "ocean_palace_mammon_m",
-        region_rewards=[memory.Flags.HAS_ALGETTY_PORTAL]
+        region_rewards=[memory.Flags.HAS_ALGETTY_PORTAL, QuestID.OCEAN_PALACE]
     )
     ret_list.append(ocean_palace_mammon_m)
 
@@ -1511,6 +1522,7 @@ def get_all_loc_regions() -> list[LocRegion]:
             TID.MT_WOE_FINAL_2,
             TID.MT_WOE_MAGIC_TAB,
             TID.MT_WOE_KEY,
+            BSID.BEAST_CAVE, BSID.MT_WOE
         },
         region_loc_ids={
             LocID.BEAST_NEST,
@@ -1518,7 +1530,7 @@ def get_all_loc_regions() -> list[LocRegion]:
             LocID.MT_WOE_LOWER_EASTERN_FACE, LocID.MT_WOE_UPPER_EASTERN_FACE,
             LocID.MT_WOE_WESTERN_FACE, LocID.MT_WOE_MIDDLE_EASTERN_FACE,
         },
-        region_rewards=[QuestID.MT_WOE],
+        region_rewards=[QuestID.MT_WOE, QuestID.BEAST_CAVE],
         is_combat_region=True
     )
     ret_list.append(mt_woe)

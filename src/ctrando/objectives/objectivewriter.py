@@ -250,6 +250,7 @@ def get_random_objectives_from_settings(
     ]
 
     links = get_linked_objs(boss_assign_dict)
+    links = links + oty.get_overlapping_quests()
 
     pool = list(total_keys)
     ret_list: list[oty.ObjectiveType] = []
@@ -273,10 +274,9 @@ def get_random_objectives_from_settings(
                 remove_list = (x for x in link if x in pool and x is not None)
                 for obj in remove_list:
                     pool.remove(obj)
-                break
-        else:
-            if new_obj is not None:
-                pool.remove(new_obj)
+
+        if new_obj is not None and new_obj in pool:
+            pool.remove(new_obj)
 
     return ret_list
 

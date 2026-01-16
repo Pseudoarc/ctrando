@@ -155,6 +155,7 @@ excluded_spots=[
 starter_rewards = ["epoch"]
 hard_lavos_end_boss=true  # The game will end if Ocean Palace Lavos is defeated.
 boats_of_time=false  # Ferry to Choras.  With gate key ferry to 600AD destinations.
+jets_of_time=true
 
 ### Boss Rando Options
 # boss_randomization scheme

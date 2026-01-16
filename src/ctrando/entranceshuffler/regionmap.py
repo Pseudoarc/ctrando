@@ -630,9 +630,21 @@ def get_default_region_connectors(
             rule=logictypes.LogicRule([ctenums.ItemID.BIKE_KEY])
         ),
         RegionConnector(
+            "lab_32_west", "johnny_race",
+            "johnny_race_west",
+            rule=logictypes.LogicRule([ctenums.ItemID.BIKE_KEY, ctenums.CharID.CRONO]),
+            reversible=False
+        ),
+        RegionConnector(
             "lab_32_east", "lab_32_middle",
             "bike_key_east",
             rule=logictypes.LogicRule([ctenums.ItemID.BIKE_KEY])
+        ),
+        RegionConnector(
+            "lab_32_east", "johnny_race",
+            "johnny_race_east",
+            rule=logictypes.LogicRule([ctenums.ItemID.BIKE_KEY, ctenums.CharID.CRONO]),
+            reversible=False
         ),
         RegionConnector(
             "death_peak_entrance", "death_peak",

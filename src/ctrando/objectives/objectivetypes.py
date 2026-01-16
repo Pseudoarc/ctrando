@@ -127,6 +127,12 @@ class QuestID(Enum):
     DEATH_PEAK = auto()
     SPEKKIO = auto()
     DEFEAT_JOHNNY = auto()
+    BEAST_CAVE = auto()
+    OMEN_MEGA_MUTANT = auto()
+    OMEN_GIGA_MUTANT = auto()
+    OMEN_TERRA_MUTANT = auto()
+    OMEN_ELDER_SPAWN = auto()
+
 
 
 @dataclass
@@ -242,7 +248,12 @@ _quest_data_dict: dict[QuestID, QuestData] = {
     QuestID.GENO_DOME: QuestData("*Geno Dome", "Defeat Geno Dome Boss"),
     QuestID.DEATH_PEAK: QuestData("*DeathPeak", "Clear Death Peak"),
     QuestID.SPEKKIO: QuestData("*Spekkio", "Defeat Spekkio"),
-    QuestID.DEFEAT_JOHNNY: QuestData("*JohnnyRace", "Defeat Johnny in a Race")
+    QuestID.DEFEAT_JOHNNY: QuestData("*JohnnyRace", "Defeat Johnny in a Race"),
+    QuestID.BEAST_CAVE: QuestData("*Beast Cave", "Defeat Beast Cave Boss"),
+    QuestID.OMEN_MEGA_MUTANT: QuestData("*Omen Mega", "Vanilla MegaMutant Spot"),
+    QuestID.OMEN_GIGA_MUTANT: QuestData("*Omen Giga", "Vanilla GigaMutant Spot"),
+    QuestID.OMEN_TERRA_MUTANT: QuestData("*Omen Terra", "Vanilla TerraMutant Spot"),
+    QuestID.OMEN_ELDER_SPAWN: QuestData("*Omen Spawn", "Vanilla ElderSpawn Spot"),
 }
 
 _boss_abbrev: dict[bty.BossID, str] = {
@@ -421,7 +432,7 @@ _quest_locator_dict: dict[QuestID, HookLocator | list[HookLocator]] = {
 
 ObjectiveType = QuestID | bty.BossID | None
 
-_associated_objs: list[tuple[ObjectiveType, ...]] = [
+_associated_objs: list[tuple[QuestID, bty.BossSpotID]] = [
     (QuestID.MANORIA_CATHEDRAL, bty.BossSpotID.MANORIA_CATHERDAL),
     (QuestID.CRONO_TRIAL, bty.BossSpotID.PRISON_CATWALKS),
     (QuestID.FACTORY_RUINS, bty.BossSpotID.FACTORY_RUINS),
@@ -438,6 +449,11 @@ _associated_objs: list[tuple[ObjectiveType, ...]] = [
     (QuestID.KINGS_TRIAL, bty.BossSpotID.KINGS_TRIAL),
     (QuestID.OZZIES_FORT, bty.BossSpotID.OZZIES_FORT_TRIO),
     (QuestID.GENO_DOME, bty.BossSpotID.GENO_DOME_FINAL),
+    (QuestID.BEAST_CAVE, bty.BossSpotID.BEAST_CAVE),
+    (QuestID.OMEN_MEGA_MUTANT, bty.BossSpotID.BLACK_OMEN_MEGA_MUTANT),
+    (QuestID.OMEN_GIGA_MUTANT, bty.BossSpotID.BLACK_OMEN_GIGA_MUTANT),
+    (QuestID.OMEN_TERRA_MUTANT, bty.BossSpotID.BLACK_OMEN_TERRA_MUTANT),
+    (QuestID.OMEN_ELDER_SPAWN, bty.BossSpotID.BLACK_OMEN_ELDER_SPAWN),
     # Not death peak
 ]
 
@@ -526,9 +542,18 @@ for eq_class in _associated_objs:
         quest_id = next(x for x in eq_class if isinstance(x, QuestID))
         spot_id = next(x for x in eq_class if isinstance(x, bty.BossSpotID))
 
-        _boss_spot_locator_dict[spot_id] = _quest_locator_dict[quest_id]
+        if quest_id in _quest_locator_dict and spot_id not in _boss_spot_locator_dict:
+            _boss_spot_locator_dict[spot_id] = _quest_locator_dict[quest_id]
+        elif quest_id not in _quest_locator_dict and spot_id in _boss_spot_locator_dict:
+            _quest_locator_dict[quest_id] = _boss_spot_locator_dict[spot_id]
     except StopIteration:
         pass
+
+_overlapping_quests: list[tuple[QuestID,...]] = [
+    (QuestID.EPOCH_REBORN_BATTLE, QuestID.BLACKBIRD),
+    (QuestID.OMEN_MEGA_MUTANT, QuestID.OMEN_GIGA_MUTANT,
+     QuestID.OMEN_TERRA_MUTANT, QuestID.OMEN_ELDER_SPAWN),
+]
 
 
 def get_boss_locator_dict() -> dict[bty.BossSpotID, HookLocator]:
@@ -554,8 +579,12 @@ def get_boss_locator(boss_id: bty.BossID,
     return locators
 
 
-def get_associated_objectives() -> list[tuple[ObjectiveType, ...]]:
+def get_associated_objectives() -> list[tuple[QuestID, bty.BossSpotID]]:
     return list(_associated_objs)
+
+
+def get_overlapping_quests() -> list[tuple[QuestID, ...]]:
+    return list(_overlapping_quests)
 
 
 def get_quest_locator(quest_id: QuestID) -> list[HookLocator]:
@@ -591,7 +620,8 @@ def get_obj_keys(obj_str: str) -> list[ObjectiveType]:
             QuestID.MT_WOE, QuestID.FACTORY_RUINS, QuestID.ARRIS_DOME,
             QuestID.TYRANO_LAIR, QuestID.JERKY_TRADE, QuestID.ZENAN_BRIDGE,
             QuestID.REPTITE_LAIR, QuestID.EPOCH_REBORN_BATTLE, QuestID.ZEAL_PALACE_THRONE,
-            QuestID.KINGS_TRIAL, QuestID.SPEKKIO, QuestID.DEFEAT_JOHNNY
+            QuestID.KINGS_TRIAL, QuestID.SPEKKIO, QuestID.DEFEAT_JOHNNY,
+            QuestID.BEAST_CAVE
         ]
     elif obj_str == "flight_gated_quest":
         return [
@@ -603,7 +633,9 @@ def get_obj_keys(obj_str: str) -> list[ObjectiveType]:
         return [
             QuestID.BLACKBIRD, QuestID.SUNKEN_DESERT, QuestID.FORGE_MASAMUNE,
             QuestID.DEATH_PEAK, QuestID.MAGUS_CASTLE, QuestID.OCEAN_PALACE,
-            QuestID.SUNKEN_DESERT
+            QuestID.SUNKEN_DESERT,
+            QuestID.OMEN_MEGA_MUTANT, QuestID.OMEN_GIGA_MUTANT, QuestID.OMEN_TERRA_MUTANT,
+            QuestID.OMEN_ELDER_SPAWN
         ]
     elif obj_str == "any_boss":
         return bty.get_assignable_bosses()

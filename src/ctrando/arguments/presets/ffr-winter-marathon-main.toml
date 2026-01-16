@@ -121,6 +121,7 @@ excluded_spots=[
 
 starter_rewards = ["epoch"]
 boats_of_time=true
+jets_of_time=true
 
 ## Objectives
 #Can be boss by name, any_boss, any_miniboss, any_quest, open_quest, gated_quest, flight_gated_quest, very_gated_quest
