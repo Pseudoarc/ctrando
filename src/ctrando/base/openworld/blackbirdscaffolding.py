@@ -22,7 +22,7 @@ class EventMod(locationevent.LocEventMod):
         """
 
         cls.add_epoch_objects(script)
-        cls.add_flight_turn_in(script)
+        # cls.add_flight_turn_in(script)
         cls.add_magus(script)
 
     @classmethod

@@ -247,16 +247,26 @@ def get_shuffled_exit_connectors(
     ]
 
     # Make sure flag exits can't be back doored by making them always dead ends
+
+    has_used_nr = False
     for ow_exit in flag_ow_exits:
         if ow_exit in dungeon_exits:
-            pool = [x for x in usable_dead_ends
-                    if x in dungeon_targets and x != LocExit.NORTHERN_RUINS_1000]
+            pool = [x for x in usable_dead_ends if x in dungeon_targets]
+            if has_used_nr:
+                pool = [x for x in pool if x not in (LocExit.NORTHERN_RUINS_1000,
+                                                     LocExit.NORTHERN_RUINS_600)]
             target = rng.choice(pool)
             dungeon_exits.remove(ow_exit)
             dungeon_targets.remove(target)
         else:
             pool = [x for x in usable_dead_ends if x not in dungeon_targets]
+            if has_used_nr:
+                pool = [x for x in pool if x not in (LocExit.NORTHERN_RUINS_1000,
+                                                     LocExit.NORTHERN_RUINS_600)]
             target = rng.choice(pool)
+
+        if target in (LocExit.NORTHERN_RUINS_600, LocExit.NORTHERN_RUINS_1000):
+            has_used_nr = True
 
         usable_dead_ends.remove(target)
         loc_exit_pool.remove(target)

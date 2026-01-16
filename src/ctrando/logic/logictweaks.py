@@ -2,6 +2,7 @@
 import dataclasses
 
 from ctrando.arguments import logicoptions
+from ctrando.base.openworld import blackbirdscaffolding
 from ctrando.common import ctenums, memory
 
 from ctrando.locations.locationevent import FunctionID as FID
@@ -178,6 +179,15 @@ def apply_boats_of_time(
                 script.set_function(
                     obj_id, FID.ACTIVATE, ferry_func
                 )
+
+
+def apply_jets_of_time(
+        logic_options: logicoptions.LogicOptions,
+        script_manager: ScriptManager
+):
+    script = script_manager[ctenums.LocID.BLACKBIRD_SCAFFOLDING]
+    blackbirdscaffolding.EventMod.add_flight_turn_in(script)
+
 
 def apply_logic_tweaks(
         logic_options: logicoptions.LogicOptions,

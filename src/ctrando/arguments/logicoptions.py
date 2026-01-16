@@ -117,7 +117,14 @@ class LogicOptions:
     _default_force_early_flight: typing.ClassVar[bool] = False
     _default_starter_rewards: typing.ClassVar[tuple[RewardType,...]] = (ScriptReward.EPOCH,)
     _default_out_of_logic_starter_rewards: typing.ClassVar[tuple[RewardType, ...]] = tuple()
+    _default_min_flight_depth = 0
 
+    attr_names: typing.ClassVar[tuple[str, ...]] = (
+        "additional_key_items", "forced_spots", "incentive_spots",
+        "incentive_factor", "excluded_spots", "decay_factor",
+        "hard_lavos_end_boss", "starter_rewards", "out_of_logic_starter_rewards",
+        "force_early_flight", "boats_of_time", "jets_of_time", "min_flight_depth"
+    )
     name: typing.ClassVar[str] = "Logic Options"
     description: typing.ClassVar[str] = "Options for the distribution of key items"
     def __init__(
@@ -132,7 +139,9 @@ class LogicOptions:
             force_early_flight: bool = _default_force_early_flight,
             starter_rewards: Sequence[RewardType] = _default_starter_rewards,
             out_of_logic_starter_rewards: Sequence[RewardType] = _default_out_of_logic_starter_rewards,
-            boats_of_time: bool = False
+            boats_of_time: bool = False,
+            jets_of_time: bool = False,
+            min_flight_depth: int = _default_min_flight_depth
     ):
         self.additional_key_items = sorted(additional_key_items)
         self.forced_spots = forced_spots
@@ -145,6 +154,8 @@ class LogicOptions:
         self.starter_rewards = starter_rewards
         self.out_of_logic_starter_rewards = out_of_logic_starter_rewards
         self.boats_of_time = boats_of_time
+        self.jets_of_time = jets_of_time
+        self.min_flight_depth = min_flight_depth
 
 
     @classmethod
@@ -204,6 +215,14 @@ class LogicOptions:
             ),
             "boats_of_time": argumenttypes.FlagArg(
                 "Additional ferry locations."
+            ),
+            "jets_of_time": argumenttypes.FlagArg(
+                "Add JetsOfTime item and turn-in on Blackbird scaffolding"
+            ),
+            "min_flight_depth": argumenttypes.DiscreteNumericalArg(
+                0, 6, 1, cls._default_min_flight_depth,
+                "Minimum logical depth at which flight can be obtained",
+                type_fn=int
             )
 
         }
@@ -296,33 +315,34 @@ class LogicOptions:
             default=argparse.SUPPRESS
         )
 
+        group.add_argument(
+            "--jets-of-time", action="store_true",
+            help="Add JetsOfTime item and turn-in on Blackbird scaffolding",
+            default=argparse.SUPPRESS
+        )
+
+        cls.get_argument_spec()["min_flight_depth"].add_to_argparse(
+            "--min-flight-depth", group
+        )
+
     @ classmethod
     def extract_from_namespace(cls, namespace: argparse.Namespace):
-        attr_names = [
-            "additional_key_items", "forced_spots", "incentive_spots",
-            "incentive_factor", "excluded_spots", "decay_factor",
-            "hard_lavos_end_boss", "starter_rewards", "out_of_logic_starter_rewards",
-            "force_early_flight", "boats_of_time",
-        ]
 
         init_dict: dict[str, typing.Any] = dict()
 
-        for attr_name in attr_names:
+        for attr_name in cls.attr_names:
             if hasattr(namespace, attr_name):
                 init_dict[attr_name] = getattr(namespace, attr_name)
 
         return LogicOptions(**init_dict)
 
     def __str__(self):
-        return (
-            f"{self.__class__.__name__}("
-            f"additional_key_items={self.additional_key_items}"
-            f"forced_spots={self.forced_spots}, "
-            f"incentive_spots={self.incentive_spots}, "
-            f"incentive_factor={self.incentive_factor}, "
-            f"excluded_spots={self.excluded_spots}, "
-            f"decay_factor={self.decay_factor})"
-        )
+        ret_str = self.__class__.__name__
+        ret_str = ret_str + "(" + ", ".join(
+            f"{attr_name} = {getattr(self, attr_name)}"
+            for attr_name in self.attr_names
+        ) + ")"
+        return ret_str
 
 
 

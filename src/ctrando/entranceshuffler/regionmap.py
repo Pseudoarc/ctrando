@@ -435,6 +435,16 @@ def get_default_region_connectors(
             ),
         ]
 
+    if logic_options.jets_of_time:
+            extra_connectors.append(
+                RegionConnector(
+                    "blackbird_scaffolding", "epoch_reborn",
+                    "jets_turn_in",
+                    rule=logictypes.LogicRule([ItemID.JETSOFTIME]),
+                    reversible=False
+                ),
+            )
+
     return extra_connectors + [
         RegionConnector(
             "starting_rewards", "cronos_house",
@@ -834,11 +844,6 @@ def get_default_region_connectors(
             "medina_eot_portal",
             rule=eot_portal_rule,
             reversible=False
-        ),
-        RegionConnector(
-            "blackbird_scaffolding", "epoch_reborn",
-            "jets_turn_in",
-            rule=logictypes.LogicRule([ItemID.JETSOFTIME])
         ),
         RegionConnector(
             "last_village_commons", "blackbird",

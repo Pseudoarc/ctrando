@@ -85,7 +85,7 @@ obstacle_safety_level=30
 ### Logic Options
 # The forced key items are:
 # [
-#   "c_trigger", "clone", "pendant", "pendant_charge", "dreamstone", "ruby_knife", "jetsoftime",
+#   "c_trigger", "clone", "pendant", "pendant_charge", "dreamstone", "ruby_knife",
 #   "tools", "rainbow_shell", "prismshard", "jerky", "jerky",  # (Yes, two)
 #   "bent_hilt", "bent_sword", "hero_medal", "masamune_1", # (not "masamune_2")
 #   "tomas_pop", "moon_stone", "sun_stone", "bike_key",  "seed", "gate_key"
@@ -171,6 +171,11 @@ excluded_spots=[
 starter_rewards = ["epoch"]
 hard_lavos_end_boss=true  # The game will end if Ocean Palace Lavos is defeated.
 boats_of_time=false  # Ferry to Choras.  With gate key ferry to 600AD destinations.
+
+# Adds a key item, JetsOfTime, which can be turned in on the Blackbird dock in Zeal for flight
+jets_of_time=true
+# Minimum logical depth at which flight can be obtained (Don't recommend much above 5)
+min_flight_depth=0
 
 ### Boss Rando Options
 # boss_randomization scheme

@@ -13,7 +13,7 @@ def get_forced_key_items():
     return [
         ctenums.ItemID.C_TRIGGER, ctenums.ItemID.CLONE,
         ctenums.ItemID.PENDANT, ctenums.ItemID.PENDANT_CHARGE, ctenums.ItemID.DREAMSTONE,
-        ctenums.ItemID.RUBY_KNIFE, ctenums.ItemID.JETSOFTIME,
+        ctenums.ItemID.RUBY_KNIFE, # ctenums.ItemID.JETSOFTIME,
         ctenums.ItemID.TOOLS, ctenums.ItemID.RAINBOW_SHELL,
         ctenums.ItemID.PRISMSHARD, ctenums.ItemID.JERKY, ctenums.ItemID.JERKY,
         ctenums.ItemID.BENT_HILT, ctenums.ItemID.BENT_SWORD,
@@ -43,6 +43,9 @@ def get_key_item_fill(
 
     forced_key_items = get_forced_key_items()
 
+    if logic_options.jets_of_time:
+        forced_key_items.append(ctenums.ItemID.JETSOFTIME)
+
     key_items = forced_key_items + logic_options.additional_key_items
     for item in initial_treasure_assignment.values():
         if item in key_items:
@@ -55,7 +58,7 @@ def get_key_item_fill(
     # Precompute BossSpots which have Nizbel/II or Retinite
     nizbel_spots = {
         spot for spot, boss in boss_assignment.items()
-        if boss in (bty.BossID.NIZBEL, bty.BossID.NIZBEL_2)
+        if boss in (bty.BossID.NIZBEL,)
     }
     nizbel_rule = logictypes.LogicRule([ctenums.CharID.CRONO])
 
@@ -106,7 +109,8 @@ def get_key_item_fill(
                     excluded_spots,list(logic_options.forced_spots), list(logic_options.incentive_spots),
                     logic_options.incentive_factor, logic_options.decay_factor, rng
                 )
-                if verify_fill(region_map, treasure_assignment, recruit_assignment):
+                if verify_fill(region_map, treasure_assignment, recruit_assignment,
+                               logic_options):
                     break
             else:
                 continue
@@ -273,13 +277,39 @@ def verify_fill(
         region_map: regionmap.RegionMap,
         treasure_dict: dict[ctenums.TreasureID, ttypes.RewardType],
         recruit_dict: dict[ctenums.RecruitID, list[ctenums.CharID]],
-        starting_region: str = "starting_rewards"
+        logic_options: logicoptions.LogicOptions,
+        starting_region: str = "starting_rewards",
 ) -> bool:
     traverser = maptraversal.MapTraverser(
         region_map,
         starting_region
     )
-    traverser.maximize(treasure_dict, recruit_dict)
+
+    sphere = 0
+    flight_sphere: int | None = None
+    # dark_ages_sphere: int | None = None
+
+    while True:
+        orig_reached = set(traverser.reached_regions)
+        traverser.step(treasure_dict, recruit_dict)
+        if (
+                flight_sphere is None and
+                logictypes.ScriptReward.FLIGHT in traverser.game.other_rewards
+        ):
+            flight_sphere = sphere
+
+        # if (
+        #         dark_ages_sphere is None and
+        #         memory.Flags.HAS_DARK_AGES_TIMEGAUGE_ACCESS in traverser.game.other_rewards
+        # ):
+        #     dark_ages_sphere = sphere
+
+        if traverser.reached_regions == orig_reached:
+            break
+
+        sphere += 1
+
+    # traverser.maximize(treasure_dict, recruit_dict)
 
     total_regions = set(region_map.name_connector_dict.keys())
     missed_regions = total_regions.difference(traverser.reached_regions)
@@ -287,7 +317,7 @@ def verify_fill(
         # print("Missed:")
         # for region_name in missed_regions:
         #     print(f"\t{region_name}")
-        # input()
+        # # input()
         # print("Collected:")
         # print("  Items:")
         # for item in traverser.game.key_items:
@@ -303,6 +333,11 @@ def verify_fill(
         #     print(f"\t{connection.link_name}")
         return False
 
+    if flight_sphere < logic_options.min_flight_depth:
+        return False
+
+    # print(sphere, flight_sphere)
+    # input()
     return True
 
 
