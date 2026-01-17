@@ -198,3 +198,6 @@ def apply_logic_tweaks(
 
     if logic_options.boats_of_time:
         apply_boats_of_time(logic_options, script_manager)
+
+    if logic_options.jets_of_time:
+        apply_jets_of_time(logic_options, script_manager)
