@@ -1234,6 +1234,7 @@ def get_all_loc_regions() -> list[LocRegion]:
     end_of_time = LocRegion(
         "end_of_time",
         region_rewards=[memory.Flags.PROTO_DOME_DOOR_UNLOCKED,
+                        memory.Flags.HAS_EOT_TIMEGAUGE_ACCESS,
                         QuestID.SPEKKIO],
         region_loc_ids={LocID.END_OF_TIME, LocID.SPEKKIO},
     )
