@@ -1461,7 +1461,7 @@ def write_location_script_to_ctrom(
     total_string_len = strings_len + string_ptrs_len
 
     new_string_index = ct_rom.space_manager.get_free_addr(
-        total_string_len)
+        total_string_len, hint = 0x410000)
     string_data_pos = (new_string_index & 0x00FFFF) + string_ptrs_len
 
     # print(f"*** To: [{new_string_index:06X}, {new_string_index + total_string_len:06X}) (strings)***")
