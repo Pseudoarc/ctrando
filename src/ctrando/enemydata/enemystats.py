@@ -80,6 +80,14 @@ class EnemySpriteData:
         self._data[2] = val
 
     @property
+    def animation_id(self):
+        return self._data[3]
+
+    @animation_id.setter
+    def animation_id(self, val: int):
+        self._data[3] = val
+
+    @property
     def sprite_size(self) -> int:
         return self._data[4] & 0x03
 
@@ -89,7 +97,7 @@ class EnemySpriteData:
             raise ValueError
 
         self._data[4] &= 0xFC
-        self._data |= val
+        self._data[4] |= val
 
     def set_affect_layer_1(self, affects_layer_1: bool):
         """Will effects on this sprite also affect layer1 tiles."""
