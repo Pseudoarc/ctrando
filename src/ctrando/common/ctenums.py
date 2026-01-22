@@ -124,6 +124,7 @@ class LocID(StrIntEnum):
     PRISON_CELLS = 0x47  # Guardia Jail
     PRISON_STAIRWELLS = 0x48
     NORTHERN_RUINS_HEROS_GRAVE = 0x49
+    DARKNESS_BEYOND_TIME = 0x4A
     UNKNOWN_4A = 0x4A  # Unused
     PRISON_EXTERIOR = 0x4B
     UNKNOWN_4C = 0x4C
@@ -1504,7 +1505,6 @@ class EnemyID(StrIntEnum):
     MAGUS = 0xF9
     MAGUS_NORTH_CAPE = 0xFA
     MAGUS_NO_NAME = 0xFB
-    UNUSED_FC = 0xFC
     SCHALA = 0xFC
     UNUSED_FD = 0xFD
     UNUSED_FE = 0xFE

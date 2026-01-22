@@ -29,7 +29,10 @@ def get_enemy_pool(
     enemy_pool: list[ctenums.EnemyID] = []
     # The only important one (I think) is to not put anything on 0xFF
     restricted_enemies = [
-        ctenums.EnemyID.UNUSED_FC, ctenums.EnemyID.UNUSED_FD,
+        ctenums.EnemyID.UNKNOWN_3C, ctenums.EnemyID.UNKNOWN_44,
+        ctenums.EnemyID.UNKNOWN_5A, ctenums.EnemyID.MAGUS_NO_NAME,
+        ctenums.EnemyID.UNUSED_FD, ctenums.EnemyID.UNUSED_FE,
+        ctenums.EnemyID.SCHALA, ctenums.EnemyID.UNUSED_FD,
         ctenums.EnemyID.UNUSED_FE, ctenums.EnemyID.UNUSED_FF
     ]
 
