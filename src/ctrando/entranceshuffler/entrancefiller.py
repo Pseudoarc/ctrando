@@ -55,12 +55,15 @@ def get_key_item_fill(
         if item in key_items:
             key_items.remove(item)
 
-    # Precompute BossSpots which have Nizbel/II or Retinite
+    # Precompute BossSpots which have Nizbel or Retinite
     nizbel_spots = {
         spot for spot, boss in boss_assignment.items()
         if boss in (bty.BossID.NIZBEL,)
     }
-    nizbel_rule = logictypes.LogicRule([ctenums.CharID.CRONO])
+    nizbel_rule = logictypes.LogicRule([
+        [ctenums.CharID.CRONO],
+        [ctenums.CharID.ROBO, ctenums.CharID.MAGUS]
+    ])
 
     retinite_spots = {
         spot for spot, boss in boss_assignment.items()
