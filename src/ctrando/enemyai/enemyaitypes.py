@@ -539,18 +539,18 @@ class Tech(_EnemyAIAction):
     ACTION_ID = 2
     SIZE = 6
 
-    tech_index = cty.byte_prop(1)
+    tech_id = cty.byte_prop(1)
     target = cty.byte_prop(2, ret_type=Target)
     message_id = cty.byte_prop(5)
 
     def __init__(self, *args,
-                 tech_index: int | None = None,
+                 tech_id: int | None = None,
                  target: Target | None = None,
                  message_id: int | None = None,
                  **kwargs):
         super().__init__(*args, **kwargs)
         self._set_properties(
-            ("tech_index", tech_index),
+            ("tech_id", tech_id),
             ("target", target),
             ("message_id", message_id)
         )
@@ -654,8 +654,8 @@ class TechAndMultiStatSet(_EnemyAIAction):
     ACTION_ID = 0x12
     SIZE = 16
 
-    target = cty.byte_prop(1, ret_type=Target)
-    tech_id = cty.byte_prop(2)
+    target = cty.byte_prop(2, ret_type=Target)
+    tech_id = cty.byte_prop(1)
 
     stat_offset_1 = cty.byte_prop(5)
     stat_value_1 = cty.byte_prop(6)
@@ -693,8 +693,8 @@ class TechAndMultiStatMath(_EnemyAIAction):
     ACTION_ID = 0x15
     SIZE = 16
 
-    target = cty.byte_prop(1, ret_type=Target)
-    tech_id = cty.byte_prop(2)
+    target = cty.byte_prop(2, ret_type=Target)
+    tech_id = cty.byte_prop(1)
 
     stat_offset_1 = cty.byte_prop(5)
     is_subtraction_1 = cty.byte_prop(6, 0x80)
