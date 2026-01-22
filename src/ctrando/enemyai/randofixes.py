@@ -32,6 +32,7 @@ def fix_dino_slash_scripts(
         EnemyID.REPTITE_GREEN, EnemyID.TERRASAUR, EnemyID.REPTITE_PURPLE,
         EnemyID.MEGASAUR, EnemyID.RUNNER, EnemyID.MASA_MUNE, EnemyID.NIZBEL,
         EnemyID.NIZBEL_II, EnemyID.GIGASAUR, EnemyID.LEAPER,
+        EnemyID.LAVOS_NIZBEL
     ]
 
     target_condition = aitypes.IfHitByTechID(

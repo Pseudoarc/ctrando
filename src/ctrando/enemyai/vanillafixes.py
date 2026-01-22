@@ -15,7 +15,7 @@ def fix_son_of_sun_ai(
     condition = aitypes.IfNumLivingEnemiesLessThanEqual()
     condition.num_enemies = 1
 
-    end_battle = aitypes.Tech(tech_index=0x7F, target=aitypes.Target.CURRENT_ENEMY)
+    end_battle = aitypes.Tech(tech_id=0x7F, target=aitypes.Target.CURRENT_ENEMY)
     wander = aitypes.Wander()
     wander[2] = 6  # Whatever the vanilla script has
 
