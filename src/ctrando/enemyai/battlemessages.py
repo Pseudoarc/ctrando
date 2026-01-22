@@ -192,6 +192,16 @@ class BattleMessageManager:
         ct_rom.seek(0x0D02A0)
         ct_rom.write(bank.to_bytes(1))
 
+    def __getitem__(self, item: int) -> str:
+        return str(self.message_dict[item])
+
+
+    def __setitem__(self, item: int, val: str):
+        if not val.lower().endswith("{null}"):
+            val = val + "{null}"
+
+        self.message_dict[item] = BattleMessage.from_string(val)
+
 
     def write_to_ct_rom(self, ct_rom: ctrom.CTRom, hint: int = 0x410000):
         """
