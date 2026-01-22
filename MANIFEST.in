@@ -1,2 +1,3 @@
 recursive-include src/ctrando/arguments/presets *.toml
+recursive-include src/ctrando/enemyai/customscripts *.bin
 include src/ctrando/strings/huffman_table.pickle
