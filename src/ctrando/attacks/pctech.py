@@ -1836,6 +1836,7 @@ class PCTechManager:
         extra_descs = self._collect_extra_descs_from_ct_rom(ct_rom)
 
         # Now it's safe to wipe the old data
+        self.free_existing_tech_data_on_ct_rom(ct_rom)
 
         for bitmask in self._bitmasks:
             group = self._bitmask_group_dict[bitmask]
@@ -2156,11 +2157,7 @@ class PCTechManager:
         num_rock_groups = ct_rom.getbuffer()[0x3FF9B5]
 
         num_controls = ctt.get_pc_control_header_count(ct_rom, num_techs)
-        cls._free_type_block_on_rom(ct_rom, ctt.PCTechControlHeader, num_controls, overwrite_byte)
-
         num_effects = ctt.get_pc_effect_header_count(ct_rom, num_techs)
-        cls._free_type_block_on_rom(ct_rom, ctt.PCTechEffectHeader, num_effects, overwrite_byte)
-        cls._free_type_block_on_rom(ct_rom, ctt.PCEffectMP, num_effects, overwrite_byte)
 
         num_gfx = num_techs + 11
         cls._free_type_block_on_rom(ct_rom, ctt.PCTechGfxHeader, num_gfx)
@@ -2188,10 +2185,11 @@ class PCTechManager:
         start = desc_ptr_rom_rw.get_data_start_from_ctrom(ct_rom)
 
         for ptr_ind in range(num_desc_ptrs):
-            ptr_b = desc_ptr_rom_rw.read_data_from_ctrom(ct_rom, ptr_ind)
-            ptr = int.from_bytes(ptr_b, "little")
+            ptr_b = desc_ptr_rom_rw.read_data_from_ctrom(ct_rom, 2, ptr_ind)
+            ptr = int.from_bytes(ptr_b, "little") + (start & 0xFF0000)
             desc_len = len(ctt.read_tech_desc_from_ctrom_address(ct_rom, ptr))
 
+            # print(f"Freeing: [{ptr:06X},{ptr+desc_len:06X})")
             if overwrite_byte is None:
                 ct_rom.space_manager.mark_block(
                     (ptr, ptr+desc_len),
@@ -2214,11 +2212,11 @@ class PCTechManager:
 
         # Learn Reqs and Refs
         learn_ref_start = ctt.PCTechLearnRW.get_learn_ref_start(ct_rom.getbuffer())
-        learn_ref_size = 0
+        learn_ref_size = 1
         while True:
-            learn_ref_size += 1
             if ct_rom.getbuffer()[learn_ref_start+learn_ref_size] == 0xFF:
                 break
+            learn_ref_size += ctt.PCTechLearnReferences.SIZE
 
         if (learn_ref_size % 5) != 1:
             raise ValueError
@@ -2247,6 +2245,9 @@ class PCTechManager:
         atb_size = num_techs + num_trip_groups
         cls._free_block_on_rom(ct_rom, atb_start, atb_size, overwrite_byte)
 
+        cls._free_type_block_on_rom(ct_rom, ctt.PCTechEffectHeader, num_effects, overwrite_byte)
+        cls._free_type_block_on_rom(ct_rom, ctt.PCEffectMP, num_effects, overwrite_byte)
+        cls._free_type_block_on_rom(ct_rom, ctt.PCTechControlHeader, num_controls, overwrite_byte)
 
     def print_protected(self):
         """Debug method for tracking the group counts."""
