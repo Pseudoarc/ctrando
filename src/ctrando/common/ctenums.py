@@ -1347,6 +1347,7 @@ class EnemyID(StrIntEnum):
     SHITAKE = 0x5D
     HETAKE = 0x5E
     RUBBLE = 0x5F
+    DREAM_DEVOURER = 0x60
     UNKNOWN_60 = 0x60
     SHIST = 0x61
     PAHOEHOE = 0x62
@@ -1504,6 +1505,7 @@ class EnemyID(StrIntEnum):
     MAGUS_NORTH_CAPE = 0xFA
     MAGUS_NO_NAME = 0xFB
     UNUSED_FC = 0xFC
+    SCHALA = 0xFC
     UNUSED_FD = 0xFD
     UNUSED_FE = 0xFE
     UNUSED_FF = 0xFF
@@ -2010,7 +2012,7 @@ class NpcID(StrIntEnum):
     # {CA} THE END text
     # {CB} Human Glenn (ending cutscene)
     # {CC} Queen Zeal (Death Peak cutscene)
-    # {CD} Schala (Death Peak cutscene)
+    SCHALA_TIME_FREEZE = 0xCD  # {CD} Schala (Death Peak cutscene)
     # {CE} Lavos (Death Peak cutscene)
     # {CF} Crono (Death Peak cutscene)
     # {D0} Hironobu Sakaguchi (Programmer's Ending)
