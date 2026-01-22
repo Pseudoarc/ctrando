@@ -28,6 +28,33 @@ _LocEvent = locationevent.LocationEvent
 _Overworld = overworld.Overworld
 
 
+def add_dream_devourer(
+        enemy_dict: dict[ctenums.EnemyID, enemystats.EnemyStats],
+):
+    dd_id = ctenums.EnemyID.DREAM_DEVOURER
+    # dd_id = ctenums.EnemyID.KRAWLIE
+    stats = enemy_dict[dd_id]
+
+    stats.hp = 32000
+    stats.defense = 220
+    stats.mdef = 80
+    stats.name = "Temu DD"
+
+    # Experimental
+    stats.level = 99
+    stats.magic = 200
+    stats.offense = 180
+
+    # No rewards
+    stats.xp = 0
+    stats.tp = 0
+    stats.gp = 0
+
+    schala_id = ctenums.EnemyID.SCHALA
+    stats = enemy_dict[schala_id]
+    stats.hp = 0
+
+
 @dataclass
 class ConfigState:
     """
@@ -88,6 +115,8 @@ class ConfigState:
 
         enemy_data_dict[ctenums.EnemyID.DALTON_PLUS].tp = 25
 
+        add_dream_devourer(enemy_data_dict)
+
         boss_assignment_dict = bosstypes.get_default_boss_assignment()
         shop_manager = shoptypes.ShopManager.read_from_ctrom(ct_rom)
         treasure_assignment = ttypes.get_vanilla_assignment()
@@ -133,6 +162,7 @@ class PostConfigState:
         }
         treasure_data_dict = ttypes.get_base_treasure_dict()
         enemy_sprite_dict = enemystats.get_sprite_dict_from_ctrom(ct_rom)
+
         enemy_ai_manager = enemyaimanager.EnemyAIManager.read_from_ct_rom(ct_rom)
         vanillafixes.fix_son_of_sun_ai(enemy_ai_manager)
         vanillafixes.fix_magus_masa2_ai(enemy_ai_manager)
