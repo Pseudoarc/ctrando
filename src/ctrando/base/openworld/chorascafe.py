@@ -23,8 +23,18 @@ class EventMod(locationevent.LocEventMod):
         Modify Choras Cafe for an Open World.
         - Change the carpenter to check for tools rather than a flag.
         """
+        pos = script.find_exact_command(
+            EC.if_flag(memory.Flags.RECOVERED_RAINBOW_SHELL),
+            script.get_function_start(0xD, FID.ACTIVATE)
+        )
+        script.wrap_jump_cmd(
+            pos,
+            EC.if_flag(memory.Flags.OBTAINED_TOMA_ITEM)
+        )
+
         pos = script.find_exact_command(EC.add_item(ctenums.ItemID.TOMAS_POP),
                                         script.get_function_start(0xD, FID.ACTIVATE))
+
         owu.update_add_item(script, pos)
         cls.modify_tools_turnin(script)
 
