@@ -60,8 +60,7 @@ def fix_dino_slash_scripts(
 def add_dream_devourer_ai(ai_manager: EnemyAIManager):
     script_b = files("ctrando.enemyai").joinpath("customscripts", "ddscript.bin").read_bytes()
     script = aitypes.EnemyAIScript.from_bytestring(script_b, 0)
-    # ai_manager.script_dict[EnemyID.UNKNOWN_60] = script
-    print(script)
+    # print(script)
     ai_manager.script_dict[EnemyID.DREAM_DEVOURER] = script
 
     ai_manager.battle_msg_man.message_dict[0xE3] = battlemessages.BattleMessage.from_string(
@@ -103,7 +102,6 @@ def add_dream_devourer_ai(ai_manager: EnemyAIManager):
                 else:
                     msg_id = 0
 
-                print(f"{tech_id:02X}")
                 setattr(action, "message_id", msg_id)
             elif hasattr(action, "message_id"):
                 msg_id = getattr(action, "message_id")
