@@ -422,6 +422,9 @@ def get_ctrom_from_config(
             break
     else:
         raise IndexError
+    randofixes.add_dream_devourer_ai(post_config.enemy_ai_manager)
+    ct_rom.seek(0x24F023 +0xCD*5 + 2)  # "Kid" palette for cutscene Schala
+    ct_rom.write(b'\x36')
 
     modifymaps.make_heckran_boss_map(post_config.script_manager,
                                      post_config.loc_exit_dict,
@@ -429,6 +432,9 @@ def get_ctrom_from_config(
     modifymaps.make_zenan_boss_map(post_config.script_manager,
                                    post_config.loc_exit_dict,
                                    post_config.loc_data_dict)
+    modifymaps.make_dream_devourer_map(post_config.script_manager,
+                                       post_config.loc_exit_dict,
+                                       post_config.loc_data_dict)
 
     enemyrando.apply_enemy_shuffle(
         config.enemy_assign_dict, post_config.script_manager, post_config.enemy_sprite_dict
