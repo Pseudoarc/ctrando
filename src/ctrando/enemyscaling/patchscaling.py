@@ -1419,6 +1419,7 @@ def apply_full_scaling_patch(
         ctenums.EnemyID.SPEKKIO_OGRE, ctenums.EnemyID.SPEKKIO_OMNICRONE,
         ctenums.EnemyID.SPEKKIO_MASA_MUNE, ctenums.EnemyID.SPEKKIO_NU,
         ctenums.EnemyID.UNKNOWN_BF,  # Weird Motherbrain object
+        ctenums.EnemyID.SCHALA, ctenums.EnemyID.DREAM_DEVOURER,
         ctenums.EnemyID.UNUSED_FF,  # Placeholder enemy
     ]
 
