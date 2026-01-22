@@ -26,6 +26,29 @@ class EventMod(locationevent.LocEventMod):
         cls.make_portal_always_visible(script)
         cls.remove_extras(script)  # Do this last b/c it messes with numbering
 
+        pos = script.find_exact_command(
+            EC.assign_val_to_mem(7, memory.Memory.LAVOS_STATUS, 1)
+        )
+
+        # Don't change lavos status/gauntlet status
+        script.replace_command_at_pos(pos, EC.assign_val_to_mem(4, memory.Memory.LAVOS_STATUS, 1))
+        script.delete_commands(pos, 2)
+
+        pos = script.find_exact_command(
+            EC.if_flag(memory.Flags.LAVOS_TELEPOD_ACTIVE),
+            script.get_object_start(0x1A)
+        )
+        script.delete_commands(pos, 1)
+
+        pos, cmd = script.find_command([0xDE])
+        new_cmd = EC.change_location(
+            ctenums.LocID.DARKNESS_BEYOND_TIME, 0x7, 0xA, facing=1
+        )
+        cmd.args[0] &= 0xFE00
+        cmd.args[0] |= 0x4A
+        new_cmd.command = 0xDE
+        script.replace_command_at_pos(pos, cmd)
+
 
     @classmethod
     def remove_initial_cutscene(cls, script: locationevent.LocationEvent):
