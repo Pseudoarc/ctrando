@@ -5,6 +5,7 @@ import copy
 from dataclasses import dataclass
 import typing
 
+from ctrando.base.openworld import cursedwoods
 from ctrando.bosses import bosstypes as bty
 from ctrando.common import ctenums, memory
 from ctrando.locations import locationevent, scriptmanager
@@ -645,3 +646,40 @@ def get_obj_keys(obj_str: str) -> list[ObjectiveType]:
         return [None]
     else:
         raise ValueError(f"Unknown objective: \"{obj_str}\".")
+
+
+_cursed_woods_nu_id = cursedwoods.EventMod.nu_obj
+
+_nu_hook_dict: dict[memory.Flags, list[HookLocator]] = {
+    memory.Flags.ENCOUNTERED_CURSED_WOODS_NU: [
+        CommandSequenceLocator(
+            ctenums.LocID.CURSED_WOODS, _cursed_woods_nu_id, FID.TOUCH,
+            [EC.set_flag(memory.Flags.ENCOUNTERED_CURSED_WOODS_NU)],
+            False
+        ),
+        CommandSequenceLocator(
+            ctenums.LocID.CURSED_WOODS, _cursed_woods_nu_id, FID.ARBITRARY_0,
+            [EC.set_flag(memory.Flags.ENCOUNTERED_CURSED_WOODS_NU)],
+            False
+        ),
+        CommandSequenceLocator(
+            ctenums.LocID.CURSED_WOODS, _cursed_woods_nu_id, FID.ARBITRARY_1,
+            [EC.set_flag(memory.Flags.ENCOUNTERED_CURSED_WOODS_NU)],
+            False
+        ),
+    ],
+    memory.Flags.HUNTING_RANGE_NU_REWARD: [
+        CommandSequenceLocator(
+            ctenums.LocID.HUNTING_RANGE, obj_id, FID.STARTUP,
+            [EC.set_flag(memory.Flags.HUNTING_RANGE_NU_REWARD)],
+            False
+        ) for obj_id in (4, 5, 6)
+    ],
+    memory.Flags.RECEIVED_SILVER_ROCK: [
+        CommandSequenceLocator(
+            ctenums.LocID.LARUBA_RUINS, 0xD, FID.ACTIVATE,
+            [EC.set_explore_mode(True)], False
+        )
+    ]
+}
+
