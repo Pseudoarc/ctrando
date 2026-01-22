@@ -610,6 +610,12 @@ def get_obj_keys(obj_str: str) -> list[ObjectiveType]:
         raise ValueError("Invalid objective specifier.")
 
     if obj_str == "any_quest":
+        ret_list = [
+            x for x in QuestID if x not in (
+                QuestID.OMEN_ELDER_SPAWN, QuestID.OMEN_MEGA_MUTANT,
+                QuestID.OMEN_GIGA_MUTANT, QuestID.OMEN_TERRA_MUTANT
+            )
+        ]
         return list(QuestID)
     elif obj_str == "open_quest":
         return [
