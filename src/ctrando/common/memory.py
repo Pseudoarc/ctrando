@@ -405,6 +405,7 @@ class Flags(enum.Enum):
     MASAMUNE_DEFEATED = FlagData(0x7F00F3, 0x20)
     # 0x7F00F4
     HAS_VIEWED_ENHASA_JANUS_SCENE = FlagData(0x7F00F4, 0x04)  # Removed
+    ENHASA_NU_BATTLE = FlagData(0x7F00F4, 0x08)
     HAS_VIEWED_SCHALAS_ROOM_SCENE = FlagData(0x7F00F4, 0x10)
     OBTAINED_BLACK_ROCK = FlagData(0x7F00F4, 0x20)
     FAILED_TO_OPEN_ZEAL_THRONE_DOOR = FlagData(0x7F00F4, 0x40)
@@ -497,6 +498,7 @@ class Flags(enum.Enum):
     PROTO_DOME_DOOR_UNLOCKED = FlagData(0x7F0107, 0x08)
     LAVOS_GAUNTLET_DISABLED = FlagData(0x7F0107, 0x10)
     ENCOUNTERED_CURSED_WOODS_NU = FlagData(0x7F0107, 0x20)
+    OBTAINED_DORINO_INN_POWERMEAL = FlagData(0x7F0107, 0x40)
     # 0x7F0136
     LAST_RACE_SPECIAL_SCORE = FlagData(0x7F0136, 0x01)
     # 0x7F0138
@@ -574,6 +576,7 @@ class Flags(enum.Enum):
     # In vanilla the below flag as a slightly different purpose.  It tracks the
     # first part of a cutscene has having played.
     OBTAINED_DACTYLS = FlagData(0x7F0160, 0x10)
+    OBTAINED_SWEETWATER_HUT_TONICS = FlagData(0x7F0160, 0x40)
     # 0x7F0190
     CRONO_HAS_BEEN_IMPRISONED = FlagData(0x7F0190, 0x01)
     CRONO_WAKES_IN_CELL = FlagData(0x7F0190, 0x02)

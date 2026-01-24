@@ -455,6 +455,8 @@ def get_all_loc_regions() -> list[LocRegion]:
     )
     ret_list.append(LocRegion("dorino_inn", {LocExit.DORINO_INN},
                               region_loc_ids={LocID.DORINO_INN}))
+    ret_list.append(LocRegion("dorino_inn_marle",
+                              reward_spots={TID.DORINO_INN_POWERMEAL}))
 
     fionas_villa = LocRegion(
         "fionas_villa",
@@ -764,6 +766,8 @@ def get_all_loc_regions() -> list[LocRegion]:
                               region_loc_ids={LocID.IOKA_SOUTHWEST_HUT}))
     ret_list.append(LocRegion("ioka_sweet_water_hut", {LocExit.IOKA_SWEET_WATER_HUT},
                               region_loc_ids={LocID.IOKA_SWEETWATER_HUT}))
+    ret_list.append(LocRegion("ioka_sweet_water_hut_ayla",
+                              reward_spots={TID.IOKA_SWEETWATER_TONIC}))
     ret_list.append(
         LocRegion(
         "lair_ruins_portal", {LocExit.LAIR_RUINS},

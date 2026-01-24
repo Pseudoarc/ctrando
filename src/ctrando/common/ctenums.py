@@ -1169,6 +1169,8 @@ class TreasureID(StrIntEnum):
     GUARDIA_PRISON_LUNCH_BAG = auto()
     CRONOS_MOM = auto()
     TRUCE_MAYOR_2F_OLD_MAN = auto()
+    IOKA_SWEETWATER_TONIC = auto()
+    DORINO_INN_POWERMEAL = auto()
 
     # Tabs
     # Tabs later if they're going to be randomized

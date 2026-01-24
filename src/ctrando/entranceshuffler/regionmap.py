@@ -1034,6 +1034,12 @@ def get_default_region_connectors(
             reversible=False
         ),
         RegionConnector(
+            "ioka_sweet_water_hut", "ioka_sweet_water_hut_ayla",
+            "ayla_recruited_item",
+            rule=logictypes.LogicRule([ctenums.CharID.AYLA]),
+            reversible=False
+        ),
+        RegionConnector(
             "ioka_trading_post", "ioka_trading_post_base",
             "upgraded_trading_post",
             rule=logictypes.LogicRule([logictypes.StrangeReward.TRADING_MATERIALS])
@@ -1260,6 +1266,12 @@ def get_default_region_connectors(
             "dorino_bromide_base", "dorino_bromide_reward",
             "bromide_turn_in",
             rule=logictypes.LogicRule([memory.Flags.OBTAINED_NAGAETTE_BROMIDE])
+        ),
+        RegionConnector(
+            "dorino_inn", "dorino_inn_marle",
+            "rest_with_marle_recruited",
+            rule=logictypes.LogicRule([ctenums.CharID.MARLE]),
+            reversible=False
         ),
         RegionConnector(
             "geno_dome", "geno_dome_inside",
