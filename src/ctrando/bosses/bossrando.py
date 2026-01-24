@@ -130,6 +130,8 @@ def get_random_midboss_assignment(
             boss_pool = list(test_pool)
 
         boss_pool = [rng.choice(boss_pool) for _ in spot_pool]
+        # Check for double Gato Ozzie's Fort
+
     else:
         rng.shuffle(boss_pool)
 
@@ -138,6 +140,20 @@ def get_random_midboss_assignment(
     # Guarantee Atropos in geno if she's not in the pool.
     if bty.BossID.ATROPOS_XR not in boss_pool:
         base_dict[bty.BossSpotID.GENO_DOME_MID] = bty.BossID.ATROPOS_XR
+
+    # Don't allow double gato in Ozzie's Fort
+    fort_assignments = set(
+        [base_dict[bty.BossSpotID.OZZIES_FORT_FLEA_PLUS],
+         base_dict[bty.BossSpotID.OZZIES_FORT_SUPER_SLASH]]
+    )
+    if fort_assignments == {bty.BossID.GATO}:
+        if set(boss_pool) == {bty.BossID.GATO}:
+            replacement = bty.BossID.FLEA_PLUS
+        else:
+            replacement_pool = [x for x in boss_pool if x != bty.BossID.GATO]
+            replacement = rng.choice(replacement_pool)
+
+        base_dict[bty.BossSpotID.OZZIES_FORT_FLEA_PLUS] = replacement
 
     return base_dict
 
