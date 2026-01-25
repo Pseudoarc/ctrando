@@ -41,9 +41,11 @@ def add_dream_devourer(
     stats.name = "Temu DD"
 
     # Experimental
-    stats.level = 99
-    stats.magic = 200
-    stats.offense = 180
+    stats.level = 80
+    stats.magic = 220
+    stats.offense = 230
+    stats.evade = 40
+    stats.hit = 100
     stats.speed = 16
 
     # No rewards
