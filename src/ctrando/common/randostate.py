@@ -44,6 +44,7 @@ def add_dream_devourer(
     stats.level = 99
     stats.magic = 200
     stats.offense = 180
+    stats.speed = 16
 
     # No rewards
     stats.xp = 0
