@@ -38,7 +38,7 @@ def add_dream_devourer(
     stats.hp = 32000
     stats.defense = 220
     stats.mdef = 80
-    stats.name = "Temu DD"
+    stats.name = "DrmDevourer"
 
     # Experimental
     stats.level = 80

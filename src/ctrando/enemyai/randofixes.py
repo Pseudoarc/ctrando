@@ -80,8 +80,8 @@ def add_dream_devourer_ai(ai_manager: EnemyAIManager):
                 if tech_id == 0x9A:
                     msg_id = 0xAA  # Destruction Rains
                 elif tech_id == 0x69:
-                    if barrier_count == 0:
-                        msg_id = 0xE3
+                    if barrier_count > 0:
+                        msg_id = 0xB5
                     else:
                         msg_id = 0
 
@@ -114,7 +114,8 @@ def add_dream_devourer_ai(ai_manager: EnemyAIManager):
 
     # for ind, ct_str in ai_manager.battle_msg_man.message_dict.items():
     #     print(f"{ind:02X}: {ct_str}")
-
+    # input()
+    #
     script = ai_manager.script_dict[EnemyID.SCHALA]
     script.action_script[0].action_list[0] = aitypes.Wander(b'\x00\x01\x00\x00')
     # print(script)
