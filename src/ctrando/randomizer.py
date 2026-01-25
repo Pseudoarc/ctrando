@@ -797,6 +797,17 @@ def get_openworld_post_config(
         return post_config
 
     post_config = randostate.PostConfigState.get_default_state_from_ctrom(cur_ct_rom)
+
+    lavos_sprite = post_config.enemy_sprite_dict[ctenums.EnemyID.LAVOS_1].get_copy()
+    post_config.enemy_sprite_dict[ctenums.EnemyID.DREAM_DEVOURER] = lavos_sprite
+    # 26 1B 9F 3B 00
+    schala_sprite = post_config.enemy_sprite_dict[ctenums.EnemyID.SCHALA]
+    schala_sprite.packet_id = 0x26
+    schala_sprite.sprite_assembly_id = 0x1B
+    schala_sprite.palette = 0x80 # 0x36 # 0x80
+    schala_sprite.animation_id = 0x3B
+    schala_sprite.sprite_size = 0x00
+
     basepatch.apply_openworld.apply_openworld(post_config.script_manager)
     basepatch.apply_openworld_ow.update_all_overworlds(post_config.overworld_manager)
 

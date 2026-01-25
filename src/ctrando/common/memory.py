@@ -699,6 +699,8 @@ class Flags(enum.Enum):
     GIANTS_CLAW_BOSS_DEFEATED = FlagData(0x7F01D2, 0x40)
     # 7F01D3
     PORRE_MARKET_600_TAB = FlagData(0x7F01D3, 0x01)
+    OBTAINED_GUARDIA_FOREST_1000_TAB = FlagData(0x7F01D3, 0x04)
+    OBTAINED_GUARDIA_FOREST_600_TAB = FlagData(0x7F01D3, 0x08)
     # 0x7F01F0 (0x7E1BA7)
     OW_VORTEX_ACTIVE = FlagData(0x7F01F0, 0x01)
     # The rest can be repurposed
