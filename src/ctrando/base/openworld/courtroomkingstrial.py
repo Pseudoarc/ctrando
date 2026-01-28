@@ -1,9 +1,11 @@
 """Openworld Courtroom King's Trial"""
+from ctrando.base import openworldutils as owu
 from ctrando.common import ctenums, memory
 from ctrando.locations import locationevent
 from ctrando.locations.eventcommand import (
     EventCommand as EC,
     Operation as OP,
+    FuncSync as FS,
     get_command,
 )
 from ctrando.locations.eventfunction import EventFunction as EF
@@ -44,7 +46,8 @@ class EventMod(locationevent.LocEventMod):
     @classmethod
     def modify_marle_king_scene(cls, script: Event):
         """
-        Shorten the scene with Marle and the king.
+        - Shorten the scene with Marle and the king.
+        - Give Yakra Key immediately after
         """
 
         pos, end = script.get_function_bounds(2, FID.ARBITRARY_3)
@@ -66,6 +69,27 @@ class EventMod(locationevent.LocEventMod):
                 script.data[pos+2] //= 2
 
             pos += len(cmd)
+
+        pos = script.find_exact_command(
+            EC.call_obj_function(0x19, FID.ARBITRARY_0, 3, FS.CONT)
+        )
+        script.replace_command_at_pos(
+            pos,
+            EC.call_obj_function(0x19, FID.ACTIVATE, 3, FS.HALT)
+        )
+
+        got_item_id = owu.add_default_treasure_string(script)
+        new_activate = (
+            EF()
+            .add(EC.assign_val_to_mem(ctenums.ItemID.YAKRA_KEY, 0x7F0200, 1))
+            .add(EC.add_item_memory(0x7F0200))
+            .add(EC.auto_text_box(got_item_id))
+            .add(EC.set_flag(memory.Flags.OBTAINED_YAKRA_KEY))
+            .add(EC.return_cmd())
+        )
+        script.set_function(0x19, FID.ACTIVATE, new_activate)
+
+
 
 
 
