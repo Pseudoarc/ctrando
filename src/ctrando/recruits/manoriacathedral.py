@@ -10,6 +10,7 @@ from ctrando.locations.locationevent import FunctionID as FID, \
 import ctrando.base.openworldutils as owu
 import ctrando.base.openworld.manoriasanctuary as manoriasanctuary
 
+from ctrando.recruits import recruitassign as ra
 
 def assign_pc_to_spot(
         char_id: ctenums.CharID,
@@ -53,6 +54,9 @@ def assign_pc_to_spot(
         script.get_function_start(0xF, FID.ACTIVATE)
     )
     script.data[pos+1] = pc_obj_id*2
+
+    pos = script.find_exact_command(EC.play_song(0x10), pos)
+    script.delete_commands(pos, 1)
 
     # Comment Below here to remove anim checker
     # obj_id = script.append_copy_object(pc_obj_id)
@@ -167,7 +171,9 @@ def get_recruit_block(
         .add(EC.load_pc_in_party(char_identity))
         .add(EC.assign_val_to_mem(1, 0x7F0210, 1))
         .add(EC.set_flag(memory.Flags.MANORIA_RECRUIT_OBTAINED))
+        .add(EC.set_flag(memory.Flags.KEEP_SONG_ON_SWITCH))
         .add(EC.switch_pcs())
+        .add(EC.reset_flag(memory.Flags.KEEP_SONG_ON_SWITCH))
     )
 
     scale_block = owu.get_level_techlevel_set_function(
@@ -275,7 +281,7 @@ def make_frog_entry_function(
         .add(EC.play_song(0))
         .add(EC.remove_object(0x18))
         .add(EC.play_sound(char_noise)).add(EC.play_sound(char_noise))
-        .add(EC.play_song(0x1B))
+        .add(EC.play_song(ra.get_char_music(char_identity)))
         .add(EC.static_animation(sheath_frames[0]))
         .add(EC.break_cmd())
         .add(EC.static_animation(sheath_frames[1]))
