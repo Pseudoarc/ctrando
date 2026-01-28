@@ -417,6 +417,10 @@ class EventMod(locationevent.LocEventMod):
         for _ in range(5):
             script.delete_jump_block(pos)
 
+        # Add exploremode after partyfollow
+        pos = script.find_exact_command(EC.party_follow(), pos) + 1
+        script.insert_commands(EC.set_explore_mode(True).to_bytearray(), pos)
+
         # Now alter the activate function to remove the big argument scene
         str_ind = 52  # Precomputed "What do you want?" string index
 
