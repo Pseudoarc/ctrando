@@ -1,4 +1,4 @@
-"""Openworld Spekkio"""
+"""Openworld Guardia Kitchen 1000"""
 from dataclasses import dataclass
 
 from ctrando.base import openworldutils as owu
