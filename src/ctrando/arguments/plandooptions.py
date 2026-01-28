@@ -17,7 +17,8 @@ for _char_id in ctenums.CharID:
 _plando_recruit_dict_inv = {val: key for key, val in _plando_recruit_dict.items()}
 type RecruitType = ctenums.CharID | None | EllipsisType | typing.Literal["random"]
 
-class PlandoException(Exception):
+
+class PlandoException(argumenttypes.SettingsError):
     ...
 
 
@@ -31,7 +32,7 @@ class PlandoOptions:
         if treasure_assignment is None:
             treasure_assignment = dict()
         if recruit_assignment is None:
-            recruit_assignment = {ctenums.RecruitID.STARTER: ["random"]}
+            recruit_assignment = {spot: [...] for spot in ctenums.RecruitID}
         if boss_assignment is None:
             boss_assignment = dict()
 
@@ -77,8 +78,12 @@ class PlandoOptions:
         total_filled = num_placed + num_random
 
         if total_filled > len(ctenums.CharID):
-            raise PlandoException(f"Placed {total_filled} spots (max {len(ctenums.CharID)}")
+            raise PlandoException(f"Placed {total_filled} spots (need {len(ctenums.CharID)}")
 
+        num_none = len(set(placement_dict[None]))
+        max_none = len(ctenums.RecruitID) - len(ctenums.CharID)
+        if num_none > max_none:
+            raise PlandoException(f"Force {num_none} empty spots (max {max_none})")
 
 
     @classmethod
@@ -91,7 +96,7 @@ class PlandoOptions:
 
             if recruit_id == ctenums.RecruitID.STARTER:
                 ret_dict[name] = argumenttypes.MultipleDiscreteSelection(
-                    list(ctenums.CharID) + ["random"], ["random"],
+                    list(ctenums.CharID) + [..., "random"], ["random"],
                     "Characters to start with",
                     lambda x: _plando_recruit_dict[x],
                     lambda x: _plando_recruit_dict_inv[x],

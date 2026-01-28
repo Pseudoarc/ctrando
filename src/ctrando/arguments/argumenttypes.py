@@ -14,6 +14,10 @@ from typing import Protocol, TypeVar, Any
 from unicodedata import lookup
 
 
+class SettingsError(Exception):
+    ...
+
+
 class ArgumentGroup(typing.Protocol):
 
     @classmethod
@@ -356,7 +360,14 @@ class DiscreteCategorialArg[_T]:
         self.help_text = help_text
         if choice_from_str_fn is None:
             choice_from_str_fn = default_value.__class__
-        self.choice_from_str_fn = choice_from_str_fn
+        def wrap_choice_from_str(val: str) -> _T:
+            _choice = choice_from_str_fn(val)
+            if _choice not in choices:
+                raise ValueError(f"Choice {_choice} not permitted")
+
+            return _choice
+
+        self.choice_from_str_fn = wrap_choice_from_str
 
         if str_from_choice_fn is None:
             str_from_choice_fn = lambda x: str(x)
@@ -409,7 +420,15 @@ class MultipleDiscreteSelection[_T]:
         self.choices = list(choices)
         self.default_value = list(default_value)
         self.help_text = help_text
-        self.choice_from_str_fn = choice_from_str_fn
+
+        def wrap_choice_from_str(val: str) -> _T:
+            _choice = choice_from_str_fn(val)
+            if _choice not in choices:
+                raise ValueError(f"Choice {_choice} not permitted")
+
+            return _choice
+
+        self.choice_from_str_fn = wrap_choice_from_str
         self.str_from_choice_fn = str_from_choice_fn
 
     def add_to_argparse(
