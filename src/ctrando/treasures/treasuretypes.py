@@ -1678,6 +1678,12 @@ def get_base_treasure_dict() -> dict[ctenums.TreasureID, RewardSpot]:
         TID.DORINO_INN_POWERMEAL: ScriptTreasure(
             LocID.DORINO_INN, 0x1B, FID.ARBITRARY_0
         ),
+        TID.YAKRA_KEY_CHEST: ScriptTreasure(
+            LocID.GUARDIA_LAWGIVERS_TOWER, 0x08, FID.ACTIVATE,
+        ),
+        TID.COURTROOM_YAKRA_KEY: ScriptTreasure(
+            LocID.KINGS_TRIAL, 0x19, FID.ACTIVATE
+        ),
         TID.TRADING_POST_PETAL_FANG_BASE: TradingPostTreasure(3, True),
         TID.TRADING_POST_PETAL_FANG_UPGRADE: TradingPostTreasure(3, False),
         TID.TRADING_POST_PETAL_HORN_BASE: TradingPostTreasure(5, True),
@@ -2193,6 +2199,8 @@ def get_vanilla_assignment() -> dict[ctenums.TreasureID, RewardType]:
         ctenums.TreasureID.TRUCE_MAYOR_2F_OLD_MAN: Gold(300),
         ctenums.TreasureID.IOKA_SWEETWATER_TONIC: ctenums.ItemID.TONIC,
         ctenums.TreasureID.DORINO_INN_POWERMEAL: ctenums.ItemID.POWER_MEAL,
+        ctenums.TreasureID.YAKRA_KEY_CHEST: ctenums.ItemID.TONIC,
+        ctenums.TreasureID.COURTROOM_YAKRA_KEY: ctenums.ItemID.YAKRA_KEY,
         ctenums.TreasureID.TRADING_POST_PETAL_FANG_BASE: ctenums.ItemID.RUBY_GUN,
         ctenums.TreasureID.TRADING_POST_PETAL_FANG_UPGRADE: ctenums.ItemID.DREAM_GUN,
         ctenums.TreasureID.TRADING_POST_PETAL_HORN_BASE: ctenums.ItemID.SAGE_BOW,

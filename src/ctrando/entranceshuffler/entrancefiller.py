@@ -20,7 +20,8 @@ def get_forced_key_items():
         ctenums.ItemID.HERO_MEDAL, ctenums.ItemID.MASAMUNE_1,
         # ItemID.MASAMUNE_2,  This doesn't unlock anything so not forced
         ctenums.ItemID.TOMAS_POP, ctenums.ItemID.MOON_STONE, ctenums.ItemID.SUN_STONE,
-        ctenums.ItemID.BIKE_KEY, ctenums.ItemID.SEED, ctenums.ItemID.GATE_KEY
+        ctenums.ItemID.BIKE_KEY, ctenums.ItemID.SEED, ctenums.ItemID.GATE_KEY,
+        ctenums.ItemID.YAKRA_KEY,
     ]
 
 

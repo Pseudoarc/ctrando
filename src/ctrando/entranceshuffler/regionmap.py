@@ -475,6 +475,11 @@ def get_default_region_connectors(
             charge_rule(2)
         ),
         RegionConnector(
+            "guardia_castle_1000", "guardia_castle_1000_yakra",
+            "use_yakra_key",
+            logictypes.LogicRule([ctenums.ItemID.YAKRA_KEY])
+        ),
+        RegionConnector(
             "guardia_castle_1000", "crono_trial",
             "crono_trial",
             rule=crono_trial_rule

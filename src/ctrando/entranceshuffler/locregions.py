@@ -114,6 +114,12 @@ def get_all_loc_regions() -> list[LocRegion]:
     )
     ret_list.append(guardia_castle_1000)
 
+    guardia_castle_1000_yakra = LocRegion(
+        "guardia_castle_1000_yakra",
+        reward_spots={TID.YAKRA_KEY_CHEST, RecruitID.YAKRA_BOX}
+    )
+    ret_list.append(guardia_castle_1000_yakra)
+
     guardia_castle_1000_sealed = LocRegion(
         "guardia_castle_1000_sealed",
         reward_spots={TID.GUARDIA_CASTLE_SEALED_1000},
@@ -870,7 +876,7 @@ def get_all_loc_regions() -> list[LocRegion]:
 
     kings_trial_resolution = LocRegion(
         "kings_trial_resolution",
-        reward_spots={BSID.KINGS_TRIAL, TID.MELCHIOR_RAINBOW_SHELL},
+        reward_spots={BSID.KINGS_TRIAL, TID.MELCHIOR_RAINBOW_SHELL, TID.COURTROOM_YAKRA_KEY},
         region_loc_ids={LocID.COURTROOM},
         region_rewards=[QuestID.KINGS_TRIAL],
         is_combat_region=True
