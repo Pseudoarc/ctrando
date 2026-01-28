@@ -374,13 +374,15 @@ shuffle_entrances = false   # Shuffle the target of overworld entrances
 #                      Minimum level at which the death_peak recruit can join (deafult: 37)
 #  death_peak_min_techlevel=DEATH_PEAK_MIN_TECHLEVEL
 #                      Minimum tech level at which the death_peak recruit can join (default: 8)
-#  minimum-recruits    All recruits are given a min level of 1 and min tech
+#  yakra_box_min_level=YAKRA_BOX_MIN_LEVEL
+#                      Minimum level at which the death_peak recruit can join (deafult: 37)
+#  yakra_box_min_techlevel=YAKRA_BOX_MIN_TECHLEVEL
+#                      Minimum tech level at which the death_peak recruit can join (default: 8)
+#  minimum_recruits    All recruits are given a min level of 1 and min tech
 #                      level of 0. Overrides other min settings.
-#  scale-to-leader     Recruits are scaled to the level/tech level of the
-#                      lead character (but not below the spot minimum)
-scale_level_to_leader=true
-scale_techlevel_to_leader=true
-scale_gear=true
+scale_level_to_leader=true          # Joining recruits will have a level no lower than the leader
+scale_techlevel_to_leader=true      # Joining recruits will have a tech level no lower than the leader
+scale_gear=true                     # Gear will improve with the level at which they join
 
 # Treasure Options: Options for how non-progression treasures are distributed
 loot_pool = "vanilla"  # vanilla, random, tiered_random
@@ -586,3 +588,4 @@ plando_recruit_frogs_burrow = "..."
 plando_recruit_crono_trial = "..."
 plando_recruit_death_peak = "..."
 plando_recruit_north_cape = "..."
+plando_recruit_yakra_box = "..."
