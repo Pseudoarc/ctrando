@@ -179,7 +179,7 @@ _split_name_dict: dict[BossID, tuple[str,str]] = {
     BossID.MEGA_MUTANT: ("mega", "mutant"),
     BossID.MUD_IMP: ("mud", "imp"),
     BossID.NIZBEL: ("niz", "bel"),
-    BossID.NIZBEL_2: ("niz", "bel_2"),
+    BossID.NIZBEL_2: ("niz", "bel2"),
     BossID.RETINITE: ("retin", "ite"),
     BossID.R_SERIES: ("r", "series"),
     BossID.RUST_TYRANO: ("rust", "tyrano"),
