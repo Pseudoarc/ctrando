@@ -33,6 +33,7 @@ class RecruitOptions:
     _default_burrow_data = RecruitData(18, 2)
     _default_dactyl_data = RecruitData(20, 2)
     _default_death_peak_data = RecruitData(37, 8)
+    _default_yakra_box_data = RecruitData(25, 3)
     _default_scale_level_to_leader: bool = False
     _default_scale_techlevel_to_leader: bool = False
     _default_scale_gear: bool = False
@@ -46,7 +47,8 @@ class RecruitOptions:
         "north_cape": _default_north_cape_data,
         "burrow": _default_burrow_data,
         "dactyl": _default_dactyl_data,
-        "death_peak": _default_death_peak_data
+        "death_peak": _default_death_peak_data,
+        "yakra_box": _default_yakra_box_data
     }
     def __init__(
             self,
@@ -60,6 +62,7 @@ class RecruitOptions:
             burrow_data: RecruitData = _default_burrow_data,
             dactyl_data: RecruitData = _default_dactyl_data,
             death_peak_data: RecruitData = _default_death_peak_data,
+            yakra_box_data: RecruitData = _default_yakra_box_data,
             scale_level_to_leader: bool = _default_scale_level_to_leader,
             scale_techlevel_to_leader: bool = _default_scale_techlevel_to_leader,
             scale_gear: bool = _default_scale_gear
@@ -74,6 +77,7 @@ class RecruitOptions:
         self.burrow_data = burrow_data
         self.dactyl_data = dactyl_data
         self.death_peak_data = death_peak_data
+        self.yakra_box_data = yakra_box_data
         self.scale_level_to_leader = scale_level_to_leader
         self.scale_techlevel_to_leader = scale_techlevel_to_leader
         self.scale_gear = scale_gear

@@ -1552,6 +1552,7 @@ class RecruitID(StrIntEnum):
     CRONO_TRIAL = auto()
     DEATH_PEAK = auto()
     NORTH_CAPE = auto()
+    YAKRA_BOX = auto()
 
 
 class Element(StrIntEnum):

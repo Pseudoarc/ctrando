@@ -12,7 +12,8 @@ from ctrando.logic.logictypes import LogicRule
 from ctrando.logic.logicfactory import get_fair_recruit_item
 from ctrando.recruits import (
     starter, dactylnest, deathpeak, frogsburrow, guardiaprison,
-    leenesquare, manoriacathedral, northcape, protodome, queenschamber
+    leenesquare, manoriacathedral, northcape, protodome, queenschamber,
+    yakrabox
 )
 
 # _fair_recruit_item: dict[CharID, ItemID] = {
@@ -86,37 +87,6 @@ def get_random_recruit_assignment_dict(
     return ret_dict
 
 
-# def write_recruits_to_reward_structure(reward_structure: RewardStructure):
-#     """Completely random except Crono's Trial and Starter must be filled."""
-#
-#     characters = list(CharID)
-#     random.shuffle(characters)
-#     assignable_spots = list(RecruitID)
-#
-#     for spot in (RecruitID.STARTER,):
-#         print(f"{spot}: {characters[-1]}")
-#         reward_structure.assign_recruit(spot, characters.pop())
-#         assignable_spots.remove(spot)
-#
-#     random.shuffle(assignable_spots)
-#     for char in characters:
-#         spot = assignable_spots.pop()
-#         reward_structure.assign_recruit(spot, char)
-#         print(f"{spot}: {char}")
-#
-#     fair_char_entry = reward_structure.recruit_dict[RecruitID.MILLENNIAL_FAIR]
-#     if fair_char_entry.reward is not None:
-#         fair_item = _fair_recruit_item[fair_char_entry.reward]
-#         fair_group = fair_char_entry.group_name
-#
-#         reward_structure.group_dict[fair_group].access_rule = LogicRule([fair_item])
-#
-#     prison_char_entry = reward_structure.recruit_dict[RecruitID.CRONO_TRIAL]
-#     if prison_char_entry is not None:
-#         prison_group = prison_char_entry.group_name
-#         reward_structure.group_dict[prison_group].access_rule = LogicRule()
-
-
 RecruitAssigner: typing.Callable[[CharID, ScriptManager], None]
 
 
@@ -137,6 +107,7 @@ def write_recruits_to_ct_rom(
         RecruitID.DEATH_PEAK: deathpeak.assign_pc_to_spot,
         RecruitID.FROGS_BURROW: frogsburrow.assign_pc_to_spot,
         RecruitID.NORTH_CAPE: northcape.assign_pc_to_spot,
+        RecruitID.YAKRA_BOX: yakrabox.assign_pc_to_spot,
     }
 
     spot_levels_dict: dict[RecruitID, RecruitData] = {
@@ -150,6 +121,7 @@ def write_recruits_to_ct_rom(
         RecruitID.DEATH_PEAK: settings.recruit_options.death_peak_data,
         RecruitID.FROGS_BURROW: settings.recruit_options.burrow_data,
         RecruitID.NORTH_CAPE: settings.recruit_options.north_cape_data,
+        RecruitID.YAKRA_BOX: settings.recruit_options.yakra_box_data
     }
 
     for spot, writer in recruit_writer_dict.items():
