@@ -68,8 +68,10 @@ class EventMod(locationevent.LocEventMod):
             EF().add(EC.set_flag(memory.Flags.R_SERIES_DEFEATED))
             .add(EC.set_flag(memory.Flags.PROTO_DOME_DOOR_UNLOCKED))
             .add(EC.reset_flag(memory.Flags.FACTORY_WALLS_CLOSED))
+            .add(EC.play_song(0))
+            .add(EC.generic_command(0xEB, 0xC0, 0xFF))
             .add(EC.change_location(ctenums.LocID.OW_FUTURE, 0x73, 0x24, 1,
-                                    3, False))
+                                    0, False))
             .add(EC.return_cmd())
         )
         script.set_function(1, FID.ARBITRARY_0, post_battle_func)
