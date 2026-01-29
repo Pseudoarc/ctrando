@@ -81,6 +81,7 @@ class LogicOptions:
         ctenums.TreasureID.ARRIS_DOME_FOOD_LOCKER_KEY, ctenums.TreasureID.REPTITE_LAIR_KEY,
         ctenums.TreasureID.TABAN_GIFT_VEST, ctenums.TreasureID.GENO_DOME_BOSS_1
     )
+    _default_loose_key_items: typing.ClassVar[tuple[ctenums.ItemID, ...]] = tuple()
     _default_excluded_spots: typing.ClassVar[tuple[ctenums.TreasureID, ...]] = (
         # Magus
         ctenums.TreasureID.MAGUS_CASTLE_RIGHT_HALL, ctenums.TreasureID.MAGUS_CASTLE_GUILLOTINE_1,
@@ -120,7 +121,7 @@ class LogicOptions:
     _default_min_flight_depth = 0
 
     attr_names: typing.ClassVar[tuple[str, ...]] = (
-        "additional_key_items", "forced_spots", "incentive_spots",
+        "additional_key_items", "forced_spots", "loose_key_items", "incentive_spots",
         "incentive_factor", "excluded_spots", "decay_factor",
         "hard_lavos_end_boss", "starter_rewards", "out_of_logic_starter_rewards",
         "force_early_flight", "boats_of_time", "jets_of_time", "min_flight_depth"
@@ -131,6 +132,7 @@ class LogicOptions:
             self,
             additional_key_items: Sequence[ctenums.ItemID] = _default_additional_key_items,
             forced_spots: Sequence[ctenums.TreasureID] = _default_forced_spots,
+            loose_key_items: Sequence[ctenums.ItemID] = _default_loose_key_items,
             incentive_spots: Sequence[ctenums.TreasureID] = _default_incentive_spots,
             incentive_factor: float = _default_incentive_factor,
             excluded_spots: Sequence[ctenums.TreasureID] = _default_excluded_spots,
@@ -145,6 +147,7 @@ class LogicOptions:
     ):
         self.additional_key_items = sorted(additional_key_items)
         self.forced_spots = forced_spots
+        self.loose_key_items = loose_key_items
         self.incentive_spots = sorted(incentive_spots)
         self.incentive_factor = incentive_factor
         self.excluded_spots = excluded_spots
@@ -171,6 +174,13 @@ class LogicOptions:
             "forced_spots": argumenttypes.arg_multiple_from_enum(
                 ctenums.TreasureID, cls._default_forced_spots,
                 "Spots forced to have key items (if enough KIs)",
+            ),
+            "loose_key_items": argumenttypes.arg_multiple_from_enum(
+                ctenums.ItemID, cls._default_loose_key_items,
+                "Key items to place randomly instead of in forced spots (when more items then spots)",
+                available_pool=[
+                    x for x in ctenums.ItemID if x not in shopoptions.ShopOptions.unused_items
+                ]
             ),
             "incentive_spots": argumenttypes.arg_multiple_from_enum(
                 ctenums.TreasureID, cls._default_incentive_spots,
@@ -246,6 +256,14 @@ class LogicOptions:
             nargs="*",
             type=functools.partial(str_to_enum, enum_type=ctenums.TreasureID),
             help="Spots forced to have key items.",
+            default=argparse.SUPPRESS
+        )
+
+        group.add_argument(
+            "--loose-key-items",
+            nargs="*",
+            type=functools.partial(str_to_enum, enum_type=ctenums.ItemID),
+            help="Key items to place randomly instead of in forced spots (when more items then spots)",
             default=argparse.SUPPRESS
         )
 

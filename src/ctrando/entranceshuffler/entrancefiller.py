@@ -56,6 +56,15 @@ def get_key_item_fill(
         if item in key_items:
             key_items.remove(item)
 
+    # Do it this way to preserve multiples in the loose list
+    normal_key_items = list(key_items)
+    possible_loose: list[ctenums.ItemID] = []
+    for item_id in logic_options.loose_key_items:
+        if item_id in key_items:
+            possible_loose.append(item_id)
+            normal_key_items.remove(item_id)
+
+
     # Precompute BossSpots which have Nizbel or Retinite
     nizbel_spots = {
         spot for spot, boss in boss_assignment.items()
@@ -108,6 +117,11 @@ def get_key_item_fill(
         if entrancerandomizer.is_map_viable(region_map):
             excluded_spots = list(set(logic_options.forced_excluded_spots).union(logic_options.excluded_spots))
             for _ in range(5):
+                # Shuffle KI list so that the possible loose ones are at the end in random order
+                rng.shuffle(normal_key_items)
+                rng.shuffle(possible_loose)
+                key_items = normal_key_items + possible_loose
+
                 treasure_assignment = fill_key_items(
                     region_map, initial_treasure_assignment, recruit_assignment, key_items,
                     excluded_spots,list(logic_options.forced_spots), list(logic_options.incentive_spots),
@@ -141,6 +155,10 @@ def fill_key_items(
         decay_factor: float,
         rng: RNGType,
 ) -> dict[ctenums.TreasureID, ttypes.RewardType]:
+    """
+    Put key items in key item spots.  Assumes the key items are already shuffled
+    so that the low priority ones are at the end of the list.
+    """
     working_treasure_dict: dict[ctenums.TreasureID, ttypes.RewardType] = {
         tid: ctenums.ItemID.NONE
         for tid in ctenums.TreasureID
@@ -148,7 +166,7 @@ def fill_key_items(
     }
     working_treasure_dict.update(treasure_dict)
 
-    rng.shuffle(key_item_list)
+    # rng.shuffle(key_item_list)
     forced_keys = key_item_list[0: len(forced_spots)]
 
     for key, spot in zip(forced_keys, forced_spots):
