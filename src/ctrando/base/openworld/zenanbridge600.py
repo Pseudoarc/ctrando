@@ -153,6 +153,8 @@ class EventMod(locationevent.LocEventMod):
             )
         )
 
+        got_item_id = owu.add_default_treasure_string(script)
+
         boss_fight_block = (
             EF().add(EC.remove_object(0x11)).add(EC.remove_object(0x12))
             .add(EC.generic_command(0xE7, 0, 1))  # scroll screen
@@ -185,6 +187,9 @@ class EventMod(locationevent.LocEventMod):
             .add(EC.move_party(0x84, 0x86, 0x83, 0x88, 0x84, 0x8B))
             .add(EC.generic_command(0xD8, 0x83, 0xC0))
             .add(EC.set_flag(memory.Flags.OW_ZENAN_COMPLETE))
+            .add(EC.assign_val_to_mem(ctenums.ItemID.GOLD_HELM, 0x7F0200, 1))
+            .add(EC.add_item_memory(0x7F0200))
+            .add(EC.auto_text_box(got_item_id))
             .append(owu.get_increment_quest_complete())
             .add(EC.play_song(0xC))
             .add(EC.party_follow()).add(EC.set_explore_mode(True))
@@ -258,8 +263,10 @@ class EventMod(locationevent.LocEventMod):
     @classmethod
     def modify_captain_activation(cls, script: Event):
         """
-        Modify the guard captain to take the jerky instead of checking their
-        chef flag.  Set the OW flag for Zenan
+        - Modify the guard captain to take the jerky instead of checking their
+          chef flag.
+        - Set the OW flag for Zenan
+        - Move the item check to after the boss battle
         """
         captain_obj = 0xD
         pos = script.get_function_start(captain_obj, FID.ACTIVATE)
@@ -277,15 +284,13 @@ class EventMod(locationevent.LocEventMod):
         repl_cmd = EC.if_has_item(ctenums.ItemID.JERKY)
         script.replace_jump_cmd(pos, repl_cmd)
 
-        move_block_st = script.find_exact_command(EC.if_result_equals(1),
-                                                  pos) + 3
-        move_block_st = script.find_exact_command(EC.if_result_equals(1),
-                                                  move_block_st) + 3
-        move_block_end = script.find_exact_command(EC.jump_forward(),
-                                                   move_block_st)
+        # Delete the item check from the guard captain
+        del_pos = script.find_exact_command(
+            EC.if_flag(memory.Flags.ZENAN_CAPTAIN_ITEM, pos)
+        )
+        script.delete_commands(del_pos, 1)
 
-        block = EF.from_bytearray(script.data[move_block_st:move_block_end])
-        block.add(EC.set_flag(memory.Flags.OW_ZENAN_STARTED))
+        block = EF().add(EC.set_flag(memory.Flags.OW_ZENAN_STARTED))
 
         str_pos = script.find_exact_command(EC.auto_text_box(0x19), pos)
         script.data[str_pos+1] = 2

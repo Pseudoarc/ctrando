@@ -1421,7 +1421,7 @@ def get_base_treasure_dict() -> dict[ctenums.TreasureID, RewardSpot]:
             LocID.GUARDIA_THRONEROOM_600, 0x0F, FID.STARTUP, item_num=1
         ),
         TID.ZENAN_BRIDGE_CAPTAIN: ScriptTreasure(
-            LocID.ZENAN_BRIDGE_600, object_id=0xD, function_id=FID.ACTIVATE
+            LocID.ZENAN_BRIDGE_BOSS, object_id=0x1, function_id=FID.STARTUP
         ),
         TID.SNAIL_STOP_KEY: ScriptTreasure(
             LocID.SNAIL_STOP, object_id=0x09, function_id=0x01
