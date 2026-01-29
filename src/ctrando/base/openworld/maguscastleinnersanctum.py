@@ -102,7 +102,9 @@ class EventMod(locationevent.LocEventMod):
         )
         no_epoch_loc_cmd.command = 0xDD
         change_loc_block = (
-            EF().add_if_else(
+            EF()
+            .add(EC.assign_val_to_mem(0, memory.Memory.KEEPSONG, 1))
+            .add_if_else(
                 EC.if_flag(memory.Flags.EPOCH_OBTAINED_LOC),
                 EF()
                 .append(
@@ -113,7 +115,6 @@ class EventMod(locationevent.LocEventMod):
                 )
                 .add(epoch_loc_cmd),
                 EF()
-                .add(EC.assign_val_to_mem(0, memory.Memory.KEEPSONG,1 ))
                 .add(no_epoch_loc_cmd)
             )
         )
