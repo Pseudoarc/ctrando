@@ -425,9 +425,9 @@ _quest_locator_dict: dict[QuestID, HookLocator | list[HookLocator]] = {
     ),
     QuestID.DEFEAT_JOHNNY: [
         CommandSequenceLocator(ctenums.LocID.LAB_32_EAST, 0, FID.STARTUP,
-                               [EC.if_flag(memory.Flags.LAST_RACE_SPECIAL_SCORE)], False),
+                               [EC.if_flag(memory.Flags.HAS_MET_RX_XR)], False),
         CommandSequenceLocator(ctenums.LocID.LAB_32_WEST, 0, FID.STARTUP,
-                               [EC.if_flag(memory.Flags.LAST_RACE_SPECIAL_SCORE)], False),
+                               [EC.if_flag(memory.Flags.HAS_MET_RX_XR)], False),
     ]
 }
 

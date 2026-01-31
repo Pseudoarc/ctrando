@@ -1,6 +1,7 @@
 """Openworld Lab 32 East"""
 
 from ctrando.base import openworldutils as owu
+from ctrando.base.openworld import lab32west
 from ctrando.common import ctenums, memory
 from ctrando.locations import locationevent
 from ctrando.locations.eventcommand import EventCommand as EC, FuncSync as FS, \
@@ -12,6 +13,8 @@ from ctrando.locations.locationevent import FunctionID as FID, LocationEvent as 
 class EventMod(locationevent.LocEventMod):
     """EventMod for Lab 32 East"""
     loc_id = ctenums.LocID.LAB_32_EAST
+    scorekeeper_obj = 0x0A
+
     @classmethod
     def modify(cls, script: Event):
         """
@@ -60,3 +63,5 @@ class EventMod(locationevent.LocEventMod):
         script.insert_commands(
             change_loc_block.get_bytearray(), pos
         )
+
+        lab32west.EventMod.update_scorekeeper_object(script, 0x0A)
