@@ -530,6 +530,10 @@ def get_ctrom_from_config(
         settings.treasure_options.trading_post_special_cost,
         post_config.script_manager
     )
+    treasureassign.write_johnny_rewards(
+        post_config.script_manager,
+        settings.treasure_options
+    )
     randostate.write_initial_rewards(config.starting_rewards, post_config.script_manager)
 
     recruitwriter.write_recruits_to_ct_rom(
@@ -658,6 +662,19 @@ def write_spoilers_to_file(
             else:
                 reward_str = f"{reward} G"
             treasure_str_dict[spot] = reward_str
+
+        obj_dict: dict[str, str] = dict()
+        for ind, item_id in enumerate((
+            ctenums.ItemID.OBJECTIVE_1, ctenums.ItemID.OBJECTIVE_2,
+            ctenums.ItemID.OBJECTIVE_3, ctenums.ItemID.OBJECTIVE_4,
+            ctenums.ItemID.OBJECTIVE_5, ctenums.ItemID.OBJECTIVE_6,
+            ctenums.ItemID.OBJECTIVE_7, ctenums.ItemID.OBJECTIVE_8,
+        )):
+            name = f"Objective {ind+1}"
+            desc = config.item_db[item_id].get_desc_as_str()
+            obj_dict[name] = desc
+
+        write_rjust_dict(obj_dict, "Objectives", outfile)
 
         ki_dict = {key: treasure_str_dict[key] for key in ki_spots}
         write_rjust_dict(ki_dict, "Key Items", outfile)
