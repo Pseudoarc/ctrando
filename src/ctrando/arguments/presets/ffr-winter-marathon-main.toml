@@ -80,7 +80,8 @@ forced_spots = [
     "arris_dome_food_locker_key",
     "reptite_lair_key",
     "taban_gift_vest",  # After Heckran
-    "geno_dome_boss_1"
+    "geno_dome_boss_1",
+    "yakra_key_chest"
 ]
 hard_lavos_end_boss=false
 

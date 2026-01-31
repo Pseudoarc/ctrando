@@ -88,7 +88,8 @@ obstacle_safety_level=30
 #   "c_trigger", "clone", "pendant", "pendant_charge", "dreamstone", "ruby_knife",
 #   "tools", "rainbow_shell", "prismshard", "jerky", "jerky",  # (Yes, two)
 #   "bent_hilt", "bent_sword", "hero_medal", "masamune_1", # (not "masamune_2")
-#   "tomas_pop", "moon_stone", "sun_stone", "bike_key",  "seed", "gate_key"
+#   "tomas_pop", "moon_stone", "sun_stone", "bike_key",  "seed", "gate_key",
+#   "yakra_key", "race_log"
 # ]
 # - Use this options to guarantee the presence of gear in key item spots
 additional_key_items=["masamune_2"]  # Extra (non-progression) items to add to the key item pool.
@@ -118,7 +119,8 @@ forced_spots = [
     "arris_dome_food_locker_key",
     "reptite_lair_key",
     "taban_gift_vest",  # Talk to Taban after Heckran
-    "geno_dome_boss_1"
+    "geno_dome_boss_1",
+    "yakra_key_chest"
 ]
 
 # If there are more key items than forced spots, the following key items will
