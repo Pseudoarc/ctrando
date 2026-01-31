@@ -105,6 +105,10 @@ forced_spots = [
     "geno_dome_boss_1"
 ]
 
+# If there are more key items than forced spots, the following key items will
+# be prioritized for placement outside of the forced spots.
+loose_key_items = ["race_log"]
+
 # excluded_spots -- a list of spots which will never hold a key item
 # - Charged versions of chargable chests are never allowed
 # - At present there is no protection from other chests that become unavailable

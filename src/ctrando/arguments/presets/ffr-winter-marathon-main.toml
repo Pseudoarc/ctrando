@@ -84,6 +84,10 @@ forced_spots = [
 ]
 hard_lavos_end_boss=false
 
+# If there are more key items than forced spots, the following key items will
+# be prioritized for placement outside of the forced spots.
+loose_key_items = ["race_log"]
+
 excluded_spots=[
     # Trading Post
     "trading_post_petal_fang_base", "trading_post_petal_fang_upgrade",
