@@ -556,6 +556,13 @@ def get_all_loc_regions() -> list[LocRegion]:
     )
     ret_list.append(johnny_race)
 
+    johnny_race_log = LocRegion(
+        "johnny_race_log",
+        loc_exits=set(),
+        reward_spots={TID.JOHNNY_RACE_KEY}
+    )
+    ret_list.append(johnny_race_log)
+
     sewers = LocRegion(
         "sewers",
         loc_exits={LocExit.SEWER_ACCESS_ARRIS, LocExit.SEWER_ACCESS_KEEPERS},

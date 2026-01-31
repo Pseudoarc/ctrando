@@ -641,6 +641,12 @@ def get_default_region_connectors(
             reversible=False
         ),
         RegionConnector(
+            "johnny_race", "johnny_race_log",
+            "race_good_score",
+            rule=logictypes.LogicRule([ctenums.ItemID.RACE_LOG]),
+            reversible=False
+        ),
+        RegionConnector(
             "lab_32_east", "lab_32_middle",
             "bike_key_east",
             rule=logictypes.LogicRule([ctenums.ItemID.BIKE_KEY])

@@ -380,14 +380,21 @@ class ScriptTreasure:
 
             pos += len(cmd)
 
+    def _get_search_start_end(self, script: LocationEvent):
+        fn_start = script.get_function_start(self.object_id, self.function_id)
+        fn_end = script.get_function_end(self.object_id, self.function_id)
+
+        return fn_start, fn_end
+
+
+
     def write_to_ct_rom(self, ct_rom: ctrom.CTRom,
                         script_manager: typing.Optional[ScriptManager] = None):
         """
         Insert the desired reward into the event script in the state
         """
         script = script_manager[self.location]
-        fn_start = script.get_function_start(self.object_id, self.function_id)
-        fn_end = script.get_function_end(self.object_id, self.function_id)
+        fn_start, fn_end = self._get_search_start_end(script)
 
         pos: typing.Optional[int] = fn_start
         num_mem_set_cmds_found = 0
@@ -834,6 +841,55 @@ class HuntingRangeNuTreasure(ScriptTreasure):
         else:
             reward_pos, cmd = script.find_command([0xCD])
             return Gold(cmd.args[0])
+
+
+class JohnnyRacePart(ScriptTreasure):
+
+    def _get_search_start_end(self, script: LocationEvent):
+        fn_start, fn_end = ScriptTreasure._get_search_start_end(self, script)
+
+        fn_start = script.find_exact_command(
+            EC.if_not_flag(memory.Flags.OBTAINED_JOHNNY_RACE_POWER_TAB),
+            fn_start, fn_end
+        )
+
+        return fn_start, fn_end
+
+
+class JohnnyRaceKeyItemTreasure:
+    def __init__(
+            self,
+            west_spot: JohnnyRacePart,
+            east_spot: JohnnyRacePart,
+            reward: RewardType = ctenums.ItemID.MOP
+    ):
+        self.reward = reward
+        self.west_spot = west_spot
+        self.east_spot = east_spot
+
+    def write_to_ct_rom(self, ct_rom: ctrom.CTRom,
+                        script_manager: typing.Optional[ScriptManager] = None):
+        if script_manager is None:
+            raise ValueError
+
+        self.west_spot.write_to_ct_rom(ct_rom, script_manager)
+        self.east_spot.write_to_ct_rom(ct_rom, script_manager)
+
+    def read_reward_from_ct_rom(
+            self, ct_rom: ctrom.CTRom,
+            script_manager: typing.Optional[ScriptManager] = None
+    ):
+        if script_manager is None:
+            raise ValueError
+
+        item_16 = self.west_spot.read_reward_from_ct_rom(ct_rom, script_manager)
+        item_32 = self.east_spot.read_reward_from_ct_rom(ct_rom, script_manager)
+
+        if item_16 != item_32:
+            raise ValueError
+
+        return item_16
+
 
 
 class TradingPostTreasure:
@@ -1684,6 +1740,14 @@ def get_base_treasure_dict() -> dict[ctenums.TreasureID, RewardSpot]:
         TID.COURTROOM_YAKRA_KEY: ScriptTreasure(
             LocID.KINGS_TRIAL, 0x19, FID.ACTIVATE
         ),
+        TID.JOHNNY_RACE_KEY: JohnnyRaceKeyItemTreasure(
+            JohnnyRacePart(
+                ctenums.LocID.LAB_32_WEST, 0xE, FID.ARBITRARY_2,
+            ),
+            JohnnyRacePart(
+                ctenums.LocID.LAB_32_EAST, 0x0A, FID.ARBITRARY_2
+            )
+        ),
         TID.TRADING_POST_PETAL_FANG_BASE: TradingPostTreasure(3, True),
         TID.TRADING_POST_PETAL_FANG_UPGRADE: TradingPostTreasure(3, False),
         TID.TRADING_POST_PETAL_HORN_BASE: TradingPostTreasure(5, True),
@@ -2201,6 +2265,7 @@ def get_vanilla_assignment() -> dict[ctenums.TreasureID, RewardType]:
         ctenums.TreasureID.DORINO_INN_POWERMEAL: ctenums.ItemID.POWER_MEAL,
         ctenums.TreasureID.YAKRA_KEY_CHEST: ctenums.ItemID.TONIC,
         ctenums.TreasureID.COURTROOM_YAKRA_KEY: ctenums.ItemID.YAKRA_KEY,
+        ctenums.TreasureID.JOHNNY_RACE_KEY: ctenums.ItemID.POWER_TAB,
         ctenums.TreasureID.TRADING_POST_PETAL_FANG_BASE: ctenums.ItemID.RUBY_GUN,
         ctenums.TreasureID.TRADING_POST_PETAL_FANG_UPGRADE: ctenums.ItemID.DREAM_GUN,
         ctenums.TreasureID.TRADING_POST_PETAL_HORN_BASE: ctenums.ItemID.SAGE_BOW,
