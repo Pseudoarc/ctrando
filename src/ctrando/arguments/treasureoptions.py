@@ -141,6 +141,20 @@ class TreasureOptions:
     _default_trading_post_upgrade_cost = 3
     _default_trading_post_special_cost = 10
     _default_custom_loot_pool = "none"
+    _default_johnny_key_threshold = 1500
+
+    _default_johnny_low_threshold = 1200
+    _default_johnny_low_item = ItemID.MID_TONIC
+    _default_johnny_low_quantity = 5
+
+    _default_johnny_mid_threshold = 2000
+    _default_johnny_mid_item = ItemID.ETHER
+    _default_johnny_mid_quantity = 5
+
+    _default_johnny_high_threshold = 2300
+    _default_johnny_high_item = ItemID.FULL_ETHER
+    _default_johnny_high_quantity = 5
+
 
     def __init__(
             self,
@@ -153,7 +167,17 @@ class TreasureOptions:
             trading_post_base_cost = _default_trading_post_base_cost,
             trading_post_upgrade_cost = _default_trading_post_upgrade_cost,
             trading_post_special_cost=_default_trading_post_special_cost,
-            custom_loot_pool=_default_custom_loot_pool
+            custom_loot_pool=_default_custom_loot_pool,
+            johnny_key_threshold=_default_johnny_key_threshold,
+            johnny_low_threshold=_default_johnny_low_threshold,
+            johnny_low_item=_default_johnny_low_item,
+            johnny_low_quantity=_default_johnny_low_quantity,
+            johnny_mid_threshold=_default_johnny_mid_threshold,
+            johnny_mid_item=_default_johnny_mid_item,
+            johnny_mid_quantity=_default_johnny_mid_quantity,
+            johnny_high_threshold=_default_johnny_high_threshold,
+            johnny_high_item=_default_johnny_high_item,
+            johnny_high_quantity=_default_johnny_high_quantity,
     ):
         self.loot_pool = loot_pool
         self.loot_assignment_scheme = loot_assignment_scheme
@@ -165,6 +189,23 @@ class TreasureOptions:
         self.trading_post_upgrade_cost = trading_post_upgrade_cost
         self.trading_post_special_cost = trading_post_special_cost
         self.custom_loot_pool = custom_loot_pool
+        self.johnny_key_threshold = johnny_key_threshold
+
+        self.johnny_low_threshold = johnny_low_threshold
+        self.johnny_low_item = johnny_low_item
+        self.johnny_low_quantity = johnny_low_quantity
+
+        self.johnny_mid_threshold = johnny_mid_threshold
+        self.johnny_mid_item = johnny_mid_item
+        self.johnny_mid_quantity = johnny_mid_quantity
+
+        self.johnny_high_threshold = johnny_high_threshold
+        self.johnny_high_item = johnny_high_item
+        self.johnny_high_quantity = johnny_high_quantity
+
+        if not (johnny_low_threshold <= johnny_mid_threshold <= johnny_high_threshold):
+            raise ValueError("Johnny thresholds must be in order.")
+
 
     @classmethod
     def get_argument_spec(cls) -> argumenttypes.ArgSpec:
@@ -216,6 +257,65 @@ class TreasureOptions:
             "trading_post_special_cost": argumenttypes.DiscreteNumericalArg(
                 1, 15, 1, cls._default_trading_post_special_cost,
                 "Number of materials of each type required for special trade",
+                type_fn=int
+            ),
+            "johnny_key_threshold": argumenttypes.DiscreteNumericalArg(
+                0, 2500, 100, cls._default_johnny_key_threshold,
+                "Points needed for the Johnny key item",
+                type_fn=int
+            ),
+            "johnny_low_threshold": argumenttypes.DiscreteNumericalArg(
+                0, 2500, 100, cls._default_johnny_low_threshold,
+                "Points needed for the low tier Johnny rewards",
+                type_fn=int
+            ),
+            "johnny_low_item": argumenttypes.DiscreteCategorialArg(
+                [
+                    x for x in ItemID if x not in shopoptions.ShopOptions.unused_items
+                ], cls._default_johnny_low_item,
+                "Low tier Johnny item reward",
+                choice_from_str_fn=functools.partial(argumenttypes.str_to_enum, enum_type=ItemID),
+                str_from_choice_fn=functools.partial(argumenttypes.enum_to_str, enum_type=ItemID)
+            ),
+            "johnny_low_quantity": argumenttypes.DiscreteNumericalArg(
+                1, 10, 1, cls._default_johnny_low_quantity,
+                "Number of items for the low tier Johnny reward",
+                type_fn=int
+            ),
+            "johnny_mid_threshold": argumenttypes.DiscreteNumericalArg(
+                0, 2500, 100, cls._default_johnny_mid_threshold,
+                "Points needed for the mid tier Johnny rewards",
+                type_fn=int
+            ),
+            "johnny_mid_item": argumenttypes.DiscreteCategorialArg(
+                [
+                    x for x in ItemID if x not in shopoptions.ShopOptions.unused_items
+                ], cls._default_johnny_mid_item,
+                "Mid tier Johnny item reward",
+                choice_from_str_fn=functools.partial(argumenttypes.str_to_enum, enum_type=ItemID),
+                str_from_choice_fn=functools.partial(argumenttypes.enum_to_str, enum_type=ItemID)
+            ),
+            "johnny_mid_quantity": argumenttypes.DiscreteNumericalArg(
+                1, 10, 1, cls._default_johnny_mid_quantity,
+                "Number of items for the mid tier Johnny reward",
+                type_fn=int
+            ),
+            "johnny_high_threshold": argumenttypes.DiscreteNumericalArg(
+                0, 2500, 100, cls._default_johnny_high_threshold,
+                "Points needed for the high tier Johnny rewards",
+                type_fn=int
+            ),
+            "johnny_high_item": argumenttypes.DiscreteCategorialArg(
+                [
+                    x for x in ItemID if x not in shopoptions.ShopOptions.unused_items
+                ], cls._default_johnny_high_item,
+                "High tier Johnny item reward",
+                choice_from_str_fn=functools.partial(argumenttypes.str_to_enum, enum_type=ItemID),
+                str_from_choice_fn=functools.partial(argumenttypes.enum_to_str, enum_type=ItemID)
+            ),
+            "johnny_high_quantity": argumenttypes.DiscreteNumericalArg(
+                1, 10, 1, cls._default_johnny_high_quantity,
+                "Number of items for the high tier Johnny reward",
                 type_fn=int
             )
         }
@@ -270,7 +370,11 @@ class TreasureOptions:
 
         spec = cls.get_argument_spec()
         attr_names = ("trading_post_base_cost", "trading_post_upgrade_cost",
-                      "trading_post_special_cost", "custom_loot_pool")
+                      "trading_post_special_cost", "custom_loot_pool",
+                      "johnny_key_threshold",
+                      "johnny_low_threshold", "johnny_low_item", "johnny_low_quantity",
+                      "johnny_mid_threshold", "johnny_mid_item", "johnny_mid_quantity",
+                      "johnny_high_threshold", "johnny_high_item", "johnny_high_quantity")
         for attr_name in attr_names:
             arg = spec[attr_name]
             arg_name = argumenttypes.attr_name_to_arg_name(attr_name)
