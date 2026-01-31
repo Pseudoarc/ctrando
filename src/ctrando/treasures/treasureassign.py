@@ -12,7 +12,7 @@ from ctrando.arguments.gearrandooptions import DSItem
 from ctrando.locations.scriptmanager import ScriptManager
 from ctrando.locations.locationevent import FunctionID as FID
 from ctrando.arguments import treasureoptions, gearrandooptions
-from ctrando.base.openworld import iokatradingpost
+from ctrando.base.openworld import iokatradingpost, lab32west, lab32east
 from ctrando.common import ctenums, ctrom, distribution, piecewiselinear as pwl
 from ctrando.common.ctenums import TreasureID as TID
 from ctrando.common.random import RNGType
@@ -597,6 +597,47 @@ def get_current_assignment(
     }
 
     return assignment
+
+
+def write_johnny_rewards(
+        script_manager: ScriptManager,
+        treasure_options: treasureoptions.TreasureOptions
+):
+    west_obj = lab32west.EventMod.scorekeeper_obj
+    east_obj = lab32east.EventMod.scorekeeper_obj
+
+    west_script = script_manager[ctenums.LocID.LAB_32_WEST]
+    east_script = script_manager[ctenums.LocID.LAB_32_EAST]
+
+    scripts = (west_script, east_script)
+    obj_ids =  (west_obj, east_obj)
+
+    for script, obj_id in zip(scripts, obj_ids):
+        lab32west.EventMod.assign_tier_reward(
+            script, obj_id, 0,
+            treasure_options.johnny_low_threshold,
+            treasure_options.johnny_low_item,
+            treasure_options.johnny_low_quantity,
+        )
+
+        lab32west.EventMod.assign_tier_reward(
+            script, obj_id, 1,
+            treasure_options.johnny_mid_threshold,
+            treasure_options.johnny_mid_item,
+            treasure_options.johnny_mid_quantity,
+        )
+
+        lab32west.EventMod.assign_tier_reward(
+            script, obj_id, 2,
+            treasure_options.johnny_high_threshold,
+            treasure_options.johnny_high_item,
+            treasure_options.johnny_high_quantity,
+        )
+
+        lab32west.EventMod.assign_key_threshold(
+            script, obj_id, treasure_options.johnny_key_threshold
+        )
+
 
 
 
