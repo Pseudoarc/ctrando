@@ -559,7 +559,7 @@ def get_all_loc_regions() -> list[LocRegion]:
     johnny_race_log = LocRegion(
         "johnny_race_log",
         loc_exits=set(),
-        reward_spots={TID.JOHNNY_RACE_KEY}
+        reward_spots={TID.JOHNNY_RACE_POWER_TAB}
     )
     ret_list.append(johnny_race_log)
 

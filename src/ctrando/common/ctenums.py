@@ -1173,7 +1173,7 @@ class TreasureID(StrIntEnum):
     DORINO_INN_POWERMEAL = auto()
     YAKRA_KEY_CHEST = auto()
     COURTROOM_YAKRA_KEY = auto()
-    JOHNNY_RACE_KEY = auto()
+    JOHNNY_RACE_POWER_TAB = auto()
     # Tabs
     # Tabs later if they're going to be randomized
     GUARDIA_FOREST_POWER_TAB_600 = auto()

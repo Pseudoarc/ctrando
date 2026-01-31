@@ -418,6 +418,17 @@ trading_post_base_cost = 2      # Base trades cost this many for two item types 
 trading_post_upgrade_cost = 3   # Upgraded trades cost this many for two item types [default 3]
 trading_post_special_cost = 6   # The Special trade costs this much for all item tyes [default 10]
 
+johnny_key_threshold = 1000  # 1000 points for the "Power Tab" (normal check)
+johnny_low_threshold = 700   # 700 points for 5 mid tonics
+johnny_low_item = "mid_tonic"
+johnny_low_quantity = 5
+
+johnny_mid_threshold = 1300  # 1300 points for 5 mid ethers
+johnny_mid_item = "mid_ether"
+johnny_mid_quantity = 5
+johnny_high_threshold = 1700  # 1700 points for 2 mega elixirs
+johnny_high_item = "megaelixir"
+johnny_high_quantity = 2
 
 # Enemy Options: Options relating to Enemies
 sightscope_all=true     # Enable sightscope usage on all enemies.

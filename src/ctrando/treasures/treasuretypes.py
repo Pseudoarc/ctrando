@@ -1740,7 +1740,7 @@ def get_base_treasure_dict() -> dict[ctenums.TreasureID, RewardSpot]:
         TID.COURTROOM_YAKRA_KEY: ScriptTreasure(
             LocID.KINGS_TRIAL, 0x19, FID.ACTIVATE
         ),
-        TID.JOHNNY_RACE_KEY: JohnnyRaceKeyItemTreasure(
+        TID.JOHNNY_RACE_POWER_TAB: JohnnyRaceKeyItemTreasure(
             JohnnyRacePart(
                 ctenums.LocID.LAB_32_WEST, 0xE, FID.ARBITRARY_2,
             ),
@@ -2265,7 +2265,7 @@ def get_vanilla_assignment() -> dict[ctenums.TreasureID, RewardType]:
         ctenums.TreasureID.DORINO_INN_POWERMEAL: ctenums.ItemID.POWER_MEAL,
         ctenums.TreasureID.YAKRA_KEY_CHEST: ctenums.ItemID.TONIC,
         ctenums.TreasureID.COURTROOM_YAKRA_KEY: ctenums.ItemID.YAKRA_KEY,
-        ctenums.TreasureID.JOHNNY_RACE_KEY: ctenums.ItemID.POWER_TAB,
+        ctenums.TreasureID.JOHNNY_RACE_POWER_TAB: ctenums.ItemID.POWER_TAB,
         ctenums.TreasureID.TRADING_POST_PETAL_FANG_BASE: ctenums.ItemID.RUBY_GUN,
         ctenums.TreasureID.TRADING_POST_PETAL_FANG_UPGRADE: ctenums.ItemID.DREAM_GUN,
         ctenums.TreasureID.TRADING_POST_PETAL_HORN_BASE: ctenums.ItemID.SAGE_BOW,
