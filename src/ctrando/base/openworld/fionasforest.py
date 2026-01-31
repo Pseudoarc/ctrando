@@ -79,4 +79,8 @@ class EventMod(locationevent.LocEventMod):
             script.get_function_start(1, FID.ARBITRARY_4)
         )
         script.delete_commands(pos, 4)
-        owu.insert_add_item_block(script, pos, ctenums.ItemID.GREENDREAM)
+        owu.insert_add_item_block(
+            script,
+            pos,
+            ctenums.ItemID.GREENDREAM,
+            memory.Flags.OBTAINED_GREEN_DREAM_ITEM)
