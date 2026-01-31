@@ -81,7 +81,9 @@ class LogicOptions:
         ctenums.TreasureID.ARRIS_DOME_FOOD_LOCKER_KEY, ctenums.TreasureID.REPTITE_LAIR_KEY,
         ctenums.TreasureID.TABAN_GIFT_VEST, ctenums.TreasureID.GENO_DOME_BOSS_1
     )
-    _default_loose_key_items: typing.ClassVar[tuple[ctenums.ItemID, ...]] = tuple()
+    _default_loose_key_items: typing.ClassVar[tuple[ctenums.ItemID, ...]] = (
+        ctenums.ItemID.SUN_STONE, ctenums.ItemID.RACE_LOG
+    )
     _default_excluded_spots: typing.ClassVar[tuple[ctenums.TreasureID, ...]] = (
         # Magus
         ctenums.TreasureID.MAGUS_CASTLE_RIGHT_HALL, ctenums.TreasureID.MAGUS_CASTLE_GUILLOTINE_1,
