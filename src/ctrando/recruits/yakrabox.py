@@ -69,6 +69,7 @@ def assign_pc_to_spot(
         .add(EC.follow_pc_once(0))
         #.add(EC.reset_animation())
         .add(EC.name_pc(char_id))
+        .append(scale_block)
         .add(EC.assign_mem_to_mem(memory.Memory.ACTIVE_PC3, temp_pc3_addr, 1))
         .add_if_else(
             EC.if_mem_op_value(temp_pc3_addr, OP.GREATER_THAN, 6),
