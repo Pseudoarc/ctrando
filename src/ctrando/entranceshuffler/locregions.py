@@ -309,12 +309,12 @@ def get_all_loc_regions() -> list[LocRegion]:
     )
     ret_list.append(luccas_house_charged_pendant)
 
-    luccas_house_sunstone = LocRegion(
-        "luccas_house_sunstone",
-        loc_exits=set(),  # TODO: Should this have an exit?  Accessed from elsewhere.
-        reward_spots={TID.TABAN_SUNSHADES, TID.LUCCA_WONDERSHOT}
-    )
-    ret_list.append(luccas_house_sunstone)
+    # luccas_house_sunstone = LocRegion(
+    #     "luccas_house_sunstone",
+    #     loc_exits=set(),  # TODO: Should this have an exit?  Accessed from elsewhere.
+    #     reward_spots={TID.TABAN_SUNSHADES, TID.LUCCA_WONDERSHOT}
+    # )
+    # ret_list.append(luccas_house_sunstone)
 
     truce_canyon = LocRegion(
         "truce_canyon",
