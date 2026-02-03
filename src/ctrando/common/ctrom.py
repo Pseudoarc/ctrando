@@ -2,6 +2,8 @@
 Module for basic operations on a Chrono Trigger ROM.
 """
 import hashlib
+import io
+import pathlib
 import typing
 
 from ctrando.common import freespace
@@ -250,6 +252,61 @@ class CTRom(freespace.FSRom):
         #     self.getbuffer()[0x008000:0x010000]
         #     == self.getbuffer()[0x408000:0x410000]
         # )
+
+    def apply_ips_patch(
+            self,
+            object_or_filename: pathlib.Path | str | typing.BinaryIO | io.BytesIO
+    ):
+        if isinstance(object_or_filename, typing.BinaryIO | io.BytesIO):
+            patch = object_or_filename
+        elif isinstance(object_or_filename, pathlib.Path | str):
+            with open(object_or_filename, "rb") as infile:
+                patch = io.BytesIO(infile.read())
+        else:
+            raise TypeError("Argument is neither a file or file-like object")
+
+        p = patch
+        p.seek(0, 2)
+        patch_size = p.tell()
+
+        p.seek(0)
+        header = p.read(5)
+        if header != b'PATCH':
+            raise ValueError("Does not appear to be an ips patch.")
+
+        while p.tell() < patch_size - 5:
+
+            # Get the location of the payload
+            addr_bytes = p.read(3)
+            addr = int.from_bytes(addr_bytes, "big")
+
+            # Get the size of the payload
+            size_bytes = p.read(2)
+            size = int.from_bytes(size_bytes, "big")
+
+            mark_set = freespace.FSWriteType.MARK_USED
+
+            if size == 0:
+                # RLE block
+                rle_size_bytes = p.read(2)
+                rle_size = int.from_bytes(rle_size_bytes, "big")
+
+                rle_byte = p.read(1)
+
+                # Runs of a single symbol are usually free space?
+                # IPS will write 0 blocks to extend the length of a file.
+                # We should mark these as free
+                if rle_byte[0] == 0 and rle_size >= 0x10:
+                    mark_set = freespace.FSWriteType.MARK_FREE
+
+                payload = bytearray([rle_byte[0]] * rle_size)
+            else:
+                # Normal block
+                payload = p.read(size)
+
+            self.seek(addr)
+            self.write(payload, mark_set)
+            # print(f'Wrote {len(payload):04X} bytes to {addr:06X}')
 
 
 def main():

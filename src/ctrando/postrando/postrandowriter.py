@@ -1,5 +1,7 @@
 """Write Post-Randomization options to rom data"""
 from collections.abc import Callable
+from importlib.resources import files
+import io
 import random
 
 from ctrando.arguments import postrandooptions
@@ -262,3 +264,8 @@ def write_post_rando_options(
 
     if post_rando_options.use_l_select_warp:
         use_alt_house_warp(ct_rom, script_man)
+
+    if post_rando_options.use_msu1:
+        patch = files("ctrando.postrando").joinpath("msu1", "ct_msu1.ips")
+        patch_obj = io.BytesIO(patch.read_bytes())
+        ct_rom.apply_ips_patch(patch_obj)

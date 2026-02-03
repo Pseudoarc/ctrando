@@ -38,7 +38,7 @@ class PostRandoOptions:
         "window_background",
         "crono_palette", "marle_palette", "lucca_palette", "robo_palette",
         "frog_palette", "ayla_palette", "magus_palette",
-        "ending", "remove_flashes", "use_l_select_warp"
+        "ending", "remove_flashes", "use_l_select_warp", "use_msu1"
     )
     _default_fast_loc_movement: typing.ClassVar[bool] = False
     _default_fast_ow_movement: typing.ClassVar[bool] = False
@@ -109,6 +109,7 @@ class PostRandoOptions:
     ending: EndingID = EndingID("the dream project")
     remove_flashes: bool = False
     use_l_select_warp: bool = False
+    use_msu1: bool = False
 
     def __post_init__(self):
         self.battle_speed = sorted([1, int(self.battle_speed), 8])[1]
@@ -139,6 +140,9 @@ class PostRandoOptions:
             ),
             "use_l_select_warp": argumenttypes.FlagArg(
                 "Use L+Select instead of Start+Select for house warp"
+            ),
+            "use_msu1": argumenttypes.FlagArg(
+                "Apply an MSU-1 patch to the rom."
             )
         }
 
@@ -255,9 +259,11 @@ class PostRandoOptions:
             help="Remove flashes from many animations."
         )
 
-        cls.get_argument_spec()["use_l_select_warp"].add_to_argparse(
-            "--use-l-select-warp", group
-        )
+        spec = cls.get_argument_spec()
+        args = ["use_l_select_warp", "use_msu1"]
+        for arg in args:
+            spec[arg].add_to_argparse(argumenttypes.arg_name_to_attr_name(arg),
+                                      group)
 
     @classmethod
     def extract_from_namespace(cls, namespace: argparse.Namespace) -> typing.Self:

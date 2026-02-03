@@ -582,6 +582,7 @@ remove_flashes = false
 
 # If set to true, useu L+Select instead of Start+Select to house warp
 use_l_select_warp = false
+use_msu1 = false  # Set true to enable MSU-1 support
 
 ### Plando Recruits
 #  - Use "crono", "marle", "lucca", "robo", "frog", "ayla", "magus" to force a character

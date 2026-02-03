@@ -18,3 +18,6 @@ $ python3 -m ctrando --input-file path/to/ct.sfc --options-file path/to/samplese
 ```
 Note that the seed is included at the top of the settings file, so you'll need to edit that to get fresh seeds.
 If the seed is omitted from the settings file, then a random seed will be assigned.
+
+MSU1 support is thanks to DarkShock, qwertymodo, and Cthulhu.  The full license can be found in
+`/src/ctrando/postrando/msu1/chrono_msu1.asm`.
