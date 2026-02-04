@@ -25,6 +25,19 @@ class EventMod(locationevent.LocEventMod):
         # cls.add_flight_turn_in(script)
         cls.add_magus(script)
 
+        pos = script.find_exact_command(
+            EC.party_follow(),
+            script.get_function_start(0xA, FID.STARTUP)
+        )
+
+        block = (
+            EF().add(EC.party_follow()).add(EC.set_explore_mode(True))
+        )
+        script.insert_commands(block.get_bytearray(), pos)
+        pos += len(block)
+        script.delete_commands(pos, 1)
+
+
     @classmethod
     def add_magus(cls, script: Event):
         """
@@ -42,8 +55,10 @@ class EventMod(locationevent.LocEventMod):
         """
         Add a flight turn-in on the bashers.  Hide the bashers if the fight has been
         completed.
+
+        Call this *after* Magus has been added to the event
         """
-        basher_objs = (7, 8)
+        basher_objs = (8, 9)
         basher_activate = (
             EF().add_if(
                 EC.if_has_item(ctenums.ItemID.JETSOFTIME),
@@ -52,10 +67,10 @@ class EventMod(locationevent.LocEventMod):
                         "Don't worry, Lord Dalton has made good{linebreak+0}"
                         "use of those wings!{null}"
                 ))).add(EC.play_song(0x16))
-                .add(EC.call_obj_function(0xA, FID.ARBITRARY_0, 4, FS.SYNC))
-                .add(EC.call_obj_function(0xB, FID.ARBITRARY_0, 4, FS.CONT))
+                .add(EC.call_obj_function(0xB, FID.ARBITRARY_0, 4, FS.SYNC))
                 .add(EC.call_obj_function(0xC, FID.ARBITRARY_0, 4, FS.CONT))
-                .add(EC.call_obj_function(0xD, FID.ARBITRARY_0, 4, FS.HALT))
+                .add(EC.call_obj_function(0xD, FID.ARBITRARY_0, 4, FS.CONT))
+                .add(EC.call_obj_function(0xE, FID.ARBITRARY_0, 4, FS.HALT))
                 .add(EC.move_party(6, 0x14, 6, 0x14, 6, 0x14))
                 .add(EC.darken(1))
                 .add(EC.fade_screen())
