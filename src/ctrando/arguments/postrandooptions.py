@@ -262,7 +262,7 @@ class PostRandoOptions:
         spec = cls.get_argument_spec()
         args = ["use_l_select_warp", "use_msu1"]
         for arg in args:
-            spec[arg].add_to_argparse(argumenttypes.arg_name_to_attr_name(arg),
+            spec[arg].add_to_argparse(argumenttypes.attr_name_to_arg_name(arg),
                                       group)
 
     @classmethod
