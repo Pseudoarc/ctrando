@@ -25,7 +25,7 @@ _restricted_items = frozenset([
     ctenums.ItemID.OBJECTIVE_7, ctenums.ItemID.OBJECTIVE_8, ctenums.ItemID.MASAMUNE_1,
     ctenums.ItemID.MASAMUNE_2, ctenums.ItemID.FIST, ctenums.ItemID.FIST_2,
     ctenums.ItemID.FIST_3, ctenums.ItemID.IRON_FIST, ctenums.ItemID.BRONZEFIST,
-    ctenums.ItemID.PACIFIST, ctenums.ItemID.UNUSED_4A,
+    ctenums.ItemID.PACIFIST, ctenums.ItemID.APITEM,
     ctenums.ItemID.BENT_HILT, ctenums.ItemID.BENT_SWORD,
     ctenums.ItemID.MASAMUNE_0_ATK,
     ctenums.ItemID.UNUSED_56, ctenums.ItemID.UNUSED_57, ctenums.ItemID.UNUSED_58,
@@ -350,7 +350,4 @@ def apply_reward_rando(
 
     mark_charm_and_drop(enemy_dict, reward_options.charm_options.mark_charmable_enemies,
                         reward_options.drop_options.mark_dropping_enemies)
-
-
-
 
