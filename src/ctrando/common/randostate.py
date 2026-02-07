@@ -348,7 +348,10 @@ def get_reward_event_code(
     raise ValueError
 
 
-def get_initial_rewards_ef(intial_rewards: list[logictypes.RewardType]) -> EF:
+def get_initial_rewards_ef(
+        intial_rewards: list[logictypes.RewardType],
+        start_offset: int = 0
+) -> EF:
     ret_ef = EF()
 
     normal_item_reward_count: dict[ctenums.ItemID, int] = dict()
@@ -367,7 +370,7 @@ def get_initial_rewards_ef(intial_rewards: list[logictypes.RewardType]) -> EF:
     count_bytes = bytes(list(normal_item_reward_count.values()))
 
     if item_bytes:
-        item_st = 0x7E2400
+        item_st = 0x7E2400 + start_offset
         count_st = item_st + 0x000100
         ret_ef.add(EC.copy_memory(item_st, item_bytes))
         ret_ef.add(EC.copy_memory(count_st, count_bytes))
@@ -381,11 +384,22 @@ def get_initial_rewards_ef(intial_rewards: list[logictypes.RewardType]) -> EF:
 def write_initial_rewards(
         initial_rewards: list[logictypes.RewardType],
         script_manager: ScriptManager):
-
-    func = get_initial_rewards_ef(initial_rewards)
-
     script = script_manager[ctenums.LocID.LOAD_SCREEN]
+    start_pos = script.get_function_start(1, locationevent.FunctionID.ACTIVATE)
+    pos = script.find_exact_command(EC.set_flag(memory.Flags.OW_VORTEX_ACTIVE))
+
+    # Detect of other items have been written and avoid undoing that.
+    other_items = set()
+    while start_pos < pos:
+        start_pos, cmd = script.find_command_opt([0xCA], start_pos, pos)
+        if start_pos is None:
+            break
+        other_items.add(cmd.args[0])
+        start_pos += len(cmd)
+
+    start_offset = len(other_items)
+    func = get_initial_rewards_ef(initial_rewards, start_offset)
+
 
     # Note: We look *after* the default Epoch status is set.
-    pos = script.find_exact_command(EC.set_flag(memory.Flags.OW_VORTEX_ACTIVE))
     script.insert_commands(func.get_bytearray(), pos)
