@@ -281,6 +281,38 @@ def get_random_objectives_from_settings(
     return ret_list
 
 
+def update_objective_names_descriptions(
+        objectives: list[oty.ObjectiveType],
+        item_manager: itemdata.ItemDB
+):
+    item_pool = [
+        ctenums.ItemID.OBJECTIVE_1, ctenums.ItemID.OBJECTIVE_2,
+        ctenums.ItemID.OBJECTIVE_3, ctenums.ItemID.OBJECTIVE_4,
+        ctenums.ItemID.OBJECTIVE_5, ctenums.ItemID.OBJECTIVE_6,
+        ctenums.ItemID.OBJECTIVE_7, ctenums.ItemID.OBJECTIVE_8,
+    ]
+
+    for item_id, obj_id in zip(item_pool, objectives):
+        if obj_id is None:
+            continue
+        elif isinstance(obj_id, oty.QuestID):
+            quest_data = oty.get_quest_data(obj_id)
+            item_name = quest_data.name
+            item_desc = quest_data.desc
+        elif isinstance(obj_id, bty.BossID):
+            boss_name_abbrev = oty.get_boss_item_name(obj_id)
+            boss_name = obj_id.name.replace("_", " ").title()
+            item_name = f"*{boss_name_abbrev}"
+            item_desc = f"Defeat {boss_name}"
+        else:
+            raise TypeError
+
+        item_manager[item_id].set_name_from_str(item_name)
+        item_manager[item_id].set_desc_from_str(item_desc)
+        item_manager[item_id].secondary_stats.is_key_item = True
+        item_manager[item_id].secondary_stats.is_unsellable = True
+
+
 def write_test_objectives(
         script_manager: scriptmanager.ScriptManager,
         boss_assign_dict: dict[bty.BossSpotID, bty.BossID],
@@ -322,32 +354,21 @@ def write_test_objectives(
         memory.Flags.OBJECTIVE_7_COMPLETE, memory.Flags.OBJECTIVE_8_COMPLETE
     ]
 
-    quests = objectives
+    # Repeat this in case things have been messed with externally
+    update_objective_names_descriptions(objectives, item_manager)
 
     descs: list[str] = []
-    for item_id, obj_id, flag in zip(item_pool, quests, obj_flags):
+    for item_id, obj_id, flag in zip(item_pool, objectives, obj_flags):
         if obj_id is None:
             continue
         elif isinstance(obj_id, oty.QuestID):
-            quest_data = oty.get_quest_data(obj_id)
-            item_name = quest_data.name
-            item_desc = quest_data.desc
             locators = oty.get_quest_locator(obj_id)
         elif isinstance(obj_id, bty.BossID):
-            boss_name_abbrev = oty.get_boss_item_name(obj_id)
-            boss_name = obj_id.name.replace("_", " ").title()
-            item_name = f"*{boss_name_abbrev}"
-            item_desc = f"Defeat {boss_name}"
             locators = oty.get_boss_locator(obj_id, boss_assign_dict)
         else:
             raise TypeError
 
-        item_manager[item_id].set_name_from_str(item_name)
-        item_manager[item_id].set_desc_from_str(item_desc)
-        item_manager[item_id].secondary_stats.is_key_item = True
-        item_manager[item_id].secondary_stats.is_unsellable = True
-
-        descs.append(item_desc)
+        descs.append(item_manager[item_id].get_desc_as_str())
 
         for locator in locators:
             write_simple_objective_to_ct_rom(

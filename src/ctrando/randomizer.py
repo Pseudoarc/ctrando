@@ -675,6 +675,7 @@ def write_spoilers_to_file(
             obj_dict[name] = desc
 
         write_rjust_dict(obj_dict, "Objectives", outfile)
+        outfile.write("\n")
 
         ki_dict = {key: treasure_str_dict[key] for key in ki_spots}
         write_rjust_dict(ki_dict, "Key Items", outfile)
