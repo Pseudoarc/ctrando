@@ -328,6 +328,10 @@ def get_random_config(
     gearrando.randomize_gear(config.item_db, settings.gear_rando_options, rng)
     config.item_db.update_all_descriptions()
 
+    objectivewriter.update_objective_names_descriptions(
+        config.objectives, config.item_db
+    )
+
     return config
 
 
