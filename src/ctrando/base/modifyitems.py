@@ -312,7 +312,7 @@ def normalize_hp_accessories(ct_rom: ctrom.CTRom):
         inst.BRA("do_add"),
         "do_scale",
         inst.LDA(acc_data_start_rom_addr+3, AM.LNG_X),
-        # inst.AND(0x00F0, AM.IMM16),
+        inst.AND(0x00F0, AM.IMM16),
         # inst.STA(0x28, AM.DIR),
         inst.LSR(mode=AM.NO_ARG),
         inst.LSR(mode=AM.NO_ARG),
