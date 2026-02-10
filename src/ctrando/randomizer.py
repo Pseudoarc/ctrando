@@ -653,6 +653,8 @@ def write_spoilers_to_file(
                 entrancefiller.get_forced_key_items() +
                 settings.logic_options.additional_key_items
         )
+        if settings.logic_options.jets_of_time:
+            key_items.append(ctenums.ItemID.JETSOFTIME)
 
         treasure_str_dict: dict[ctenums.TreasureID, str] = {}
         ki_spots: list[ctenums.TreasureID] = []
