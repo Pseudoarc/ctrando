@@ -445,6 +445,36 @@ def get_default_region_connectors(
                 ),
             )
 
+    portal_connectors = [
+        RegionConnector(
+            "millennial_fair", "truce_canyon",
+            "telepod_portal"
+        ),
+        RegionConnector(
+            "mystic_mts", "medina_portal",
+            "mystic_mts_portal",
+        ),
+        RegionConnector(
+            "proto_dome_portal", "end_of_time",
+            "end_of_time_portal"
+        ),
+        RegionConnector(
+            "dark_ages_portal", "lair_ruins_portal",
+            "dark_ages_to_Lair_ruins_portal",
+            rule=logictypes.LogicRule([memory.Flags.OW_LAVOS_HAS_FALLEN])
+        ),
+        RegionConnector(
+            "guardia_forest_1000", "bangor_dome",
+            "guardia_forest_portal"
+        ),
+    ]
+
+    if logic_options.lock_gates:
+        for connector in portal_connectors:
+            connector.rule &= logictypes.LogicRule([ctenums.ItemID.GATE_KEY])
+
+    extra_connectors += portal_connectors
+
     return extra_connectors + [
         RegionConnector(
             "starting_rewards", "cronos_house",
@@ -559,10 +589,6 @@ def get_default_region_connectors(
             rule=charge_rule(2)
         ),
         RegionConnector(
-            "millennial_fair", "truce_canyon",
-            "telepod_portal"
-        ),
-        RegionConnector(
             "millennial_fair", "end_of_time",
             "telepod_portal_eot",
             rule=eot_portal_rule,
@@ -673,12 +699,6 @@ def get_default_region_connectors(
             rule=logictypes.LogicRule([ctenums.ItemID.SEED])
         ),
         RegionConnector(
-            "proto_dome", "proto_dome_portal",
-            "proto_dome_power",
-            rule=logictypes.LogicRule([memory.Flags.PROTO_DOME_DOOR_UNLOCKED]),
-            reversible=True
-        ),
-        RegionConnector(
             "keepers_dome", "keepers_dome_sealed",
             "keepers_dome_sealed_door",
             rule=charge_rule(2)
@@ -687,10 +707,6 @@ def get_default_region_connectors(
             "dactyl_nest", "dactyl_nest_recruit",
             "dactyl_nest_summit",
             rule=logictypes.LogicRule([ctenums.ItemID.DREAMSTONE])
-        ),
-        RegionConnector(
-            "mystic_mts", "medina_portal",
-            "mystic_mts_portal",
         ),
         RegionConnector(
             "choras_1000_carpenter_base", "choras_1000_carpenter_wife",
@@ -820,8 +836,10 @@ def get_default_region_connectors(
             rule=logictypes.LogicRule([memory.Flags.HAS_ALGETTY_PORTAL])
         ),
         RegionConnector(
-            "proto_dome_portal", "end_of_time",
-            "end_of_time_portal"
+            "proto_dome", "proto_dome_portal",
+            "proto_dome_power",
+            rule=logictypes.LogicRule([memory.Flags.PROTO_DOME_DOOR_UNLOCKED]),
+            reversible=True
         ),
         RegionConnector(
             "end_of_time", "mystic_mts",
@@ -845,11 +863,6 @@ def get_default_region_connectors(
             "eot_dark_ages_pillar",
             rule=logictypes.LogicRule([memory.Flags.HAS_DARK_AGES_PORTAL]),
             reversible=False
-        ),
-        RegionConnector(
-            "dark_ages_portal", "lair_ruins_portal",
-            "dark_ages_to_Lair_ruins_portal",
-            rule=logictypes.LogicRule([memory.Flags.OW_LAVOS_HAS_FALLEN])
         ),
         RegionConnector(
             "dark_ages_portal", "end_of_time",
@@ -1170,10 +1183,6 @@ def get_default_region_connectors(
                                        memory.Flags.HAS_DARK_AGES_TIMEGAUGE_ACCESS,
                                        memory.Flags.HAS_ALGETTY_PORTAL]),
             reversible=False
-        ),
-        RegionConnector(
-            "guardia_forest_1000", "bangor_dome",
-            "guardia_forest_portal"
         ),
         RegionConnector(
             "guardia_forest_1000", "end_of_time",

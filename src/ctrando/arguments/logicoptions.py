@@ -126,7 +126,8 @@ class LogicOptions:
         "additional_key_items", "forced_spots", "loose_key_items", "incentive_spots",
         "incentive_factor", "excluded_spots", "decay_factor",
         "hard_lavos_end_boss", "starter_rewards", "out_of_logic_starter_rewards",
-        "force_early_flight", "boats_of_time", "jets_of_time", "min_flight_depth"
+        "force_early_flight", "boats_of_time", "jets_of_time", "min_flight_depth",
+        "lock_gates"
     )
     name: typing.ClassVar[str] = "Logic Options"
     description: typing.ClassVar[str] = "Options for the distribution of key items"
@@ -145,7 +146,8 @@ class LogicOptions:
             out_of_logic_starter_rewards: Sequence[RewardType] = _default_out_of_logic_starter_rewards,
             boats_of_time: bool = False,
             jets_of_time: bool = False,
-            min_flight_depth: int = _default_min_flight_depth
+            min_flight_depth: int = _default_min_flight_depth,
+            lock_gates: bool = False
     ):
         self.additional_key_items = sorted(additional_key_items)
         self.forced_spots = forced_spots
@@ -161,6 +163,7 @@ class LogicOptions:
         self.boats_of_time = boats_of_time
         self.jets_of_time = jets_of_time
         self.min_flight_depth = min_flight_depth
+        self.lock_gates = lock_gates
 
 
     @classmethod
@@ -235,8 +238,10 @@ class LogicOptions:
                 0, 6, 1, cls._default_min_flight_depth,
                 "Minimum logical depth at which flight can be obtained",
                 type_fn=int
+            ),
+            "lock_gates": argumenttypes.FlagArg(
+                "Gates require the Gate Key to operate."
             )
-
         }
 
     @classmethod
@@ -341,9 +346,11 @@ class LogicOptions:
             default=argparse.SUPPRESS
         )
 
-        cls.get_argument_spec()["min_flight_depth"].add_to_argparse(
-            "--min-flight-depth", group
-        )
+        for arg in ["min_flight_depth", "lock_gates"]:
+            cls.get_argument_spec()[arg].add_to_argparse(
+                argumenttypes.attr_name_to_arg_name(arg), group
+            )
+
 
     @ classmethod
     def extract_from_namespace(cls, namespace: argparse.Namespace):

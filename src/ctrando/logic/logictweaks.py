@@ -189,6 +189,72 @@ def apply_jets_of_time(
     blackbirdscaffolding.EventMod.add_flight_turn_in(script)
 
 
+def lock_portals(script_manager: ScriptManager):
+    @dataclasses.dataclass()
+    class PortalData:
+        loc_id: ctenums.LocID
+        portal_obj_id: int | None
+        activate_obj_id: int
+
+    # Note:
+    # The Dark Ages portal is sealed until Lavos falls in prehistory.
+    # That is a different locking mechanism which will not conflict.
+
+    portal_data_list = [
+        PortalData(ctenums.LocID.TELEPOD_EXHIBIT, 0xA, 0xA),
+        PortalData(ctenums.LocID.TRUCE_CANYON_PORTAL, 0xB, 0xB),
+        PortalData(ctenums.LocID.GUARDIA_FOREST_DEAD_END, 9, 9),
+        PortalData(ctenums.LocID.BANGOR_DOME, 0xB, 0xB),
+        PortalData(ctenums.LocID.PROTO_DOME_PORTAL, 0xB, 0xB),
+        PortalData(ctenums.LocID.MEDINA_PORTAL, None, 0xD),
+        PortalData(ctenums.LocID.MYSTIC_MTN_PORTAL, 0xB, 0xA),
+        PortalData(ctenums.LocID.LAIR_RUINS_PORTAL, 8, 9),
+        PortalData(ctenums.LocID.DARK_AGES_PORTAL, 0xB, 0xB)
+    ]
+
+    portal_load_block = (
+        EF()
+        .add_if_else(
+            EC.if_has_item(ctenums.ItemID.GATE_KEY),
+            EF().add(EC.load_npc(ctenums.NpcID.CLOSED_PORTAL)),
+            EF().add(EC.load_npc(ctenums.NpcID.SEALED_PORTAL))
+        )
+    )
+
+    for data in portal_data_list:
+        script = script_manager[data.loc_id]
+
+        if data.portal_obj_id is not None:
+            pos = script.find_exact_command(
+                EC.load_npc(ctenums.NpcID.CLOSED_PORTAL),
+                script.get_object_start(data.portal_obj_id)
+            )
+            script.insert_commands(
+                portal_load_block.get_bytearray(), pos
+            )
+            pos += len(portal_load_block)
+            script.delete_commands(pos, 1)
+
+        pos = script.get_function_start(data.activate_obj_id, FID.ACTIVATE)
+
+        sealed_str_id = script.add_py_string(
+            "{line break}   Requires Gate Key{null}"
+        )
+        script.insert_commands(
+            EF()
+            .add_if_else(
+                EC.if_has_item(ctenums.ItemID.GATE_KEY),
+                EF(),
+                EF()
+                .add(EC.auto_text_box(sealed_str_id))
+                .add(EC.return_cmd())
+            ).get_bytearray(), pos
+        )
+
+
+
+
+
 def apply_logic_tweaks(
         logic_options: logicoptions.LogicOptions,
         script_manager: ScriptManager
@@ -201,3 +267,6 @@ def apply_logic_tweaks(
 
     if logic_options.jets_of_time:
         apply_jets_of_time(logic_options, script_manager)
+
+    if logic_options.lock_gates:
+        lock_portals(script_manager)
