@@ -84,13 +84,8 @@ def decompress(rom, start):
 
                 copy_size += 3
                 for j in range(0, copy_size):
-                    try:
-                        out_buffer[out_pos + j] = \
-                            out_buffer[out_pos - copy_off + j]
-                    except IndexError:
-
-                        # print(out_pos + j)
-                        exit()
+                    out_buffer[out_pos + j] = \
+                        out_buffer[out_pos - copy_off + j]
 
                 out_pos += copy_size
                 src_pos += 2
