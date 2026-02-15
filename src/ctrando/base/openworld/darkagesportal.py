@@ -122,9 +122,19 @@ class EventMod(locationevent.LocEventMod):
         jump_cmd = EC.if_flag(memory.Flags.SKYWAYS_LOCKED)
         repl_cmd = EC.if_mem_op_value(cls.portal_unlocked_addr, OP.EQUALS, 0)
 
+        locked_str_id = script.add_py_string(
+            "{line break} Locked until Tyrano Lair Complete{null}"
+        )
+
         pos = script.get_function_start(0xA, FID.STARTUP)
         pos = script.find_exact_command(jump_cmd, pos)
         script.replace_jump_cmd(pos, repl_cmd)
+
+        pos = script.get_function_start(0xA, FID.ACTIVATE)
+        script.insert_commands(
+            EC.auto_text_box(locked_str_id).to_bytearray(), pos
+        )
+        script.set_function(0xA, FID.TOUCH, EF().add(EC.return_cmd()))
 
         pos = script.get_function_start(0xB, FID.STARTUP)
         pos = script.find_exact_command(jump_cmd)
