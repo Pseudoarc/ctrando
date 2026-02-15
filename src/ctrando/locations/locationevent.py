@@ -1202,6 +1202,8 @@ class LocationEvent:
     # This is for short removals
     def delete_commands(self, del_pos: int, num_commands: int = 1):
 
+        if num_commands <= 0:
+            return
         pos = del_pos
         cmd_len = 0
 
