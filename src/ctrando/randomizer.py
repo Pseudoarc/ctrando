@@ -349,11 +349,16 @@ def clean_scripts_for_tf(
         ctenums.LocID.DACTYL_NEST_SUMMIT,
         ctenums.LocID.MANORIA_SANCTUARY,
         ctenums.LocID.PROTO_DOME,
-        ctenums.LocID.QUEENS_ROOM_600
+        ctenums.LocID.QUEENS_ROOM_600,
+        ctenums.LocID.GUARDIA_LAWGIVERS_TOWER
     )
 
     for loc in bad_locs:
-        script = script_man[loc]
+        try:
+            script = script_man[loc]
+        except IndexError:
+            continue
+
         while True:
             pos, _ = script.find_command_opt(
                 [0xFC, 0xFD]
