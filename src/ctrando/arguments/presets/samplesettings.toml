@@ -180,8 +180,12 @@ boats_of_time=false  # Ferry to Choras.  With gate key ferry to 600AD destinatio
 
 # Adds a key item, JetsOfTime, which can be turned in on the Blackbird dock in Zeal for flight
 jets_of_time=true
+
 # Minimum logical depth at which flight can be obtained (Don't recommend much above 5)
 min_flight_depth=0
+
+# Gates require a gate key to traverse (default False)
+lock_gates = false
 
 ### Boss Rando Options
 # boss_randomization scheme
@@ -332,6 +336,7 @@ mark_charmable_enemies=true # Alter enemy names to indicate a charmable item
 
 # Entrance Shuffler Options: Options for how overworld entrances are shuffled.
 shuffle_entrances = false   # Shuffle the target of overworld entrances
+shuffle_gates = false       # Shuffle gate targets (requires shuffle_entrances)
 # preserve_spots = [PRESERVE_SPOTS ...]   # Spots which are to be shuffled among themselves.
 # rest_vanilla = false                    # Only shuffle locations specified by preserve_spots
 # vanilla_spots [VANILLA_SPOTS ...]       # Spots which are not shuffled.  Will take precedence over preserve_spots

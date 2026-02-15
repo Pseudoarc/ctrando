@@ -6,7 +6,7 @@ from ctrando.bosses import bosstypes as bty
 from ctrando.common import ctenums, distribution, memory
 from ctrando.common.random import RNGType
 from ctrando.treasures import treasuretypes as ttypes
-from ctrando.entranceshuffler import regionmap, maptraversal, entrancerandomizer
+from ctrando.entranceshuffler import regionmap, maptraversal, entrancerandomizer, portalshuffle
 
 
 def get_forced_key_items():
@@ -89,6 +89,10 @@ def get_key_item_fill(
         region_map = entrancerandomizer.get_shuffled_map_from_connectors(
             exit_connectors, region_connectors
         )
+
+        if entrance_options.shuffle_gates:
+            portal_assignment = portalshuffle.get_random_portal_assignment(rng)
+            portalshuffle.shuffle_map_portals(region_map, portal_assignment)
 
         # Find Regions with Nizbel/Retinite
         nizbel_regions = {

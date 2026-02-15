@@ -147,7 +147,7 @@ class RegionMap:
                                     region_connector.rule)
                 )
 
-        self.region_connectors = region_connectors
+        # self.region_connectors = region_connectors
 
     def get_treasure_group_dict(self) -> dict[str, list[ctenums.TreasureID]]:
         ret_dict: dict[str, list[ctenums.TreasureID]] = dict()

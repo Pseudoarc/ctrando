@@ -32,7 +32,8 @@ from ctrando import encounters
 from ctrando.enemyai import randofixes
 from ctrando.enemyscaling import patchscaling
 from ctrando.entranceshuffler import (
-    entrancefiller, entranceassign, regionmap, maptraversal, locregions
+    entrancefiller, entranceassign, regionmap, maptraversal, locregions,
+    portalshuffle
 )
 from ctrando.entranceshuffler.entrancefiller import update_starting_rewards
 from ctrando.items import gearrando, itemdata
@@ -162,6 +163,7 @@ def extract_settings(*in_args: str) -> arguments.Settings:
     args = parser.parse_args(list(in_args) + additional_args)
 
     settings = arguments.Settings.extract_from_namespace(args)
+    # print(f"Seed: {settings.general_options.seed}")
     return settings
 
 
@@ -505,6 +507,10 @@ def get_ctrom_from_config(
         config.ow_exit_assignment_dict,
         post_config.loc_exit_dict
     )
+
+    if settings.entrance_options.shuffle_gates:
+        portalshuffle.modify_all_portal_scripts(
+            config.region_map, post_config.script_manager)
 
     ### Replace rstate.update_ct_rom()
     start = chesttext.write_desc_strings(ct_rom, config.item_db)

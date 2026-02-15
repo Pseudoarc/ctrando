@@ -50,7 +50,8 @@ class EntranceShufflerOptions:
             "vanilla_spots": aty.arg_multiple_from_enum(
                 OWExit, cls._default_vanilla_spots,
                 "Spots guaranteed to not be shuffled. Takes precedence over preserve_spots"
-            )
+            ),
+            "shuffle_gates": aty.FlagArg("Shuffle where (non-algetty) portals lead to")
         }
 
     def __init__(
@@ -59,6 +60,7 @@ class EntranceShufflerOptions:
             preserve_spots: tuple[OWExit, ...] = _default_preserve_spots,
             vanilla_spots: tuple[OWExit, ...] = _default_vanilla_spots,
             rest_vanilla: bool = False,
+            shuffle_gates: bool = False
     ):
         self.shuffle_entrances = shuffle_entrances
 
@@ -79,6 +81,8 @@ class EntranceShufflerOptions:
             self.vanilla_spots = tuple(
                 x for x in total_spots if x not in preserve_spots
             )
+
+        self.shuffle_gates = shuffle_gates
 
     @classmethod
     def add_group_to_parser(cls, parser: argparse.ArgumentParser):
@@ -117,16 +121,17 @@ class EntranceShufflerOptions:
             default=argparse.SUPPRESS
         )
 
-        # group.add_argument(
-        #     "--preserve-shops",
-        #     action="store_true",
-        #     help="Shuffle shop exits among themselves.",
-        #     default=argparse.SUPPRESS
-        # )
+        group.add_argument(
+            "--shuffle-gates",
+            action="store_true",
+            help="Shuffle where (non-algetty) portals lead",
+            default=argparse.SUPPRESS
+        )
 
     @classmethod
     def extract_from_namespace(cls, namespace: argparse.Namespace) -> typing.Self:
         attr_names = [
-            "shuffle_entrances", "preserve_spots", "vanilla_spots", "rest_vanilla"  # "preserve_dungeons", "preserve_shops"
+            "shuffle_entrances", "preserve_spots", "vanilla_spots", "rest_vanilla",
+            "shuffle_gates"  # "preserve_dungeons", "preserve_shops"
         ]
         return aty.extract_from_namespace(cls, arg_names=attr_names, namespace=namespace)
