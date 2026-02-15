@@ -370,12 +370,20 @@ def fix_boss_sprites_given_assignment(
     if arris_boss != bty.BossID.GUARDIAN:
         change_enemy_sprite(ctenums.EnemyID.GUARDIAN, ctenums.EnemyID.NU, True)
 
-    woe_boss = boss_dict[bty.BossSpotID.MT_WOE]
-    if woe_boss != bty.BossID.GIGA_GAIA:
+    change_giga_gaia = change_tyrano = False
+
+    for spot, boss in boss_dict.items():
+        if boss == bty.BossID.GIGA_GAIA and spot != bty.BossSpotID.MT_WOE:
+            change_giga_gaia = True
+
+        if boss == bty.BossID.RUST_TYRANO and spot != bty.BossSpotID.GIANTS_CLAW:
+            change_tyrano = True
+
+
+    if change_giga_gaia:
         enemy_sprite_dict[ctenums.EnemyID.GIGA_GAIA_HEAD].set_affect_layer_1(False)
 
-    claw_boss = boss_dict[bty.BossSpotID.GIANTS_CLAW]
-    if claw_boss != bty.BossID.RUST_TYRANO:
+    if change_tyrano:
         enemy_sprite_dict[ctenums.EnemyID.RUST_TYRANO].set_affect_layer_1(False)
 
     bad_mud_imp_spots = (
