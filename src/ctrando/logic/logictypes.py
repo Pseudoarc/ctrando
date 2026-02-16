@@ -157,7 +157,7 @@ class LogicRule:
         self._rules: list[SingleRule]
 
         if initial_rules is None:
-            self._rules = []
+            self._rules = [[]]
         else:
             if all(isinstance(x,enum.Enum) for x in initial_rules):
                 initial_rules = [initial_rules]
