@@ -28,10 +28,13 @@ def add_objectives_to_map(
         if isinstance(objective, QuestID):
             obj_tokens.append([objective])
         elif isinstance(objective, bty.BossID):
-            obj_tokens.append([
+            spots = [
                 spot for spot, boss in boss_assign_dict.items()
                 if boss == objective
-            ])
+            ]
+            if not spots:
+                raise ValueError("Missing Boss")
+            obj_tokens.append(spots)
         elif objective is None:
             obj_tokens.append([])
         else:
