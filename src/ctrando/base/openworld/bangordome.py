@@ -22,6 +22,7 @@ class EventMod(locationevent.LocEventMod):
         - Remove cutscene on first entry
         - Change EoT access condition
         - Change charged pendant condition
+        - Move pillar flag so it always triggers on portal activation
         """
 
         # Easiest to just set the flag for having viewed the cutscene
@@ -43,10 +44,17 @@ class EventMod(locationevent.LocEventMod):
         )
 
         pos = script.get_function_start(0xB, FID.ACTIVATE)
-        pos = script.find_exact_command(EC.if_storyline_counter_lt(0x48))
+        pos = script.find_exact_command(EC.if_storyline_counter_lt(0x48), pos)
         # The conditional block has the normal mode, so check can_eot == 0
         script.replace_jump_cmd(pos, EC.if_mem_op_value(cls.can_eot_addr, OP.EQUALS, 0))
 
+        # Move pillar flag to before the portal opens
+        flag_cmd = EC.set_flag(memory.Flags.HAS_BANGOR_PORTAL)
+        script.insert_commands(flag_cmd.to_bytearray(), pos)
+        pos += len(flag_cmd)
+
+        pos = script.find_exact_command(flag_cmd, pos)
+        script.delete_commands(pos, 1)
 
         # Fix exploremode after portal
         pos = script.find_exact_command(EC.party_follow(),

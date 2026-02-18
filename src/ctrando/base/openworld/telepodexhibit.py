@@ -19,7 +19,7 @@ class EventMod(locationevent.LocEventMod):
         """
         Modify Telepod Exhibit for open world.
         - Remove storyline-dependent cutscenes (Marle vanish, 1st return)
-        -
+        - Move pillar flag to before portal activation
         """
         cls.remove_initial_cutscene(script)
         cls.remove_return_cutscene(script)
@@ -97,6 +97,14 @@ class EventMod(locationevent.LocEventMod):
         script.insert_commands(
             owu.get_can_eot_func(cls.temp_addr, cls.can_eot_addr).get_bytearray(), pos
         )
+
+        # Always trigger pillar flag
+        flag_cmd = EC.set_flag(memory.Flags.HAS_TRUCE_PORTAL)
+        script.insert_commands(flag_cmd.to_bytearray(), pos)
+        pos += len(flag_cmd)
+
+        pos = script.find_exact_command(flag_cmd, pos)
+        script.delete_commands(pos, 1)
 
     @classmethod
     def remove_extras(cls, script: locationevent.LocationEvent):

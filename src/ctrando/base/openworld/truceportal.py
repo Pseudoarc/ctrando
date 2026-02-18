@@ -73,3 +73,11 @@ class EventMod(locationevent.LocEventMod):
             owu.get_can_eot_func(cls.temp_addr, cls.can_eot_addr).get_bytearray(),
             pos
         )
+
+        # Always trigger pillar flag
+        flag_cmd = EC.set_flag(memory.Flags.HAS_TRUCE_PORTAL)
+        script.insert_commands(flag_cmd.to_bytearray(), pos)
+        pos += len(flag_cmd)
+
+        pos = script.find_exact_command(flag_cmd, pos)
+        script.delete_commands(pos, 1)

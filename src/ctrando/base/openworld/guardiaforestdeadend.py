@@ -20,6 +20,7 @@ class EventMod(locationevent.LocEventMod):
         - Always show the portal.
         - Remove storyline checks/the escape cutscene
         - Change the requirements for visiting EoT
+        - Move pillar flag so it always triggers
         """
         cls.modify_storyline_triggers(script)
         cls.modify_sealed_box(script)
@@ -82,6 +83,14 @@ class EventMod(locationevent.LocEventMod):
         # back to the just-removed block.
         script.delete_commands(pos, 2)
 
+        # Remove the portal entering part of the cutscene because it complicates
+        # other portal-related modifications.
+        pos = script.find_exact_command(
+            EC.if_mem_op_value(0x7F0214, OP.EQUALS, 1),
+            pos
+        )
+        script.delete_jump_block(pos)
+
         # Next is the check for whether the portal should go to EoT
         pos = script.find_exact_command(
             EC.if_mem_op_value(0x7F0000, OP.GREATER_OR_EQUAL, 0x48), pos
@@ -91,3 +100,11 @@ class EventMod(locationevent.LocEventMod):
             owu.get_can_eot_func(0x7F0222, 0x7F0220).get_bytearray(),
             pos
         )
+
+        # Move the pillar flag command
+        flag_cmd = EC.set_flag(memory.Flags.HAS_BANGOR_PORTAL)
+        script.insert_commands(flag_cmd.to_bytearray(), pos)
+        pos += len(flag_cmd)
+
+        pos =  script.find_exact_command(flag_cmd, pos)
+        script.delete_commands(pos, 1)

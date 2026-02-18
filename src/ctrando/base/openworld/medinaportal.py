@@ -69,7 +69,6 @@ class EventMod(locationevent.LocEventMod):
         """
         Make the portal go to EoT with gate key and >= 4 characters.  Otherwise,
         it goes to Prehistory.
-        TODO: Add Epoch relocation commands.
         """
 
         # Put a portal-ready check in obj00, activate
