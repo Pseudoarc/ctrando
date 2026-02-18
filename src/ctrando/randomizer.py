@@ -299,12 +299,8 @@ def get_random_config(
     objectivelogic.add_objectives_to_map(config.objectives, config.boss_assignment_dict,
                                          settings.objective_options, region_map)
 
-
     config.ow_exit_assignment_dict = entrance_assignment
     config.region_map = region_map
-    # for key, val in entrance_assignment.items():
-    #     print(key, val)
-    # input()
 
     ### Treasure Fill
     exclude_pool = [

@@ -71,31 +71,25 @@ def update_portal_activation(
         script: LocationEvent,
         script_exit_info: ScriptExitInfo,
         orig_flag: memory.Flags | None,
-        new_flag: memory.Flags,
+        new_flags: Sequence[memory.Flags],
         new_change_location_cmd: EC,
-        set_dark_ages_flag: bool = False,
         num_del_commands: int = 1,
 ):
 
     pos, end = script.get_function_bounds(
         script_exit_info.obj_id, script_exit_info.func_id)
 
-    # If there is no old flag to delete, insert the flags right before the EoT transition
+    # If there is no old flag to delete, insert the flags when the portal appears
     if orig_flag is None:
-        while True:
-            pos, cmd = script.find_command(EC.change_loc_commands, pos, end)
-            if cmd.args[0] & 0x01FF == ctenums.LocID.END_OF_TIME:
-                break
-
-            pos += len(cmd)
+        # The first 0xFF command opens the portal.
+        # Guaranteed to be a successful portal activation
+        pos, _ = script.find_command([0xFF], pos, end)
     else:
         pos = script.find_exact_command(EC.set_flag(orig_flag), pos, end)
 
     new_block = EF()
-    if new_flag is not None:
-        new_block.add(EC.set_flag(new_flag))
-    if set_dark_ages_flag:
-        new_block.add(EC.set_flag(memory.Flags.HAS_DARK_AGES_TIMEGAUGE_ACCESS))
+    for flag in new_flags:
+        new_block.add(EC.set_flag(flag))
 
     script.insert_commands(new_block.get_bytearray(), pos)
     pos += len(new_block)
@@ -125,7 +119,7 @@ _orig_flag_data_dict: dict[PortalExits, PortalFlagData] = {
     PortalExits.GUARDIA_FOREST: PortalFlagData(memory.Flags.HAS_BANGOR_PORTAL, 1),
     PortalExits.BANGOR_DOME: PortalFlagData(memory.Flags.HAS_BANGOR_PORTAL, 1),
     PortalExits.DARK_AGES_CAVE: PortalFlagData(memory.Flags.HAS_DARK_AGES_PORTAL, 1),
-    PortalExits.LAIR_RUINS: PortalFlagData(memory.Flags.HAS_LAIR_RUINS_PORTAL, 3)
+    PortalExits.LAIR_RUINS: PortalFlagData(memory.Flags.HAS_LAIR_RUINS_PORTAL, 2)
 }
 
 def update_portal_activation_scripts(
@@ -145,31 +139,35 @@ def update_portal_activation_scripts(
     eot_portal: PortalExits = PortalExits.PROTO_DOME
 
     for (portal1, portal2), pillar_flag in zip(portal_pairs, flags):
+        new_flags: list[memory.Flags] = []
+        if pillar_flag is not None:
+            new_flags.append(pillar_flag)
+
         if portal1 == portal2:  # EoT
             script = script_manager[portal1.value.loc_id]
             flag_data = _orig_flag_data_dict[portal1]
             update_portal_activation(
                 script, portal1.value,
-                flag_data.flag, pillar_flag,
-                eot_command, False,
+                flag_data.flag, new_flags,
+                eot_command,
                 flag_data.num_delete
             )
             if portal1 != PortalExits.PROTO_DOME:
                 eot_portal = portal1
         else:
             it = itertools.permutations((portal1, portal2))
-            set_da_flag = False
-            if PortalExits.LAIR_RUINS in (portal1, portal2):
-                set_da_flag = True
             for (source, target) in it:
                 script = script_manager[source.value.loc_id]
+                source_flags = list(new_flags)
+                if source == PortalExits.LAIR_RUINS:
+                    source_flags.append(memory.Flags.HAS_LAIR_RUINS_PORTAL)
+
                 flag_data = _orig_flag_data_dict[source]
-                loc_cmd = change_loc_commands_dict[target]
                 update_portal_activation(
                     script, source.value,
-                    flag_data.flag, pillar_flag,
+                    flag_data.flag, source_flags,
                     change_loc_commands_dict[target],
-                    set_da_flag, flag_data.num_delete
+                    flag_data.num_delete
                 )
     if eot_portal != PortalExits.PROTO_DOME:
         make_proto_portal_normal(script_manager, eot_command)
@@ -502,7 +500,8 @@ def shuffle_map_portals(
     ]
 
     # Note Dark Ages/Lair Ruins portal flags are combined now.
-    # Because entrance rando is on, Tyrano Lair is always destroyed
+    # Traveling to Lair Ruins portal may require a house warp to escape if
+    # the lair is not yet destroyed.
     portal_target_regions = set(_portal_region_dict.values())
     portal_target_regions.add("end_of_time")
 
@@ -545,6 +544,11 @@ def shuffle_map_portals(
             # Add new portal connectors
             target_portal = pair[(ind + 1) % true_len]
             target_region_name = _portal_region_dict[target_portal]
+
+            normal_rule = portal_rule
+            if target_portal == PortalExits.LAIR_RUINS:
+                normal_rule = portal_rule & logictypes.LogicRule([memory.Flags.OW_LAVOS_HAS_FALLEN])
+
             if portal == target_portal:  #
                 new_connectors = [
                     regionmap.RegionConnector(
@@ -563,7 +567,7 @@ def shuffle_map_portals(
                     regionmap.RegionConnector(
                         portal_region_name, target_region_name,
                         f"portal_{portal_region_name}_to_{target_region_name}",
-                        portal_rule, reversible=False
+                        normal_rule, reversible=False
                     )
                 ]
             region_map.name_connector_dict[map_region_name].extend(new_connectors)
@@ -625,10 +629,8 @@ def modify_all_portal_scripts(
     #     PortalExits.DARK_AGES_CAVE: PortalExits.MEDINA_CLOSET,
     # }
     portal_assignment = find_portal_assignment(region_map)
-
     portal_pairs = get_portal_pairs(portal_assignment)
     assigned_portal_flags = get_pair_flags(portal_pairs, region_map)
 
     update_portal_activation_scripts(script_manager, portal_pairs, assigned_portal_flags)
     rewrite_eot_pillars(script_manager, portal_pairs, assigned_portal_flags)
-

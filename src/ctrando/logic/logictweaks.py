@@ -252,9 +252,6 @@ def lock_portals(script_manager: ScriptManager):
         )
 
 
-
-
-
 def apply_logic_tweaks(
         logic_options: logicoptions.LogicOptions,
         script_manager: ScriptManager
