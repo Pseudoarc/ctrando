@@ -9,7 +9,7 @@ from ctrando.asm import assemble
 from ctrando.asm import instructions as inst, assemble
 from ctrando.characters import ctpcstats
 from ctrando.common import byteops, ctrom, freespace, memory, ctenums, randostate, asmpatcher
-from ctrando.base import apply_openworld, apply_openworld_ow, chesttext, modifyitems
+from ctrando.base import apply_openworld, apply_openworld_ow, chesttext, modifyitems, disablecharacter
 from ctrando.base import decompressed_graphics
 
 def apply_tf_compressed_enemy_gfx_hack(ct_rom: ctrom.CTRom):
@@ -1165,6 +1165,7 @@ def base_patch_ct_rom(ct_rom: ctrom.CTRom):
     alter_event_or_operation(ct_rom)
     set_storyline_thresholds(ct_rom)
     add_boss_counter_to_rewards(ct_rom)
+    disablecharacter.lock_characters(ct_rom)
     chesttext.add_get_desc_char(ct_rom, 0)
     modifyitems.normalize_hp_accessories(ct_rom)
     modifyitems.normalize_mp_accessories(ct_rom)

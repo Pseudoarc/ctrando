@@ -1495,7 +1495,8 @@ class ItemDB:
             self.update_description(item_id)
 
     def update_description(self, item_id):
-        if item_id == ctenums.ItemID.NONE:
+        bad_items = (ctenums.ItemID.NONE, ctenums.ItemID.PACIFIST)
+        if item_id in bad_items:
             return
 
         item = self.item_dict[item_id]

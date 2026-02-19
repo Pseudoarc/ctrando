@@ -103,6 +103,11 @@ class ConfigState:
         item_db[ctenums.ItemID.SCALING_LEVEL].secondary_stats.is_key_item = True
         item_db[ctenums.ItemID.SCALING_LEVEL].secondary_stats.is_unsellable = True
 
+        remove_item = item_db[ctenums.ItemID.PACIFIST]
+        remove_item.set_name_from_str("{fist}Pacifist")
+        remove_item.set_desc_from_str("Remove character from battle")
+        remove_item.secondary_stats.set_equipable_by(list(ctenums.CharID))
+
         pcstat_manager = ctpcstats.PCStatsManager.read_from_ct_rom(ct_rom)
         characterwriter.fill_vanilla_tp_gaps(pcstat_manager)
 

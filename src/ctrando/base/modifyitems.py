@@ -84,8 +84,6 @@ def update_boosts(item_db: itemdata.ItemDB):
     boost.magnitude = 20
 
 
-
-
 def modify_item_stats(
         item_man: itemdata.ItemDB
 ):

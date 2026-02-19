@@ -28,6 +28,19 @@ class Memory(enum.IntEnum):
     EPOCH_MAP_LO = 0x7E029F
     EPOCH_MAP_HI = 0x7E02A0
     OW_STORYLINE_COUNTER = 0x7E1BA6
+    # Appears [0x7E01EE0, 0x7E01EF0) is free
+    # Used by MSU-1 hack
+    MSU_CURRENT_SONG = 0x7E1EE0
+    MSU_FADE_COUNT = 0x7E1EE1
+    MSU_FADE_VOLUME = 0x7E1EE2
+    MSU_FADE_STEP = 0x7E1EE4
+    MSU_COUNTER = 0x7E1EE6
+    MSU_FRAME_COUNTER = 0x7E1EE8
+    MSU_IN_COMBAT_HACK = 0x7E1EE9
+    # Copy of Character IDs for paci-fist
+    COPY_PC_1 = 0x7E1EED
+    COPY_PC_2 = 0x7E1EEE
+    COPY_PC_3 = 0x7E1EEF
     # Free Memory from Jets Time Gauge: [0x7E2881, 0x7E2980)
     SCALING_LEVEL = 0x7E2881
     ORIGINAL_LEVEL_TEMP = 0x7E2882
