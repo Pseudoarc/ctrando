@@ -187,6 +187,10 @@ min_flight_depth=0
 # Gates require a gate key to traverse (default False)
 lock_gates = false
 
+# Nizbel and Retinite do not logically require elements.
+# Their stats are adjusted to compensate
+disable_element_locks = false
+
 ### Boss Rando Options
 # boss_randomization scheme
 #  - "vanilla": Keep all bosses in their vanilla locations
