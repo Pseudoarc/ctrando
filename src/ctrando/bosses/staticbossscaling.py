@@ -169,3 +169,22 @@ def modify_poison_immunity(
         parts = set(part.enemy_id for part in scheme.parts)
         for part in parts:
             enemy_data_dict[part].set_is_immune(ctenums.StatusEffect.POISON, False)
+
+
+def remove_element_softlocks(
+        enemy_data_dict: dict[ctenums.EnemyID, enemystats.EnemyStats]
+):
+    """
+    Make Nizbel and Retinite defeatable without the right element.
+    """
+
+    nizbel_stats = enemy_data_dict[ctenums.EnemyID.NIZBEL]
+    nizbel_stats.defense = 0xC0
+    nizbel_stats.mdef = 75
+
+    for enemy_id in (ctenums.EnemyID.RETINITE_TOP, ctenums.EnemyID.RETINITE_BOTTOM):
+        stats = enemy_data_dict[enemy_id]
+        stats.evade = 50
+        stats.defense = 0xC0
+
+

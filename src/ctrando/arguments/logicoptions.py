@@ -127,7 +127,7 @@ class LogicOptions:
         "incentive_factor", "excluded_spots", "decay_factor",
         "hard_lavos_end_boss", "starter_rewards", "out_of_logic_starter_rewards",
         "force_early_flight", "boats_of_time", "jets_of_time", "min_flight_depth",
-        "lock_gates"
+        "lock_gates", "disable_element_locks"
     )
     name: typing.ClassVar[str] = "Logic Options"
     description: typing.ClassVar[str] = "Options for the distribution of key items"
@@ -147,7 +147,8 @@ class LogicOptions:
             boats_of_time: bool = False,
             jets_of_time: bool = False,
             min_flight_depth: int = _default_min_flight_depth,
-            lock_gates: bool = False
+            lock_gates: bool = False,
+            disable_element_locks: bool = False,
     ):
         self.additional_key_items = sorted(additional_key_items)
         self.forced_spots = forced_spots
@@ -164,6 +165,7 @@ class LogicOptions:
         self.jets_of_time = jets_of_time
         self.min_flight_depth = min_flight_depth
         self.lock_gates = lock_gates
+        self.disable_element_locks = disable_element_locks
 
 
     @classmethod
@@ -241,7 +243,11 @@ class LogicOptions:
             ),
             "lock_gates": argumenttypes.FlagArg(
                 "Gates require the Gate Key to operate."
+            ),
+            "disable_element_locks": argumenttypes.FlagArg(
+                "Remove elemental requirement from Nizbel and Retinite"
             )
+
         }
 
     @classmethod
@@ -346,7 +352,7 @@ class LogicOptions:
             default=argparse.SUPPRESS
         )
 
-        for arg in ["min_flight_depth", "lock_gates"]:
+        for arg in ["min_flight_depth", "lock_gates", "disable_element_locks"]:
             cls.get_argument_spec()[arg].add_to_argparse(
                 argumenttypes.attr_name_to_arg_name(arg), group
             )

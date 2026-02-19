@@ -66,6 +66,7 @@ def get_key_item_fill(
 
 
     # Precompute BossSpots which have Nizbel or Retinite
+    # Only needed with element locks
     nizbel_spots = {
         spot for spot, boss in boss_assignment.items()
         if boss in (bty.BossID.NIZBEL,)
@@ -95,23 +96,24 @@ def get_key_item_fill(
             portalshuffle.shuffle_map_portals(region_map, portal_assignment)
 
         # Find Regions with Nizbel/Retinite
-        nizbel_regions = {
-            region_name for region_name, loc_region in region_map.loc_region_dict.items()
-            if nizbel_spots.intersection(loc_region.reward_spots)
-        }
+        if not logic_options.disable_element_locks:
+            nizbel_regions = {
+                region_name for region_name, loc_region in region_map.loc_region_dict.items()
+                if nizbel_spots.intersection(loc_region.reward_spots)
+            }
 
-        retinite_regions = {
-            region_name for region_name, loc_region in region_map.loc_region_dict.items()
-            if retinite_spots.intersection(loc_region.reward_spots)
-        }
+            retinite_regions = {
+                region_name for region_name, loc_region in region_map.loc_region_dict.items()
+                if retinite_spots.intersection(loc_region.reward_spots)
+            }
 
-        # Update Nizbel/Retinite Rules
-        for connector_list in region_map.name_connector_dict.values():
-            for connector in connector_list:
-                if connector.to_region_name in nizbel_regions:
-                    connector.rule &= nizbel_rule
-                elif connector.to_region_name in retinite_regions:
-                    connector.rule &= retinite_rule
+            # Update Nizbel/Retinite Rules
+            for connector_list in region_map.name_connector_dict.values():
+                for connector in connector_list:
+                    if connector.to_region_name in nizbel_regions:
+                        connector.rule &= nizbel_rule
+                    elif connector.to_region_name in retinite_regions:
+                        connector.rule &= retinite_rule
 
         # Starting Rewards
         region_map.loc_region_dict["starting_rewards"].region_rewards.extend(

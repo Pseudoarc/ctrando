@@ -476,6 +476,9 @@ def get_ctrom_from_config(
         settings.battle_rewards.xp_tp_rewards.fix_tp_doubling
     )
 
+    if settings.logic_options.disable_element_locks:
+        staticbossscaling.remove_element_softlocks(config.enemy_data_dict)
+
     staticbossscaling.scale_boss_hp(
         config.enemy_data_dict, post_config.enemy_ai_manager,
         settings.scaling_options.static_scaling_options.static_boss_hp_scale,
