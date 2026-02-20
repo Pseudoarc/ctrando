@@ -185,6 +185,6 @@ def remove_element_softlocks(
     for enemy_id in (ctenums.EnemyID.RETINITE_TOP, ctenums.EnemyID.RETINITE_BOTTOM):
         stats = enemy_data_dict[enemy_id]
         stats.evade = 50
-        stats.defense = 0xC0
+        stats.defense = 0xA0
 
 
