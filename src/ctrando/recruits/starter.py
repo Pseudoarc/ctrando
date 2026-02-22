@@ -52,7 +52,7 @@ def assign_pc_to_spot(
         .add(EC.assign_val_to_mem(
             bitmask,
             memory.Memory.RECRUITED_CHARACTERS, 1)
-        ).append(scale_block)
+        )
         .add(EC.return_cmd())
     )
     # A little clunky.  Finds the second big memset command and writes
