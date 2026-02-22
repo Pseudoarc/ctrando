@@ -416,6 +416,7 @@ class MultipleDiscreteSelection[_T]:
             help_text: str,
             choice_from_str_fn: Callable[[str], _T] | None = None,
             str_from_choice_fn: Callable[[_T], str] | None = None,
+            allow_duplicates: bool = False
     ):
         self.choices = list(choices)
         self.default_value = list(default_value)
@@ -491,7 +492,8 @@ def arg_multiple_from_enum(
         default_value: Iterable[_ET],
         help_text: str,
         force_enum_names: bool = False,
-        available_pool: Iterable[_ET] = None
+        available_pool: Iterable[_ET] = None,
+        allow_duplicates: bool = False
 ):
     if available_pool is not None:
         pool = list(available_pool)
@@ -515,7 +517,8 @@ def arg_multiple_from_enum(
     return MultipleDiscreteSelection(
         pool, default_value, help_text,
         choice_from_str_fn=choice_from_str_fn,
-        str_from_choice_fn=str_from_choice_fn
+        str_from_choice_fn=str_from_choice_fn,
+        allow_duplicates=allow_duplicates
     )
 
 # type ArgSpec = dict[str, Argument | ArgSpec]

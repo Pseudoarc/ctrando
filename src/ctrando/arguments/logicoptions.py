@@ -176,7 +176,8 @@ class LogicOptions:
                 "Extra (non-progression) items to add to the key item pool",
                 available_pool=[
                     x for x in ctenums.ItemID if x not in shopoptions.ShopOptions.unused_items
-                ]
+                ],
+                allow_duplicates=True
             ),
             "forced_spots": argumenttypes.arg_multiple_from_enum(
                 ctenums.TreasureID, cls._default_forced_spots,
@@ -187,7 +188,8 @@ class LogicOptions:
                 "Key items to place randomly instead of in forced spots (when more items then spots)",
                 available_pool=[
                     x for x in ctenums.ItemID if x not in shopoptions.ShopOptions.unused_items
-                ]
+                ],
+                allow_duplicates=True
             ),
             "incentive_spots": argumenttypes.arg_multiple_from_enum(
                 ctenums.TreasureID, cls._default_incentive_spots,
@@ -214,7 +216,8 @@ class LogicOptions:
                 ] + list(_reward_dict.values()),
                 cls._default_starter_rewards,
                 "Rewards to grant at game start",
-                str_to_reward, reward_to_str
+                str_to_reward, reward_to_str,
+                allow_duplicates=True
             ),
             "out_of_logic_starter_rewards": argumenttypes.MultipleDiscreteSelection(
                 [
@@ -222,7 +225,8 @@ class LogicOptions:
                 ] + list(_reward_dict.values()),
                 cls._default_out_of_logic_starter_rewards,
                 "Rewards to grant at game start which are not considered by logic",
-                str_to_reward, reward_to_str
+                str_to_reward, reward_to_str,
+                allow_duplicates=True
             ),
             # "force_early_flight": argumenttypes.FlagArg(
             #     "The JetsOfTime will be guaranteed in a pre-flight location"
