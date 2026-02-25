@@ -431,6 +431,7 @@ class MultipleDiscreteSelection[_T]:
 
         self.choice_from_str_fn = wrap_choice_from_str
         self.str_from_choice_fn = str_from_choice_fn
+        self.allow_duplicates = allow_duplicates
 
     def add_to_argparse(
             self,
