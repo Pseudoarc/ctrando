@@ -1123,6 +1123,24 @@ def write_scripts_to_ct_rom(ct_rom: ctrom.CTRom):
     burst_ball_script.write_to_ctrom(ct_rom, NewScriptID.BURST_BALL)
 
 
+class AnimationScriptManager:
+    """Class for reading/writing tech animation scripts"""
+
+    def __init__(self, init_script_dict: dict[int, AnimationScript] | None = None):
+        if init_script_dict is None:
+            init_script_dict: dict[int, AnimationScript] = dict()
+
+        self.script_dict = init_script_dict
+
+    def load_from_ctrom(self, index: int):
+        script = AnimationScript.read_from_ctrom(index)
+        self.script_dict[index] = script
+
+    def write_to_ctrom(self, ct_rom: ctrom.CTRom):
+        for ind, script in self.script_dict.items():
+            script.write_to_ctrom(ct_rom, ind)
+
+
 def main():
     from ctrando.base import basepatch
     from ctrando.postrando import palettes

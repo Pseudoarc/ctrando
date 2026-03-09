@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 
 from ctrando.characters import characterwriter
 from ctrando.shops import shoptypes
-from ctrando.attacks import pctech
+from ctrando.attacks import pctech, animationscript
 from ctrando.bosses import bosstypes, bossrando
 from ctrando.enemyai import enemyaimanager, vanillafixes
 from ctrando.enemydata import enemystats
@@ -78,6 +78,7 @@ class ConfigState:
     starting_rewards: list[logictypes.RewardType]
     objectives: list[objectivetypes.ObjectiveType]
     enemy_assign_dict: dict[ctenums.EnemyID, ctenums.EnemyID]
+    animation_script_manager: animationscript.AnimationScriptManager
 
     @classmethod
     def get_default_config_from_ctrom(cls, ct_rom: ctrom.CTRom):
@@ -138,11 +139,14 @@ class ConfigState:
         objectives = [None for _ in range(8)]
         enemy_assign_dict: dict[ctenums.EnemyID, ctenums.EnemyID] = dict()
 
+        animation_script_manager = animationscript.AnimationScriptManager()
+
         return cls(
             item_db, treasure_assignment, pcstat_manager,
             pctech_manager, enemy_data_dict, boss_assignment_dict,
             shop_manager, recruit_dict, ow_exit_assignment_dict, region_map,
-            starting_rewards, objectives, enemy_assign_dict
+            starting_rewards, objectives, enemy_assign_dict,
+            animation_script_manager
         )
 
 

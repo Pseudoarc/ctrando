@@ -46,6 +46,7 @@ from ctrando.treasures import treasureassign, treasuretypes as ttypes
 
 from ctrando.effects import effecttypes
 
+from ctrando.attacks import elementrando
 
 # Should move this into patchscaling
 def apply_dynamic_scaling(
@@ -163,7 +164,7 @@ def extract_settings(*in_args: str) -> arguments.Settings:
     args = parser.parse_args(list(in_args) + additional_args)
 
     settings = arguments.Settings.extract_from_namespace(args)
-    # print(f"Seed: {settings.general_options.seed}")
+    print(f"Seed: {settings.general_options.seed}")
     return settings
 
 
@@ -198,6 +199,20 @@ def get_random_config(
         staticbossscaling.modify_poison_immunity(config.enemy_data_dict)
 
     ### Techs
+    working_rom = ctrom.CTRom(input_rom.getvalue())
+    basepatch.mark_initial_free_space(working_rom)
+    basepatch.apply_mauron_player_tech_patch(working_rom)
+
+    elem_assign = {
+        ctenums.CharID.CRONO: elementrando.TechElement.WATER,
+        ctenums.CharID.MARLE: elementrando.TechElement.LIGHTNING,
+        ctenums.CharID.LUCCA: elementrando.TechElement.ICE,
+    }
+    elementrando.get_reassign_techs(config.pctech_manager, config.animation_script_manager,
+                                    elem_assign, working_rom)
+    # elementrando.get_tech_names(config.pctech_manager)
+    # elementrando.test_scripts(config.pctech_manager, config.animation_script_manager,
+    #                           working_rom)
     pctechrandomizer.modify_all_single_tech_powers(
         config.pctech_manager, settings.tech_options, rng
     )
@@ -421,7 +436,8 @@ def get_ctrom_from_config(
     print("Setting Random Data...", end="")
     a = time.time()
 
-    randofixes.fix_movement_locks(post_config.enemy_ai_manager)
+    # The lock was probably caused by bad tile copying
+    # randofixes.fix_movement_locks(post_config.enemy_ai_manager)
     # Slash AI
     for tech_id in range(1, 9):
         if config.pctech_manager.get_tech(tech_id).name == "Slash":
@@ -560,6 +576,7 @@ def get_ctrom_from_config(
     config.pctech_manager.write_to_ctrom(ct_rom,
                                          settings.tech_options.black_hole_factor,
                                          settings.tech_options.black_hole_min)
+    config.animation_script_manager.write_to_ctrom(ct_rom)
 
     for enemy_id, enemy_stats in config.enemy_data_dict.items():
         enemy_stats.write_to_ctrom(ct_rom, enemy_id)
@@ -802,7 +819,7 @@ def main():
 
     # import time
     # x = time.time()
-    out_rom = get_ctrom_from_config(ct_rom, settings, config, make_tf_friendly=False)
+    out_rom = get_ctrom_from_config(ct_rom, settings, config, make_tf_friendly=True)
     # y = time.time()
     # print(y-x)
 

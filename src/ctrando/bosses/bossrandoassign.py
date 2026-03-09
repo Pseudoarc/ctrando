@@ -854,13 +854,33 @@ def assign_arris_dome_boss(
     script = script_manager[loc_id]
 
     # Copy L1 and L3 (needed?) tiles over guardian's body
-    copy_cmd = EC.copy_tiles(
-        3, 0x11, 0xC, 0x1C, 3, 2,
-        copy_l1=True, copy_l3=True, copy_props=True,
-        unk_0x10=True, unk_0x20=True, wait_vblank=True
+    # copy_cmd = EC.copy_tiles(
+    #     3, 0x11, 0xC, 0x1C, 3, 2,
+    #     copy_l1=True, copy_l3=True, copy_props=True,
+    #     unk_0x10=True, unk_0x20=True, wait_vblank=True
+    # )
+    copy_block = (
+        EF()
+        .add(
+            EC.copy_tiles(
+                3, 0x11, 0xC, 0x1B, 3, 6,
+                copy_l1=True, copy_l3=True, copy_props=True,
+                unk_0x10=True, unk_0x20=True, wait_vblank=True,
+                copy_z_plane=True,
+            )
+        )
+        .add(
+            EC.copy_tiles(
+                3, 0x16, 0xC, 0x18, 3, 3,
+                copy_l1=True, copy_l3=True, copy_props=True,
+                unk_0x10=True, unk_0x20=True, wait_vblank=True,
+                copy_z_plane=True,
+            )
+        )
+
     )
     pos = script.get_function_start(0, FID.ACTIVATE)
-    script.insert_commands(copy_cmd.to_bytearray(), pos)
+    script.insert_commands(copy_block.get_bytearray(), pos)
 
     for obj_id in (0xB, 0xC, 0xD):
         # Make all objects shown at the start

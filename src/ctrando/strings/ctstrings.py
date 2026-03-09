@@ -466,12 +466,23 @@ def get_huffman_table(rom: bytearray) -> list[bytearray]:
         substr_start = start+1
         substr_end = substr_start+substr_len
 
+        string = CTString.ct_bytes_to_ascii(rom[substr_start:substr_end])
+        print(f"{i:02X}: {string}")
+
         huffman_table.append(rom[substr_start:substr_end])
 
     return huffman_table
 
 
 def main():
+
+    string = CTString.ct_bytes_to_ascii(bytes.fromhex("E1 29 C1 D8 88 D8 E0 4D C3 AD D8 E0 10 C7 F1 88 D8 E0 08 88 C3 9D D8 E0 13 E2 57 34 A2 9F D8 88 D8 E1 20 25 F1 E3 D9 E0 3D C5 00"))
+    print(string)
+    input()
+    with open("/home/ross/Documents/ct.sfc", "rb") as infile:
+        rom = infile.read()
+        get_huffman_table(rom)
+        input()
     pass
 
 
