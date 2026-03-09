@@ -863,9 +863,20 @@ class JohnnyRaceKeyItemTreasure:
             east_spot: JohnnyRacePart,
             reward: RewardType = ctenums.ItemID.MOP
     ):
-        self.reward = reward
+        self._reward = reward
         self.west_spot = west_spot
         self.east_spot = east_spot
+        self.reward = self._reward
+
+    @property
+    def reward(self) -> RewardType:
+        return self._reward
+
+    @reward.setter
+    def reward(self, reward: RewardType):
+        self._reward = reward
+        self.west_spot.reward = reward
+        self.east_spot.reward = reward
 
     def write_to_ct_rom(self, ct_rom: ctrom.CTRom,
                         script_manager: typing.Optional[ScriptManager] = None):
