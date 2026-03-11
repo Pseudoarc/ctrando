@@ -1209,6 +1209,12 @@ def base_patch_ct_rom(ct_rom: ctrom.CTRom):
     ct_rom.seek(0x0DC087)
     ct_rom.write(b'\x10')  # Straight line to coords command
 
+    # Remove Grandleon restriction on GrandDream (Gold Rock tech)
+    # Overwrite CMP #$42, BNE XX with NOP NOP NOP NOP.
+    # 0x42 is the Grandleon's item id.
+    ct_rom.seek(0x010FED)
+    ct_rom.write(b"\xEA" * 4)
+
 
 def patch_max_tech_count(ct_rom: ctrom.CTRom):
     """Allow more than 0x7F techs on the rom."""

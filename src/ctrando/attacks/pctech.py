@@ -738,7 +738,7 @@ class PCTechManager:
 
     def remove_bitmask(self, bitmask: int):
         if bitmask not in self._bitmasks:
-            raise ValueError
+            return
 
         group = self._bitmask_group_dict[bitmask]
         if group.num_pcs == 1:

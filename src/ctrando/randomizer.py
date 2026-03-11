@@ -192,8 +192,8 @@ def get_random_config(
         charactermods.make_prot_all(config.pctech_manager)
     if settings.character_options.use_reraise:
         charactermods.make_reraise(config.pctech_manager)
-    if settings.character_options.use_magus_dual_techs:
-        charactermods.add_magus_duals(config.pctech_manager)
+    # if settings.character_options.use_magus_dual_techs:
+    #     charactermods.add_magus_duals(config.pctech_manager)
     if settings.character_options.use_daltonized_magus:
         charactermods.add_daltonized_magus_techs(config.pctech_manager)
         staticbossscaling.modify_poison_immunity(config.enemy_data_dict)
@@ -204,12 +204,15 @@ def get_random_config(
     basepatch.apply_mauron_player_tech_patch(working_rom)
 
     elem_assign = {
-        ctenums.CharID.CRONO: elementrando.TechElement.WATER,
+        ctenums.CharID.CRONO: elementrando.TechElement.FIRE,
         ctenums.CharID.MARLE: elementrando.TechElement.LIGHTNING,
-        ctenums.CharID.LUCCA: elementrando.TechElement.ICE,
+        ctenums.CharID.LUCCA: elementrando.TechElement.WATER,
+        ctenums.CharID.FROG: elementrando.TechElement.ICE
     }
     elementrando.get_reassign_techs(config.pctech_manager, config.animation_script_manager,
-                                    elem_assign, working_rom)
+                                    elem_assign, working_rom,
+                                    settings.character_options.use_magus_dual_techs,
+                                    rng)
     # elementrando.get_tech_names(config.pctech_manager)
     # elementrando.test_scripts(config.pctech_manager, config.animation_script_manager,
     #                           working_rom)
@@ -246,6 +249,7 @@ def get_random_config(
                                           settings.boss_rando_options,
                                           rng)
 
+    config.boss_assignment_dict[bosstypes.BossSpotID.DEATH_PEAK] = bosstypes.BossID.HECKRAN
     ### Objectives
     # After bosses to avoid double dipping.
     # Before map to allow objectives in logic
@@ -423,7 +427,7 @@ def get_ctrom_from_config(
         ct_rom, config.pctech_manager
     )
     animationscript.write_scripts_to_ct_rom(ct_rom)
-    scriptreassign.write_magus_animation_scripts(config.pctech_manager, ct_rom)
+    # scriptreassign.write_magus_animation_scripts(config.pctech_manager, ct_rom)
 
 
     print("Applying Openworld Scripts...", end="")

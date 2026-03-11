@@ -2,9 +2,11 @@
 import copy
 import dataclasses
 import enum
+import itertools
 
 from ctrando.attacks import pctech, animationscript, animationcommands as ac
 from ctrando.common import ctenums, ctrom
+from ctrando.common.random import RNGType
 
 
 class TechElement(enum.Enum):
@@ -37,18 +39,20 @@ _anim_replacements: dict[ctenums.CharID, dict[int, dict[ctenums.CharID, int]]] =
         },
         # 0x43: Cross arms as flare goes off
         0x43: {
-            ctenums.CharID.CRONO: 0x47
+            ctenums.CharID.CRONO: 0x47,
+            ctenums.CharID.MAGUS: 0x22
         }
     },
     ctenums.CharID.MARLE: {
         # 0x35: Arms out while ice is travelling
         0x35: {
-            ctenums.CharID.CRONO: 0x40,
+            ctenums.CharID.CRONO: 0x41,  # Sword down hair blowing
             # 11 one arm up static, 1A laugh, 21 glasses, 22 arms crossed chanting
             # 23 protect arms up, 39 weird conductor
             # 46 hands up cast (good)
             ctenums.CharID.LUCCA: 0x23,
             ctenums.CharID.FROG: 0x1A,
+            ctenums.CharID.MAGUS: 0x22,
         },
         # 0x36: Praying while powering up spell
         0x36: {
@@ -159,7 +163,9 @@ def _make_hex_mist_data(
     base_animation = animationscript.AnimationScript.read_from_ctrom(ct_rom, script_id)
     if element == TechElement.WATER:
         caster_obj = base_animation.main_script.caster_objects[0]
-        caster_obj[8:14] = [
+        caster_obj[6:14] = [
+            ac.IncrementCounter1D(),
+            ac.WaitForCounter1DValue(value=2),
             ac.PlaySound(sound=0xC3),
             ac.IncrementCounter(counter=0x1B),
             ac.Pause(duration=0x78),
@@ -168,12 +174,37 @@ def _make_hex_mist_data(
             ac.PlaySound(sound=0xC5),
             ac.IncrementCounter(counter=0x19),
             ac.WaitForCounterValue(counter=0x1B, value=0),
+            ac.WaitForCounter1DValue(value=3),
+            ac.IncrementCounter1D(),
             ac.PlayAnimationFirstFrame(animation_id=0x03),
-            ac.WaitForCounter1DValue(value=4)
+            ac.WaitForCounter1DValue(value=5)
         ]
 
+        base_animation.main_script.target_objects[0][0] = ac.WaitForCounter1DValue(value=4)
+        base_animation.main_script.target_objects[1][0] = ac.WaitForCounter1DValue(value=4)
+    elif element == TechElement.ICE:
+        caster_obj = base_animation.main_script.caster_objects[0]
+        caster_obj[3:13] = [
+            ac.WaitForCounter1DValue(value=2),
+            ac.WaitForCounter1DValue(value=2),
+            ac.PlaySound(sound=0xC3),
+            ac.IncrementCounter(counter=0x1B),
+            ac.IncrementCounter1D(),
+            ac.Pause(duration=0x78),
+            ac.PlaySound(sound=0xC4),
+            ac.IncrementCounter(counter=0x1A),
+            ac.PlaySound(sound=0xC5),
+            ac.IncrementCounter(counter=0x19),
+            ac.WaitForCounterValue(counter=0x1B, value=0),
+            # ac.WaitForCounter1DValue(value=3),
+            ac.PlayAnimationFirstFrame(animation_id=0x03),
+            # ac.WaitForCounter1DValue(value=5)
+        ]
+
+    base_tech = copy.deepcopy(base_tech)
     base_tech.graphics_header.layer3_packet_id = 0x04
     base_tech.effect_headers[0].power = 0x2A  # Match Flare
+    base_tech.name = "*Hex Mist"
 
     return _TechData(base_tech, base_animation)
 
@@ -182,7 +213,9 @@ def get_reassign_techs(
         tech_man: pctech.PCTechManager,
         animation_script_man: animationscript.AnimationScriptManager,
         elem_assignment: dict[ctenums.CharID, TechElement],
-        ct_rom: ctrom.CTRom  # For script lookups
+        ct_rom: ctrom.CTRom,  # For script lookups
+        use_magus_duals: bool,
+        rng: RNGType
 ):
     element_name_progression: dict[TechElement, tuple[str, str, str]] ={
         TechElement.LIGHTNING: ("*Lightning", "*Lightning2", "*Luminaire"),
@@ -197,6 +230,7 @@ def get_reassign_techs(
         ctenums.CharID.MARLE: TechElement.ICE,
         ctenums.CharID.LUCCA: TechElement.FIRE,
         ctenums.CharID.FROG: TechElement.WATER,
+        ctenums.CharID.MAGUS: TechElement.SHADOW
     }
     vanilla_pc_elem_dict_inv = {val: key for key,val in vanilla_pc_elem_dict.items()}
 
@@ -236,6 +270,27 @@ def get_reassign_techs(
         )
     }
 
+    all_techs = tech_man.get_all_techs()
+
+    combo_techs = {tech_id: tech for tech_id, tech in all_techs.items()
+                   if tech.num_pcs > 1}
+    combo_tech_scripts: dict[int, animationscript.AnimationScript] = {}
+
+    for tech_id, tech in combo_techs.items():
+        script_id = tech.graphics_header.script_id
+        combo_tech_scripts[script_id] = animationscript.AnimationScript.read_from_ctrom(
+            ct_rom, script_id)
+
+    tech_char_usage: dict[int, dict[ctenums.CharID, str]] = {}
+    for tech_id, tech in combo_techs.items():
+        tech_usage: dict[ctenums.CharID, str] = {}
+        for mp_req in tech.menu_mp_reqs:
+            char_id = ctenums.CharID((mp_req - 1) // 8)
+            part = all_techs[mp_req]
+            tech_usage[char_id] = part.name
+
+        tech_char_usage[tech_id] = tech_usage
+
     for char_id, orig_elem in vanilla_pc_elem_dict.items():
         if char_id not in elem_assignment:
             continue
@@ -244,7 +299,8 @@ def get_reassign_techs(
             continue
 
         names_to_replace = element_name_progression[orig_elem]
-        replacement_names = element_name_progression[new_elem]
+        if char_id == ctenums.CharID.MAGUS:
+            names_to_replace = ("*DarkMatter",)
 
         start_id = char_id*8 + 1
         for tech_id in range(start_id, start_id+8):
@@ -268,6 +324,153 @@ def get_reassign_techs(
             tech.effect_headers[0].power = new_tech.effect_headers[0].power
             animation_script_man.script_dict[old_script_id] = new_script
             tech_man.set_tech_by_id(tech, tech_id)
+
+    new_combo_techs = make_new_combo_techs(
+        tech_man, combo_techs, combo_tech_scripts, tech_char_usage,
+        use_magus_duals
+    )
+
+    for chars, techs in new_combo_techs.items():
+        bitmask = pctech.ctt.PCTechBattleGroup.from_charids(list(chars)).to_bitmask()
+        tech_man.remove_bitmask(bitmask)
+
+    cur_script_id = 0x39
+    for chars, techs in new_combo_techs.items():
+        if len(chars) == 2:
+            num_techs = 3
+        elif len(chars) == 3:
+            num_techs = 1
+        else:
+            raise ValueError
+
+        if len(techs) <= num_techs:
+            chosen_data = techs
+        else:
+            chosen_data = rng.sample(techs, num_techs)
+
+        for tech_data in chosen_data:
+            tech = tech_data.tech
+            tech.graphics_header.script_id = cur_script_id
+            animation_script_man.script_dict[cur_script_id] = tech_data.script
+            cur_script_id += 1
+            tech_man.add_tech(tech)
+
+
+def make_new_combo_techs(
+        tech_man: pctech.PCTechManager,
+        combo_techs: dict[int, pctech.PCTech],
+        combo_tech_scripts: dict[int, animationscript.AnimationScript],
+        char_tech_usage: dict[int, dict[ctenums.CharID, str]],
+        use_magus_duals: bool,
+) -> dict[frozenset[ctenums.CharID], list[_TechData]]:
+    """Make new combo techs given the single techs present."""
+
+    # First store which tech names each character has
+    char_tech_name_ind_dict: dict[ctenums.CharID, dict[str, int]] = {}
+    for char_id in ctenums.CharID:
+        start_id = 1+char_id*8
+        name_dict: dict[str, int] = {}
+        for ind in range(8):
+            tech_id = start_id + ind
+            tech = tech_man.get_tech(tech_id)
+            name_dict[tech.name] = ind
+
+        char_tech_name_ind_dict[char_id] = name_dict
+
+    tech_group_dict: dict[frozenset[ctenums.CharID], list[_TechData]] = {}
+    for dual_group in itertools.combinations(ctenums.CharID, 2):
+        tech_group_dict[frozenset(dual_group)] = []
+
+    for triple_group in itertools.combinations(ctenums.CharID, 3):
+        tech_group_dict[frozenset(triple_group)] = []
+
+    for tech_id, tech in combo_techs.items():
+        char_options: dict[ctenums.CharID, tuple[ctenums.CharID, ...]] = {}
+        tech_usage = char_tech_usage[tech_id]
+
+        for char_id, name in tech_usage.items():
+            options = tuple(
+                char_id for char_id, tech_names in char_tech_name_ind_dict.items()
+                if name in tech_names
+            )
+            char_options[char_id] = options
+
+        chars = tuple(char_options.keys())
+        for combo in itertools.product(
+                *(char_options[x] for x in chars)
+        ):
+            if len(set(combo)) != tech.num_pcs:
+                continue  # May happen if one character fills multiple roles
+
+            # Filter out unallowed Magus combos techs:
+            # 1) Any dual unless use_magus_duals
+            # 2) Any non-rock triple
+            if ctenums.CharID.MAGUS in combo:
+                if tech.num_pcs == 2 and not use_magus_duals:
+                    continue
+                if tech.num_pcs == 3 and tech.rock_used is None:
+                    continue
+
+            # We should have a tuple of characters who can perform the tech now
+            reassign_dict = {
+                old_char: new_char for old_char, new_char in zip(chars, combo)
+            }
+            new_tech_ids: dict[ctenums.CharID, int] = {}
+            for char_id, new_char_id in reassign_dict.items():
+                old_effect_name = char_tech_usage[tech_id][char_id]
+                new_tech_id = char_tech_name_ind_dict[new_char_id][old_effect_name]
+                new_tech_id = 1 + new_char_id*8 + new_tech_id
+                new_tech_ids[new_char_id] = new_tech_id
+
+            reassigned_tech = get_reassigned_combo_tech(
+                tech, tech_man, reassign_dict,
+                new_tech_ids
+            )
+
+            script_id = tech.graphics_header.script_id
+            script = copy.deepcopy(combo_tech_scripts[script_id])
+
+            for ind, char in enumerate(reassigned_tech.battle_group.to_char_ids()):
+                orig_char = tech.battle_group.to_char_ids()[ind]
+                replace_animations(script, orig_char, char, ind)
+
+            tech_group_dict[frozenset(reassign_dict.values())].append(
+                _TechData(reassigned_tech, script))
+
+    return tech_group_dict
+
+
+def get_reassigned_combo_tech(
+        tech: pctech.PCTech,
+        tech_manager: pctech.PCTechManager,
+        reassignment: dict[ctenums.CharID, ctenums.CharID],
+        reassignment_tech_ids: dict[ctenums.CharID, int],
+):
+    tech = copy.deepcopy(tech)
+
+    bat_grp_chars = tech.battle_group.to_char_ids()
+    new_bat_grp_chars = [reassignment[x] for x in bat_grp_chars]
+    new_bat_grp = pctech.ctt.PCTechBattleGroup.from_charids(new_bat_grp_chars)
+    new_menu_mps = pctech.ctt.PCTechMenuMPReq(list(reassignment_tech_ids.values()))
+
+    tech.battle_group = new_bat_grp
+    tech.menu_mp_reqs = new_menu_mps
+
+    for ind, char_id in enumerate(bat_grp_chars):
+        reassign_char = reassignment[char_id]
+        new_effect_tech_id = reassignment_tech_ids[reassign_char]
+        new_effect_tech_level = ((new_effect_tech_id - 1) % 8) + 1
+
+        single_tech = tech_manager.get_tech(new_effect_tech_id)
+
+        tech.control_header.set_effect_index(ind, reassignment_tech_ids[reassign_char])
+        tech.effect_headers[ind] = single_tech.effect_headers[0]
+        tech.effect_mps[ind] = single_tech.effect_mps[0]
+
+        if tech.rock_used is None:
+            tech.set_learn_requirement(reassign_char, new_effect_tech_level)
+
+    return tech
 
 
 def get_tech_names(tech_man: pctech.PCTechManager):
