@@ -1306,7 +1306,7 @@ class MoveToTarget9C(MoveToTarget):
 
 # 9D Move To Stored Coordinates (0x98 variants)
 class MoveToStoredCoordinates9D(AnimationCommand):
-    SIZE = 1
+    SIZE = 2
     CMD_ID = 0x9D
 
 
