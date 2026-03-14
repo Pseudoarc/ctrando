@@ -251,7 +251,7 @@ def get_elem_assignment(
                  TechElement.FIRE, TechElement.WATER,
                  TechElement.SHADOW]
 
-    if rando_scheme == TechRandoScheme.VANILLA:
+    if rando_scheme in (TechRandoScheme.VANILLA, TechRandoScheme.CHAOS_ELEMENT):
         chosen_elems = list(elem_pool)
     elif rando_scheme == TechRandoScheme.SHUFFLE_ELEMENT:
         chosen_elems = list(elem_pool)
