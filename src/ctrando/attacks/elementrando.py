@@ -466,9 +466,9 @@ def chaos_reassign_elemental_single_techs(
         for _dup_pair in duplicates:
             if _tech_id in _dup_pair:
                 if _char_id == ctenums.CharID.MAGUS:
-                    _tech_id = dup_pair[1]
+                    _tech_id = _dup_pair[1]
                 else:
-                    _tech_id = dup_pair[0]
+                    _tech_id = _dup_pair[0]
                 break
 
         return orig_data[_tech_id]
