@@ -41,6 +41,19 @@ balance_tech_mps = true  # Everyone gets at least one good tech
 black_hole_factor=3.0   # Base percent kill chance for black hole. Total is base + mp*factor.
 black_hole_min=40       # Base percent kill chance for black hole. Total is base + mp*factor.
 
+# tech_rando_scheme -- Actually modify/randomize each character's techs
+# - "vanilla": No changes. [default]
+# - "shuffle_element": Character elements are shuffled and their elemental magic changed to match.
+#                      For example Crono could become "Fire" and learn Fire1/2 and Flare.
+#                      Robo and Ayla are unchanged by this.
+# - "random_element": Each character gets a random element and their elemental magic is updated.
+# - "chaos_element": All elemental spells are shuffled among the characters who have them.
+# In all cases, dual techs are recomputed based on the single techs.  That is, any "Fire" is eligble
+# to do "Fire Sword" with Crono's Spincut.  Each character pair can have at most 3 duals and each
+# trio at most one triple tech.
+
+tech_rando_scheme = "vanilla"
+
 ### Scaling Options
 dynamic_scaling_scheme = "progression"  # Options: "none", "progression"
 

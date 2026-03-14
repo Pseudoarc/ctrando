@@ -203,19 +203,12 @@ def get_random_config(
     basepatch.mark_initial_free_space(working_rom)
     basepatch.apply_mauron_player_tech_patch(working_rom)
 
-    elem_assign = {
-        ctenums.CharID.CRONO: elementrando.TechElement.FIRE,
-        ctenums.CharID.MARLE: elementrando.TechElement.LIGHTNING,
-        ctenums.CharID.LUCCA: elementrando.TechElement.WATER,
-        ctenums.CharID.FROG: elementrando.TechElement.ICE
-    }
-    elementrando.get_reassign_techs(config.pctech_manager, config.animation_script_manager,
-                                    elem_assign, working_rom,
-                                    settings.character_options.use_magus_dual_techs,
-                                    rng)
-    # elementrando.get_tech_names(config.pctech_manager)
-    # elementrando.test_scripts(config.pctech_manager, config.animation_script_manager,
-    #                           working_rom)
+    elementrando.apply_full_tech_rando(
+        config.pctech_manager, config.animation_script_manager,
+        config.item_db,
+        working_rom, settings.character_options,
+        config.pcstat_manager, rng
+    )
     pctechrandomizer.modify_all_single_tech_powers(
         config.pctech_manager, settings.tech_options, rng
     )
@@ -580,6 +573,8 @@ def get_ctrom_from_config(
     config.pctech_manager.write_to_ctrom(ct_rom,
                                          settings.tech_options.black_hole_factor,
                                          settings.tech_options.black_hole_min)
+    elementrando.write_menu_element_graphics(ct_rom, config.pctech_manager,
+                                             settings.character_options.tech_rando_scheme)
     config.animation_script_manager.write_to_ctrom(ct_rom)
 
     for enemy_id, enemy_stats in config.enemy_data_dict.items():
