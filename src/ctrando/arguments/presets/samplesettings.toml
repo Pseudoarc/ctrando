@@ -39,7 +39,7 @@ preserve_magic=false  # Keep each PC's first magic tech in its vanilla location 
 balance_tech_mps = true  # Everyone gets at least one good tech
 # custom_damage_mps = []  # Instead of vanilla values, randomize damage spells with these
 # Vanilla's list of damage MPs is:
-# [1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 4, 4, 4, 4, 8, 8, 8, 8, 8, 8, 8, 8,
+# [1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 4, 4, 4, 4, 8, 8, 8, 8, 8, 8, 8, 8,
 #  10, 10, 12, 12, 14, 15, 15, 15, 15, 17, 20, 20, 20, 20]
 
 black_hole_factor=3.0   # Base percent kill chance for black hole. Total is base + mp*factor.
