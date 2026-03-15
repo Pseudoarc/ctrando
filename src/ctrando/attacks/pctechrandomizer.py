@@ -171,7 +171,7 @@ def modify_all_single_tech_powers(
                     damage_tech_mps = custom_damage_mp_pool*quot
                 else:
                     extras = rng.sample(custom_damage_mp_pool, rem)
-                    damage_tech_mps = custom_damage_mp_pool*quot + [extras]
+                    damage_tech_mps = custom_damage_mp_pool*quot + extras
 
         rng.shuffle(heal_tech_mps)
         rng.shuffle(damage_tech_mps)
