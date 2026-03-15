@@ -121,6 +121,7 @@ _scale_dict: dict[ctt.DamageFormula, Callable[[int], Union[int, float]]] = {
 def modify_all_single_tech_powers(
         tech_manager: pctech.PCTechManager,
         tech_options: TechOptions,
+        custom_damage_mp_pool: list[int],
         rng: RNGType
 ):
     """
@@ -157,11 +158,29 @@ def modify_all_single_tech_powers(
     ]
     damage_tech_mps: list[int] = [tech_dict[ind].effect_mps[0] for ind in damage_tech_ids]
 
+    num_custom, num_needed = len(custom_damage_mp_pool), len(damage_tech_mps)
     if tech_options.tech_damage == TechDamage.SHUFFLE:
+        if custom_damage_mp_pool:
+            if num_custom == num_needed:
+                damage_tech_mps = custom_damage_mp_pool
+            elif num_custom > num_needed:
+                damage_tech_mps = rng.sample(custom_damage_mp_pool, k=len(damage_tech_mps))
+            else:
+                quot, rem = divmod(num_needed, num_custom)
+                if rem == 0:
+                    damage_tech_mps = custom_damage_mp_pool*quot
+                else:
+                    damage_tech_mps = custom_damage_mp_pool*(quot+1)
+                    damage_tech_mps = rng.sample(damage_tech_mps, num_needed)
+
         rng.shuffle(heal_tech_mps)
         rng.shuffle(damage_tech_mps)
     elif tech_options.tech_damage == TechDamage.RANDOM:
-        damage_tech_mps = rng.choices(list(damage_tech_mps), k=len(damage_tech_mps))
+        if custom_damage_mp_pool:
+            damage_mp_pool = custom_damage_mp_pool
+        else:
+            damage_mp_pool = damage_tech_mps
+        damage_tech_mps = rng.choices(list(damage_mp_pool), k=len(damage_tech_mps))
         heal_tech_mps = rng.choices(list(heal_tech_mps), k=len(heal_tech_mps))
 
     min_mod = tech_options.tech_damage_random_factor_min

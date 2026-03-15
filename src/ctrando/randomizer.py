@@ -164,7 +164,7 @@ def extract_settings(*in_args: str) -> arguments.Settings:
     args = parser.parse_args(list(in_args) + additional_args)
 
     settings = arguments.Settings.extract_from_namespace(args)
-    print(f"Seed: {settings.general_options.seed}")
+    # print(f"Seed: {settings.general_options.seed}")
     return settings
 
 
@@ -210,7 +210,8 @@ def get_random_config(
         config.pcstat_manager, rng
     )
     pctechrandomizer.modify_all_single_tech_powers(
-        config.pctech_manager, settings.tech_options, rng
+        config.pctech_manager, settings.tech_options,
+        settings.tech_options.custom_damage_mps, rng
     )
 
     techdescriptions.update_all_tech_descs(config.pctech_manager,

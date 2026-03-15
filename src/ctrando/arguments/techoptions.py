@@ -1,4 +1,6 @@
 from __future__ import annotations
+from collections.abc import Sequence
+
 import argparse
 import enum
 import typing
@@ -29,6 +31,7 @@ class TechOptions:
     _default_black_hole_factor: typing.ClassVar[float] = 2.0
     _default_black_hole_min: typing.ClassVar[float] = 10.0
     _default_show_full_tech_list = False
+    _default_custom_damage_mps: typing.ClassVar[tuple[int, ...]] = tuple()
 
     def __init__(
             self,
@@ -40,7 +43,8 @@ class TechOptions:
             black_hole_min: float = _default_black_hole_min,
             black_hole_factor: float = _default_black_hole_factor,
             show_full_tech_list: bool = _default_show_full_tech_list,
-            balance_tech_mps: bool = False
+            balance_tech_mps: bool = False,
+            custom_damage_mps: Sequence[int] = _default_custom_damage_mps
     ):
 
         self.tech_order = tech_order
@@ -59,6 +63,7 @@ class TechOptions:
         self.black_hole_factor = black_hole_factor
         self.show_full_tech_list = show_full_tech_list
         self.balance_tech_mps = balance_tech_mps
+        self.custom_damage_mps = list(custom_damage_mps)
 
     @classmethod
     def get_argument_spec(cls) -> argumenttypes.ArgSpec:
@@ -104,6 +109,11 @@ class TechOptions:
             ),
             "balance_tech_mps": argumenttypes.FlagArg(
                 "Ensure every character has at least one strong tech."
+            ),
+            "custom_damage_mps": argumenttypes.MultipleDiscreteSelection(
+                [x for x in range(25)], cls._default_custom_damage_mps,
+                "Custom pool of mps for damage techs",
+                int, str, True
             )
         }
 
@@ -167,6 +177,10 @@ class TechOptions:
             default=argparse.SUPPRESS
         )
 
+        cls.get_argument_spec()["custom_damage_mps"].add_to_argparse(
+            "--custom-damage-mps", group
+        )
+
     @classmethod
     def extract_from_namespace(
             cls, namespace: argparse.Namespace
@@ -174,7 +188,7 @@ class TechOptions:
         attr_names = ["tech_order", "tech_damage", "tech_damage_random_factor_min",
                       "tech_damage_random_factor_max", "preserve_magic",
                       "black_hole_min", "black_hole_factor", "show_full_tech_list",
-                      "balance_tech_mps"]
+                      "balance_tech_mps", "custom_damage_mps"]
 
         return argumenttypes.extract_from_namespace(
             cls,
