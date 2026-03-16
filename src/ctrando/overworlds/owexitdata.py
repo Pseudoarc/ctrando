@@ -357,7 +357,8 @@ class OWExitClass(enum.Enum):
     CHORAS_CARPENTER_600 = (OWExitEnum.CHORAS_CARPENTER_600_NE, OWExitEnum.CHORAS_CARPENTER_600_N,
                             OWExitEnum.CHORAS_CARPENTER_600_NW)
     CHORAS_MARKET_600 = (OWExitEnum.CHORAS_MARKET_600_E, OWExitEnum.CHORAS_MARKET_600_SE,
-                         OWExitEnum.CHORAS_MARKET_600_S, OWExitEnum.CHORAS_MARKET_600_W)
+                         OWExitEnum.CHORAS_MARKET_600_S, OWExitEnum.CHORAS_MARKET_600_W,
+                         OWExitEnum.CHORAS_MARKET_600)
     CURSED_WOODS = (OWExitEnum.CURSED_WOODS,)
     DENADORO_MTS = (OWExitEnum.DENADORO_MTS,)
     MAGIC_CAVE_MAGUS = (OWExitEnum.MAGIC_CAVE_MAGUS,)
