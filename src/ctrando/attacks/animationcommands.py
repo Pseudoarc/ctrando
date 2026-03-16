@@ -240,7 +240,7 @@ class LinkEffectObjToCasterObj(AnimationCommand):
 
 # 1D Unlink Object
 class UnlinkObject(AnimationCommand):
-    SIZE = 1
+    SIZE = 2
     CMD_ID = 0x1D
 
 
