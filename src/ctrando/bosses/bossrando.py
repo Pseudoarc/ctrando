@@ -256,7 +256,6 @@ def get_random_boss_assignment(
         for spot in available_spots:
             base_dict[spot] = rng.choice(boss_pool)
 
-    base_dict[bty.BossSpotID.ARRIS_DOME] = bty.BossID.SLASH_SWORD
     return base_dict
 
 

@@ -701,8 +701,10 @@ def get_reassigned_combo_tech(
 
         single_tech = tech_manager.get_tech(new_effect_tech_id)
 
-        tech.control_header.set_effect_index(ind, reassignment_tech_ids[reassign_char])
-        tech.effect_headers[ind] = single_tech.effect_headers[0]
+        orig_index = tech.control_header.get_effect_index(ind)
+        if orig_index <= 1+7*8:
+            tech.control_header.set_effect_index(ind, reassignment_tech_ids[reassign_char])
+            tech.effect_headers[ind] = single_tech.effect_headers[0]
         tech.effect_mps[ind] = single_tech.effect_mps[0]
 
         if tech.rock_used is None:

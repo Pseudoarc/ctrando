@@ -1282,7 +1282,7 @@ class MoveToTarget(AnimationCommand):
 
 # 99 Move To Stored Coordinates (0x98 variants)
 class MoveToStoredCoordinates(AnimationCommand):
-    SIZE = 1
+    SIZE = 2
     CMD_ID = 0x99
 
 
