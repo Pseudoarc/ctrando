@@ -578,6 +578,8 @@ def get_reassign_techs(
             tech.graphics_header.script_id = cur_script_id
             animation_script_man.script_dict[cur_script_id] = tech_data.script
             cur_script_id += 1
+            if cur_script_id == 0x75:  # don't overwrite some hard-coded script ids
+                cur_script_id = 0x81
             tech_man.add_tech(tech)
 
             if tech.rock_used is not None:
