@@ -105,9 +105,10 @@ def randomize_good_accessory_effects(
         ctenums.ItemID.GOLD_ROCK, ctenums.ItemID.SILVERROCK,
         ctenums.ItemID.WHITE_ROCK
     ]
+
     if (
             DSItem.CHAMPIONS_BADGE in gear_rando_options.ds_item_pool and
-            rng.random() < gear_rando_options.ds_replacement_chance
+            rng.random() < gear_rando_options.ds_replacement_chance/100
     ):
         badge = item_db[ctenums.ItemID.HERO_MEDAL]
         badge.set_name_from_str("{acc}ChampBadge")
@@ -137,11 +138,11 @@ def randomize_good_accessory_effects(
             boost = rng.choice(badge_boosts)
             badge.stats.has_stat_boost = True
             badge.stats.stat_boost_index = boost
+    else:
+        good_accesories.append(ctenums.ItemID.HERO_MEDAL)
 
 
-    for item_id in (ctenums.ItemID.BLUE_ROCK, ctenums.ItemID.BLACK_ROCK,
-                    ctenums.ItemID.GOLD_ROCK, ctenums.ItemID.SILVERROCK,
-                    ctenums.ItemID.WHITE_ROCK):
+    for item_id in good_accesories:
         item = item_db[item_id]
         item.stats = get_random_acc_stats(0.4, 0.4, 0.2, rng)
 
