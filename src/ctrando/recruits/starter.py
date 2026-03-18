@@ -57,7 +57,8 @@ def assign_pc_to_spot(
     )
     # A little clunky.  Finds the second big memset command and writes
     # the char_id instead of 0 (Crono) to the first byte of the payload.
-    pos, cmd = script.find_command([0x4E])
+    pos, _ = script.find_command([0xC8])
+    pos, cmd = script.find_command([0x4E], pos)
     pos, cmd = script.find_command([0x4E], pos+len(cmd))
 
     for ind, char_id in enumerate(char_ids):
