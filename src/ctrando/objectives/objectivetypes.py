@@ -689,3 +689,31 @@ _nu_hook_dict: dict[memory.Flags, list[HookLocator]] = {
     ]
 }
 
+def enumerate_objectives() -> dict[ObjectiveType, int]:
+    keys = list(QuestID) + list(_boss_abbrev.keys()) + [None]
+
+    obj_enumeration = {
+        obj: obj_id for obj, obj_id in zip(keys, range(len(keys)))
+    }
+
+    return obj_enumeration
+
+
+def get_readable_obj_enumeration() -> dict[int, str]:
+    obj_enum = enumerate_objectives()
+    obj_enum_inv = {val: key for key,val in obj_enum.items()}
+    ret_dict: dict[int, str] = {}
+
+    for obj_id, obj in obj_enum_inv.items():
+        if isinstance(obj, QuestID):
+            desc = _quest_data_dict[obj].desc
+        elif isinstance(obj, bty.BossID):
+            desc = f"Defeat {_boss_abbrev[obj]}"
+        elif obj is None:
+            desc = "None"
+        else:
+            raise ValueError
+
+        ret_dict[obj_id] = desc
+
+    return ret_dict

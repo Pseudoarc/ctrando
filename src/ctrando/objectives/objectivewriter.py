@@ -489,6 +489,20 @@ def write_test_objectives(
         .to_bytearray(), pos
     )
 
+    # Write objective ids to title screen memory
+    obj_enum_dict = oty.enumerate_objectives()
+    obj_ids: list[int] = []
+    for objective in objectives:
+        obj_ids.append(obj_enum_dict[objective])
+
+    payload = bytes(obj_ids)
+    for loc_id in (ctenums.LocID.LOAD_SCREEN, ctenums.LocID.TITLE_SCREEN):
+        script = script_manager[loc_id]
+        pos = script.get_object_start(0)
+        script.insert_commands(
+            EC.copy_memory(0x7F0220, payload).to_bytearray(), pos
+        )
+
     # Repeat objective rewards in kitchen
     # script = script_manager[ctenums.LocID.CRONOS_KITCHEN]
     # pos = script.find_exact_command(
