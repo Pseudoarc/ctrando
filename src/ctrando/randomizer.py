@@ -182,27 +182,34 @@ def get_random_config(
     rng: RNGType = random.Random()
     rng.seed(settings.general_options.seed, version=2)
 
-    if settings.character_options.use_phys_marle:
-        charactermods.make_phys_marle(config.pcstat_manager, config.pctech_manager)
-    if settings.character_options.use_haste_all:
-        charactermods.make_haste_all(config.pctech_manager)
-    if settings.character_options.use_phys_lucca:
-        charactermods.make_phys_lucca(config.pcstat_manager, config.pctech_manager)
-    if settings.character_options.use_protect_all:
-        charactermods.make_prot_all(config.pctech_manager)
-    if settings.character_options.use_reraise:
-        charactermods.make_reraise(config.pctech_manager)
-    # if settings.character_options.use_magus_dual_techs:
-    #     charactermods.add_magus_duals(config.pctech_manager)
-    if settings.character_options.use_daltonized_magus:
-        charactermods.add_daltonized_magus_techs(config.pctech_manager)
-        staticbossscaling.modify_poison_immunity(config.enemy_data_dict)
-
-    ### Techs
     working_rom = ctrom.CTRom(input_rom.getvalue())
     basepatch.mark_initial_free_space(working_rom)
     basepatch.apply_mauron_player_tech_patch(working_rom)
 
+    if settings.character_options.use_phys_marle:
+        charactermods.make_phys_marle(
+            config.pcstat_manager, config.pctech_manager,
+            config.animation_script_manager, working_rom
+        )
+    if settings.character_options.use_haste_all:
+        charactermods.make_haste_all(config.pctech_manager,
+                                     config.animation_script_manager, working_rom)
+    if settings.character_options.use_phys_lucca:
+        charactermods.make_phys_lucca(config.pcstat_manager, config.pctech_manager,
+                                      config.animation_script_manager, working_rom)
+    if settings.character_options.use_protect_all:
+        charactermods.make_prot_all(config.pctech_manager,
+                                    config.animation_script_manager, working_rom)
+    if settings.character_options.use_reraise:
+        charactermods.make_reraise(config.pctech_manager,
+                                   config.animation_script_manager, working_rom)
+    if settings.character_options.use_daltonized_magus:
+        charactermods.add_daltonized_magus_techs(config.pctech_manager,
+                                                 config.animation_script_manager,
+                                                 working_rom)
+        staticbossscaling.modify_poison_immunity(config.enemy_data_dict)
+
+    ### Techs
     elementrando.apply_full_tech_rando(
         config.pctech_manager, config.animation_script_manager,
         config.item_db,
@@ -420,9 +427,6 @@ def get_ctrom_from_config(
     effecttypes.expand_effect_mods(
         ct_rom, config.pctech_manager
     )
-    animationscript.write_scripts_to_ct_rom(ct_rom)
-    # scriptreassign.write_magus_animation_scripts(config.pctech_manager, ct_rom)
-
 
     print("Applying Openworld Scripts...", end="")
     a = time.time()

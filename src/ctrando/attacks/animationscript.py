@@ -14,22 +14,6 @@ _T = typing.TypeVar("_T", bound=ac.AnimationCommand)
 ObjectScript = list[_T]
 
 
-class NewScriptID(enum.IntEnum):
-    ARROW_HAIL = 0x80
-    HASTE_ALL = 0x81
-    PROTECT_ALL = 0x82
-    MAGUS_LUCCA_ANTI2 = 0x83
-    MAGUS_LUCCA_ANTI3 = 0x84
-    MAGUS_MARLE_ANTI2 = 0x85
-    MAGUS_CRONO_ICESWORD2 = 0x86
-    RERAISE = 0x87
-    GALE_SLASH = 0x88
-    BLURP = 0x89
-    IRON_ORB = 0x8A
-    BURST_BALL = 0x8B
-    DOUBLE_TAP = 0x8C
-
-
 def extract_object_script_from_buffer(
         buf: typing.ByteString, pos: int = 0
 ):
@@ -1093,34 +1077,6 @@ def make_double_tap_script(ct_rom: ctrom.CTRom):
         ac.ReturnCommand()
     ]
     return script
-
-
-def write_scripts_to_ct_rom(ct_rom: ctrom.CTRom):
-    dt_script = make_double_tap_script(ct_rom)
-    arrow_hail_script = make_arrow_rain_script(ct_rom)
-    haste_all_script = make_single_marle_haste_all_script(ct_rom)
-    prot_all_script = make_single_lucca_prot_all_script(ct_rom)
-    reraise_script = make_marle_reraise_script(ct_rom)
-
-    arrow_hail_script.write_to_ctrom(ct_rom, NewScriptID.ARROW_HAIL)
-    haste_all_script.write_to_ctrom(ct_rom, NewScriptID.HASTE_ALL)
-    prot_all_script.write_to_ctrom(ct_rom, NewScriptID.PROTECT_ALL)
-    reraise_script.write_to_ctrom(ct_rom, NewScriptID.RERAISE)
-    dt_script.write_to_ctrom(ct_rom, NewScriptID.DOUBLE_TAP)
-
-    gale_slash_script = make_gale_slash_script(ct_rom)
-    gale_slash_script.write_to_ctrom(ct_rom, NewScriptID.GALE_SLASH)
-
-    blurp_script = read_enemy_tech_script_from_ctrom(ct_rom, 0x5D)
-    blurp_script.main_script.caster_objects[0][1] = ac.PlayAnimationOnce(animation_id=0x5)
-    blurp_script.write_to_ctrom(ct_rom, NewScriptID.BLURP)
-
-    iron_orb_script = make_iron_orb_script(ct_rom)
-    iron_orb_script.write_to_ctrom(ct_rom, NewScriptID.IRON_ORB)
-
-    burst_ball_script = read_enemy_tech_script_from_ctrom(ct_rom, 0x88)
-    burst_ball_script.main_script.caster_objects[0][4] = ac.PlayAnimationOnce(animation_id=0x22)
-    burst_ball_script.write_to_ctrom(ct_rom, NewScriptID.BURST_BALL)
 
 
 class AnimationScriptManager:

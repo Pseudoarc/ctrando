@@ -16,14 +16,6 @@ _magus_repl_anim: dict[ctenums.CharID, dict[int, int]] = {
 }
 
 
-_script_reassign_id_dict: dict[tuple[ctenums.TechID, ctenums.CharID], animationscript.NewScriptID] = {
-    (ctenums.TechID.ANTIPODE_2, ctenums.CharID.MARLE): animationscript.NewScriptID.MAGUS_LUCCA_ANTI2,
-    (ctenums.TechID.ANTIPODE_3, ctenums.CharID.MARLE): animationscript.NewScriptID.MAGUS_LUCCA_ANTI3,
-    (ctenums.TechID.ANTIPODE_2, ctenums.CharID.LUCCA): animationscript.NewScriptID.MAGUS_MARLE_ANTI2,
-    (ctenums.TechID.ICE_SWORD_2, ctenums.CharID.MARLE): animationscript.NewScriptID.MAGUS_CRONO_ICESWORD2
-}
-
-
 def get_magus_reassigns(tech: pctech.PCTech) -> list[ctenums.CharID]:
     reassigns: list[ctenums.CharID] = []
 
