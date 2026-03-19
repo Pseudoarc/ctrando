@@ -571,7 +571,32 @@ def get_reassign_techs(
         if len(techs) <= num_techs:
             chosen_data = techs
         else:
-            chosen_data = rng.sample(techs, num_techs)
+            def is_damage_tech(tech: pctech.PCTech):
+                num_pcs = tech.num_pcs
+                for ind in range(num_pcs):
+                    if tech.control_header.get_effect_mp_only(ind):
+                        continue
+                    if tech.effect_headers[ind].effect_type not in (
+                        pctech.ctt.EffectType.DAMAGE, pctech.ctt.EffectType.MULTIHIT,
+                    ):
+                        return False
+                return True
+
+            damage_techs: list[_TechData] = []
+            other_techs: list[_TechData] = []
+            for tech_data in techs:
+                if is_damage_tech(tech_data.tech):
+                    damage_techs.append(tech_data)
+                else:
+                    other_techs.append(tech_data)
+
+            if len(damage_techs) > num_techs:
+                chosen_data = rng.sample(damage_techs, num_techs)
+            elif len(damage_techs) == num_techs:
+                chosen_data = damage_techs
+            else:
+                num_others = num_techs - len(damage_techs)
+                chosen_data = damage_techs + rng.sample(other_techs, num_others)
 
         for tech_data in chosen_data:
             tech = tech_data.tech
