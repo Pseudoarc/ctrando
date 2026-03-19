@@ -75,11 +75,22 @@ class EntranceShufflerOptions:
             x for x in preserve_spot_temp.keys() if x not in vanilla_spots
         )
 
+        if (
+                OWExit.NORTHERN_RUINS_600 in self.preserve_spots and
+                OWExit.NORTHERN_RUINS_1000 not in self.preserve_spots
+        ):
+            self.preserve_spots = self.preserve_spots + (OWExit.NORTHERN_RUINS_1000,)
+        elif (
+                OWExit.NORTHERN_RUINS_1000 in self.preserve_spots and
+                OWExit.NORTHERN_RUINS_600 not in self.preserve_spots
+        ):
+            self.preserve_spots = self.preserve_spots + (OWExit.NORTHERN_RUINS_600,)
+
         if rest_vanilla:
             total_spots = list(OWExit)
             total_spots.remove(OWExit.TYRANO_LAIR)
             self.vanilla_spots = tuple(
-                x for x in total_spots if x not in preserve_spots
+                x for x in total_spots if x not in self.preserve_spots
             )
 
         self.shuffle_gates = shuffle_gates
