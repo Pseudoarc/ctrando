@@ -1844,7 +1844,9 @@ class PCTechManager:
             first_tech.control_header[0] |= 0x80
 
             while group.has_free_space():
-                group.add_tech(copy.deepcopy(first_tech))
+                new_tech = copy.deepcopy(first_tech)
+                new_tech.name = "None"
+                group.add_tech(new_tech)
 
         battle_group_bytes = self._collect_update_battle_groups()
         bat_group_start = self._write_block_to_ct_rom(battle_group_bytes, ct_rom, hint)
