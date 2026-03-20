@@ -4,7 +4,7 @@ from ctrando.asm import assemble, instructions as inst
 from ctrando.asm.instructions import AddressingMode as AM
 from ctrando.common import asmpatcher, byteops, ctrom
 
-def show_all_techs_in_menu(ct_rom: ctrom.CTRom):
+def show_all_single_techs_in_menu(ct_rom: ctrom.CTRom):
     """
     This function will modify the ct_rom so that the menu shows all techs,
     greying out unlearned techs.
@@ -153,3 +153,105 @@ def write_cumulative_tp_in_menu(
     ]
 
     asmpatcher.apply_jmp_patch(rt, hook_addr, ct_rom)
+
+
+def show_all_combo_techs_in_menu(ct_rom: ctrom.CTRom):
+    """
+    Patch the menu to show all combo techs.
+    Must be called *after* techs are written in the given ct_rom.
+    """
+
+    ct_rom.seek(0x2BBF3+1)
+    menu_grp_rom_addr = int.from_bytes(ct_rom.read(3), "little")
+
+    bitmask_dir_addr = 0x01
+    cur_tech_dir_addr = 0x03
+    menu_style_start_abs_addr = 0x7F40 - 0x39
+    # menu_style_start_abs_addr = 0x7700
+
+    tech_id_start_abs_addr = 0x0F00
+    group_id_start_abs_addr = 0x0F30
+
+    # C2BD1D  06 01          ASL $01
+    # C2BD1F  90 0A          BCC $C2BD2B
+    # C2BD21  A5 03          LDA $03
+    # C2BD23  99 00 0F       STA $0F00,Y
+    # C2BD26  8A             TXA
+    # C2BD27  99 30 0F       STA $0F30,Y
+    # C2BD2A  C8             INY
+    # C2BD2B  E6 03          INC $03
+    # C2BD2D  A5 03          LDA $03
+    # C2BD2F  C5 02          CMP $02
+    # C2BD31  90 EA          BCC $C2BD1D
+    # C2BD33  E6 00          INC $00
+
+
+    hook_rom_addr = 0xC2BD1D
+    hook_addr = byteops.to_file_ptr(hook_rom_addr)
+
+    return_rom_addr = 0xC2BD33
+    return_addr = byteops.to_file_ptr(return_rom_addr)
+
+    new_loop: assemble.ASMList = [
+        inst.LDA(menu_grp_rom_addr, AM.LNG_X),
+        inst.ORA(0x29AF, AM.ABS),
+        inst.CMP(0x29AF, AM.ABS),
+        inst.BNE("end"),
+        "loop_st",
+        inst.ASL(bitmask_dir_addr, AM.DIR),
+        inst.BCC("not_learned"),
+        # learned tech, normal text
+        inst.LDA(0x00, AM.IMM8),
+        inst.BRA("after_tech_status"),
+        "not_learned",
+        inst.LDA(0x40, AM.IMM8),
+        "after_tech_status",
+        inst.PHY(),
+        inst.LDY(cur_tech_dir_addr, AM.DIR),
+        inst.CPY(0x39, AM.IMM8),
+        inst.BCC("single_tech"),
+        inst.STA(menu_style_start_abs_addr, AM.ABS_Y),
+        "single_tech",
+        inst.PLY(),
+        inst.LDA(cur_tech_dir_addr, AM.DIR),
+        inst.STA(tech_id_start_abs_addr, AM.ABS_Y),
+        inst.TXA(),
+        inst.STA(group_id_start_abs_addr, AM.ABS_Y),
+        inst.INY(),
+        inst.INC(cur_tech_dir_addr, AM.DIR),
+        inst.LDA(cur_tech_dir_addr, AM.DIR),
+        inst.CMP(0x02, AM.DIR),
+        inst.BCC("loop_st"),
+        "end",
+        inst.JMP(return_rom_addr, AM.LNG)
+    ]
+
+    asmpatcher.apply_jmp_patch(new_loop, hook_addr, ct_rom, return_addr, 0x410000)
+
+    # In the routine that loads a tech name, check $7700, Y to see if any other
+    # effects should be applied.
+    #  - Y holds a tech id
+    #  - There is not enough room to accommodate all techs in this range, and I can't
+    #    find a contiguous region which can.
+    #  - Use $
+    # C2BDC0  A2 0C          LDX #$0C
+    # Hook: Change the following load conditionally on Y value
+    # C2BDC2  B9 00 77       LDA $7700,Y
+    # C2BDC5  89 40          BIT #$40
+    # After hook
+    # C2BDC7  D0 0C          BNE $C2BDD5
+    # C2BDC9  A2 00          LDX #$00
+
+    new_rt: assemble.ASMList = [
+        inst.CPY(7*8, AM.IMM8),
+        inst.BCS("combo"),
+        inst.LDA(0x7700, AM.ABS_Y),
+        inst.BRA("test"),
+        "combo",
+        inst.LDA(menu_style_start_abs_addr, AM.ABS_Y),
+        "test",
+        inst.BIT(0x40, AM.IMM8),
+        inst.JMP(0xC2BDC7, AM.LNG)
+    ]
+
+    asmpatcher.apply_jmp_patch(new_rt, 0x02BDC2, ct_rom, hint=0x410000)
