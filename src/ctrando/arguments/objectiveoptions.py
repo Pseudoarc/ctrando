@@ -75,6 +75,7 @@ class ObjectiveOptions:
     num_gauntlet_objectives: int = 0
     num_timegauge_objectives: int = 6
     objective_specifiers: list[str] = field(default_factory=list)
+    no_omen_gauntlet: bool = False
 
     @classmethod
     def get_argument_spec(cls) -> argumenttypes.ArgSpec:
@@ -104,6 +105,9 @@ class ObjectiveOptions:
                 "Number of objectives needed to unlock the bucket in the End of Time",
                 type_fn=int
             ),
+            "no_omen_gauntlet": argumenttypes.FlagArg(
+                "Lavos Gauntlet is disabled when entering from the Black Omen"
+            )
         }
 
         for obj_id in range(8):
@@ -135,6 +139,7 @@ class ObjectiveOptions:
             "num_bucket_objectives": "Number of objectives needed to unlock the bucket in the End of Time.",
             "num_timegauge_objectives": "Number of objectives needed to unlock 1999 on the time gauge.",
             "num_gauntlet_objectives": "Number of objectives needed to remove the lavos boss gauntlet",
+            "no_omen_gauntlet": "Lavos Gauntlet is disabled when entering from the Black Omen",
         }
         argumenttypes.add_dataclass_to_group(cls, group, help_dict=help_dict)
 

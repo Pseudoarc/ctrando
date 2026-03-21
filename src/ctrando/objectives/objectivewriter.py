@@ -503,6 +503,9 @@ def write_test_objectives(
             EC.copy_memory(0x7F0220, payload).to_bytearray(), pos
         )
 
+    if objective_settings.no_omen_gauntlet:
+        write_omen_disable_gauntlet(script_manager)
+
     # Repeat objective rewards in kitchen
     # script = script_manager[ctenums.LocID.CRONOS_KITCHEN]
     # pos = script.find_exact_command(
@@ -545,3 +548,14 @@ def write_quest_counters(
                 .get_bytearray(), pos
             )
 
+
+def write_omen_disable_gauntlet(script_man: scriptmanager.ScriptManager):
+    script = script_man[ctenums.LocID.BLACK_OMEN_CELESTIAL_GATE]
+    pos = script.find_exact_command(
+        EC.if_flag(memory.Flags.LAVOS_GAUNTLET_DISABLED),
+        script.get_function_start(0x9, FID.ACTIVATE)
+    )
+    script.insert_commands(
+        EC.set_flag(memory.Flags.LAVOS_GAUNTLET_DISABLED).to_bytearray(),
+        pos
+    )
