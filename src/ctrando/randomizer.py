@@ -575,6 +575,12 @@ def get_ctrom_from_config(
     config.pctech_manager.write_to_ctrom(ct_rom,
                                          settings.tech_options.black_hole_factor,
                                          settings.tech_options.black_hole_min)
+
+    if settings.tech_options.show_full_tech_list:
+        techmenu.show_all_single_techs_in_menu(ct_rom)
+        techmenu.write_cumulative_tp_in_menu(ct_rom)
+        techmenu.show_all_combo_techs_in_menu(ct_rom)  # Needs to be after techs are on rom
+
     elementrando.write_menu_element_graphics(ct_rom, config.pctech_manager,
                                              settings.character_options.tech_rando_scheme)
     config.animation_script_manager.write_to_ctrom(ct_rom)
