@@ -243,7 +243,7 @@ def show_all_combo_techs_in_menu(ct_rom: ctrom.CTRom):
     # C2BDC9  A2 00          LDX #$00
 
     new_rt: assemble.ASMList = [
-        inst.CPY(7*8, AM.IMM8),
+        inst.CPY(7*8+1, AM.IMM8),
         inst.BCS("combo"),
         inst.LDA(0x7700, AM.ABS_Y),
         inst.BRA("test"),
