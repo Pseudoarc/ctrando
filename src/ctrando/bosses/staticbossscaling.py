@@ -178,9 +178,10 @@ def remove_element_softlocks(
     Make Nizbel and Retinite defeatable without the right element.
     """
 
-    nizbel_stats = enemy_data_dict[ctenums.EnemyID.NIZBEL]
-    nizbel_stats.defense = 0xC0
-    nizbel_stats.mdef = 75
+    for enemy_id in (ctenums.EnemyID.NIZBEL, ctenums.EnemyID.LAVOS_NIZBEL):
+        nizbel_stats = enemy_data_dict[enemy_id]
+        nizbel_stats.defense = 0xC0
+        nizbel_stats.mdef = 75
 
     for enemy_id in (ctenums.EnemyID.RETINITE_TOP, ctenums.EnemyID.RETINITE_BOTTOM):
         stats = enemy_data_dict[enemy_id]
