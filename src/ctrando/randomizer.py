@@ -250,7 +250,6 @@ def get_random_config(
                                           settings.boss_rando_options,
                                           rng)
 
-    config.boss_assignment_dict[bosstypes.BossSpotID.DEATH_PEAK] = bosstypes.BossID.HECKRAN
     ### Objectives
     # After bosses to avoid double dipping.
     # Before map to allow objectives in logic
@@ -826,7 +825,7 @@ def main():
 
     # import time
     # x = time.time()
-    out_rom = get_ctrom_from_config(ct_rom, settings, config, make_tf_friendly=True)
+    out_rom = get_ctrom_from_config(ct_rom, settings, config, make_tf_friendly=False)
     # y = time.time()
     # print(y-x)
 
