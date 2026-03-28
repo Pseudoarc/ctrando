@@ -416,6 +416,8 @@ def get_ctrom_from_config(
     b=time.time()
     print(f"({b-a})")
     basepatch.add_set_level_command(ct_rom, config.pcstat_manager)
+    basepatch.set_level_cap(ct_rom, settings.battle_rewards.xp_tp_rewards.level_cap)
+
     effecttypes.write_bh_percent(ct_rom, config.pctech_manager,
                                  settings.tech_options.black_hole_min,
                                  settings.tech_options.black_hole_factor

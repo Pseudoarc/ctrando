@@ -1938,6 +1938,33 @@ def add_set_level_command(
     add_event_command(ct_rom, rt_asm, 0xFC)
 
 
+def set_level_cap(ct_rom: ctrom.CTRom, level_cap: int):
+    """Don't level up past the cap."""
+
+    # C1F7D1  C9 63          CMP #$63
+    # C1F865  C9 63          CMP #$63
+
+    # Curiousity while investigating:
+    #  There's some effect of level on hit rate
+    #    C1DFD3  AE F4 B1       LDX $B1F4  Start of routine
+    #  It looks like there's supposed to be bonus hit if your level exceeds the enemy's,
+    #  but it's bugged.
+    #  - It does (level diff)/20, and then divides this a second time by 20.
+    #    - It makes no sense to do a double divide.  One of them is meant to be a multiply?
+    #    - The second operation is meant to have an operand of 2 as a 2 is loaded
+    #      but never actually written to the operand memory address.
+    #    - Because level gaps rarely reach 20, the first division almost always has a
+    #      quotient of 0.  The second division then gets called as 0/20, but a special
+    #      case of the division routine causes values in $2E to be used, which gives
+    #      an unexpected result.
+    #  - It's supposed to be something like +1 hit for every X level difference, but
+    #    it doesn't function correctly.
+    addrs = [0x01F7D2,0x01F866]
+    for addr in addrs:
+        ct_rom.seek(addr)
+        ct_rom.write(bytes([level_cap]))
+
+
 def add_event_command(
         ct_rom: ctrom.CTRom,
         routine: assemble.ASMList,
