@@ -1,6 +1,7 @@
 """
 Module for basic operations on a Chrono Trigger ROM.
 """
+import enum
 import hashlib
 import io
 import pathlib
@@ -11,6 +12,10 @@ from ctrando.common import freespace
 
 class InvalidRomException(Exception):
     """Exception to raise when a rom file is not recognizable as a CT rom."""
+
+
+class CTRomOffset(enum.StrEnum):
+    LEVELUP_STAT_MAX_START = "levelup_stat_max_start"
 
 
 class CTRom(freespace.FSRom):
@@ -25,6 +30,8 @@ class CTRom(freespace.FSRom):
             raise InvalidRomException("Bad checksum.")
 
         freespace.FSRom.__init__(self, rom, False)
+
+        self.offset_registry: dict[str, int] = {}
 
     @classmethod
     def from_file(cls, filename: str, ignore_checksum=False):
@@ -198,7 +205,8 @@ class CTRom(freespace.FSRom):
         super().write(payload[over_st:over_end], write_mark)
 
     def write(
-        self, payload, write_mark: freespace.FSWriteType = freespace.FSWriteType.NO_MARK
+            self, payload, write_mark: freespace.FSWriteType = freespace.FSWriteType.NO_MARK,
+            register_name: str | None = None,
     ):
         """
         FSRom write but mirrors [0x008000, 0x010000) w/ [0x408000, 0x410000)
@@ -247,6 +255,9 @@ class CTRom(freespace.FSRom):
             self._write_mirror(payload, start, over_m_st, over_m_end, write_mark)
             self.seek(start)
             super().write(payload, write_mark)
+
+        if register_name is not None:
+            self.offset_registry[register_name] = start
 
         # assert (
         #     self.getbuffer()[0x008000:0x010000]
