@@ -45,6 +45,139 @@ def apply_tf_compressed_enemy_gfx_hack(ct_rom: ctrom.CTRom):
     ct_rom.seek(0x004775)
     ct_rom.write(routine_b)
 
+def patch_level_up(ct_rom: ctrom.CTRom):
+    """
+    Patch the level up routine to use max stat values on the rom.
+    Heavily inspired by Mauron's similar patch applied by Warrior Workshop.
+    """
+
+    # growth_offset_start_lng = 0x000000
+    # base_offset_start_lng = 0x000000
+
+    def make_level_up_rt(
+            growth_offset_lng: int,
+            level_stat_max_lng: int
+    ):
+        battle_stat_offset = 0xB285
+        AM = inst.AddressingMode
+
+        slow_mult_abs = 0xC90B
+        slow_div_abs = 0xC92A
+        temp_growth_start_abs = 0xB294
+        temp_stat_index_dir = 0x20
+
+        # 16-bit X/Y, 8-bit A
+        rt: assemble.ASMList = [
+            inst.JSR(0xF7B9, AM.ABS),  # Adds up XP
+            inst.LDA(0xB28B, AM.ABS),  # 0 if level up
+            inst.BEQ("level_up"),
+            inst.BRL("return"),
+            "level_up",
+            inst.JSR(0xF871, AM.ABS),  # HP/MP growth
+            inst.TDC(),
+            inst.LDX(battle_stat_offset, AM.ABS),
+            inst.LDA(0x0000, AM.ABS_X),  # char id
+            inst.TAX(),
+            inst.STX(0x28, AM.DIR),
+            inst.LDX(0x0007, AM.IMM16),
+            inst.STX(0x2A, AM.DIR),
+            inst.JSR(slow_mult_abs, AM.ABS),  # 7*char_id in $2C
+            inst.LDA(0x2C, AM.DIR),
+            inst.REP(0x21),  # 16-bit A, Clear Carry
+            inst.ADC(0x25FA, AM.IMM16),  # Start of char_id's stat growths
+            inst.STA(temp_growth_start_abs, AM.ABS),
+            inst.TDC(),
+            inst.STA(temp_stat_index_dir, AM.DIR),
+            inst.SEP(0x20),
+            inst.LDY(0x0006, AM.IMM16),  # Loop over 6 stats
+            "stat_loop_start",
+            inst.TYX(),
+            inst.LDA(growth_offset_lng, AM.LNG_X),
+            inst.STA(temp_stat_index_dir, AM.DIR),
+            inst.REP(0x20),
+            inst.LDA(temp_growth_start_abs, AM.ABS),
+            inst.CLC(),
+            inst.ADC(temp_stat_index_dir, AM.DIR),
+            inst.TAX(),
+            inst.TDC(),
+            inst.SEP(0x20),
+            inst.LDA(0xCC0000, AM.LNG_X),  # cur stat growth
+            inst.BEQ("stat_loop_end"),
+            inst.STA(0x28, AM.DIR),
+            inst.LDX(battle_stat_offset, AM.ABS),
+            inst.LDA(0x0012, AM.ABS_X),  # level
+            inst.DEC(mode=AM.NO_ARG),
+            inst.TAX(),
+            inst.STA(0x2A, AM.DIR),
+            inst.JSR(slow_mult_abs, AM.ABS),  # (level-1)*stat_growth
+            inst.LDX(0x2C, AM.DIR),
+            inst.STX(0x28, AM.DIR),
+            inst.LDX(100, AM.IMM16),
+            inst.STX(0x2A, AM.DIR),
+            inst.JSR(slow_div_abs, AM.ABS),
+            inst.REP(0x20),  # because div always sets 0x20
+            inst.LDA(temp_stat_index_dir, AM.DIR),
+            inst.CLC(),
+            inst.ADC(battle_stat_offset, AM.ABS),
+            inst.TAX(),
+            inst.TDC(),
+            inst.SEP(0x20),
+            inst.LDA(0x002F, AM.ABS_X),  # Get base stat (growth order)
+            inst.CLC(),
+            inst.ADC(0x2C, AM.DIR),  # Add the previously computed growth
+            inst.TYX(),
+            inst.CMP(level_stat_max_lng, AM.LNG_X),
+            inst.BCC("no_max"),
+            inst.LDA(level_stat_max_lng, AM.LNG_X),
+            "no_max",
+            inst.PHA(),
+            inst.TYA(),
+            inst.REP(0x21),
+            inst.ADC(battle_stat_offset, AM.ABS),
+            inst.TAX(),
+            inst.TDC(),
+            inst.SEP(0x20),
+            inst.PLA(),
+            inst.STA(0x000B, AM.ABS_X),
+            "stat_loop_end",
+            inst.DEY(),
+            inst.BPL("stat_loop_start"),
+            "return",
+            inst.RTS()
+        ]
+
+        return rt
+
+    orig_st, orig_end = 0x01F623, 0x01F7B9
+    orig_len = orig_end-orig_st
+    clear_b =  bytes([0]*orig_len)
+    ct_rom.seek(orig_st)
+    ct_rom.write(clear_b, ctrom.freespace.FSWriteType.MARK_FREE)
+
+    rt = make_level_up_rt(0, 0)
+    rt_b = assemble.assemble(rt)
+    ct_rom.seek(orig_st)
+    ct_rom.write(rt_b, ctrom.freespace.FSWriteType.MARK_USED)
+
+    growth_offsets = bytes([0, 1, 2, 5, 3, 4, 6])
+    # order: 99, 99, 16, 99, 99, 99, 99
+    stat_maxes = bytes([99, 99, 16, 99, 99, 99, 99])
+
+    pos = ct_rom.space_manager.get_free_addr(len(growth_offsets) + len(stat_maxes),
+                                             hint=0x410000)
+
+    ct_rom.seek(pos)
+    growth_offset_addr = ct_rom.tell()
+    ct_rom.write(growth_offsets, ctrom.freespace.FSWriteType.MARK_USED)
+
+    stat_max_addr = ct_rom.tell()
+    ct_rom.write(stat_maxes, ctrom.freespace.FSWriteType.MARK_USED,
+                 register_name=ctrom.CTRomOffset.LEVELUP_STAT_MAX_START)
+
+    rt = make_level_up_rt(growth_offset_addr, stat_max_addr)
+    rt_b = assemble.assemble(rt)
+    ct_rom.seek(orig_st)
+    ct_rom.write(rt_b)
 
 def apply_mauron_enemy_tech_patch(
     ct_rom: ctrom.CTRom,
@@ -1174,6 +1307,7 @@ def base_patch_ct_rom(ct_rom: ctrom.CTRom):
     apply_mauron_player_tech_patch(ct_rom)
     patch_max_tech_count(ct_rom)
     expand_eventcommands(ct_rom)
+    patch_level_up(ct_rom)
 
     # Debug
     ct_rom.seek(0x01FFFF)
@@ -1498,7 +1632,8 @@ def get_set_techlevel_event_cmd_asm() -> assemble.ASMList:
 
 def get_set_level_event_cmd_asm(
         hp_table_rom_start: int,
-        mp_table_rom_start: int
+        mp_table_rom_start: int,
+        max_start_rom_addr: int,
 ) -> assemble.ASMList:
     """
     Gets aasembly for an event command which sets a PC's level.
@@ -1669,6 +1804,7 @@ def get_set_level_event_cmd_asm(
             stat: ctpcstats.PCStat,
             pull_x: bool = True,  # No pull on first
             push_x: bool = True,  # No push on first, last
+            max_addr: int = 0
     ) -> assemble.ASMList:
         """Make a bit of asm to set a stat to the level this command has read"""
         init = []
@@ -1714,30 +1850,34 @@ def get_set_level_event_cmd_asm(
             inst.LDX(temp_addr, AM.DIR),
             inst.CLC(),
             inst.ADC(0x7E0000+base_stat_offset_dict[stat], AM.LNG_X),
-            inst.CMP(100, AM.IMM8),
+            inst.CMP(max_addr, AM.LNG),
             inst.BCS("max"+postlabel),
             inst.STA(0x7E0000+cur_stat_offset_dict[stat], AM.LNG_X),
             inst.BRA("no_max"+postlabel),
             "max"+postlabel,
             inst.LDX(temp_addr, AM.DIR),
-            inst.LDA(99, AM.IMM8),
+            inst.LDA(max_addr, AM.LNG),
             inst.STA(0x7E0000+cur_stat_offset_dict[stat], AM.LNG_X),
             "no_max"+postlabel
         ]
         return ret_block
 
-    for ind, stat in enumerate((
-            Stat.POWER, Stat.MAGIC, Stat.EVADE, Stat.MAGIC_DEFENSE,
+
+    stats = (
+            Stat.POWER, Stat.MAGIC, Stat.SPEED, Stat.EVADE, Stat.MAGIC_DEFENSE,
             Stat.STAMINA, Stat.HIT,
-    )):
+    )
+    max_offsets = (0, 3, 2, 5, 6, 1, 4)
+
+    for ind, (stat, offset) in enumerate(zip(stats, max_offsets)):
         push_x, pull_x = True, True
         if ind == 0:
             push_x = False
             pull_x = False
-        if ind == 5:
+        if ind == len(stats)-1:
             push_x = False
 
-        ret_rt += make_stat_set_block(stat, pull_x, push_x)
+        ret_rt += make_stat_set_block(stat, pull_x, push_x, max_start_rom_addr+offset)
 
     ret_rt += [
         # Normal ending stuff.
@@ -1787,9 +1927,12 @@ def add_set_level_command(
     ct_rom.seek(mp_table_addr)
     ct_rom.write(mp_io.getbuffer(), freespace.FSWriteType.MARK_USED)
 
+    max_addr = ct_rom.offset_registry[ctrom.CTRomOffset.LEVELUP_STAT_MAX_START]
+    max_rom_addr = byteops.to_rom_ptr(max_addr)
     rt_asm = get_set_level_event_cmd_asm(
         byteops.to_rom_ptr(hp_table_addr),
-        byteops.to_rom_ptr(mp_table_addr)
+        byteops.to_rom_ptr(mp_table_addr),
+        max_rom_addr
     )
 
     add_event_command(ct_rom, rt_asm, 0xFC)

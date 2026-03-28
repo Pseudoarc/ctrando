@@ -141,6 +141,12 @@ class ConfigState:
 
         animation_script_manager = animationscript.AnimationScriptManager()
 
+        for char in ctenums.CharID:
+            pcstat_manager.set_base_stat(
+                char, ctpcstats.PCStat.SPEED,
+                pcstat_manager.get_current_stat(char, ctpcstats.PCStat.SPEED)
+            )
+
         return cls(
             item_db, treasure_assignment, pcstat_manager,
             pctech_manager, enemy_data_dict, boss_assignment_dict,
