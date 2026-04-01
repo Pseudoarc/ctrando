@@ -67,3 +67,22 @@ def adaptive_scale_xp(pc_stat_man: ctpcstats.PCStatsManager,
                 new_xp_req = round(new_xp_req*penalty) & 0xFFFF  #
 
         pc_stat_man.xp_thresholds.set_xp_for_level(level, new_xp_req)
+
+
+def apply_mdef_restrictions(
+        pc_stat_man: ctpcstats.PCStatsManager,
+        mdef_cap: int,
+        mdef_levelup_cap: int,
+        mdef_scale_factor: float,
+):
+    pc_stat_man.stat_max_dict[ctpcstats.PCStat.MAGIC_DEFENSE] = mdef_cap
+    pc_stat_man.level_up_stat_max_dict[ctpcstats.PCStat.MAGIC_DEFENSE] = mdef_levelup_cap
+
+    for char_id in ctenums.CharID:
+        mdef_growth = pc_stat_man.pc_stat_dict[char_id].stat_growth.get_stat_growth(
+            ctpcstats.PCStat.MAGIC_DEFENSE
+        )
+        mdef_growth = sorted([0, round(mdef_growth*mdef_scale_factor), 99])[1]
+        pc_stat_man.pc_stat_dict[char_id].stat_growth.set_stat_growth(
+            ctpcstats.PCStat.MAGIC_DEFENSE, mdef_growth
+        )

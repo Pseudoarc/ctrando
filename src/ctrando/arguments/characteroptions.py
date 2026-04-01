@@ -24,6 +24,9 @@ class CharacterOptions:
     use_magus_dual_techs: bool = False
     use_daltonized_magus: bool = False
     tech_rando_scheme:  TechRandoScheme = TechRandoScheme.VANILLA
+    mdef_growth_scale_factor: float = 1.0
+    mdef_cap: int = 99
+    mdef_levelup_cap: int = 99
 
     @classmethod
     def get_argument_spec(cls) -> aty.ArgSpec:
@@ -39,6 +42,19 @@ class CharacterOptions:
                 TechRandoScheme, TechRandoScheme.VANILLA,
                 "Scheme to randomize single techs",
                 False
+            ),
+            "mdef_growth_scale_factor": aty.DiscreteNumericalArg(
+                0.5, 1.5, 0.01, 1.0,
+                "Scale all magic defense gains by this factor", float
+            ),
+            "mdef_cap": aty.DiscreteNumericalArg(
+                1, 99, 1, 99,
+                "The maximum possible magic defense (stats + equip)", int
+            ),
+            "mdef_levelup_cap": aty.DiscreteNumericalArg(
+                1, 99, 1, 99,
+                "The maximum possible magic defense gained through leveling",
+                int
             )
         }
 

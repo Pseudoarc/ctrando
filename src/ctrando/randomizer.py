@@ -295,6 +295,12 @@ def get_random_config(
     )
     characterwriter.scale_tp(
         config.pcstat_manager, settings.battle_rewards.xp_tp_rewards.tp_scale)
+    characterwriter.apply_mdef_restrictions(
+        config.pcstat_manager,
+        settings.character_options.mdef_cap,
+        settings.character_options.mdef_levelup_cap,
+        settings.character_options.mdef_growth_scale_factor
+    )
 
     ### Logic (KI Fill, Entrances)
     entrancefiller.update_starting_rewards(settings.logic_options.starter_rewards,

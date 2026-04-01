@@ -2,6 +2,8 @@
 Module that re-implements statcompute and
 """
 from __future__ import annotations
+
+import typing
 from enum import auto
 from typing import Optional
 
@@ -448,12 +450,41 @@ class PCStatsManager:
     influences all characters, such as XP required to gain levels.
     """
 
+    _max_order: typing.ClassVar[tuple[PCStat, ...]] = (
+        PCStat.POWER, PCStat.SPEED, PCStat.STAMINA, PCStat.EVADE,
+        PCStat.MAGIC, PCStat.HIT, PCStat.MAGIC_DEFENSE
+    )
+    _max_addr: typing.ClassVar[int] = 0x3FCF33
+    _level_max_order: typing.ClassVar[tuple[PCStat, ...]] = (
+        PCStat.POWER, PCStat.STAMINA, PCStat.SPEED, PCStat.MAGIC,
+        PCStat.HIT, PCStat.EVADE, PCStat.MAGIC_DEFENSE
+    )
     def __init__(
             self,
             pc_stat_dict: Optional[dict[ctenums.CharID, PCStatData]] = None,
-            xp_thresholds: Optional[XPThreshholds] = None):
+            xp_thresholds: Optional[XPThreshholds] = None,
+            stat_max_dict: Optional[dict[PCStat, int]] = None,
+            level_stat_max_dict: Optional[dict[PCStat, int]] = None,
+    ):
+
+        if level_stat_max_dict is None:
+            level_stat_max_dict = dict()
+        if stat_max_dict is None:
+            stat_max_dict = dict()
 
         self.pc_stat_dict: dict[ctenums.CharID, PCStatData] = {}
+        self.stat_max_dict: dict[PCStat, int] = {
+            PCStat.POWER: 99,
+            PCStat.STAMINA: 99,
+            PCStat.HIT: 99,
+            PCStat.SPEED: 16,
+            PCStat.MAGIC: 99,
+            PCStat.EVADE: 99,
+            PCStat.MAGIC_DEFENSE: 99
+        }
+        self.level_up_stat_max_dict: dict[PCStat, int] = {
+            key: val for key,val in self.stat_max_dict.items()
+        }
 
         # Copy over entries from parameter pc_stat_dict
         if pc_stat_dict is not None:
@@ -480,7 +511,21 @@ class PCStatsManager:
         for pc_id in list(ctenums.CharID):
             pc_stat_dict[pc_id] = PCStatData.read_from_ctrom(ct_rom, pc_id)
 
-        return PCStatsManager(pc_stat_dict, xp_thresholds)
+        max_dict: dict[PCStat, int] ={}
+        ct_rom.seek(cls._max_addr)
+        for stat in cls._max_order:
+            max_dict[stat] = int.from_bytes(ct_rom.read(1))
+
+        if ctrom.CTRomOffset.LEVELUP_STAT_MAX_START in ct_rom.offset_registry:
+            level_max_dict: dict[PCStat, int] = {}
+            ct_rom.seek(ct_rom.offset_registry[ctrom.CTRomOffset.LEVELUP_STAT_MAX_START])
+            for stat in cls._level_max_order:
+                level_max_dict[stat] = int.from_bytes(ct_rom.read(1))
+        else:
+            level_max_dict = {key:val for key,val in max_dict.items()}
+
+        return PCStatsManager(pc_stat_dict, xp_thresholds,
+                              max_dict, level_max_dict)
 
     def write_to_ct_rom(self, ct_rom: ctrom.CTRom):
         self.xp_thresholds.write_to_ctrom(ct_rom)
@@ -488,11 +533,18 @@ class PCStatsManager:
         for pc_id in ctenums.CharID:
             self.pc_stat_dict[pc_id].write_to_ctrom(ct_rom, pc_id)
 
-    @staticmethod
-    def get_stat_max(stat: PCStat):
-        if stat == PCStat.SPEED:
-            return 16
-        return 99
+        ct_rom.seek(self._max_addr)
+        for stat in self._max_order:
+            ct_rom.write(self.stat_max_dict[stat].to_bytes(1))
+
+        if ctrom.CTRomOffset.LEVELUP_STAT_MAX_START in ct_rom.offset_registry:
+            level_max_dict: dict[PCStat, int] = {}
+            ct_rom.seek(ct_rom.offset_registry[ctrom.CTRomOffset.LEVELUP_STAT_MAX_START])
+            for stat in self._level_max_order:
+                ct_rom.write(self.level_up_stat_max_dict[stat].to_bytes(1))
+
+    def get_stat_max(self, stat: PCStat):
+        return self.stat_max_dict[stat]
 
     # Methods for actually manipulating stats in a way that respects game
     # logic.
