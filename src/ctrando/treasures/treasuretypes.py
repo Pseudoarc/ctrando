@@ -25,8 +25,32 @@ class Gold(int):
         if self not in range(0, 2**16):
             raise ValueError("Gold must be in range(0, 65353)")
 
+    def get_reward_str(self) -> str:
+        return f"{self}G"
 
-RewardType = typing.Union[ctenums.ItemID, Gold]
+
+class TechLevelReward:
+    def __init__(self, char_id: ctenums.CharID):
+        self.char_id = char_id
+
+    def get_setter_event_function(self) -> EF:
+        char_tech_level_addr = 0x7E2830 + self.char_id
+        new_block = (
+            EF().add(EC.assign_mem_to_mem(char_tech_level_addr, 0x7F0200, 1))
+            .add_if(
+                EC.if_mem_op_value(0x7F0200, OP.LESS_THAN, 8),
+                EF()
+                .add(EC.increment_mem(0x7F0200))
+                .add(EC.set_tech_level_from_memory(self.char_id, 0x7F0200))
+            )
+        )
+        return new_block
+
+    def get_reward_str(self) -> str:
+        return "{line break}{" + self.char_id.name.lower() +"}'s TechLevel Increased!{null}"
+
+
+RewardType = typing.Union[ctenums.ItemID, Gold, TechLevelReward]
 
 
 class _RewardSpotBase(typing.Protocol):
@@ -139,6 +163,33 @@ class ChestTreasureData(ctt.BinaryData):
     x_coord = ctt.byte_prop(0)
     y_coord = ctt.byte_prop(1)
     has_gold = ctt.bytes_prop(2, 2, 0x8000)
+
+    def set_has_techlevel(self, char_id: ctenums.CharID):
+        self.has_gold = False
+        self.is_empty = False
+        self[2] = 0x20
+        self[3] = char_id
+
+    @property
+    def has_techlevel(self) -> bool:
+        return bool(self[2] & 0x20)
+
+    @has_techlevel.setter
+    def has_techlevel(self, val: bool):
+        self.has_gold = False
+        self.is_empty = False
+
+    @property
+    def techlevel_char(self) -> ctenums.CharID | None:
+        if not self.has_techlevel:
+            return None
+
+        return ctenums.CharID(self[3])
+
+    @techlevel_char.setter
+    def techlevel_char(self, val: ctenums.CharID):
+        self.has_techlevel = True
+        self[3] = int(val)
 
     @property
     def gold(self) -> Gold:
@@ -270,6 +321,8 @@ class ChestTreasure:
 
         if chest_data.has_gold:
             return chest_data.gold
+        elif chest_data.has_techlevel:
+            return TechLevelReward(chest_data.techlevel_char)
         else:
             return chest_data.held_item
 
@@ -368,9 +421,13 @@ class ScriptTreasure:
                 orig_str = f"{orig_gold_amt} G!"
 
             if orig_str is not None:
-                new_str = py_string.replace(orig_str, repl_str)
-                if "{item}" not in repl_str or orig_str == "{item}":
-                    new_str = new_str.replace("{itemdesc}", "")
+                if isinstance(reward, TechLevelReward):
+                    new_str = reward.get_reward_str()
+                else:
+                    new_str = py_string.replace(orig_str, repl_str)
+                    if "{item}" not in repl_str or orig_str == "{item}":
+                        new_str = new_str.replace("{itemdesc}", "")
+
                 new_ind = script.add_py_string(new_str)
                 script.data[pos + 1] = new_ind
                 # print(orig_str, new_str)
@@ -460,7 +517,13 @@ class ScriptTreasure:
                 script.delete_commands(add_rwd_pos+2, 1)
             elif script.data[add_rwd_pos] != 0xC7:
                 script.data[add_rwd_pos + 1] = int(self.reward)
-
+        elif isinstance(self.reward, TechLevelReward):
+            char_tech_level_addr = 0x7E2830 + self.reward.char_id
+            new_block = self.reward.get_setter_event_function()
+            script.insert_commands(
+                new_block.get_bytearray(), add_rwd_pos
+            )
+            script.delete_commands(add_rwd_pos + len(new_block), 1)
         else:  # The reward is gold
             add_gold_cmd = EC.add_gold(self.reward)
 
@@ -616,6 +679,8 @@ class MasaMuneTreasure(ScriptTreasure):
                 EC.assign_val_to_mem(self.reward, 0x7F0200, 1).to_bytearray(), pos
             )
             repl_str = "{item}"
+        elif isinstance(self.reward, TechLevelReward):
+            repl_str = "Tech Level"
         else:
             repl_str = f"{int(self.reward)}G"
 
@@ -665,10 +730,15 @@ class BekklerTreasure(ScriptTreasure):
         if isinstance(self.reward, ctenums.ItemID):
             script.data[pos + 1] = int(self.reward)
         else:
+            if isinstance(self.reward, TechLevelReward):
+                repl_str = "Tech Level"
+            else:
+                repl_str = "wad of cash"
+
             pos, cmd = script.find_command([0xC0])
             str_ind = cmd.args[-1]
             py_str = ctstrings.CTString.ct_bytes_to_ascii(script.strings[str_ind])
-            py_str = py_str.replace("{item}", "wad of cash")
+            py_str = py_str.replace("{item}", repl_str)
             script.strings[str_ind] = ctstrings.CTString.from_str(py_str)
 
 
@@ -695,8 +765,8 @@ class PrismShardTreasure(ScriptTreasure):
         string = script.strings[str_ind]
         py_string = ctstrings.CTString.ct_bytes_to_ascii(string)
 
-        if not isinstance(self.reward, ctenums.ItemID):
-            reward_str = f"{int(self.reward)}G"
+        if isinstance(self.reward, Gold | TechLevelReward):
+            reward_str = self.reward.get_reward_str()
             py_string = py_string.replace("{item}", reward_str)
             script.strings[str_ind] = ctstrings.CTString.from_str(py_string)
 
@@ -714,7 +784,12 @@ class ChargeableTreasure(ScriptTreasure):
             [0xC0], script.get_function_start(self.object_id, self.function_id)
         )
         str_id = script.data[pos + 1]
-        item_str = str(self.reward)
+
+        if isinstance(self.reward, TechLevelReward):
+            item_str = "Tech Level"
+        else:
+            item_str = str(self.reward)
+
         new_str_id = script.add_py_string(
             f"A {item_str} is reacting to the pendant.{{linebreak+0}}"
             "Take it out?{line break}"
@@ -807,15 +882,18 @@ class HuntingRangeNuTreasure(ScriptTreasure):
             if isinstance(self.reward, ctenums.ItemID):
                 script.data[pos+1] = self.reward
             else:
-                new_block = (
-                    EF().add(EC.add_gold(self.reward))
-                    .add(EC.auto_text_box(
-                        script.add_py_string(
-                            "{line break}"
-                            f"Got {self.reward}G!{{null}}"
-                        )
-                    ))
-                )
+                if isinstance(self.reward, TechLevelReward):
+                    new_block = self.reward.get_setter_event_function()
+                else:
+                    new_block = (
+                        EF().add(EC.add_gold(self.reward))
+                        .add(EC.auto_text_box(
+                            script.add_py_string(
+                                "{line break}"
+                                f"Got {self.reward}G!{{null}}"
+                            )
+                        ))
+                    )
                 script.insert_commands(new_block.get_bytearray(), pos)
                 pos += len(new_block)
                 script.delete_commands(pos, 3)
