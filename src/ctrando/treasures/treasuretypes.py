@@ -172,24 +172,25 @@ class ChestTreasureData(ctt.BinaryData):
 
     @property
     def has_techlevel(self) -> bool:
-        return bool(self[2] & 0x20)
+        return bool(self[3] & 0x20)
 
     @has_techlevel.setter
     def has_techlevel(self, val: bool):
         self.has_gold = False
         self.is_empty = False
+        self[3] |= 0x20
 
     @property
     def techlevel_char(self) -> ctenums.CharID | None:
         if not self.has_techlevel:
             return None
 
-        return ctenums.CharID(self[3])
+        return ctenums.CharID(self[2])
 
     @techlevel_char.setter
     def techlevel_char(self, val: ctenums.CharID):
         self.has_techlevel = True
-        self[3] = int(val)
+        self[2] = int(val)
 
     @property
     def gold(self) -> Gold:
@@ -230,6 +231,13 @@ class ChestTreasureData(ctt.BinaryData):
         self._is_empty = val
 
     _held_item = ctt.bytes_prop(2, 2, 0x3FFF, ret_type=ctenums.ItemID)
+
+    @property
+    def has_item(self) -> bool:
+        if self.is_copying_location() or self.has_gold or self.has_techlevel:
+            return False
+
+        return True
 
     @property
     def held_item(self) -> ctenums.ItemID:
@@ -274,14 +282,23 @@ class ChestTreasureData(ctt.BinaryData):
 
         if self.has_gold:
             return self.gold
+        if self.has_techlevel:
+            return TechLevelReward(self.techlevel_char)
 
-        return self._held_item
+        try:
+            return self._held_item
+        except ValueError:
+            pass
 
     @reward.setter
     def reward(self, val: RewardType):
         if isinstance(val, ctenums.ItemID):
             self.held_item = val
+        elif isinstance(val, TechLevelReward):
+            self.has_techlevel = True
+            self.techlevel_char = val.char_id
         else:
+            self.has_gold = True
             self.gold = val
 
     @property
@@ -340,7 +357,7 @@ class ChestTreasure:
             )
         )
         current_data.reward = self.reward
-        if current_data.reward == ctenums.ItemID.NONE:
+        if current_data.has_item and current_data.reward == ctenums.ItemID.NONE:
             current_data.is_empty = True
 
         chest_rw.write_data_to_ct_rom(

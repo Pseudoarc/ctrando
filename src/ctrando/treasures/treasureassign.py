@@ -487,6 +487,9 @@ def default_assignment(
 
     spot_pool = [tid for tid in ctenums.TreasureID if tid not in assigned_spots]
 
+    fill_tech_levels(spot_pool, treasure_options.tech_level_forced_spots,
+                     treasure_options.tech_levels_per_char,
+                     final_assignment, rng)
     fill_good_stuff(item_pool, spot_pool, treasure_options.good_loot_spots, treasure_options.good_loot,
                     treasure_options.good_loot_rate, final_assignment, rng)
     fill_chargeable_chests(final_assignment, item_pool, spot_pool, rng)
@@ -547,6 +550,54 @@ def default_assignment(
         raise ValueError
 
     return final_assignment
+
+
+def fill_tech_levels(
+        spot_pool: list[ctenums.TreasureID],
+        tech_level_forced_spots: Sequence[ctenums.TreasureID],
+        tech_levels_per_char: int,
+        assignment_dict: dict[ctenums.TreasureID, ttypes.RewardType],
+        rng: RNGType
+):
+    # if tech_levels_per_char <= 0:
+    #     return
+
+    tech_levels_per_char = 10
+
+    tech_level_spots = [
+        x for x in tech_level_forced_spots
+        if x in spot_pool and x not in treasureoptions.TreasureOptions.tech_level_excluded_spots
+    ]
+
+    level_pool: list[ctenums.CharID] = []
+    for char_id in ctenums.CharID:
+        level_pool.extend([char_id]*tech_levels_per_char)
+
+    num_extra_needed = len(level_pool) - len(tech_level_spots)
+    if num_extra_needed>0:
+        extra_available_spots = [
+            x for x in spot_pool
+            if x not in tech_level_spots and x not in treasureoptions.TreasureOptions.tech_level_excluded_spots
+        ]
+        extra_spots = rng.sample(extra_available_spots, k=num_extra_needed)
+        tech_level_spots += extra_spots
+
+    rng.shuffle(level_pool)
+
+    for spot, char in zip(tech_level_spots, level_pool):
+        char = level_pool.pop()
+        assignment_dict[spot] = ttypes.TechLevelReward(char)
+        print(spot)
+        spot_pool.remove(spot)
+
+
+
+
+
+
+
+
+
 
 
 def fill_good_stuff(
