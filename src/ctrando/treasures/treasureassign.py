@@ -11,7 +11,7 @@ import math
 from ctrando.arguments.gearrandooptions import DSItem
 from ctrando.locations.scriptmanager import ScriptManager
 from ctrando.locations.locationevent import FunctionID as FID
-from ctrando.arguments import treasureoptions, gearrandooptions
+from ctrando.arguments import treasureoptions, gearrandooptions, recruitoptions
 from ctrando.base.openworld import iokatradingpost, lab32west, lab32east
 from ctrando.common import ctenums, ctrom, distribution, piecewiselinear as pwl
 from ctrando.common.ctenums import TreasureID as TID
@@ -425,6 +425,8 @@ def treasure_sort_key(
                 return tier
         return 0
 
+    raise ValueError
+
 
 def default_assignment(
         existing_assignment: dict[ctenums.TreasureID, ctenums.ItemID],
@@ -432,8 +434,9 @@ def default_assignment(
         extra_ds_items: Sequence[gearrandooptions.DSItem],
         exclude_pool: collections.abc.Sequence[ctenums.ItemID],
         region_map: regionmap.RegionMap,
-        recruit_assignment: dict[ctenums.RecruitID, ctenums.CharID | None],
+        recruit_assignment: dict[ctenums.RecruitID, list[ctenums.CharID]],
         starter_rewards: list[typing.Any],
+        recruit_options: recruitoptions.RecruitOptions,
         rng: RNGType
 ) -> dict[ctenums.TreasureID, ttypes.RewardType]:
     """
@@ -487,9 +490,10 @@ def default_assignment(
 
     spot_pool = [tid for tid in ctenums.TreasureID if tid not in assigned_spots]
 
-    fill_tech_levels(spot_pool, treasure_options.tech_level_forced_spots,
-                     treasure_options.tech_levels_per_char,
-                     final_assignment, rng)
+    if treasure_options.use_tech_level_treasures:
+        fill_tech_levels(spot_pool, treasure_options.tech_level_forced_spots,
+                         treasure_options.extra_tech_levels_per_char,
+                         final_assignment, recruit_assignment, recruit_options, rng)
     fill_good_stuff(item_pool, spot_pool, treasure_options.good_loot_spots, treasure_options.good_loot,
                     treasure_options.good_loot_rate, final_assignment, rng)
     fill_chargeable_chests(final_assignment, item_pool, spot_pool, rng)
@@ -555,23 +559,23 @@ def default_assignment(
 def fill_tech_levels(
         spot_pool: list[ctenums.TreasureID],
         tech_level_forced_spots: Sequence[ctenums.TreasureID],
-        tech_levels_per_char: int,
+        extra_levels_per_char: int,
         assignment_dict: dict[ctenums.TreasureID, ttypes.RewardType],
+        recruit_dict: dict[ctenums.RecruitID, list[ctenums.CharID]],
+        recruit_options: recruitoptions.RecruitOptions,
         rng: RNGType
 ):
-    # if tech_levels_per_char <= 0:
-    #     return
-
-    tech_levels_per_char = 10
+    level_pool: list[ctenums.CharID] = []
+    for spot, recruits in recruit_dict.items():
+        tech_level = recruit_options.get_spot_data(spot).min_tech_level
+        for char_id in recruits:
+            needed_levels = (8 - tech_level) + extra_levels_per_char
+            level_pool.extend([char_id] * needed_levels)
 
     tech_level_spots = [
         x for x in tech_level_forced_spots
         if x in spot_pool and x not in treasureoptions.TreasureOptions.tech_level_excluded_spots
     ]
-
-    level_pool: list[ctenums.CharID] = []
-    for char_id in ctenums.CharID:
-        level_pool.extend([char_id]*tech_levels_per_char)
 
     num_extra_needed = len(level_pool) - len(tech_level_spots)
     if num_extra_needed>0:
@@ -587,17 +591,7 @@ def fill_tech_levels(
     for spot, char in zip(tech_level_spots, level_pool):
         char = level_pool.pop()
         assignment_dict[spot] = ttypes.TechLevelReward(char)
-        print(spot)
         spot_pool.remove(spot)
-
-
-
-
-
-
-
-
-
 
 
 def fill_good_stuff(

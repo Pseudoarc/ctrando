@@ -5,6 +5,7 @@ import dataclasses
 import typing
 
 from ctrando.arguments import argumenttypes
+from ctrando.common import ctenums
 
 
 @dataclasses.dataclass
@@ -50,6 +51,19 @@ class RecruitOptions:
         "death_peak": _default_death_peak_data,
         "yakra_box": _default_yakra_box_data
     }
+    _spot_attr_name_dict = {
+        ctenums.RecruitID.STARTER: "starter",
+        ctenums.RecruitID.MILLENNIAL_FAIR: "fair",
+        ctenums.RecruitID.CATHEDRAL: "cathedral",
+        ctenums.RecruitID.CASTLE: "castle",
+        ctenums.RecruitID.CRONO_TRIAL: "trial",
+        ctenums.RecruitID.PROTO_DOME: "proto",
+        ctenums.RecruitID.NORTH_CAPE: "north_cape",
+        ctenums.RecruitID.FROGS_BURROW: "burrow",
+        ctenums.RecruitID.DACTYL_NEST: "dactyl",
+        ctenums.RecruitID.DEATH_PEAK: "death_peak",
+        ctenums.RecruitID.YAKRA_BOX: "yakra_box"
+    }
     def __init__(
             self,
             starter_data: RecruitData = _default_starter_data,
@@ -81,6 +95,11 @@ class RecruitOptions:
         self.scale_level_to_leader = scale_level_to_leader
         self.scale_techlevel_to_leader = scale_techlevel_to_leader
         self.scale_gear = scale_gear
+
+    def get_spot_data(self, recruit_id: ctenums.RecruitID) -> RecruitData:
+        attr_suffix = self._spot_attr_name_dict[recruit_id]
+        attr_name = f"{attr_suffix}_data"
+        return getattr(self, attr_name)
 
     @classmethod
     def get_argument_spec(cls) -> argumenttypes.ArgSpec:

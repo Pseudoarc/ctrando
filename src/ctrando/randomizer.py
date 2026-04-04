@@ -301,6 +301,9 @@ def get_random_config(
         settings.character_options.mdef_levelup_cap,
         settings.character_options.mdef_growth_scale_factor
     )
+    recruitwriter.write_recruit_stats(settings.recruit_options,
+                                      config.recruit_dict,
+                                      config.pcstat_manager)
 
     ### Logic (KI Fill, Entrances)
     entrancefiller.update_starting_rewards(settings.logic_options.starter_rewards,
@@ -343,6 +346,7 @@ def get_random_config(
         config.region_map,
         config.recruit_dict,
         settings.logic_options.starter_rewards,
+        settings.recruit_options,
         rng)
 
     ### Gear Rando

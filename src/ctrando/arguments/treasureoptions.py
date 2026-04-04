@@ -155,7 +155,8 @@ class TreasureOptions:
     _default_johnny_high_item = ItemID.FULL_ETHER
     _default_johnny_high_quantity = 5
 
-    _default_tech_levels_per_char = 0
+    _default_tech_level_treasures = False
+    _default_extra_tech_levels_per_char = 0
     _default_tech_level_spots: typing.ClassVar[tuple[TID, ...]] = tuple()
     tech_level_excluded_spots: typing.ClassVar[tuple[TID, ...]] = (
         TID.TRADING_POST_PETAL_FANG_BASE, TID.TRADING_POST_PETAL_FANG_UPGRADE,
@@ -189,7 +190,8 @@ class TreasureOptions:
             johnny_high_threshold=_default_johnny_high_threshold,
             johnny_high_item=_default_johnny_high_item,
             johnny_high_quantity=_default_johnny_high_quantity,
-            tech_levels_per_char=_default_tech_levels_per_char,
+            use_tech_level_treasures=_default_tech_level_treasures,
+            extra_tech_levels_per_char=_default_extra_tech_levels_per_char,
             tech_level_forced_spots=_default_tech_level_spots
     ):
         self.loot_pool = loot_pool
@@ -216,7 +218,8 @@ class TreasureOptions:
         self.johnny_high_item = johnny_high_item
         self.johnny_high_quantity = johnny_high_quantity
 
-        self.tech_levels_per_char = tech_levels_per_char
+        self.use_tech_level_treasures = use_tech_level_treasures
+        self.extra_tech_levels_per_char = extra_tech_levels_per_char
         self.tech_level_forced_spots = tech_level_forced_spots
 
         if not (johnny_low_threshold <= johnny_mid_threshold <= johnny_high_threshold):
@@ -334,9 +337,12 @@ class TreasureOptions:
                 "Number of items for the high tier Johnny reward",
                 type_fn=int
             ),
-            "tech_levels_per_char": argumenttypes.DiscreteNumericalArg(
-                0, 10, 1, cls._default_tech_levels_per_char,
-                "Number of Tech Tevel increases to include for each character",
+            "use_tech_level_treasures": argumenttypes.FlagArg(
+                "Allow character tech levels to appear in treasure spots"
+            ),
+            "extra_tech_levels_per_char": argumenttypes.DiscreteNumericalArg(
+                0, 5, 1, cls._default_extra_tech_levels_per_char,
+                "Number of extra Tech Level increases to include for each character",
                 type_fn=int
             ),
             "tech_level_forced_spots": argumenttypes.arg_multiple_from_enum(
@@ -404,7 +410,8 @@ class TreasureOptions:
                       "johnny_low_threshold", "johnny_low_item", "johnny_low_quantity",
                       "johnny_mid_threshold", "johnny_mid_item", "johnny_mid_quantity",
                       "johnny_high_threshold", "johnny_high_item", "johnny_high_quantity",
-                      "tech_levels_per_char", "tech_level_forced_spots")
+                      "use_tech_level_treasures", "extra_tech_levels_per_char",
+                      "tech_level_forced_spots")
         for attr_name in attr_names:
             arg = spec[attr_name]
             arg_name = argumenttypes.attr_name_to_arg_name(attr_name)

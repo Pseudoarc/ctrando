@@ -958,6 +958,8 @@ def get_lead_pc_level_tech_level_func(
     Return an EF that stores the leading PC's level in temp_addr
     """
 
+    prefix="lead_ltl_"
+
     ret_fn = (
         EF()
         .add(EC.assign_mem_to_mem(memory.Memory.ACTIVE_PC1, level_addr, 1))
@@ -970,10 +972,10 @@ def get_lead_pc_level_tech_level_func(
             EF()
             .add(EC.assign_mem_to_mem(ram_level_addr, level_addr, 1))
             .add(EC.assign_mem_to_mem(ram_tech_level_addr, tech_level_addr, 1))
-            .jump_to_label(EC.jump_forward(), "return")
+            .jump_to_label(EC.jump_forward(), prefix+"return")
         )
 
-    ret_fn.set_label("return")
+    ret_fn.set_label(prefix+"return")
     ret_fn.add(EC.pause(0))
 
     return ret_fn
@@ -1025,6 +1027,7 @@ def get_dynamic_gear_function(
         temp_addr: int = 0x7F0308
 ) -> EF:
 
+    prefix = f"dyn_gear_{char_id.name.lower()}_"
     stat_block_start = 0x7E2600 + 0x50*char_id
     cur_level_offset = 0x12
     equip_offset = 0x27  # Helm, Arm, Weap, Acc
@@ -1066,10 +1069,10 @@ def get_dynamic_gear_function(
                 EF()
                 .add(EC.assign_val_to_mem(first_bytes, equip_addr, 2))
                 .add(EC.assign_val_to_mem(second_bytes, equip_addr+2, 2))
-                .jump_to_label(EC.jump_forward(), "end")
+                .jump_to_label(EC.jump_forward(), prefix+"end")
         )
 
-    func.set_label("end")
+    func.set_label(prefix+"end")
     func.add(EC.pause(0))
 
     # print(func)
@@ -1107,21 +1110,34 @@ def get_level_techlevel_set_function(
             )
         )
 
+    tech_level_block: EF = EF()
     if not scale_techlevel:
-        func.add(EC.assign_val_to_mem(min_techlevel, temp_techlevel_addr, 1))
+        tech_level_block.add(EC.assign_val_to_mem(min_techlevel, temp_techlevel_addr, 1))
     elif min_techlevel > 0:
-        func.append(
+        tech_level_block.append(
             EF()
             .add_if(
                 EC.if_mem_op_value(temp_techlevel_addr, OP.LESS_THAN, min_techlevel),
                 EF().add(EC.assign_val_to_mem(min_techlevel, temp_techlevel_addr, 1))
             )
         )
+    func.append(tech_level_block)
+
+    # re-use temp_level_addr, so delay this until we're done with it
+    tech_block = (
+        EF()
+        .add(EC.assign_mem_to_mem(0x7E2830 + pc_id, temp_level_addr, 1))
+        .add_if(
+            EC.if_mem_op_mem(temp_level_addr, OP.LESS_THAN, temp_techlevel_addr),
+            EF().add(EC.set_tech_level_from_memory(pc_id, temp_techlevel_addr))
+        )
+    )
 
     func.add(EC.set_level_from_memory(pc_id, temp_level_addr))
-    func.add(EC.set_tech_level_from_memory(pc_id, temp_techlevel_addr))
 
     if scale_gear:
         func.append(get_dynamic_gear_function(pc_id, temp_level_addr))
+
+    func.append(tech_block)  # Once we're done with temp_level_addr
 
     return func

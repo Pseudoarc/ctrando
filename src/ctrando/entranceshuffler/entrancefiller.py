@@ -34,13 +34,13 @@ def update_starting_rewards(
 
 
 def get_key_item_fill(
-        initial_treasure_assignment: dict[ctenums.TreasureID, ctenums.ItemID],
+        initial_treasure_assignment: dict[ctenums.TreasureID, ttypes.RewardType],
         boss_assignment: dict[bty.BossSpotID, bty.BossID],
         recruit_assignment: dict[ctenums.RecruitID, list[ctenums.CharID]],
         logic_options: logicoptions.LogicOptions,
         entrance_options: entranceoptions.EntranceShufflerOptions,
         rng: RNGType
-) -> tuple[dict[ctenums.TreasureID, ctenums.ItemID], dict[regionmap.OWExit, regionmap.OWExit], regionmap.RegionMap]:
+) -> tuple[dict[ctenums.TreasureID, ttypes.RewardType], dict[regionmap.OWExit, regionmap.OWExit], regionmap.RegionMap]:
 
     forced_key_items = get_forced_key_items()
 

@@ -474,6 +474,19 @@ johnny_high_threshold = 1700  # 1700 points for 2 mega elixirs
 johnny_high_item = "megaelixir"
 johnny_high_quantity = 2
 
+# Special Treasures Options
+# You can put tech levels in treasure chests.  By default this is off.
+use_tech_level_treasures = false
+
+# Be default, there are exactly enough tech level items for each character to max
+# their techs.  If you want more, you can specify it here.  If a character is at max
+# tech level, then further tech level increases have no effect.
+extra_tech_levels_per_char = 0
+
+# Spots which are guaranteed to have a tech level in them.
+# Key items get priority.  Remaining tech levels are assigned purely randomly.
+tech_level_forced_spots = []
+
 # Enemy Options: Options relating to Enemies
 sightscope_all=true     # Enable sightscope usage on all enemies.
 forced_sightscope=true  # Sightscope effect will be present without the item equipped.

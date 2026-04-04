@@ -3,7 +3,8 @@ from dataclasses import dataclass
 import typing
 
 from ctrando.arguments.arguments import Settings
-from ctrando.arguments.recruitoptions import RecruitData
+from ctrando.arguments.recruitoptions import RecruitData, RecruitOptions
+from ctrando.characters import ctpcstats
 from ctrando.common import ctenums, ctrom
 from ctrando.common.ctenums import CharID, RecruitID, ItemID
 from ctrando.common.random import RNGType
@@ -25,28 +26,6 @@ from ctrando.recruits import (
 #     CharID.AYLA: ItemID.DREAMSTONE,
 #     CharID.MAGUS: ItemID.PENDANT_CHARGE
 # }
-
-@dataclass
-class RecruitSpotData:
-    level: int
-    techlevel: int
-
-_recruit_spot_data_dict = {
-    RecruitID.STARTER: RecruitSpotData(1, 0),
-    RecruitID.MILLENNIAL_FAIR: RecruitSpotData(1, 0),
-    RecruitID.CATHEDRAL: RecruitSpotData(5, 0),
-    RecruitID.CASTLE: RecruitSpotData(5, 1),
-    RecruitID.CRONO_TRIAL: RecruitSpotData(7, 1),
-    RecruitID.PROTO_DOME: RecruitSpotData(10, 0),
-    RecruitID.NORTH_CAPE: RecruitSpotData(37, 3),
-    RecruitID.FROGS_BURROW: RecruitSpotData(18, 2),
-    RecruitID.DACTYL_NEST: RecruitSpotData(20, 2),
-    RecruitID.DEATH_PEAK: RecruitSpotData(37, 8)
-}
-
-
-def get_recruit_spot_data(recruit_spot: RecruitID) -> RecruitSpotData:
-    return _recruit_spot_data_dict[recruit_spot]
 
 
 def get_random_recruit_assignment_dict(
@@ -88,6 +67,18 @@ def get_random_recruit_assignment_dict(
 
 
 RecruitAssigner: typing.Callable[[CharID, ScriptManager], None]
+
+
+def write_recruit_stats(
+        recruit_options: RecruitOptions,
+        recruit_dict: dict[ctenums.RecruitID, list[ctenums.CharID]],
+        stat_man: ctpcstats.PCStatsManager
+):
+    for spot, chars in recruit_dict.items():
+        spot_data = recruit_options.get_spot_data(spot)
+        for char in chars:
+            stat_man.set_level(char, spot_data.min_level)
+            stat_man.set_tech_level(char, spot_data.min_tech_level)
 
 
 def write_recruits_to_ct_rom(
