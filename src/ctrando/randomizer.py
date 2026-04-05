@@ -294,7 +294,9 @@ def get_random_config(
         settings.battle_rewards.xp_tp_rewards.level_cap
     )
     characterwriter.scale_tp(
-        config.pcstat_manager, settings.battle_rewards.xp_tp_rewards.tp_scale)
+        config.pcstat_manager,
+        config.enemy_data_dict,
+        settings.battle_rewards.xp_tp_rewards.tp_scale)
     characterwriter.apply_mdef_restrictions(
         config.pcstat_manager,
         settings.character_options.mdef_cap,

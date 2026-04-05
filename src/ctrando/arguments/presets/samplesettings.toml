@@ -432,6 +432,10 @@ scale_level_to_leader=true          # Joining recruits will have a level no lowe
 scale_techlevel_to_leader=true      # Joining recruits will have a tech level no lower than the leader
 scale_gear=true                     # Gear will improve with the level at which they join
 
+mdef_growth_scale_factor = 1.0  # Scale magic defense gains, 1.0 means no change from vanilla
+mdef_cap = 99                   # Total mdef will cap at this value
+mdef_levelup_cap = 99           # Mdef from leveling up will cap at this value
+
 # Treasure Options: Options for how non-progression treasures are distributed
 loot_pool = "vanilla"  # vanilla, random, tiered_random
 loot_assignment_scheme = "shuffle"  # or logic_depth

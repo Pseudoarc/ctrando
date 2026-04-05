@@ -424,6 +424,8 @@ def treasure_sort_key(
             if treasure in item_list:
                 return tier
         return 0
+    elif isinstance(treasure, ttypes.TechLevelReward):
+        return 4  # Like a 65000 gold reward
 
     raise ValueError
 

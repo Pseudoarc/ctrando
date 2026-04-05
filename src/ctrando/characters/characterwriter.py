@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from ctrando.common import ctenums
 from ctrando.characters import ctpcstats
-
+from ctrando.enemydata.enemystats import EnemyStats
 
 def fill_vanilla_tp_gaps(pc_stat_man: ctpcstats.PCStatsManager):
 
@@ -31,14 +31,19 @@ def fill_vanilla_tp_gaps(pc_stat_man: ctpcstats.PCStatsManager):
 
 
 def scale_tp(pc_stat_man: ctpcstats.PCStatsManager,
+             enemy_data_dict: dict[ctenums.EnemyID, EnemyStats],
              scale_factor: float):
     """Scale TP gain by altering required tp to gain a tech level."""
-    for char_id in ctenums.CharID:
-        tp_thresh = pc_stat_man.pc_stat_dict[char_id].tp_thresholds
-        for tech_level in range(8):
-            tp_req = tp_thresh.get_threshold(tech_level)
-            new_tp_req = round(tp_req/scale_factor)
-            tp_thresh.set_threshold(tech_level, new_tp_req)
+    if abs(scale_factor) < 0.25:
+        for enemy_id, stats in enemy_data_dict.items():
+            stats.tp = 0
+    else:
+        for char_id in ctenums.CharID:
+            tp_thresh = pc_stat_man.pc_stat_dict[char_id].tp_thresholds
+            for tech_level in range(8):
+                tp_req = tp_thresh.get_threshold(tech_level)
+                new_tp_req = round(tp_req/scale_factor)
+                tp_thresh.set_threshold(tech_level, new_tp_req)
 
 def scale_xp(pc_stat_man: ctpcstats.PCStatsManager,
              scale_factor: float):
