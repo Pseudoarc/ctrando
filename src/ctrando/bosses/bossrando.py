@@ -431,12 +431,12 @@ def fix_atropos_ribbon_buff(
         if entry== bty.BossID.ATROPOS_XR
     ]
 
-    if bty.BossSpotID.GENO_DOME_MID not in spots and False:
+    if bty.BossSpotID.GENO_DOME_MID not in spots:
         bass.remove_ribbon_from_geno_dome(script_manager)
     else:
         bass.fix_vanilla_atropos_buff(script_manager, mdef_levelup_cap)
 
-    for spot in spots or True:
+    for spot in spots:
         bass.add_ribbon_buff_to_spot(script_manager, spot, mdef_levelup_cap)
 
 
