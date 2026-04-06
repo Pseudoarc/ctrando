@@ -486,7 +486,7 @@ class ScriptTreasure:
 
             # Loop until we reach the appropriate number of set memory and
             # add gold/item commands
-            pos, cmd = script.find_command_opt([0x4F, 0xCA, 0xCD, 0xC7], pos, fn_end)
+            pos, cmd = script.find_command_opt([0x4F, 0xCA, 0xCD, 0xC7, 0xFD], pos, fn_end)
 
             if pos is None:
                 # print(self)
@@ -501,7 +501,7 @@ class ScriptTreasure:
                     num_mem_set_cmds_found += 1
                     if num_mem_set_cmds_found == self.item_num + 1:
                         mem_set_pos = pos
-            elif cmd.command in (0xCA, 0xCD, 0xC7):
+            elif cmd.command in (0xCA, 0xCD, 0xC7, 0xFD):
                 num_add_rwd_cmds_found += 1
                 if num_add_rwd_cmds_found == self.item_num + 1:
                     add_rwd_pos = pos
@@ -535,7 +535,6 @@ class ScriptTreasure:
             elif script.data[add_rwd_pos] != 0xC7:
                 script.data[add_rwd_pos + 1] = int(self.reward)
         elif isinstance(self.reward, TechLevelReward):
-            char_tech_level_addr = 0x7E2830 + self.reward.char_id
             new_block = self.reward.get_setter_event_function()
             script.insert_commands(
                 new_block.get_bytearray(), add_rwd_pos
