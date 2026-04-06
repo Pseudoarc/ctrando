@@ -493,7 +493,8 @@ def get_ctrom_from_config(
                                 config.enemy_data_dict,
                                 post_config.overworld_manager)
     bossrando.fix_atropos_ribbon_buff(config.boss_assignment_dict,
-                                      post_config.script_manager)
+                                      post_config.script_manager,
+                                      settings.character_options.mdef_levelup_cap)
     bossrando.bass.add_r_series_boss_defeat_check(config.boss_assignment_dict,
                                                   post_config.script_manager)
 

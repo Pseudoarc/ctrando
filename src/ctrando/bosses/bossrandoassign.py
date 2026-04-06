@@ -1215,8 +1215,60 @@ def assign_black_omen_zeal(
     )
 
 
+def fix_vanilla_atropos_buff(
+        script_manager: scriptmanager.ScriptManager,
+        mdef_levelup_cap: int
+):
+    script = script_manager[ctenums.LocID.GENO_DOME_MAINFRAME]
+
+    temp_addr = 0x7F021C
+    pos = script.find_exact_command(
+        EC.assign_mem_to_mem(0x7E2701, temp_addr, 1),
+        script.get_function_start(0x1D, FID.ARBITRARY_0)
+    )
+    script.insert_commands(
+        EF()
+        .add(EC.assign_mem_to_mem(0x7E2721, temp_addr, 1))
+        .add(EC.add_value_to_mem(3, temp_addr))
+        .add_if(
+            EC.if_mem_op_value(temp_addr, OP.GREATER_THAN, 0x10, 1, 0),
+            (
+                EF()
+                .add(EC.assign_val_to_mem(0x10, temp_addr, 1))
+            )
+        ).get_bytearray(), pos
+    )
+
+    pos = script.find_exact_command(
+        EC.if_mem_op_value(0x7F021C, OP.GREATER_THAN, 0x63),
+        pos
+    )
+
+    repl_cmd = EC.if_mem_op_value(0x7F021C, OP.GREATER_THAN, mdef_levelup_cap)
+    script.replace_jump_cmd(pos, repl_cmd)
+
+    pos += len(repl_cmd)
+    script.replace_command_at_pos(
+        pos, EC.assign_val_to_mem(mdef_levelup_cap, 0x7F021C, 1)
+    )
+
+    pos = script.find_exact_command(
+        EC.if_mem_op_value(0x7F021C, OP.GREATER_THAN, 0x50),
+        script.get_function_start(0x1D, FID.ARBITRARY_0)
+    )
+
+    repl_cmd = EC.if_mem_op_value(0x7F021C, OP.GREATER_THAN, mdef_levelup_cap)
+    script.replace_jump_cmd(pos, repl_cmd)
+
+    pos += len(repl_cmd)
+    script.replace_command_at_pos(
+        pos, EC.assign_val_to_mem(mdef_levelup_cap, 0x7F021C, 1)
+    )
+
+
 def get_atropos_ribbon_func(
         stat_boost_str_id: int,
+        mdef_levelup_cap: int = 99,
         temp_addr: int = 0x7F0240,
 ) -> EF:
     """Get an EF to give Robo's stat boost."""
@@ -1232,18 +1284,32 @@ def get_atropos_ribbon_func(
             )
         )
         .add(EC.assign_mem_to_mem(temp_addr, 0x7E26FD, 1))
+        .add(EC.assign_mem_to_mem(0x7E2721, temp_addr, 1))
+        .add(EC.add_value_to_mem(3, temp_addr))
+        .add_if(
+            EC.if_mem_op_value(temp_addr, OP.GREATER_THAN, 0x10, 1, 0),
+            (
+                EF()
+                .add(EC.assign_val_to_mem(0x10, temp_addr, 1))
+            )
+        )
+        .add(EC.assign_mem_to_mem(temp_addr, 0x7E2721, 1))
         .add(EC.assign_mem_to_mem(0x7E2701, temp_addr, 1))
         .add(EC.add_value_to_mem(0xA, temp_addr))
         .add_if(
             EC.if_mem_op_value(temp_addr, OP.GREATER_THAN, 0x50, 1, 0),
             (
                 EF()
-                .add(EC.assign_val_to_mem(0x50, temp_addr, 1))
+                .add(EC.assign_val_to_mem(mdef_levelup_cap, temp_addr, 1))
             )
         )
         .add(EC.assign_mem_to_mem(temp_addr, 0x7E2701, 1))
         .add(EC.assign_mem_to_mem(0x7E2725, temp_addr, 1))
         .add(EC.add_value_to_mem(0xA, temp_addr))
+        .add_if(
+            EC.if_mem_op_value(temp_addr, OP.GREATER_OR_EQUAL, mdef_levelup_cap),
+            EF().add(EC.assign_val_to_mem(mdef_levelup_cap, temp_addr, 1))
+        )
         .add(EC.assign_mem_to_mem(temp_addr, 0x7E2725, 1))
         .add(EC.set_flag(memory.Flags.HAS_ATROPOS_RIBBON_BUFF))
         .add(EC.text_box(stat_boost_str_id))
@@ -1290,7 +1356,8 @@ def remove_ribbon_from_geno_dome(
 
 
 def add_ribbon_buff_to_spot(
-        script_manager: scriptmanager.ScriptManager, spot: bosstypes.BossSpotID
+        script_manager: scriptmanager.ScriptManager, spot: bosstypes.BossSpotID,
+        mdef_levelup_cap: int
 ):
     if spot == bosstypes.BossSpotID.GENO_DOME_MID:
         return
@@ -1305,7 +1372,7 @@ def add_ribbon_buff_to_spot(
         "Atropos' Ribbon ups Robo's Speed{linebreak+0}"
         "by 3 and Magic Defense by 10.{null}"
     )
-    func = get_atropos_ribbon_func(str_id)
+    func = get_atropos_ribbon_func(str_id, mdef_levelup_cap)
     script.insert_commands(func.get_bytearray(), pos)
 
 
