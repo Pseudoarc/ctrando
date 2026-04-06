@@ -191,7 +191,11 @@ class PostConfigState:
     def write_to_ctrom(self, ct_rom: ctrom.CTRom, clean: bool = False):
         locationtypes.write_exit_dict_to_ctrom(ct_rom, self.loc_exit_dict)
         for tid, treasure in self.treasure_data_dict.items():
-            if clean and isinstance(treasure.reward, ttypes.TechLevelReward):
+            if (
+                    clean and
+                    isinstance(treasure.reward, ttypes.TechLevelReward) and
+                    not isinstance(treasure, ttypes.ChestTreasure)
+            ):
                 continue
             treasure.write_to_ct_rom(ct_rom, self.script_manager)
 
