@@ -621,7 +621,7 @@ def get_ctrom_from_config(
 
     print("Writing to Rom...", end="")
     a = time.time()
-    post_config.write_to_ctrom(ct_rom)
+    post_config.write_to_ctrom(ct_rom, clean = make_tf_friendly)
     b = time.time()
     print(f"({b-a})")
     ### End replace rstate.update_ct_rom()

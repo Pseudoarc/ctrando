@@ -188,22 +188,22 @@ class PostConfigState:
         return cls(script_manager, overworld_manager, loc_exit_dict, loc_data_dict,
                    treasure_data_dict, enemy_sprite_dict, enemy_ai_manager)
 
-    def write_to_ctrom(self, ct_rom: ctrom.CTRom):
+    def write_to_ctrom(self, ct_rom: ctrom.CTRom, clean: bool = False):
         locationtypes.write_exit_dict_to_ctrom(ct_rom, self.loc_exit_dict)
         for tid, treasure in self.treasure_data_dict.items():
-            if tid == ctenums.TreasureID.CRONOS_MOM:
-                pass
+            if clean and isinstance(treasure.reward, ttypes.TechLevelReward):
+                continue
             treasure.write_to_ct_rom(ct_rom, self.script_manager)
 
         for loc_id, loc_data in self.loc_data_dict.items():
             loc_data.write_to_ctrom(ct_rom, loc_id)
 
+        self.enemy_ai_manager.write_to_ct_rom(ct_rom)
+        self.overworld_manager.write_all_overworlds_to_ctrom()
+
         self.script_manager.write_all_scripts_to_ctrom()
         for enemy_id, enemy_sprite in self.enemy_sprite_dict.items():
             enemy_sprite.write_to_ctrom(ct_rom, enemy_id)
-
-        self.enemy_ai_manager.write_to_ct_rom(ct_rom)
-        self.overworld_manager.write_all_overworlds_to_ctrom()
 
 
 @dataclass
