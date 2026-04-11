@@ -42,6 +42,59 @@ def _strip_static_animations(
         script.data[start_pos + 1] = 0
         start_pos += len(cmd)
 
+
+def recenter_r_series(
+        scheme: bosstypes.BossScheme,
+        lr_center: typing.Literal["min", "mid", "max"],
+        ud_center: typing.Literal["min", "mid", "max"],
+        priority:  typing.Literal["lr", "ud"] = "lr"
+):
+    """Re-center the given boss scheme (presumed R-Series) to fit in more spots"""
+
+    def key_lr(part: bosstypes.BossPart) -> int:
+        return part.displacement[0]
+
+    def key_ud(part: bosstypes.BossPart) -> int:
+        return part.displacement[1]
+
+    if priority == "lr":
+        first_key, first_center = key_lr, lr_center
+        second_key, second_center = key_ud, ud_center
+    elif priority == "ud":
+        first_key, first_center = key_ud, ud_center
+        second_key, second_center = key_lr, lr_center
+    else:
+        raise ValueError
+
+    keys = [first_key, second_key]
+    centers = [first_center, second_center]
+    part_pool = [part for part in scheme.parts]
+
+    for key, center in zip(keys, centers):
+        ind_dict: dict[Literal["min", "mid", "max"], int] = {
+            "min": 0, "mid": len(part_pool) // 2, "max": -1
+        }
+        sorted_pool = sorted(part_pool, key=key)
+        index = ind_dict[center]
+        test_val = key(sorted_pool[index])
+        remaining = [x for x in part_pool if key(x) == test_val]
+        part_pool = remaining
+
+    target_disp = part_pool[0].displacement
+    target_ind = 0
+
+    for part in scheme.parts[1:]:
+        new_x = part.displacement[0] - target_disp[0]
+        new_y = part.displacement[1] - target_disp[1]
+
+        # The one in the new center spot gets -target_disp
+        if new_x == new_y == 0:
+            new_x = -target_disp[0]
+            new_y = -target_disp[1]
+
+        part.displacement = (new_x, new_y)
+
+
 def assign_cathedral_boss(
         script_manager: scriptmanager.ScriptManager,
         boss: bosstypes.BossScheme,
@@ -736,6 +789,10 @@ def assign_sunken_desert_boss(
                                   ctenums.EnemyID.RETINITE_BOTTOM):
         return
 
+    is_rseries = ctenums.EnemyID.R_SERIES in [
+        part.enemy_id for part in boss.parts
+    ]
+
     # Remove the 0xF (Bottom) Object which rises up  instead make copies of 0xE which fades in.
     script.remove_object(0xF)
 
@@ -766,9 +823,19 @@ def assign_sunken_desert_boss(
         FID.ARBITRARY_3: (0x16, 0x18)
     }
 
+    type LocType = Literal["min", "mid", "max"]
+    reshuffle_args: dict[FID, tuple[LocType, LocType]] ={
+        FID.ARBITRARY_0: ("mid", "min"),
+        FID.ARBITRARY_1: ("mid", "max"),
+        FID.ARBITRARY_2: ("mid", "mid"),
+        FID.ARBITRARY_3: ("mid", "min")
+    }
+
     # Real coord setting happens in the Arb0-Arb3, which get called after triggering
     # the battle.
     for func_id, (x_tile, y_tile) in base_coords.items():
+        if is_rseries:
+            recenter_r_series(boss, *(reshuffle_args[func_id]))
         for obj_id, part in zip(total_objs[1:], boss.parts[1:]):
             x_px, y_px = bru.tile_to_pixel_coords(x_tile, y_tile)
             bru.update_boss_object_coordinates(
