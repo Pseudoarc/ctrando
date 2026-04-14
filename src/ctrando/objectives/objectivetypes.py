@@ -293,6 +293,7 @@ _boss_abbrev: dict[bty.BossID, str] = {
     bty.BossID.GIGA_GAIA: 'Giga Gaia',
     bty.BossID.GUARDIAN: 'Guardian',
     bty.BossID.OZZIE_TRIO: 'Ozzie Trio',
+    bty.BossID.ZEAL: "Zeal"
     #
     # bty.BossID.MAGUS: 'Magus',
     # bty.BossID.BLACK_TYRANO: 'Black Tyrano'
