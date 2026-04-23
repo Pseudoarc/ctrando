@@ -396,6 +396,8 @@ def chaos_reassign_elemental_single_techs(
     )
 
     char_elem_usage: dict[ctenums.CharID, list[ctenums.TechID]] = {}
+    elem_tech_ids: list[ctenums.TechID] = []
+    char_pool_set: set[ctenums.CharID] = set()
     for char_id in (ctenums.CharID.CRONO, ctenums.CharID.MARLE, ctenums.CharID.LUCCA,
                     ctenums.CharID.FROG, ctenums.CharID.MAGUS):
         char_elem_usage[char_id] = []
@@ -405,32 +407,24 @@ def chaos_reassign_elemental_single_techs(
             tech = tech_man.get_tech(tech_id)
             if tech.name in elem_names:
                 char_elem_usage[char_id].append(ctenums.TechID(tech_id))
+                elem_tech_ids.append(ctenums.TechID(tech_id))
+                char_pool_set.add(char_id)
 
-
-    char_elem_usage: dict[ctenums.CharID, tuple[ctenums.TechID, ...]] = {
-        ctenums.CharID.CRONO: (ctenums.TechID.LIGHTNING, ctenums.TechID.LIGHTNING_2, ctenums.TechID.LUMINAIRE,),
-        ctenums.CharID.MARLE: (ctenums.TechID.ICE, ctenums.TechID.ICE_2,),
-        ctenums.CharID.LUCCA: (ctenums.TechID.FIRE, ctenums.TechID.FIRE_2, ctenums.TechID.FLARE,),
-        ctenums.CharID.FROG: (ctenums.TechID.WATER, ctenums.TechID.WATER_2,),
-        ctenums.CharID.MAGUS: (
-            ctenums.TechID.LIGHTNING_2_M, ctenums.TechID.FIRE_2_M, ctenums.TechID.ICE_2_M,
-            ctenums.TechID.DARK_BOMB, ctenums.TechID.DARK_MIST, ctenums.TechID.DARK_MATTER)
-    }
+    # char_elem_usage: dict[ctenums.CharID, tuple[ctenums.TechID, ...]] = {
+    #     ctenums.CharID.CRONO: (ctenums.TechID.LIGHTNING, ctenums.TechID.LIGHTNING_2, ctenums.TechID.LUMINAIRE,),
+    #     ctenums.CharID.MARLE: (ctenums.TechID.ICE, ctenums.TechID.ICE_2,),
+    #     ctenums.CharID.LUCCA: (ctenums.TechID.FIRE, ctenums.TechID.FIRE_2, ctenums.TechID.FLARE,),
+    #     ctenums.CharID.FROG: (ctenums.TechID.WATER, ctenums.TechID.WATER_2,),
+    #     ctenums.CharID.MAGUS: (
+    #         ctenums.TechID.LIGHTNING_2_M, ctenums.TechID.FIRE_2_M, ctenums.TechID.ICE_2_M,
+    #         ctenums.TechID.DARK_BOMB, ctenums.TechID.DARK_MIST, ctenums.TechID.DARK_MATTER)
+    # }
     elem_capacity: dict[ctenums.CharID, int] = {
         key: len(val) for key,val in char_elem_usage.items()
     }
     elem_assignment: dict[ctenums.CharID, list[ctenums.TechID]] = {
         x: [] for x in char_elem_usage.keys()
     }
-
-    elem_tech_ids: list[ctenums.TechID] = [
-        ctenums.TechID.LIGHTNING, ctenums.TechID.LIGHTNING_2, ctenums.TechID.LUMINAIRE,
-        ctenums.TechID.FIRE, ctenums.TechID.FIRE_2, ctenums.TechID.FLARE,
-        ctenums.TechID.ICE, ctenums.TechID.ICE_2,
-        ctenums.TechID.WATER, ctenums.TechID.WATER_2,
-        ctenums.TechID.LIGHTNING_2_M, ctenums.TechID.ICE_2_M, ctenums.TechID.FIRE_2_M,
-        ctenums.TechID.DARK_BOMB, ctenums.TechID.DARK_MIST, ctenums.TechID.DARK_MATTER
-    ]
 
     duplicates: tuple[tuple[ctenums.TechID, ctenums.TechID], ...] = (
         (ctenums.TechID.LIGHTNING_2, ctenums.TechID.LIGHTNING_2_M),
@@ -439,9 +433,7 @@ def chaos_reassign_elemental_single_techs(
     )
 
     tech_pool: list[ctenums.TechID] = list(elem_tech_ids)
-    char_pool = [ctenums.CharID.CRONO, ctenums.CharID.MARLE,
-                 ctenums.CharID.LUCCA, ctenums.CharID.FROG,
-                 ctenums.CharID.MAGUS]
+    char_pool = sorted(list(char_pool_set))
 
     for dup_pair in duplicates:
         chosen_chars = rng.sample(char_pool, k=2)
@@ -460,7 +452,6 @@ def chaos_reassign_elemental_single_techs(
     orig_data: dict[ctenums.TechID, _TechData] = {
         tech_id: get_tech_data(tech_id) for tech_id in elem_tech_ids
     }
-
 
     def get_new_data(_char_id: ctenums.CharID, _tech_id: ctenums.TechID) -> _TechData:
         for _dup_pair in duplicates:
