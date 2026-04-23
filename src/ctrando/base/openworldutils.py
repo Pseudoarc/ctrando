@@ -1102,26 +1102,20 @@ def get_level_techlevel_set_function(
     if not scale_level:
         func.add(EC.assign_val_to_mem(min_level, temp_level_addr, 1))
     elif min_level > 1:
-        func.append(
-            EF()
-            .add_if(
-                EC.if_mem_op_value(temp_level_addr, OP.LESS_THAN, min_level),
-                EF().add(EC.assign_val_to_mem(min_level, temp_level_addr, 1))
-            )
+        func.add_if(
+            EC.if_mem_op_value(temp_level_addr, OP.LESS_THAN, min_level),
+            EF().add(EC.assign_val_to_mem(min_level, temp_level_addr, 1))
         )
+
 
     tech_level_block: EF = EF()
     if not scale_techlevel:
-        tech_level_block.add(EC.assign_val_to_mem(min_techlevel, temp_techlevel_addr, 1))
+        func.add(EC.assign_val_to_mem(min_techlevel, temp_techlevel_addr, 1))
     elif min_techlevel > 0:
-        tech_level_block.append(
-            EF()
-            .add_if(
-                EC.if_mem_op_value(temp_techlevel_addr, OP.LESS_THAN, min_techlevel),
-                EF().add(EC.assign_val_to_mem(min_techlevel, temp_techlevel_addr, 1))
-            )
+        func.add_if(
+            EC.if_mem_op_value(temp_techlevel_addr, OP.LESS_THAN, min_techlevel),
+            EF().add(EC.assign_val_to_mem(min_techlevel, temp_techlevel_addr, 1))
         )
-    func.append(tech_level_block)
 
     # re-use temp_level_addr, so delay this until we're done with it
     tech_block = (
@@ -1130,7 +1124,7 @@ def get_level_techlevel_set_function(
         .add_if(
             EC.if_mem_op_mem(temp_level_addr, OP.LESS_THAN, temp_techlevel_addr),
             EF().add(EC.set_tech_level_from_memory(pc_id, temp_techlevel_addr))
-        )
+        ).add(EC.pause(0))
     )
 
     func.add(EC.set_level_from_memory(pc_id, temp_level_addr))
