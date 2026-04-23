@@ -27,7 +27,7 @@ class EventFunction:
         self.commands: list[EventCommand] = []
         self.offsets: list[int] = []
 
-        self.labels: dict[str: int] = {}
+        self.labels: dict[str, int] = {}
         self.jumps: list[EventFunction.JumpRecord] = []
 
         self.pos = 0

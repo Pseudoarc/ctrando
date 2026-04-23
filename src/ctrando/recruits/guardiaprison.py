@@ -101,7 +101,7 @@ def assign_pc_to_spot(
             pos = script.get_function_start(7, FID.ARBITRARY_3)
             for _ in range(6):
                 pos = script.find_exact_command(
-                    EC.if_pc_active(ctenums.CharID.LUCCA)
+                    EC.if_pc_active(ctenums.CharID.LUCCA), pos
                 )
                 script.data[pos+1] = char_id
 
