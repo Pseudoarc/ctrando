@@ -46,8 +46,13 @@ class TechLevelReward:
         )
         return new_block
 
+    def get_desc_str(self) -> str:
+        char_name = str(self.char_id).title()
+        return f"{char_name}'s Tech Level Increased!"
+
     def get_reward_str(self) -> str:
-        return "{line break}{" + self.char_id.name.lower() +"}'s TechLevel Increased!{null}"
+        char_name = str(self.char_id).title()
+        return f"{char_name} Tech"
 
 
 RewardType = typing.Union[ctenums.ItemID, Gold, TechLevelReward]
@@ -439,7 +444,10 @@ class ScriptTreasure:
 
             if orig_str is not None:
                 if isinstance(reward, TechLevelReward):
-                    new_str = reward.get_reward_str()
+                    repl_str = reward.get_reward_str()
+                    new_str = py_string.replace(orig_str, repl_str)
+                    new_str = new_str.replace("{itemdesc}",
+                                              reward.get_desc_str())
                 else:
                     new_str = py_string.replace(orig_str, repl_str)
                     if "{item}" not in repl_str or orig_str == "{item}":
@@ -747,12 +755,12 @@ class BekklerTreasure(ScriptTreasure):
             script.data[pos + 1] = int(self.reward)
         else:
             if isinstance(self.reward, TechLevelReward):
-                repl_str = "Tech Level"
+                repl_str = self.reward.get_reward_str()
             else:
                 repl_str = "wad of cash"
 
-            pos, cmd = script.find_command([0xC0])
-            str_ind = cmd.args[-1]
+            pos, cmd = script.find_command([0xC0], pos)
+            str_ind = int(cmd.args[0])
             py_str = ctstrings.CTString.ct_bytes_to_ascii(script.strings[str_ind])
             py_str = py_str.replace("{item}", repl_str)
             script.strings[str_ind] = ctstrings.CTString.from_str(py_str)

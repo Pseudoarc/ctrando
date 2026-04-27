@@ -47,7 +47,7 @@ from ctrando.strings import ctstrings
 _item_strs = [
     "{line break}Got 1 {item}{line break}{itemdesc}{null}",
     "{line break}             Found {value 16}G!{null}",
-    "{line break}             Found {value 16}G!{null}",
+    "{line break}                   Empty!{null}",
     "{line break}                   Empty!{null}",
 ]
 

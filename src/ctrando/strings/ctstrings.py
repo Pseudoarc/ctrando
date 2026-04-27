@@ -274,7 +274,7 @@ class CTString(bytearray):
         return CTString(array).to_ascii(techname=True)
 
     @classmethod
-    def ct_bytes_to_ascii(cls, array: bytes):
+    def ct_bytes_to_ascii(cls, array: typing.ByteString):
         return CTString(array).to_ascii()
 
     def __str__(self):
