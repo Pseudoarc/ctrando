@@ -264,6 +264,10 @@ def rewrite_eot_pillars(
     script = script_manager[ctenums.LocID.END_OF_TIME]
 
     copy_tiles_cmd_id = 0xE4
+
+    # Portal Shuffle uses the same flag (HAS_DARK_AGES_PORTAL) for both
+    # Lair Ruins and Dark Ages spot.  Need to replace both the copy tiles and
+    # activation flag checks.
     pos = script.find_exact_command(
         EC.if_flag(memory.Flags.HAS_LAIR_RUINS_PORTAL),
         script.get_function_start(0, FID.ACTIVATE)
@@ -272,6 +276,16 @@ def rewrite_eot_pillars(
         pos,
         EC.if_flag(memory.Flags.HAS_DARK_AGES_PORTAL)
     )
+
+    pos = script.find_exact_command(
+        EC.if_flag(memory.Flags.HAS_LAIR_RUINS_PORTAL),
+        script.get_function_start(0x16, FID.STARTUP)
+    )
+    script.replace_jump_cmd(
+        pos,
+        EC.if_flag(memory.Flags.HAS_DARK_AGES_PORTAL)
+    )
+
 
     # proto, medina, mystic, leene, truce, forest, bangor, tyran, earthbound
     # From object 0xF
