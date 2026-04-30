@@ -177,6 +177,8 @@ def fill_key_items(
     # rng.shuffle(key_item_list)
     forced_keys = key_item_list[0: len(forced_spots)]
 
+    forced_spots = sorted(forced_spots)
+    rng.shuffle(forced_spots)
     for key, spot in zip(forced_keys, forced_spots):
         working_treasure_dict[spot] = key
 
