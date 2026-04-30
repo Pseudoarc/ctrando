@@ -7,6 +7,7 @@ import typing
 
 from ctrando.base.openworld import iokatradingpost
 from ctrando.common import byteops, ctenums, ctrom, cttypes as ctt, memory
+from ctrando.common.ctenums import TreasureID as TID, LocID
 from ctrando.locations import locationevent, eventcommand
 from ctrando.strings import ctstrings
 
@@ -16,14 +17,18 @@ from ctrando.locations.eventcommand import EventCommand as EC, Operation as OP, 
 from ctrando.locations.eventfunction import EventFunction as EF
 
 class Gold(int):
-    def __init__(self, *args, **kwargs):
-        int.__init__(self)
 
-        if self % 2 != 0:
+    def __new__(cls, val):
+        int_val = int(val)
+
+        if int_val % 2 != 0:
             raise ValueError("Gold values must be even.")
 
-        if self not in range(0, 2**16):
-            raise ValueError("Gold must be in range(0, 65353)")
+        if int_val not in range(0, 2**16):
+            raise ValueError("Gold must be in range(0, 65355)")
+
+        result = int.__new__(cls, int_val)
+        return result
 
     def get_reward_str(self) -> str:
         return f"{self}G"
@@ -108,14 +113,19 @@ class ChestRW(ctt.RomRW):
     def read_data_from_ctrom(
         self,
         ct_rom: ctrom.CTRom,
-        num_bytes: int,
+        num_bytes: int | None,
         record_num: int = 0,
-        data_start: typing.Optional[int] = None,
+        data_start: int | None = None,
     ) -> bytearray:
         if data_start is None:
-            data_start = self.get_data_start(ct_rom)
+            _data_start = self.get_data_start(ct_rom)
+        else:
+            _data_start = data_start
 
-        ct_rom.seek(data_start + num_bytes * record_num)
+        if num_bytes is None:
+            raise ValueError("Must specify number of bytes to read.")
+
+        ct_rom.seek(_data_start + num_bytes * record_num)
         return bytearray(ct_rom.read(num_bytes))
 
     def write_data_to_ct_rom(
@@ -138,7 +148,7 @@ class ChestRW(ctt.RomRW):
     def free_data_on_ct_rom(
         self,
         ct_rom: ctrom.CTRom,
-        num_bytes: int,
+        num_bytes: int | None,
         record_num: int = 0,
         start_addr: typing.Optional[int] = None,
         data_start: typing.Optional[int] = None,
@@ -150,6 +160,9 @@ class ChestRW(ctt.RomRW):
 
         if data_start is None:
             data_start = self.get_data_start(ct_rom)
+
+        if num_bytes is None:
+            raise ValueError("Must specify number of bytes to read.")
 
         start = data_start + num_bytes * record_num
         end = start + num_bytes
@@ -181,9 +194,12 @@ class ChestTreasureData(ctt.BinaryData):
 
     @has_techlevel.setter
     def has_techlevel(self, val: bool):
-        self.has_gold = False
-        self.is_empty = False
-        self[3] |= 0x20
+        if val:
+            self.has_gold = False
+            self.is_empty = False
+            self[3] |= 0x20
+        else:
+            self[3] &= (0xFF-0x20)
 
     @property
     def techlevel_char(self) -> ctenums.CharID | None:
@@ -288,12 +304,13 @@ class ChestTreasureData(ctt.BinaryData):
         if self.has_gold:
             return self.gold
         if self.has_techlevel:
-            return TechLevelReward(self.techlevel_char)
+            techlevel_char = self.techlevel_char
+            if techlevel_char is None:
+                raise ValueError
+            return TechLevelReward(techlevel_char)
 
-        try:
-            return self._held_item
-        except ValueError:
-            pass
+        return self._held_item
+
 
     @reward.setter
     def reward(self, val: RewardType):
@@ -335,7 +352,9 @@ class ChestTreasure:
             script_manager: typing.Optional[ScriptManager] = None):
         self.write_to_ctrom(ct_rom)
 
-    def read_reward_from_ct_rom(self, ct_rom, script_manager) -> RewardType:
+    def read_reward_from_ct_rom(self,
+                                ct_rom,
+                                script_manager: typing.Optional[ScriptManager] = None) -> RewardType:
         chest_data = ChestTreasureData.read_from_ctrom(ct_rom, self.chest_index)
 
         if chest_data.is_copying_location():
@@ -344,7 +363,11 @@ class ChestTreasure:
         if chest_data.has_gold:
             return chest_data.gold
         elif chest_data.has_techlevel:
-            return TechLevelReward(chest_data.techlevel_char)
+            # Pycharm has trouble deducing non-none unless it's a local var
+            techlevel_char = chest_data.techlevel_char
+            if techlevel_char is None:
+                raise ValueError
+            return TechLevelReward(techlevel_char)
         else:
             return chest_data.held_item
 
@@ -402,7 +425,7 @@ class ScriptTreasure:
     @staticmethod
     def update_get_reward_text(
         script: locationevent.LocationEvent,
-        start: int,
+        start: int | None,
         end: int,
         reward: RewardType,
         orig_gold_amt: typing.Optional[int] = None,
@@ -425,7 +448,7 @@ class ScriptTreasure:
                     "Unable to find reward string."
                 )
 
-            str_ind = cmd.args[-1]
+            str_ind = int(cmd.args[-1])
             string = script.strings[str_ind]
             py_string = ctstrings.CTString.ct_bytes_to_ascii(string)
 
@@ -469,12 +492,13 @@ class ScriptTreasure:
         return fn_start, fn_end
 
 
-
     def write_to_ct_rom(self, ct_rom: ctrom.CTRom,
                         script_manager: typing.Optional[ScriptManager] = None):
         """
         Insert the desired reward into the event script in the state
         """
+        if script_manager is None:
+            raise ValueError
         script = script_manager[self.location]
         fn_start, fn_end = self._get_search_start_end(script)
 
@@ -527,13 +551,14 @@ class ScriptTreasure:
         else:
             added_gold = None
 
-        # print(self.location, self.object_id, self.function_id)
         ScriptTreasure.update_get_reward_text(
             script, mem_set_pos, fn_end, self.reward, added_gold
         )
 
         if isinstance(self.reward, ctenums.ItemID):
             # Update the mem_set and add_rwd locations
+            if mem_set_pos is None:
+                raise ValueError("Can't find item memory set command")
             script.data[mem_set_pos + 1] = int(self.reward)
             if script.data[add_rwd_pos] == 0xCD:
                 script.insert_commands(
@@ -563,9 +588,11 @@ class ScriptTreasure:
             self, ct_rom: ctrom.CTRom,
             script_manager: typing.Optional[ScriptManager] = None
     ) -> RewardType:
+        if script_manager is None:
+            raise ValueError
         script = script_manager[self.location]
 
-        pos = script.get_function_start(self.object_id, self.function_id)
+        pos: int | None = script.get_function_start(self.object_id, self.function_id)
 
         num_mem_set_cmds_found = 0
         mem_set_pos: typing.Optional[int] = None
@@ -608,7 +635,7 @@ class ScriptTreasure:
 class SpriteScriptTreasure(ScriptTreasure):
     """ScriptTreasure that gets drawn on screen."""
 
-    _item_id_sprite_dict: dict[ctenums.ItemID, ctenums.NpcID] = {
+    _item_id_sprite_dict: dict[RewardType, ctenums.NpcID] = {
         ctenums.ItemID.DREAMSTONE: ctenums.NpcID.DREAMSTONE,
         ctenums.ItemID.GATE_KEY: ctenums.NpcID.GATE_KEY,
         ctenums.ItemID.TOMAS_POP: ctenums.NpcID.SODA_CAN,
@@ -632,19 +659,22 @@ class SpriteScriptTreasure(ScriptTreasure):
             function_id: int,
             reward: RewardType = ctenums.ItemID.MOP,
             item_num: int = 0,
-            sprite_object_id: typing.Optional[int] = None
+            sprite_object_id: int | None = None
     ):
-        if sprite_object_id is None:
-            sprite_object_id = object_id
-
         ScriptTreasure.__init__(self, location, object_id, function_id,
                                 reward, item_num)
-        self.sprite_object_id = sprite_object_id
+
+        if sprite_object_id is None:
+            self.sprite_object_id = object_id
+        else:
+            self.sprite_object_id = sprite_object_id
 
     def write_to_ct_rom(self, ct_rom: ctrom.CTRom,
                         script_manager: typing.Optional[ScriptManager] = None):
         ScriptTreasure.write_to_ct_rom(self, ct_rom, script_manager)
 
+        if script_manager is None:
+            raise ValueError
         script = script_manager[self.location]
 
         pos, end = script.get_function_bounds(self.sprite_object_id,
@@ -684,6 +714,9 @@ class MasaMuneTreasure(ScriptTreasure):
 
     def write_to_ct_rom(self, ct_rom: ctrom.CTRom,
                         script_manager: typing.Optional[ScriptManager] = None):
+        if script_manager is None:
+            raise ValueError
+
         ScriptTreasure.write_to_ct_rom(self, ct_rom, script_manager)
         self.write_item_to_decbox(script_manager)
 
@@ -696,7 +729,7 @@ class MasaMuneTreasure(ScriptTreasure):
             [0xC0],
             script.get_function_start(self.text_object_id, self.text_function_id)
         )
-        str_ind = script.data[pos+1]
+        str_ind = int(script.data[pos+1])
 
         if isinstance(self.reward, ctenums.ItemID):
             script.insert_commands(
@@ -740,6 +773,9 @@ class BekklerTreasure(ScriptTreasure):
     def write_to_ct_rom(
             self, ct_rom: ctrom.CTRom,
             script_manager: typing.Optional[ScriptManager] = None):
+
+        if script_manager is None:
+            raise ValueError
         ScriptTreasure.write_to_ct_rom(self, ct_rom, script_manager)
         self.write_bekkler_name_to_script(script_manager)
 
@@ -771,9 +807,8 @@ class PrismShardTreasure(ScriptTreasure):
             self, ct_rom: ctrom.CTRom,
             script_manager: typing.Optional[ScriptManager] = None):
         """Also set the name spoiler in obj9, touch"""
-        ScriptTreasure.write_to_ct_rom(self, ct_rom, script_manager)
-
-        script = script_manager[ctenums.LocID.GUARDIA_REAR_STORAGE]
+        ScriptTreasure.write_to_ct_rom(self, ct_rom, script_manager)  # Checks script_manager
+        script = script_manager[ctenums.LocID.GUARDIA_REAR_STORAGE]  # type: ignore
 
         pos, _ = script.find_command(
             [0x4F], script.get_function_start(9, 2)  # val to mem,
@@ -785,7 +820,7 @@ class PrismShardTreasure(ScriptTreasure):
 
         pos, cmd = script.find_command([0xC0], pos)  # spoiler DecBox
 
-        str_ind = cmd.args[0]
+        str_ind = int(cmd.args[0])
         string = script.strings[str_ind]
         py_string = ctstrings.CTString.ct_bytes_to_ascii(string)
 
@@ -801,9 +836,9 @@ class ChargeableTreasure(ScriptTreasure):
     def write_to_ct_rom(
             self, ct_rom: ctrom.CTRom,
             script_manager: typing.Optional[ScriptManager] = None):
-        ScriptTreasure.write_to_ct_rom(self, ct_rom, script_manager)
+        ScriptTreasure.write_to_ct_rom(self, ct_rom, script_manager)  # checks script_manager
+        script = script_manager[self.location] # type: ignore
 
-        script = script_manager[self.location]
         pos, _ = script.find_command(
             [0xC0], script.get_function_start(self.object_id, self.function_id)
         )
@@ -889,6 +924,8 @@ class HuntingRangeNuTreasure(ScriptTreasure):
 
     def write_to_ct_rom(self, ct_rom: ctrom.CTRom,
                         script_manager: typing.Optional[ScriptManager] = None):
+        if script_manager is None:
+            raise ValueError
         script = script_manager[self.location]
 
         for object_id in range(self.object_id, self.object_id + 3):
@@ -926,6 +963,8 @@ class HuntingRangeNuTreasure(ScriptTreasure):
             self, ct_rom: ctrom.CTRom,
             script_manager: typing.Optional[ScriptManager] = None
     ) -> RewardType:
+        if script_manager is None:
+            raise ValueError
         script = script_manager[self.location]
 
         fn_start = script.get_function_start(self.object_id, self.function_id)
@@ -1047,7 +1086,7 @@ class TradingPostTreasure:
 
         return script, pos
 
-    def write_to_ct_rom(self, ct_rom, script_manager: typing.Optional[ScriptManager]):
+    def write_to_ct_rom(self, ct_rom, script_manager: typing.Optional[ScriptManager] = None):
         if script_manager is None:
             raise ValueError
 
@@ -1103,11 +1142,13 @@ class TradingPostSpecialTreasure:
             script_manager: typing.Optional[ScriptManager] = None
     ) -> RewardType:
 
+        if script_manager is None:
+            raise ValueError
         script, pos = self._get_script_and_pos(script_manager)
         cmd = get_command(script.data, pos)
         return cmd.args[0]
 
-    def write_to_ct_rom(self, ct_rom, script_manager: typing.Optional[ScriptManager]):
+    def write_to_ct_rom(self, ct_rom, script_manager: typing.Optional[ScriptManager] = None):
         if script_manager is None:
             raise ValueError
 
@@ -1120,14 +1161,11 @@ class TradingPostSpecialTreasure:
         script.data[pos: pos + len(new_cmd)] = new_cmd.to_bytearray()
 
 
-
 def get_base_treasure_dict() -> dict[ctenums.TreasureID, RewardSpot]:
     """
     Return a dictionary of all possible TreasureIDs to their corresponding
     treasure objects.
     """
-    LocID = ctenums.LocID
-    TID = ctenums.TreasureID
 
     ret_dict: dict[TID, RewardSpot] = {
         TID.TRUCE_MAYOR_1F: ChestTreasure(0x02),

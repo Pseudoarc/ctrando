@@ -125,7 +125,6 @@ def get_key_item_fill(
             excluded_spots = list(set(logic_options.forced_excluded_spots).union(logic_options.excluded_spots))
             for _ in range(5):
                 # Shuffle KI list so that the possible loose ones are at the end in random order
-                # TODO: Pretty sure I need to shuffle the spots inside of the assignment
                 rng.shuffle(normal_key_items)
                 rng.shuffle(possible_loose)
                 key_items = normal_key_items + possible_loose
