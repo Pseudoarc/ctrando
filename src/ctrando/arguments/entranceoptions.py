@@ -51,7 +51,8 @@ class EntranceShufflerOptions:
                 OWExit, cls._default_vanilla_spots,
                 "Spots guaranteed to not be shuffled. Takes precedence over preserve_spots"
             ),
-            "shuffle_gates": aty.FlagArg("Shuffle where (non-algetty) portals lead to")
+            "shuffle_gates": aty.FlagArg("Shuffle where (non-algetty) portals lead to"),
+            "separate_gate_eras": aty.FlagArg("Shuffled gates must go to different eras")
         }
 
     def __init__(
@@ -60,7 +61,8 @@ class EntranceShufflerOptions:
             preserve_spots: tuple[OWExit, ...] = _default_preserve_spots,
             vanilla_spots: tuple[OWExit, ...] = _default_vanilla_spots,
             rest_vanilla: bool = False,
-            shuffle_gates: bool = False
+            shuffle_gates: bool = False,
+            separate_gate_eras: bool = False
     ):
         self.shuffle_entrances = shuffle_entrances
 
@@ -94,6 +96,7 @@ class EntranceShufflerOptions:
             )
 
         self.shuffle_gates = shuffle_gates
+        self.separate_gate_eras = separate_gate_eras
 
     @classmethod
     def add_group_to_parser(cls, parser: argparse.ArgumentParser):
@@ -139,10 +142,16 @@ class EntranceShufflerOptions:
             default=argparse.SUPPRESS
         )
 
+        group.add_argument(
+            "--separate-gate-eras", action="store_true",
+            help="Shuffled gates must go to different eras",
+            default=argparse.SUPPRESS
+        )
+
     @classmethod
     def extract_from_namespace(cls, namespace: argparse.Namespace) -> typing.Self:
         attr_names = [
             "shuffle_entrances", "preserve_spots", "vanilla_spots", "rest_vanilla",
-            "shuffle_gates"  # "preserve_dungeons", "preserve_shops"
+            "shuffle_gates", "separate_gate_eras"  # "preserve_dungeons", "preserve_shops"
         ]
         return aty.extract_from_namespace(cls, arg_names=attr_names, namespace=namespace)

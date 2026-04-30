@@ -92,7 +92,8 @@ def get_key_item_fill(
         )
 
         if entrance_options.shuffle_gates:
-            portal_assignment = portalshuffle.get_random_portal_assignment(rng)
+            portal_assignment = portalshuffle.get_random_portal_assignment(
+                entrance_options.separate_gate_eras, rng)
             portalshuffle.shuffle_map_portals(region_map, portal_assignment)
 
         # Find Regions with Nizbel/Retinite

@@ -374,6 +374,7 @@ mark_charmable_enemies=true # Alter enemy names to indicate a charmable item
 # Entrance Shuffler Options: Options for how overworld entrances are shuffled.
 shuffle_entrances = false   # Shuffle the target of overworld entrances
 shuffle_gates = false       # Shuffle gate targets (requires shuffle_entrances)
+separate_gate_eras = false  # Shuffled gates must go to different eras
 # preserve_spots = [PRESERVE_SPOTS ...]   # Spots which are to be shuffled among themselves.
 # rest_vanilla = false                    # Only shuffle locations specified by preserve_spots
 # vanilla_spots [VANILLA_SPOTS ...]       # Spots which are not shuffled.  Will take precedence over preserve_spots

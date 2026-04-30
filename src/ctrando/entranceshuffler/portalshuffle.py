@@ -46,24 +46,52 @@ def verify_portal_dict(
         raise ValueError("Unassigned Portals")
 
 
+
+_portal_era_dict: dict[PortalExits, ctenums.LocID] = {
+    PortalExits.PROTO_DOME: ctenums.LocID.END_OF_TIME,
+    PortalExits.TRUCE_CANYON: ctenums.LocID.OW_MIDDLE_AGES,
+    PortalExits.TELEPOD_EXHIBIT: ctenums.LocID.OW_PRESENT,
+    PortalExits.GUARDIA_FOREST: ctenums.LocID.OW_PRESENT,
+    PortalExits.BANGOR_DOME: ctenums.LocID.OW_FUTURE,
+    PortalExits.MEDINA_CLOSET: ctenums.LocID.OW_PRESENT,
+    PortalExits.MYSTIC_MTS: ctenums.LocID.OW_PREHISTORIC,
+    PortalExits.DARK_AGES_CAVE: ctenums.LocID.OW_DARK_AGES,
+    PortalExits.LAIR_RUINS: ctenums.LocID.OW_PREHISTORIC
+}
+
 def get_random_portal_assignment(
+        force_separate_eras: bool,
         rng: random.RNGType
 ) -> dict[PortalExits, PortalExits]:
-    pool = list(PortalExits)
-    assignment: dict[PortalExits, PortalExits] = {}
-    rng.shuffle(pool)
 
-    it = itertools.batched(pool, 2)
-    for item in it:
-        if len(item) == 2:
-            x, y = item
-            assignment[x] = y
-            assignment[y] = x
-        elif len(item) == 1:
-            x = item[0]
-            assignment[x]=x
+    while True:
+        pool = list(PortalExits)
+        assignment: dict[PortalExits, PortalExits] = {}
+        rng.shuffle(pool)
 
-    verify_portal_dict(assignment)
+        it = itertools.batched(pool, 2)
+        for item in it:
+            if len(item) == 2:
+                x, y = item
+                assignment[x] = y
+                assignment[y] = x
+            elif len(item) == 1:
+                x = item[0]
+                assignment[x]=x
+
+        verify_portal_dict(assignment)
+
+        if not force_separate_eras:
+            break
+
+        for portal, target_portal in assignment.items():
+            if portal == target_portal:  # How EoT assignment looks
+                continue
+            if _portal_era_dict[portal] == _portal_era_dict[target_portal]:
+                break  # To continue the outer while True loop
+        else:
+            break  # To quit the while True loop.
+
     return assignment
 
 
