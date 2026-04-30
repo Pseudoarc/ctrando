@@ -142,6 +142,7 @@ class EventMod(locationevent.LocEventMod):
             .add(EC.play_song(0x13))
             .add(EC.darken(6)).add(EC.fade_screen())
             .add(EC.set_flag(memory.Flags.HAS_FUTURE_TIMEGAUGE_ACCESS))
+            .add(EC.set_flag(memory.Flags.HAS_DARK_AGES_TIMEGAUGE_ACCESS))
             # If this was activated after the Blackbird, go to the Last Village.
             # Otherwise, go to the normal Dark Ages.
             .add_if_else(

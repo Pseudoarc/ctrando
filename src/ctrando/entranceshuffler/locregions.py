@@ -1431,6 +1431,7 @@ def get_all_loc_regions() -> list[LocRegion]:
         region_rewards=[logictypes.ScriptReward.FLIGHT,
                         logictypes.ScriptReward.EPOCH,
                         memory.Flags.HAS_FUTURE_TIMEGAUGE_ACCESS,
+                        memory.Flags.HAS_DARK_AGES_TIMEGAUGE_ACCESS,
                         QuestID.EPOCH_REBORN_BATTLE],
         region_loc_ids={LocID.REBORN_EPOCH},
         is_combat_region=True

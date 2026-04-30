@@ -503,6 +503,13 @@ def remove_epoch_teleports(
     script.delete_commands(pos, 3)
 
 
+def modify_reborn_epoch_return(
+        script_manager: scriptmanager.ScriptManager,
+        ow_exit_assignment_dict: dict[OWExit, OWExit]
+):
+    ...
+
+
 def apply_entrance_rando(
         entrance_settings: entranceoptions.EntranceShufflerOptions,
         overworld_manager: owmanager.OWManager,
