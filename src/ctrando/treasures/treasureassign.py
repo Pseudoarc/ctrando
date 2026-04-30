@@ -597,7 +597,7 @@ def fill_tech_levels(
 
 
 def fill_good_stuff(
-        item_pool: list[ctenums.ItemID],
+        item_pool: list[ttypes.RewardType],
         spot_pool: list[ctenums.TreasureID],
         good_stuff_spots: Sequence[ctenums.TreasureID],
         good_stuff_rewards: Sequence[ctenums.ItemID],

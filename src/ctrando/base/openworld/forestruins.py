@@ -60,7 +60,6 @@ class EventMod(locationevent.LocEventMod):
     def split_pyramid_chests(cls, script: Event):
         """Make the pyramid chests separate?"""
 
-        # TODO: Decide whether to split the chests or to give a Nu hint
         left_chest_obj = 0x13
         right_chest_obj = 0x14
 

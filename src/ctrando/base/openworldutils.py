@@ -557,7 +557,7 @@ def remove_dialog_from_function(
     """
 
     if max_num_replacements is None:
-        num_replacements = -1
+        max_num_replacements = -1
     elif max_num_replacements <= 0:
         raise ValueError
 
@@ -879,7 +879,7 @@ def update_add_item(script: Event, pos: int, update_text: bool = True):
     if set_pos is not None:
         script.delete_commands(set_pos, 1)
         if set_pos < item_pos:
-            item_pos -= len(EC.assign_val_to_mem(item_id, 0x7F0200, 1), pos, text_pos)
+            item_pos -= len(EC.assign_val_to_mem(item_id, 0x7F0200, 1))
     script.delete_commands(item_pos, 1)
 
     new_block = (

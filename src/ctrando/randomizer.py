@@ -714,7 +714,7 @@ def write_spoilers_to_file(
                 reward_name = config.item_db[reward].name
                 reward_str = str(ctstrings.CTNameString(reward_name[1:]))
             else:
-                reward_str = f"{reward} G"
+                reward_str = reward.get_reward_str()
             treasure_str_dict[spot] = reward_str
 
         obj_dict: dict[str, str] = dict()
