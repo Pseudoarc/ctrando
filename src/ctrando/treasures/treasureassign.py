@@ -492,12 +492,15 @@ def default_assignment(
 
     spot_pool = [tid for tid in ctenums.TreasureID if tid not in assigned_spots]
 
+    available_good_loot_spots = [
+        x for x in treasure_options.good_loot_spots if x not in treasure_options.tech_level_forced_spots
+    ]
+    fill_good_stuff(item_pool, spot_pool, available_good_loot_spots, treasure_options.good_loot,
+                    treasure_options.good_loot_rate, final_assignment, rng)
     if treasure_options.use_tech_level_treasures:
         fill_tech_levels(spot_pool, treasure_options.tech_level_forced_spots,
                          treasure_options.extra_tech_levels_per_char,
                          final_assignment, recruit_assignment, recruit_options, rng)
-    fill_good_stuff(item_pool, spot_pool, treasure_options.good_loot_spots, treasure_options.good_loot,
-                    treasure_options.good_loot_rate, final_assignment, rng)
     fill_chargeable_chests(final_assignment, item_pool, spot_pool, rng)
     fill_trading_post(final_assignment, item_pool, spot_pool, rng)
 
