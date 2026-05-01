@@ -294,6 +294,7 @@ def post_assignment_update_scripts(
     - Clean up Magus Lair end scene (keepsong)
     - Make Robo only appear in Fiona's shrine after Desert (?)
     - Remove recruit scene from post-manoria castle 600
+    - Modify last village commons return to overworld
     """
 
     # Denadoro Wind Exit
@@ -419,6 +420,7 @@ def post_assignment_update_scripts(
                            .to_bytearray(), pos)
 
     remove_epoch_teleports(script_manager)
+    modify_reborn_epoch_return(script_manager, ow_exit_assign_dict)
 
 
 def update_overworlds(
@@ -507,7 +509,34 @@ def modify_reborn_epoch_return(
         script_manager: scriptmanager.ScriptManager,
         ow_exit_assignment_dict: dict[OWExit, OWExit]
 ):
-    ...
+
+    blackbird_assign: OWExit | None = None
+    lv_commons_assign: OWExit | None = None
+
+    for key, val in ow_exit_assignment_dict.items():
+        if val == OWExit.BLACKBIRD:
+            blackbird_assign = key
+        elif val == OWExit.LAST_VILLAGE_COMMONS:
+            lv_commons_assign = key
+
+    if blackbird_assign is None or lv_commons_assign is None:
+        raise ValueError
+
+    blackbird_era = blackbird_assign.value[0].value.overworld_id
+    lv_commons_era = lv_commons_assign.value[0].value.overworld_id
+
+    # If Commons is not actually in Last Village,
+    if lv_commons_era != ctenums.OverWorldID.LAST_VILLAGE:
+        script = script_manager[ctenums.LocID.REBORN_EPOCH]
+        pos = script.find_exact_command(
+            EC.set_flag(memory.Flags.HAS_DARK_AGES_TIMEGAUGE_ACCESS),
+            script.get_function_start(7, FID.STARTUP)
+        )
+        pos = script.find_exact_command(
+            EC.if_flag(memory.Flags.HAS_COMPLETED_BLACKBIRD), pos
+        )
+        script.delete_jump_block(pos)
+
 
 
 def apply_entrance_rando(
