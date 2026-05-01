@@ -614,10 +614,11 @@ def get_obj_keys(obj_str: str) -> list[ObjectiveType]:
         ret_list = [
             x for x in QuestID if x not in (
                 QuestID.OMEN_ELDER_SPAWN, QuestID.OMEN_MEGA_MUTANT,
-                QuestID.OMEN_GIGA_MUTANT, QuestID.OMEN_TERRA_MUTANT
+                # QuestID.OMEN_GIGA_MUTANT,
+                QuestID.OMEN_TERRA_MUTANT
             )
         ]
-        return list(QuestID)
+        return ret_list
     elif obj_str == "open_quest":
         return [
             QuestID.MANORIA_CATHEDRAL, QuestID.HECKRAN_CAVE,
