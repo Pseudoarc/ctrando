@@ -29,6 +29,12 @@ class EndingID(enum.StrEnum):
     RANDOM = "random"
 
 
+class Lightning2Replacement(enum.IntEnum):
+    NO_CHANGE = -1
+    MUTE = 0x0E
+    NIZBEL_RELEASE = 0xCC
+
+
 @dataclass()
 class PostRandoOptions:
     attr_names: typing.ClassVar[tuple[str, ...]] = (
@@ -38,7 +44,8 @@ class PostRandoOptions:
         "window_background",
         "crono_palette", "marle_palette", "lucca_palette", "robo_palette",
         "frog_palette", "ayla_palette", "magus_palette",
-        "ending", "remove_flashes", "use_l_select_warp", "use_msu1"
+        "ending", "remove_flashes", "use_l_select_warp", "use_msu1",
+        "alt_lightning2"
     )
     _default_fast_loc_movement: typing.ClassVar[bool] = False
     _default_fast_ow_movement: typing.ClassVar[bool] = False
@@ -81,6 +88,8 @@ class PostRandoOptions:
     _default_magus_palette: typing.ClassVar[SNESPalette] = SNESPalette.from_bytes(
         bytes.fromhex("6510BD7F3B5B562EAD7E4D653A1EC74035199028641C8614"))
 
+    _default_lightning2_replacement: typing.ClassVar[Lightning2Replacement] = Lightning2Replacement.NO_CHANGE
+
     default_fast_loc_movement: bool = _default_fast_loc_movement
     default_fast_ow_movement: bool = _default_fast_ow_movement
     default_fast_epoch_movement: bool = _default_fast_epoch_movement
@@ -110,6 +119,7 @@ class PostRandoOptions:
     remove_flashes: bool = False
     use_l_select_warp: bool = False
     use_msu1: bool = False
+    alt_lightning2: Lightning2Replacement = _default_lightning2_replacement
 
     def __post_init__(self):
         self.battle_speed = sorted([1, int(self.battle_speed), 8])[1]
@@ -143,7 +153,7 @@ class PostRandoOptions:
             ),
             "use_msu1": argumenttypes.FlagArg(
                 "Apply an MSU-1 patch to the rom."
-            )
+            ),
         }
 
         # defaults = (cls._default_crono_palette, cls._default_marle_palette,
@@ -165,6 +175,10 @@ class PostRandoOptions:
         )
         ret_dict["remove_flashes"] = argumenttypes.FlagArg(
             "Remove flashes from many animations"
+        )
+        ret_dict["alt_lightning2"] = argumenttypes.arg_from_enum(
+            Lightning2Replacement, Lightning2Replacement.NO_CHANGE,
+            "Alternate sound effect for lightning 2"
         )
 
         return ret_dict
@@ -260,7 +274,7 @@ class PostRandoOptions:
         )
 
         spec = cls.get_argument_spec()
-        args = ["use_l_select_warp", "use_msu1"]
+        args = ["use_l_select_warp", "use_msu1", "alt_lightning2"]
         for arg in args:
             spec[arg].add_to_argparse(argumenttypes.attr_name_to_arg_name(arg),
                                       group)

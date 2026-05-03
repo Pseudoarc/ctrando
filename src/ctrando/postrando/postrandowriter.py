@@ -169,6 +169,20 @@ def write_palettes(
     ow_pc_palettes.write_to_ctrom(ct_rom, 0)
 
 
+def alt_lightning2(
+        ct_rom: ctrom.CTRom,
+        repl_id: int
+):
+    lit_2_id = 0x7B
+    ptr_st = 0x075B0D
+
+    ct_rom.seek(ptr_st + 4*repl_id)
+    ptrs = ct_rom.read(4)
+
+    ct_rom.seek(ptr_st + 4*lit_2_id)
+    ct_rom.write(ptrs)
+
+
 _ending_storyline_dict: dict[postrandooptions.EndingID, int] = {
     postrandooptions.EndingID.BEYOND_TIME: 0xD4,
     postrandooptions.EndingID.THE_DREAM_PROJECT: 0x00,
@@ -264,6 +278,9 @@ def write_post_rando_options(
 
     if post_rando_options.use_l_select_warp:
         use_alt_house_warp(ct_rom, script_man)
+
+    if post_rando_options.alt_lightning2 != postrandooptions.Lightning2Replacement.NO_CHANGE:
+        alt_lightning2(ct_rom, post_rando_options.alt_lightning2)
 
     if post_rando_options.use_msu1:
         patch = files("ctrando.postrando").joinpath("msu1", "ct_msu1.ips")
