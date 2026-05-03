@@ -202,6 +202,7 @@ def add_new_modes(
         inst.BNE("tp_next_not_max"),
         inst.REP(0x20),
         inst.LDA(0xFFFF, AM.IMM16),
+        inst.TXY(),
         inst.BRA("write_tp_next"),
         "tp_next_not_max",
         inst.TXA(),
