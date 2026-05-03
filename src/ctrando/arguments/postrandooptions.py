@@ -29,10 +29,20 @@ class EndingID(enum.StrEnum):
     RANDOM = "random"
 
 
-class Lightning2Replacement(enum.IntEnum):
-    NO_CHANGE = -1
-    MUTE = 0x0E
-    NIZBEL_RELEASE = 0xCC
+class Lightning2Replacement(enum.StrEnum):
+    NO_CHANGE = "no_change"  #-1
+    MUTE = "mute"  # 0x0E
+    NIZBEL_RELEASE = "nizbel_release"  #0xCC
+
+_effect_id_dict: dict[Lightning2Replacement, int] = {
+    Lightning2Replacement.NO_CHANGE: -1,
+    Lightning2Replacement.MUTE: 0x0E,
+    Lightning2Replacement.NIZBEL_RELEASE: 0xCC
+}
+
+def get_lightning2_effect_id(repl: Lightning2Replacement) -> int:
+    return _effect_id_dict.get(repl, -1)
+
 
 
 @dataclass()

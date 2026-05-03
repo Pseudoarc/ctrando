@@ -280,7 +280,8 @@ def write_post_rando_options(
         use_alt_house_warp(ct_rom, script_man)
 
     if post_rando_options.alt_lightning2 != postrandooptions.Lightning2Replacement.NO_CHANGE:
-        alt_lightning2(ct_rom, post_rando_options.alt_lightning2)
+        eff_id = postrandooptions.get_lightning2_effect_id(post_rando_options.alt_lightning2)
+        alt_lightning2(ct_rom, eff_id)
 
     if post_rando_options.use_msu1:
         patch = files("ctrando.postrando").joinpath("msu1", "ct_msu1.ips")
