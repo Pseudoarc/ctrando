@@ -492,11 +492,9 @@ def default_assignment(
 
     spot_pool = [tid for tid in ctenums.TreasureID if tid not in assigned_spots]
 
-    available_good_loot_spots = [
-        x for x in treasure_options.good_loot_spots if x not in treasure_options.tech_level_forced_spots
-    ]
-    fill_good_stuff(item_pool, spot_pool, available_good_loot_spots, treasure_options.good_loot,
-                    treasure_options.good_loot_rate, final_assignment, rng)
+    fill_good_stuff(treasure_options.loot_groups, item_pool, spot_pool,
+                    treasure_options.tech_level_forced_spots,
+                    final_assignment, rng)
     if treasure_options.use_tech_level_treasures:
         fill_tech_levels(spot_pool, treasure_options.tech_level_forced_spots,
                          treasure_options.extra_tech_levels_per_char,
@@ -600,17 +598,32 @@ def fill_tech_levels(
 
 
 def fill_good_stuff(
+        groups: list[treasureoptions.LootGroup],
         item_pool: list[ttypes.RewardType],
         spot_pool: list[ctenums.TreasureID],
-        good_stuff_spots: Sequence[ctenums.TreasureID],
-        good_stuff_rewards: Sequence[ctenums.ItemID],
-        good_stuff_rate: float,
+        excluded_spots: list[ctenums.TreasureID],
+        assignment_dict: dict[ctenums.TreasureID, ttypes.RewardType],
+        rng: RNGType
+):
+    for group in groups:
+        group.spot_pool = [x for x in group.spot_pool if x not in excluded_spots]
+        fill_good_stuff_group(group, item_pool, spot_pool, assignment_dict, rng)
+
+
+def fill_good_stuff_group(
+        group: treasureoptions.LootGroup,
+        item_pool: list[ttypes.RewardType],
+        spot_pool: list[ctenums.TreasureID],
         assignment_dict: dict[ctenums.TreasureID, ttypes.RewardType],
         rng: RNGType
 ):
     """
     Fill the good stuff spots with good stuff.
     """
+
+    good_stuff_rewards = group.item_pool
+    good_stuff_spots = group.spot_pool
+    good_stuff_rate = group.fill_rate
 
     available_good_stuff_spots = [
         x for x in good_stuff_spots if x in spot_pool

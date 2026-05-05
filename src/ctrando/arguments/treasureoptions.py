@@ -78,8 +78,21 @@ def parse_pool_specifier(spec: str) -> dict[float, TreasurePool | PoolModifiers]
     }
 
 
+class LootGroup:
+    def __init__(
+            self,
+            item_pool: Iterable[ItemID],
+            spot_pool: Iterable[TID],
+            fill_rate: float
+    ):
+        self.item_pool = item_pool
+        self.spot_pool = spot_pool
+        self.fill_rate = fill_rate
+
+
+
 class TreasureOptions:
-    _default_good_loot: typing.ClassVar[tuple[RewardType, ...]] = (
+    _default_good_loot: typing.ClassVar[tuple[ItemID, ...]] = (
         ItemID.MEGAELIXIR, ItemID.HYPERETHER, ItemID.ELIXIR, ItemID.SPEED_TAB,
         ItemID.RAINBOW, ItemID.SHIVA_EDGE, ItemID.SWALLOW,
         ItemID.VALKERYE, ItemID.SIREN,
@@ -172,7 +185,7 @@ class TreasureOptions:
             self,
             loot_assignment_scheme: TreasureScheme.SHUFFLE = _default_treasure_scheme,
             good_loot_spots: Iterable[TID] = _default_good_loot_spots,
-            good_loot: Iterable[RewardType] = _default_good_loot,
+            good_loot: Iterable[ItemID] = _default_good_loot,
             good_loot_rate: float = _default_good_loot_rate,
             loot_pool = _default_treasure_pool,
             post_assign_shuffle_rate = _default_post_assign_shuffle_rate,
@@ -192,13 +205,11 @@ class TreasureOptions:
             johnny_high_quantity=_default_johnny_high_quantity,
             use_tech_level_treasures=_default_tech_level_treasures,
             extra_tech_levels_per_char=_default_extra_tech_levels_per_char,
-            tech_level_forced_spots=_default_tech_level_spots
+            tech_level_forced_spots=_default_tech_level_spots,
+            **kwargs
     ):
         self.loot_pool = loot_pool
         self.loot_assignment_scheme = loot_assignment_scheme
-        self.good_loot_spots = tuple(set(good_loot_spots))
-        self.good_loot = tuple(good_loot)
-        self.good_loot_rate = good_loot_rate
         self.post_assign_shuffle_rate = post_assign_shuffle_rate
         self.trading_post_base_cost = trading_post_base_cost
         self.trading_post_upgrade_cost = trading_post_upgrade_cost
@@ -225,10 +236,25 @@ class TreasureOptions:
         if not (johnny_low_threshold <= johnny_mid_threshold <= johnny_high_threshold):
             raise ValueError("Johnny thresholds must be in order.")
 
+        self.loot_groups = [LootGroup(good_loot, list(set(good_loot_spots)), good_loot_rate)]
+
+        loot_group_ind = 2
+        while True:
+            suffix = f"_{loot_group_ind}"
+            loot_pool = kwargs.get(f"good_loot{suffix}", tuple())
+            spot_pool = kwargs.get(f"good_loot_spots{suffix}", tuple())
+            rate = kwargs.get(f"good_loot_rate{suffix}", 0)
+
+            if any(not x for x in (loot_pool, spot_pool, rate)):
+                break
+
+            self.loot_groups.append(LootGroup(loot_pool, list(set(spot_pool)), rate))
+            loot_group_ind += 1
+
 
     @classmethod
     def get_argument_spec(cls) -> argumenttypes.ArgSpec:
-        return {
+        spec = {
             "loot_pool": argumenttypes.arg_from_enum(
                 TreasurePool, cls._default_treasure_pool,
                 "Method to determine which loot is available for assignment"
@@ -355,35 +381,38 @@ class TreasureOptions:
             )
         }
 
+        for ind in range(1, 8):
+            suffix = f"_{ind+1}"
+            group_dict = {
+                "good_loot"+suffix: argumenttypes.arg_multiple_from_enum(
+                    ItemID, tuple(),
+                    f"Loot that is considered to be good for pool {ind+1} (ignored by vanilla)",
+                    available_pool=[
+                        x for x in ItemID if x not in shopoptions.ShopOptions.unused_items
+                    ]
+                ),
+                "good_loot_spots"+suffix: argumenttypes.arg_multiple_from_enum(
+                    TID, tuple(),
+                    f"Spots for pool {ind+1} which will be given a random good reward (ignored by vanilla)"
+                ),
+                "good_loot_rate"+suffix: argumenttypes.DiscreteNumericalArg(
+                    0.0, 1.0, 0.05, cls._default_good_loot_rate,
+                    f"Percent chance to fill a good loot spot with good loot for pool {ind+1}",
+                    type_fn=float
+                ),
+            }
+            spec.update(group_dict)
+
+        return spec
+
+
+
     @classmethod
     def add_group_to_parser(cls, parser: argparse.ArgumentParser):
         """Add these options to the parser."""
         group = parser.add_argument_group(
             "Treasure Options",
             "Options for how non-logical treasures are distributed"
-        )
-
-        group.add_argument(
-            "--good-loot",
-            nargs="*",
-            type=functools.partial(str_to_enum, enum_type=ItemID),
-            help="Item types considered as good loot.",
-            default=argparse.SUPPRESS
-        )
-
-        group.add_argument(
-            "--good-loot-spots",
-            nargs="*",
-            type=functools.partial(str_to_enum, enum_type=TID),
-            help="Spots which will be given a random good reward.",
-            default=argparse.SUPPRESS
-        )
-
-        group.add_argument(
-            "--good-loot-rate",
-            type=lambda val: float(sorted([0, float(val), 1.0])[1]),
-            help="Proportion (between 0 and 1) of good loot spots which receive good loot.",
-            default=argparse.SUPPRESS
         )
 
         group.add_argument(
@@ -416,6 +445,17 @@ class TreasureOptions:
             arg = spec[attr_name]
             arg_name = argumenttypes.attr_name_to_arg_name(attr_name)
             arg.add_to_argparse(arg_name, group)
+
+        num_loot_groups = 8
+        loot_group_arg_names = ("good_loot", "good_loot_spots", "good_loot_rate")
+        for ind in range(num_loot_groups):
+            suffix = "" if ind == 0 else f"_{ind+1}"
+            for name in loot_group_arg_names:
+                attr_name = name+suffix
+                arg = spec[attr_name]
+                arg.add_to_argparse(
+                    argumenttypes.attr_name_to_arg_name(attr_name), group
+                )
 
 
     @classmethod
