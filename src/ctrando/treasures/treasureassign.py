@@ -490,6 +490,7 @@ def default_assignment(
         # else:
         #     print(f"MISSING: {item}")
 
+    handle_forced_loot(treasure_options, item_pool)
     spot_pool = [tid for tid in ctenums.TreasureID if tid not in assigned_spots]
 
     fill_good_stuff(treasure_options.loot_groups, item_pool, spot_pool,
@@ -702,5 +703,40 @@ def write_johnny_rewards(
         )
 
 
+def handle_forced_loot(
+        treasure_options: treasureoptions.TreasureOptions,
+        item_pool: list[ttypes.RewardType]
+):
+    item_pool_count_dict: dict[ctenums.ItemID, int] = {
+        item_id: 0 for item_id in ctenums.ItemID
+    }
+    for item in item_pool:
+        if not isinstance(item, ctenums.ItemID):
+            continue
+        item_pool_count_dict[item] += 1
+
+    # temp_count_dict counts down each time an item is in the guaranteed pool.
+    # If it reaches 0, we have to add more items.
+    temp_count_dict = dict(item_pool_count_dict)
+    for item_id in treasure_options.guaranteed_loot:
+        if temp_count_dict[item_id] == 0:
+            item_pool_count_dict[item_id] += 1
+            item_pool.append(item_id)
+        else:
+            temp_count_dict[item_id] -= 1
+
+    # exact_count dict is similar but it going negative means we need to add more copies
+    exact_count_dict: dict[ctenums.ItemID, int] = {
+        key: item_pool_count_dict[key] for key in treasure_options.guaranteed_loot_exact
+    }
+    for item_id in treasure_options.guaranteed_loot_exact:
+        exact_count_dict[item_id] -= 1
+
+    for item_id, count in exact_count_dict.items():
+        if count > 0:
+            for _ in range(count):
+                item_pool.remove(item_id)
+        elif count < 0:
+            item_pool.extend([item_id] * (-count))
 
 

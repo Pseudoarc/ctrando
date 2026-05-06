@@ -180,10 +180,12 @@ class TreasureOptions:
         TID.TRADING_POST_HORN_FEATHER_BASE, TID.TRADING_POST_HORN_FEATHER_UPGRADE,
         TID.TRADING_POST_SPECIAL
     )
+    _default_guaranteed_loot: typing.ClassVar[tuple[TID,...]] = tuple()
+    _default_guaranteed_loot_exact: typing.ClassVar[tuple[TID, ...]] = tuple()
 
     def __init__(
             self,
-            loot_assignment_scheme: TreasureScheme.SHUFFLE = _default_treasure_scheme,
+            loot_assignment_scheme: TreasureScheme = _default_treasure_scheme,
             good_loot_spots: Iterable[TID] = _default_good_loot_spots,
             good_loot: Iterable[ItemID] = _default_good_loot,
             good_loot_rate: float = _default_good_loot_rate,
@@ -205,7 +207,9 @@ class TreasureOptions:
             johnny_high_quantity=_default_johnny_high_quantity,
             use_tech_level_treasures=_default_tech_level_treasures,
             extra_tech_levels_per_char=_default_extra_tech_levels_per_char,
-            tech_level_forced_spots=_default_tech_level_spots,
+            tech_level_forced_spots =_default_tech_level_spots,
+            guaranteed_loot = _default_guaranteed_loot,
+            guaranteed_loot_exact = _default_guaranteed_loot_exact,
             **kwargs
     ):
         self.loot_pool = loot_pool
@@ -232,6 +236,9 @@ class TreasureOptions:
         self.use_tech_level_treasures = use_tech_level_treasures
         self.extra_tech_levels_per_char = extra_tech_levels_per_char
         self.tech_level_forced_spots = tech_level_forced_spots
+
+        self.guaranteed_loot = guaranteed_loot
+        self.guaranteed_loot_exact = guaranteed_loot_exact
 
         if not (johnny_low_threshold <= johnny_mid_threshold <= johnny_high_threshold):
             raise ValueError("Johnny thresholds must be in order.")
@@ -378,7 +385,23 @@ class TreasureOptions:
                     x for x in TID if x not in cls.tech_level_excluded_spots
                 ],
                 allow_duplicates=False
-            )
+            ),
+            "guaranteed_loot": argumenttypes.arg_multiple_from_enum(
+                ItemID, cls._default_guaranteed_loot,
+                "Items guaranteed to appear in the loot pool",
+                available_pool=[
+                    x for x in ItemID if x not in shopoptions.ShopOptions.unused_items
+                ],
+                allow_duplicates=False
+            ),
+            "guaranteed_loot_exact": argumenttypes.arg_multiple_from_enum(
+                ItemID, cls._default_guaranteed_loot,
+                "Items guaranteed to appear in the loot pool (including count)",
+                available_pool=[
+                    x for x in ItemID if x not in shopoptions.ShopOptions.unused_items
+                ],
+                allow_duplicates=True
+            ),
         }
 
         for ind in range(1, 8):
@@ -440,7 +463,8 @@ class TreasureOptions:
                       "johnny_mid_threshold", "johnny_mid_item", "johnny_mid_quantity",
                       "johnny_high_threshold", "johnny_high_item", "johnny_high_quantity",
                       "use_tech_level_treasures", "extra_tech_levels_per_char",
-                      "tech_level_forced_spots")
+                      "tech_level_forced_spots",
+                      "guaranteed_loot", "guaranteed_loot_exact")
         for attr_name in attr_names:
             arg = spec[attr_name]
             arg_name = argumenttypes.attr_name_to_arg_name(attr_name)
