@@ -307,7 +307,12 @@ class PostRandoOptions:
                 attr: SNESPalette = getattr(self, name)
                 ret_dict[name] =  attr.to_hex_sequence()
             else:
-                ret_dict[name] = getattr(self, name)
+                attr = getattr(self, name)
+
+                # Subtypes of str are not handled well by toml.dumps, so convert.
+                if isinstance(attr, str):
+                    attr = str(attr)
+                ret_dict[name] = attr
 
         return ret_dict
 
