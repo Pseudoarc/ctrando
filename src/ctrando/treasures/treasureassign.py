@@ -454,7 +454,9 @@ def default_assignment(
 
     assigned_item_pool = assigned_item_pool + tuple(exclude_pool)
 
-    final_assignment: dict[ctenums.TreasureID, ttypes.RewardType] = {}
+    final_assignment: dict[ctenums.TreasureID, ttypes.RewardType] = {
+        tid: ctenums.ItemID.NONE for tid in ctenums.TreasureID
+    }
     final_assignment.update(existing_assignment)
 
     spec_dict = treasureoptions.parse_pool_specifier(treasure_options.custom_loot_pool)
