@@ -22,6 +22,7 @@ from ctrando.overworlds.owmanager import OWManager
 from ctrando.recruits import recruitassign
 from ctrando.treasures import treasuretypes as ttypes
 from ctrando.entranceshuffler import regionmap
+from ctrando.encounters import encountertypes
 
 
 _LocEvent = locationevent.LocationEvent
@@ -79,6 +80,7 @@ class ConfigState:
     objectives: list[objectivetypes.ObjectiveType]
     enemy_assign_dict: dict[ctenums.EnemyID, ctenums.EnemyID]
     animation_script_manager: animationscript.AnimationScriptManager
+    omen_elevator_data: encountertypes.OmenElevatorData
 
     @classmethod
     def get_default_config_from_ctrom(cls, ct_rom: ctrom.CTRom):
@@ -147,12 +149,16 @@ class ConfigState:
                 pcstat_manager.get_current_stat(char, ctpcstats.PCStat.SPEED)
             )
 
+        omen_elevators = encountertypes.OmenElevatorData(
+            True, True, True, True, True, True
+        )
+
         return cls(
             item_db, treasure_assignment, pcstat_manager,
             pctech_manager, enemy_data_dict, boss_assignment_dict,
             shop_manager, recruit_dict, ow_exit_assignment_dict, region_map,
             starting_rewards, objectives, enemy_assign_dict,
-            animation_script_manager
+            animation_script_manager, omen_elevators
         )
 
 

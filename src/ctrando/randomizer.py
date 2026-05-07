@@ -28,6 +28,7 @@ from ctrando.common import ctrom, ctenums, randostate
 from ctrando.common.random import RNGType
 
 from ctrando import encounters
+from ctrando.encounters import omenelevators
 
 from ctrando.enemyai import randofixes
 from ctrando.enemyscaling import patchscaling
@@ -361,6 +362,8 @@ def get_random_config(
         config.objectives, config.item_db
     )
 
+    config.omen_elevator_data = omenelevators.assign_random_elevators(rng)
+
     return config
 
 
@@ -604,6 +607,7 @@ def get_ctrom_from_config(
 
     config.shop_manager.write_to_ctrom(ct_rom)
 
+    omenelevators.write_omen_elevators(post_config.script_manager, config.omen_elevator_data)
     ### Logic Tweaks
     logictweaks.apply_logic_tweaks(settings.logic_options, post_config.script_manager)
     b=time.time()
