@@ -101,6 +101,15 @@ def make_zenan_boss_map(
     for obj_id in del_objs:
         zenan_boss_script.remove_object(obj_id)
 
+    # Remove attract mode check
+    # There's an extra jump forward that could be removed just by itself, but
+    # removing the whole block is fine.
+    pos = zenan_boss_script.find_exact_command(
+        EC.if_flag(memory.Flags.ATTRACT_MODE),
+        zenan_boss_script.get_function_start(1, FID.STARTUP)
+    )
+    zenan_boss_script.delete_jump_block(pos)
+
 
 def make_dream_devourer_map(
         script_manager: sm.ScriptManager,

@@ -64,7 +64,6 @@ def get_key_item_fill(
             possible_loose.append(item_id)
             normal_key_items.remove(item_id)
 
-
     # Precompute BossSpots which have Nizbel or Retinite
     # Only needed with element locks
     nizbel_spots = {
