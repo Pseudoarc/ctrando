@@ -317,3 +317,40 @@ def make_dream_devourer_map(
 
     )
     script.set_function(8, FID.STARTUP, battle_func)
+
+
+def make_nr_600_map(
+        script_manager: sm.ScriptManager,
+        loc_exit_dict: dict[ctenums.LocID, list[lt.LocationExit]],
+        loc_data_dict: dict[ctenums.LocID, lt.LocationData],
+):
+    """Make a copy of the NR landing map with a forced era of 600."""
+    copy_map_data(
+        script_manager, loc_exit_dict, loc_data_dict,
+        ctenums.LocID.NORTHERN_RUINS_ENTRANCE,
+        ctenums.LocID.NORTHERN_RUINS_ENTRANCE_600
+    )
+
+    script = script_manager[ctenums.LocID.NORTHERN_RUINS_ENTRANCE]
+    pos, _ = script.find_command([0x49])
+    new_block = (
+        EF()
+        .add(EC.set_flag(memory.Flags.INSIDE_NORTHERN_RUINS_1000))
+        .add(EC.reset_flag(memory.Flags.INSIDE_NORTHERN_RUINS_600))
+    )
+    script.insert_commands(new_block.get_bytearray(), pos)
+    pos += len(new_block)
+    end = script.find_exact_command(EC.return_cmd(), pos)
+    script.delete_commands_range(pos, end)
+
+    script = script_manager[ctenums.LocID.NORTHERN_RUINS_ENTRANCE_600]
+    pos, _ = script.find_command([0x49])
+    new_block = (
+        EF()
+        .add(EC.set_flag(memory.Flags.INSIDE_NORTHERN_RUINS_600))
+        .add(EC.reset_flag(memory.Flags.INSIDE_NORTHERN_RUINS_1000))
+    )
+    script.insert_commands(new_block.get_bytearray(), pos)
+    pos += len(new_block)
+    end = script.find_exact_command(EC.return_cmd(), pos)
+    script.delete_commands_range(pos, end)

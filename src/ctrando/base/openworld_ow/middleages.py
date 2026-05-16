@@ -1,5 +1,5 @@
 """Alter 600AD Overworld for open world."""
-from ctrando.common import memory
+from ctrando.common import ctenums, memory
 from ctrando.overworlds import oweventcommand as owc, oweventcommandhelper as owh, \
     overworld as ow
 
@@ -179,3 +179,7 @@ def modify_overworld(overworld: ow.Overworld):
     #       - Add the open entrance to claw
     claw_exit = overworld.exit_data.exits[0xA]
     claw_exit.is_active = False
+
+    # Normal NR and Heros Grave 600 go to the new spot
+    overworld.exit_data.exits[7].location = ctenums.LocID.NORTHERN_RUINS_ENTRANCE_600
+    overworld.exit_data.exits[8].location = ctenums.LocID.NORTHERN_RUINS_ENTRANCE_600

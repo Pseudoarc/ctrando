@@ -345,39 +345,6 @@ def post_assignment_update_scripts(
         .get_bytearray(), pos
     )
 
-    # print(script.get_function(0x0, FID.STARTUP))
-    # input()
-
-    nr_1000_era = nr_600_era = None
-    for ow_exit_src, ow_exit_target in ow_exit_assign_dict.items():
-        if ow_exit_target == OWExit.NORTHERN_RUINS_1000:
-            nr_1000_era = ow_exit_src.value[0].value.overworld_id
-        elif ow_exit_target == OWExit.NORTHERN_RUINS_600:
-            nr_600_era = ow_exit_src.value[0].value.overworld_id
-
-    if nr_1000_era is None or nr_600_era is None:
-        raise ValueError
-
-    script = script_manager[ctenums.LocID.NORTHERN_RUINS_ENTRANCE]
-    script_addr = 0x7F0200 + 0x0B*2
-    pos = script.find_exact_command(
-        EC.if_mem_op_value(script_addr, OP.EQUALS, ctenums.LocID.OW_PRESENT,2 )
-    )
-    script.replace_jump_cmd(
-        pos,
-        EC.if_mem_op_value(script_addr, OP.EQUALS, 0x1F0 + nr_1000_era, 2)
-    )
-    pos += len(EC.if_mem_op_value(script_addr, OP.EQUALS, 0x1F0 + nr_1000_era, 2))
-
-    pos = script.find_exact_command(
-        EC.if_mem_op_value(script_addr, OP.EQUALS, ctenums.LocID.OW_MIDDLE_AGES, 2),
-        pos
-    )
-    script.replace_jump_cmd(
-        pos,
-        EC.if_mem_op_value(script_addr, OP.EQUALS, 0x1F0 + nr_600_era, 2)
-    )
-
     # Tyrano Lair - No cutscene, just return to the entrance.
     # The entrance shuffler does this, but we need to remove a keepsong and add a fade.
     tyrano_end_exit = locexitdata.LocOWExits.TYRANO_LAIR_END_SCENE
@@ -430,21 +397,29 @@ def update_overworlds(
     - Never disable the Sunken Desert exit
     - NO: Default Lavos Crash in Preshistory.  Do this with starting rewards.
     - Break up Zenan Bridge 1000 (?)
+    - Never update the NR exits to say Heros Grave
     """
 
-    # Magus Castle Exit
+    # Magus Castle Exit and 600 AD Heros Grave
     script = ow_manager[ctenums.OverWorldID.MIDDLE_AGES].event
 
     pos = script.find_next_exact_command(
-        oweventcommand.SetExitInactive(exit_index=9)
+        oweventcommand.SetExitInactive(exit_index=7)
     )
-    script.delete_commands(pos-1, pos+1)
+    script.delete_commands(pos-1, pos+3)
 
     # Sunken Desert Exit
     pos = script.find_next_exact_command(
         oweventcommandhelper.branch_if_flag_set(memory.Flags.OW_SUNKEN_DESERT_COMPLETE)
     )
     script.delete_commands(pos, pos+1)
+
+    # Present Heros Grave
+    script =  ow_manager[ctenums.OverWorldID.PRESENT].event
+    pos = script.find_next_exact_command(
+        oweventcommand.SetExitInactive(exit_index=1)
+    )
+    script.delete_commands(pos - 1, pos + 1)
 
 
 def remove_epoch_teleports(

@@ -473,6 +473,9 @@ def get_ctrom_from_config(
     modifymaps.make_dream_devourer_map(post_config.script_manager,
                                        post_config.loc_exit_dict,
                                        post_config.loc_data_dict)
+    modifymaps.make_nr_600_map(post_config.script_manager,
+                               post_config.loc_exit_dict,
+                               post_config.loc_data_dict)
 
     enemyrando.apply_enemy_shuffle(
         config.enemy_assign_dict, post_config.script_manager, post_config.enemy_sprite_dict
