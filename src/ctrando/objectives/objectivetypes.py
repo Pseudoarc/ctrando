@@ -552,6 +552,8 @@ for eq_class in _associated_objs:
         pass
 
 _overlapping_quests: list[tuple[QuestID,...]] = [
+    (QuestID.MT_WOE, QuestID.BEAST_CAVE),
+    (QuestID.OCEAN_PALACE, QuestID.ZEAL_PALACE_THRONE),
     (QuestID.EPOCH_REBORN_BATTLE, QuestID.BLACKBIRD),
     (QuestID.OMEN_MEGA_MUTANT, QuestID.OMEN_GIGA_MUTANT,
      QuestID.OMEN_TERRA_MUTANT, QuestID.OMEN_ELDER_SPAWN),
