@@ -40,7 +40,7 @@ class EntranceShufflerOptions:
 
     @classmethod
     def get_argument_spec(cls) -> aty.ArgSpec:
-        return {
+        spec: aty.ArgSpec =  {
             "shuffle_entrances": aty.FlagArg("Whether to shuffle entrances or not"),
             "preserve_spots": aty.arg_multiple_from_enum(
                 OWExit, cls._default_preserve_spots,
@@ -55,6 +55,15 @@ class EntranceShufflerOptions:
             "separate_gate_eras": aty.FlagArg("Shuffled gates must go to different eras")
         }
 
+        for ind in range(1, 4):
+            arg_name = f"preserve_spots_{ind}"
+            spec[arg_name] = aty.arg_multiple_from_enum(
+                OWExit, tuple(),
+                f"Spots which are to be shuffled among themselves (Group {ind})"
+            )
+
+        return spec
+
     def __init__(
             self,
             shuffle_entrances: bool = _default_shuffle_entrances,
@@ -62,38 +71,46 @@ class EntranceShufflerOptions:
             vanilla_spots: tuple[OWExit, ...] = _default_vanilla_spots,
             rest_vanilla: bool = False,
             shuffle_gates: bool = False,
-            separate_gate_eras: bool = False
+            separate_gate_eras: bool = False,
+            **kwargs
     ):
         self.shuffle_entrances = shuffle_entrances
+        preserve_groups: list[set[OWExit]] = [
+            set(preserve_spots)
+        ]
 
-        if OWExit.TYRANO_LAIR in preserve_spots or OWExit.TYRANO_LAIR in vanilla_spots:
-            raise ValueError("Use \"lair_ruins\" in place of \"tyrano_lair\"")
+        for ind in range(1, 4):
+            arg_name = f"preserve_spots_{ind}"
+            pool = kwargs.get(arg_name, set())
+            if pool:
+                preserve_groups.append(set(pool))
 
-        vanilla_spot_temp = {spot: None for spot in vanilla_spots}
-        self.vanilla_spots = tuple(vanilla_spot_temp.keys())
-
-        preserve_spot_temp = {spot: None for spot in preserve_spots}
-        self.preserve_spots = tuple(
-            x for x in preserve_spot_temp.keys() if x not in vanilla_spots
+        vanilla_spot_temp: set[OWExit] = {spot for spot in vanilla_spots}
+        vanilla_spot_temp.update(
+            [OWExit.MAGIC_CAVE_OPEN, OWExit.MAGIC_CAVE_CLOSED, OWExit.ZENAN_BRIDGE_600_SOUTH]
         )
 
-        if (
-                OWExit.NORTHERN_RUINS_600 in self.preserve_spots and
-                OWExit.NORTHERN_RUINS_1000 not in self.preserve_spots
-        ):
-            self.preserve_spots = self.preserve_spots + (OWExit.NORTHERN_RUINS_1000,)
-        elif (
-                OWExit.NORTHERN_RUINS_1000 in self.preserve_spots and
-                OWExit.NORTHERN_RUINS_600 not in self.preserve_spots
-        ):
-            self.preserve_spots = self.preserve_spots + (OWExit.NORTHERN_RUINS_600,)
+        ungrouped = {x for x in OWExit if x != OWExit.TYRANO_LAIR}
+        grouped: set[OWExit] = set()
+        for ind, group in enumerate(preserve_groups):
+            # Remove all previously seen/vanilla elements from the current group to prevent overlap
+            group.difference_update(grouped.union(vanilla_spot_temp))
+            grouped.update(group)
+            ungrouped.difference_update(group)
 
         if rest_vanilla:
-            total_spots = list(OWExit)
-            total_spots.remove(OWExit.TYRANO_LAIR)
-            self.vanilla_spots = tuple(
-                x for x in total_spots if x not in self.preserve_spots
-            )
+            vanilla_spot_temp.update(ungrouped)
+        else:
+            preserve_groups.append(ungrouped.difference(vanilla_spot_temp))
+
+        self.vanilla_spots = tuple(x for x in OWExit if x in vanilla_spot_temp)
+        self.preserve_groups = [
+            tuple(x for x in OWExit if x in group) for group in preserve_groups
+        ]
+
+        for group in self.preserve_groups + [self.vanilla_spots]:
+            if OWExit.TYRANO_LAIR in group:
+                raise ValueError("Use \"lair_ruins\" in place of \"tyrano_lair\"")
 
         self.shuffle_gates = shuffle_gates
         self.separate_gate_eras = separate_gate_eras
@@ -105,53 +122,10 @@ class EntranceShufflerOptions:
             "Options for how overworld entrances are shuffled."
         )
 
-        group.add_argument(
-            "--shuffle-entrances",
-            action="store_true",
-            help="Shuffle the target of overworld entrances",
-            default=argparse.SUPPRESS
-        )
-
-        group.add_argument(
-            "--preserve-spots",
-            nargs="*",
-            type=functools.partial(aty.str_to_enum, enum_type=OWExit),
-            help="Spots which are to be shuffled among themselves.",
-            default=argparse.SUPPRESS
-        )
-
-        group.add_argument(
-            "--rest-vanilla",
-            action="store_true",
-            help="Only shuffle locations specified by --preserve-spots (default: False)",
-            default=argparse.SUPPRESS
-        )
-
-        group.add_argument(
-            "--vanilla-spots",
-            nargs="*",
-            type=functools.partial(aty.str_to_enum, enum_type=OWExit),
-            help="Spots which are not shuffled.  Will take precedence over --preserve-spots",
-            default=argparse.SUPPRESS
-        )
-
-        group.add_argument(
-            "--shuffle-gates",
-            action="store_true",
-            help="Shuffle where (non-algetty) portals lead",
-            default=argparse.SUPPRESS
-        )
-
-        group.add_argument(
-            "--separate-gate-eras", action="store_true",
-            help="Shuffled gates must go to different eras",
-            default=argparse.SUPPRESS
-        )
+        for attr_name, arg in cls.get_argument_spec().items():
+            arg.add_to_argparse(aty.attr_name_to_arg_name(attr_name), group)
 
     @classmethod
     def extract_from_namespace(cls, namespace: argparse.Namespace) -> typing.Self:
-        attr_names = [
-            "shuffle_entrances", "preserve_spots", "vanilla_spots", "rest_vanilla",
-            "shuffle_gates", "separate_gate_eras"  # "preserve_dungeons", "preserve_shops"
-        ]
+        attr_names = cls.get_argument_spec().keys()
         return aty.extract_from_namespace(cls, arg_names=attr_names, namespace=namespace)

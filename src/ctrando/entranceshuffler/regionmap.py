@@ -257,6 +257,7 @@ def get_default_exit_connectors() -> list[ExitConnector]:
         ExitConnector(OWExit.DORINO_BROMIDE_RESIDENCE, LocExit.DORINO_BROMIDE_RESIDENCE),
         ExitConnector(OWExit.DORINO_INN, LocExit.DORINO_INN),
         ExitConnector(OWExit.DORINO_MARKET, LocExit.DORINO_MARKET),
+        ExitConnector(OWExit.DORINO_ELDER, LocExit.DORINO_ELDER),
         ExitConnector(OWExit.TATAS_HOUSE, LocExit.TATAS_HOUSE),
         ExitConnector(OWExit.PORRE_ELDER_600, LocExit.PORRE_ELDER_600),
         ExitConnector(OWExit.PORRE_CAFE_600, LocExit.PORRE_CAFE_600),

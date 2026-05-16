@@ -1,5 +1,6 @@
 """Actually Shuffle the Entrances"""
 from collections.abc import Iterable
+from typing import Sequence
 
 from ctrando.arguments import entranceoptions
 from ctrando.common import ctenums, memory
@@ -22,7 +23,7 @@ def get_random_exit_connectors(
     else:
         return get_shuffled_exit_connectors(
             regionmap.get_default_exit_connectors(),
-            entrance_options.preserve_spots,
+            entrance_options.preserve_groups,
             entrance_options.vanilla_spots,
             rng
         )
@@ -139,52 +140,227 @@ def get_shuffled_map_from_connectors(
         exit_connectors: Iterable[regionmap.ExitConnector],
         region_connectors: Iterable[regionmap.RegionConnector]
 ):
+    loc_regions = get_all_loc_regions()
+    avail_loc_exits = {
+        x.to_exit for x in exit_connectors
+    }
+    trimmed_loc_regions = [
+        x for x in loc_regions
+        if not x.loc_exits or any(loc_exit in avail_loc_exits for loc_exit in x.loc_exits)
+    ]
+
     return regionmap.RegionMap(
-        get_ow_regions(), get_all_loc_regions(),
+        get_ow_regions(), trimmed_loc_regions,
         exit_connectors, region_connectors
     )
 
+_known_dead_ends_alt: list[LocExit] = [
+    LocExit.NORTHERN_RUINS_1000,
+    LocExit.FIONAS_SHRINE,
+    LocExit.CRONOS_HOUSE,
+    LocExit.TRUCE_SINGLE_RESIDENCE,
+    LocExit.TRUCE_INN_1000,
+    LocExit.TRUCE_SCREAMING_RESIDENCE,
+    LocExit.TRUCE_MARKET_1000,
+    LocExit.TRUCE_MAYOR,
+    LocExit.LUCCAS_HOUSE,
+    LocExit.PORRE_INN_1000,
+    LocExit.PORRE_MARKET_1000,
+    LocExit.SNAIL_STOP,
+    LocExit.PORRE_MAYOR_1000,
+    LocExit.PORRE_RESIDENCE_1000,
+    LocExit.MEDINA_ELDER,
+    LocExit.MEDINA_INN,
+    LocExit.MELCHIORS_HUT,
+    LocExit.MEDINA_MARKET,
+    LocExit.MEDINA_SQUARE,
+    LocExit.CHORAS_MAYOR_1000,
+    LocExit.CHORAS_INN_1000,
+    LocExit.CHORAS_CARPTENTER_1000,
+    LocExit.FOREST_RUINS,
+    LocExit.SUN_KEEP_1000,
+    LocExit.WEST_CAPE,
+    LocExit.ZENAN_BRIDGE_600_NORTH,
+    LocExit.SUNKEN_DESERT_ENTRANCE,
+    LocExit.GIANTS_CLAW,
+    LocExit.TRUCE_COUPLE_RESIDENCE_600,
+    LocExit.TRUCE_SMITH_RESIDENCE,
+    LocExit.TRUCE_INN_600,
+    LocExit.TRUCE_MARKET_600,
+    LocExit.MANORIA_CATHEDRAL,
+    LocExit.DORINO_BROMIDE_RESIDENCE,
+    LocExit.DORINO_ELDER,
+    LocExit.DORINO_INN,
+    LocExit.DORINO_MARKET,
+    LocExit.TATAS_HOUSE,
+    LocExit.PORRE_ELDER_600,
+    LocExit.PORRE_CAFE_600,
+    LocExit.PORRE_INN_600,
+    LocExit.PORRE_MARKET_600,
+    LocExit.FIONAS_VILLA,
+    LocExit.CHORAS_OLD_RESIDENCE_600,
+    LocExit.CHORAS_INN_600,
+    LocExit.CHORAS_CAFE_600,
+    LocExit.CHORAS_CARPTENTER_600,
+    LocExit.CHORAS_MARKET_600,
+    LocExit.CURSED_WOODS,
+    LocExit.DENADORO_MTS,
+    LocExit.OZZIES_FORT,
+    LocExit.SUN_KEEP_600,
+    LocExit.TRANN_DOME,
+    LocExit.ARRIS_DOME,
+    LocExit.FACTORY_RUINS,
+    LocExit.SUN_KEEP_2300,
+    LocExit.GENO_DOME,
+    LocExit.SUN_PALACE,
+    LocExit.TYRANO_LAIR,
+    LocExit.REPTITE_LAIR,
+    LocExit.DACTYL_NEST,
+    LocExit.SUN_KEEP_PREHISTORY,
+    LocExit.CHIEFS_HUT,
+    LocExit.TRADING_POST,
+    LocExit.IOKA_SW_HUT,
+    LocExit.IOKA_SWEET_WATER_HUT,
+    LocExit.HUNTING_RANGE,
+    LocExit.LARUBA_RUINS,
+    LocExit.TERRA_CAVE,
+    LocExit.ZEAL_PALACE,
+    LocExit.ENHASA,
+    LocExit.KAJAR,
+    LocExit.BLACKBIRD,
+    LocExit.NORTH_CAPE,
+    LocExit.LAST_VILLAGE_COMMNONS,
+    LocExit.LAST_VILLAGE_EMPTY_HUT,
+    LocExit.LAST_VILLAGE_SHOP,
+    LocExit.LAST_VILLAGE_RESIDENCE,
+    LocExit.SUN_KEEP_LAST_VILLAGE,
+]
+
 
 _known_dead_ends: list[LocExit] = [
-        LocExit.CRONOS_HOUSE, LocExit.TRUCE_MAYOR, LocExit.TRUCE_MARKET_1000,
-        LocExit.TRUCE_INN_1000, LocExit.PORRE_INN_1000,
-        LocExit.GUARDIA_CASTLE_1000, LocExit.PORRE_MAYOR_1000,
-        LocExit.PORRE_MARKET_1000, LocExit.SNAIL_STOP, LocExit.MEDINA_INN,
-        LocExit.MEDINA_SQUARE, LocExit.MEDINA_ELDER,
-        LocExit.FOREST_RUINS, LocExit.LUCCAS_HOUSE,
-        LocExit.GUARDIA_CASTLE_600, LocExit.MANORIA_CATHEDRAL,
-        LocExit.TRUCE_MARKET_600, LocExit.DENADORO_MTS, LocExit.DORINO_BROMIDE_RESIDENCE,
-        LocExit.DORINO_MARKET, LocExit.DORINO_INN, LocExit.FIONAS_VILLA,
-        LocExit.CURSED_WOODS, LocExit.PORRE_CAFE_600, LocExit.PORRE_INN_600,
-        LocExit.DEATH_PEAK, LocExit.ARRIS_DOME, LocExit.FACTORY_RUINS,
-        # LocExit.DACTYL_NEST  # ??
-        LocExit.HUNTING_RANGE, LocExit.LARUBA_RUINS,
-        LocExit.TRADING_POST, LocExit.CHIEFS_HUT, LocExit.IOKA_SW_HUT,
-        LocExit.IOKA_SWEET_WATER_HUT, LocExit.CHORAS_MAYOR_1000, LocExit.CHORAS_INN_1000,
-        LocExit.CHORAS_CARPTENTER_1000, LocExit.WEST_CAPE,
-        LocExit.NORTHERN_RUINS_1000, LocExit.PORRE_ELDER_600,
-        LocExit.MELCHIORS_HUT, LocExit.TRUCE_INN_600, LocExit.TRANN_DOME,
-        LocExit.ZENAN_BRIDGE_600_NORTH, LocExit.TATAS_HOUSE,
-        LocExit.SUN_KEEP_600, LocExit.CHORAS_CAFE_600, LocExit.CHORAS_MARKET_600,
-        LocExit.CHORAS_CARPTENTER_600, LocExit.NORTHERN_RUINS_600,
-        LocExit.GIANTS_CLAW, LocExit.OZZIES_FORT, LocExit.MAGUS_LAIR,
-        LocExit.SUNKEN_DESERT_ENTRANCE,
-        LocExit.FIONAS_SHRINE, LocExit.SUN_KEEP_2300, LocExit.SUN_KEEP_PREHISTORY,
-        LocExit.SUN_PALACE, LocExit.GENO_DOME, LocExit.REPTITE_LAIR, LocExit.TYRANO_LAIR,
-        LocExit.NORTH_CAPE, LocExit.LAST_VILLAGE_SHOP, LocExit.LAST_VILLAGE_COMMNONS,
-        LocExit.BLACKBIRD,
-        # LocExit.ZEAL_PALACE  # ??
-        LocExit.ENHASA, LocExit.KAJAR,
-        LocExit.TERRA_CAVE,  # Eventually cut Woe from Beast Cave
-        LocExit.TRUCE_SINGLE_RESIDENCE, LocExit.TRUCE_SCREAMING_RESIDENCE,
-        LocExit.TRUCE_SMITH_RESIDENCE, LocExit.TRUCE_COUPLE_RESIDENCE_600,
-        LocExit.LAST_VILLAGE_RESIDENCE, LocExit.LAST_VILLAGE_EMPTY_HUT, LocExit.SUN_KEEP_LAST_VILLAGE
-    ]
+    LocExit.CRONOS_HOUSE, LocExit.TRUCE_MAYOR, LocExit.TRUCE_MARKET_1000,
+    LocExit.TRUCE_INN_1000, LocExit.PORRE_INN_1000,
+    LocExit.GUARDIA_CASTLE_1000, LocExit.PORRE_MAYOR_1000,
+    LocExit.PORRE_MARKET_1000, LocExit.SNAIL_STOP, LocExit.MEDINA_INN,
+    LocExit.MEDINA_SQUARE, LocExit.MEDINA_ELDER,
+    LocExit.FOREST_RUINS, LocExit.LUCCAS_HOUSE,
+    LocExit.GUARDIA_CASTLE_600, LocExit.MANORIA_CATHEDRAL,
+    LocExit.TRUCE_MARKET_600, LocExit.DENADORO_MTS, LocExit.DORINO_BROMIDE_RESIDENCE,
+    LocExit.DORINO_MARKET, LocExit.DORINO_INN, LocExit.FIONAS_VILLA,
+    LocExit.CURSED_WOODS, LocExit.PORRE_CAFE_600, LocExit.PORRE_INN_600,
+    LocExit.DEATH_PEAK, LocExit.ARRIS_DOME, LocExit.FACTORY_RUINS,
+    # LocExit.DACTYL_NEST  # ??
+    LocExit.HUNTING_RANGE, LocExit.LARUBA_RUINS,
+    LocExit.TRADING_POST, LocExit.CHIEFS_HUT, LocExit.IOKA_SW_HUT,
+    LocExit.IOKA_SWEET_WATER_HUT, LocExit.CHORAS_MAYOR_1000, LocExit.CHORAS_INN_1000,
+    LocExit.CHORAS_CARPTENTER_1000, LocExit.WEST_CAPE,
+    LocExit.NORTHERN_RUINS_1000, LocExit.PORRE_ELDER_600,
+    LocExit.MELCHIORS_HUT, LocExit.TRUCE_INN_600, LocExit.TRANN_DOME,
+    LocExit.ZENAN_BRIDGE_600_NORTH, LocExit.TATAS_HOUSE,
+    LocExit.SUN_KEEP_600, LocExit.CHORAS_CAFE_600, LocExit.CHORAS_MARKET_600,
+    LocExit.CHORAS_CARPTENTER_600, LocExit.NORTHERN_RUINS_600,
+    LocExit.GIANTS_CLAW, LocExit.OZZIES_FORT, LocExit.MAGUS_LAIR,
+    LocExit.SUNKEN_DESERT_ENTRANCE,
+    LocExit.FIONAS_SHRINE, LocExit.SUN_KEEP_2300, LocExit.SUN_KEEP_PREHISTORY,
+    LocExit.SUN_PALACE, LocExit.GENO_DOME, LocExit.REPTITE_LAIR, LocExit.TYRANO_LAIR,
+    LocExit.NORTH_CAPE, LocExit.LAST_VILLAGE_SHOP, LocExit.LAST_VILLAGE_COMMNONS,
+    LocExit.BLACKBIRD,
+    # LocExit.ZEAL_PALACE  # ??
+    LocExit.ENHASA, LocExit.KAJAR,
+    LocExit.TERRA_CAVE,  # Eventually cut Woe from Beast Cave
+    LocExit.TRUCE_SINGLE_RESIDENCE, LocExit.TRUCE_SCREAMING_RESIDENCE,
+    LocExit.TRUCE_SMITH_RESIDENCE, LocExit.TRUCE_COUPLE_RESIDENCE_600,
+    LocExit.LAST_VILLAGE_RESIDENCE, LocExit.LAST_VILLAGE_EMPTY_HUT, LocExit.SUN_KEEP_LAST_VILLAGE
+]
+_known_dead_ends_set = set(_known_dead_ends)
+_flag_ow_exits = (OWExit.SUNKEN_DESERT, OWExit.FIONAS_SHRINE, OWExit.GIANTS_CLAW)
+
+_desolate_ow_exits: set[OWExit] = {
+    OWExit.SUN_KEEP_600, OWExit.SUN_KEEP_1000, OWExit.SUN_KEEP_2300,
+    OWExit.SUN_PALACE, OWExit.SUN_KEEP_LAST_VILLAGE,
+    OWExit.SUN_KEEP_PREHISTORY, OWExit.LAIR_RUINS,
+    OWExit.GENO_DOME, OWExit.OZZIES_FORT,
+}
+
+def get_shuffled_group(
+        base_assignment: dict[OWExit, LocExit],
+        group_ow_exits: Sequence[OWExit],
+        rng: RNGType,
+) -> dict[OWExit, LocExit]:
+    """
+    Takes the exit connectors with overworld exit in group_ow_exists and ow_exit_pool
+    and returns a list of ExitConnectors with randomized location exit targets.
+    """
+
+    ow_exit_pool_set = set(base_assignment.keys())
+    group_ow_exits_set = set(group_ow_exits)
+    available_ow_exits = ow_exit_pool_set.intersection(group_ow_exits_set)
+
+    loc_exit_targets = list(base_assignment[x] for x in group_ow_exits)
+
+    def get_era(ow_exit: OWExit):
+        return ow_exit.value[0].value.overworld_id
+
+    # Rules:
+    # 1) Island Exits with no other exit can't lead to Crono's house.
+    # 2) Exits opened by a flag must be assigned to a dead end
+
+    while True:
+        assign_dict: dict[OWExit, LocExit] = {
+            # x: None for x in group_ow_exits_set
+        }
+
+        temp_ow_exit_pool = set(available_ow_exits)
+        temp_loc_exit_pool = set(loc_exit_targets)
+
+        # Most restrictive is dead ends for flags
+        flag_ow_exits = [
+            x for x in (OWExit.SUNKEN_DESERT, OWExit.FIONAS_SHRINE, OWExit.GIANTS_CLAW)
+            if x in temp_ow_exit_pool
+        ]
+        if flag_ow_exits:
+            flag_target_pool = _known_dead_ends_set.intersection(temp_loc_exit_pool)
+            available_dead_ends: list[LocExit] = [
+                x for x in LocExit
+                if x in flag_target_pool and x != LocExit.CRONOS_HOUSE
+            ]
+
+            flag_assignments = rng.sample(available_dead_ends, k=len(flag_ow_exits))
+
+            temp_ow_exit_pool.difference_update(flag_ow_exits)
+            temp_loc_exit_pool.difference_update(flag_assignments)
+            assign_dict.update(zip(flag_ow_exits, flag_assignments))
+
+        # Now do Crono's House
+        if OWExit.CRONOS_HOUSE in temp_ow_exit_pool:
+            possible_house_ow_exits = [
+                x for x in OWExit
+                if x in temp_ow_exit_pool and x not in _desolate_ow_exits
+            ]
+
+            if not possible_house_ow_exits:
+                continue
+
+            house_ow_exit = rng.choice(possible_house_ow_exits)
+            assign_dict[house_ow_exit] = LocExit.CRONOS_HOUSE
+            temp_ow_exit_pool.remove(house_ow_exit)
+            temp_loc_exit_pool.remove(LocExit.CRONOS_HOUSE)
+
+        remaining_ow_exits = [
+            x for x in OWExit if x in temp_ow_exit_pool
+        ]
+        remaining_loc_exits = [
+            x for x in LocExit if x in temp_loc_exit_pool
+        ]
+        rng.shuffle(remaining_ow_exits)
+
+        assign_dict.update(zip(remaining_ow_exits, remaining_loc_exits, strict=True))
+        return assign_dict
 
 
 def get_shuffled_exit_connectors(
         exit_connectors: list[regionmap.ExitConnector],
-        preserve_pool: list[OWExit],
+        preserve_groups: list[Sequence[OWExit]],
         vanilla_pool: list[OWExit],
         rng: RNGType
 ) -> list[regionmap.ExitConnector]:
@@ -193,143 +369,34 @@ def get_shuffled_exit_connectors(
     - Leave the Dorino side of the Magic Cave as in vanilla.
     -
     """
-    ow_exit_pool = [connector.from_exit for connector in exit_connectors]
-    loc_exit_pool = [connector.to_exit for connector in exit_connectors]
+    exit_connectors = [
+        connector for connector in exit_connectors
+        if connector.from_exit != OWExit.TYRANO_LAIR
+    ]
 
-    #   print(vanilla_pool)
-    # input()
+    base_assignment: dict[OWExit, LocExit] = {
+        connector.from_exit: connector.to_exit
+        for connector in exit_connectors if connector.from_exit != OWExit.TYRANO_LAIR
+    }
 
     # 1) Remove Tyrano Lair exit (always ruined)
-    ow_exit_pool.remove(OWExit.TYRANO_LAIR)
     # 2) Remove the LV version of the portal area.
-    loc_exit_pool.remove(LocExit.DARK_AGES_PORTAL_LAST_VILLAGE)
-
-    exit_connectors = [connector for connector in exit_connectors
-                       if connector.from_exit in ow_exit_pool]
+    base_assignment[OWExit.LAIR_RUINS] = LocExit.TYRANO_LAIR
+    base_assignment[OWExit.SUN_KEEP_LAST_VILLAGE] = LocExit.LAIR_RUINS
 
     assign_dict: dict[OWExit, LocExit] = dict()
 
-    # Keep the Dorino side of magic cave vanilla.
-    vanilla_pool = list(vanilla_pool)
-    for ow_exit in (OWExit.MAGIC_CAVE_OPEN, OWExit.MAGIC_CAVE_CLOSED):
-        if ow_exit not in vanilla_pool:
-            vanilla_pool.append(ow_exit)
+    for ow_exit in vanilla_pool:
+        if ow_exit in base_assignment:
+            assign_dict[ow_exit] = base_assignment[ow_exit]
+
+    for group in preserve_groups:
+        group_assign = get_shuffled_group(base_assignment, group, rng)
+        assign_dict.update(group_assign)
 
     for connector in exit_connectors:
-        if connector.from_exit == OWExit.LAIR_RUINS:
-            connector.to_exit = LocExit.TYRANO_LAIR
-        if connector.from_exit == OWExit.LAST_VILLAGE_PORTAL:
-            connector.to_exit = LocExit.LAIR_RUINS
+        connector.to_exit = assign_dict[connector.from_exit]
 
-        # pre-fill assignment with specified vanilla spots
-        if connector.from_exit in vanilla_pool:
-            assign_dict[connector.from_exit] = connector.to_exit
-            ow_exit_pool.remove(connector.from_exit)
-            loc_exit_pool.remove(connector.to_exit)
-
-    dungeon_exits = [x for x in preserve_pool if x not in vanilla_pool]
-    if OWExit.TYRANO_LAIR in dungeon_exits:
-        dungeon_exits.remove(OWExit.TYRANO_LAIR)
-
-    dungeon_targets = [connector.to_exit for connector in exit_connectors
-                       if connector.from_exit in dungeon_exits]
-
-    usable_dead_ends = [
-        connector.to_exit for connector in exit_connectors
-        if connector.from_exit not in assign_dict and connector.to_exit in _known_dead_ends
-    ]
-    if LocExit.CRONOS_HOUSE in usable_dead_ends:
-        usable_dead_ends.remove(LocExit.CRONOS_HOUSE)
-
-    flag_ow_exits = [
-        x for x in (OWExit.SUNKEN_DESERT, OWExit.FIONAS_SHRINE, OWExit.GIANTS_CLAW)
-        if x not in assign_dict.keys()
-    ]
-
-    # Make sure flag exits can't be back doored by making them always dead ends
-
-    has_used_nr = False
-    for ow_exit in flag_ow_exits:
-        if ow_exit in dungeon_exits:
-            pool = [x for x in usable_dead_ends if x in dungeon_targets]
-            if has_used_nr:
-                pool = [x for x in pool if x not in (LocExit.NORTHERN_RUINS_1000,
-                                                     LocExit.NORTHERN_RUINS_600)]
-            target = rng.choice(pool)
-            dungeon_exits.remove(ow_exit)
-            dungeon_targets.remove(target)
-        else:
-            pool = [x for x in usable_dead_ends if x not in dungeon_targets]
-            if has_used_nr:
-                pool = [x for x in pool if x not in (LocExit.NORTHERN_RUINS_1000,
-                                                     LocExit.NORTHERN_RUINS_600)]
-            target = rng.choice(pool)
-
-        if target in (LocExit.NORTHERN_RUINS_600, LocExit.NORTHERN_RUINS_1000):
-            has_used_nr = True
-
-        usable_dead_ends.remove(target)
-        loc_exit_pool.remove(target)
-        ow_exit_pool.remove(ow_exit)
-        assign_dict[ow_exit] = target
-
-    # Give Crono's house a good exit to avoid dead-ending
-    if LocExit.CRONOS_HOUSE in loc_exit_pool and LocExit.CRONOS_HOUSE not in dungeon_targets:
-        bad_ow_exits = [
-            OWExit.SUN_KEEP_600, OWExit.SUN_KEEP_1000, OWExit.SUN_KEEP_2300,
-            OWExit.SUN_PALACE, OWExit.SUN_KEEP_LAST_VILLAGE,
-            OWExit.SUN_KEEP_PREHISTORY, OWExit.LAIR_RUINS,
-            OWExit.GENO_DOME, OWExit.OZZIES_FORT,
-        ]
-
-        bad_ow_exits += [x for x in dungeon_exits if x not in bad_ow_exits]
-        bad_ow_exits = [
-            x for x in bad_ow_exits if x not in assign_dict.keys()
-        ]
-        # bad_ow_exits = bad_ow_exits.union(dungeon_exits).difference(assign_dict.keys())
-        starting_ow_exit = rng.choice(
-            [ow_exit for ow_exit in ow_exit_pool
-             if ow_exit not in bad_ow_exits]
-        )
-        assign_dict[starting_ow_exit] = LocExit.CRONOS_HOUSE
-        ow_exit_pool.remove(starting_ow_exit)
-        loc_exit_pool.remove(LocExit.CRONOS_HOUSE)
-
-    while True:
-        # Need to make sure that the NR exits are in different eras.
-
-        temp_assign_dict = dict(assign_dict)
-        if len(dungeon_exits) != len(dungeon_targets):
-            raise ValueError
-
-        dungeon_target_list = list(dungeon_targets)
-        rng.shuffle(dungeon_target_list)
-        temp_assign_dict.update(zip(dungeon_exits, dungeon_target_list))
-
-        remaining_ow_exits = [x for x in ow_exit_pool if x not in temp_assign_dict.keys()]
-        remaining_loc_exits = [x for x in loc_exit_pool if x not in temp_assign_dict.values()]
-
-        rng.shuffle(remaining_loc_exits)
-        temp_assign_dict.update(zip(remaining_ow_exits, remaining_loc_exits))
-
-        for connector in exit_connectors:
-            connector.to_exit = temp_assign_dict[connector.from_exit]
-
-        nr_1000_era = ctenums.OverWorldID(0)
-        nr_600_era = ctenums.OverWorldID(0)
-
-        for connector in exit_connectors:
-            if connector.to_exit == LocExit.NORTHERN_RUINS_1000:
-                nr_1000_era = connector.from_exit.value[0].value.overworld_id
-
-            if connector.to_exit == LocExit.NORTHERN_RUINS_600:
-                nr_600_era = connector.from_exit.value[0].value.overworld_id
-
-        # print(nr_600_era, nr_1000_era)
-        if nr_600_era != nr_1000_era:
-            break
-
-    assign_dict.update(temp_assign_dict)
     return list(exit_connectors)
 
 
