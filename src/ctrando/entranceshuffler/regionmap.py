@@ -400,6 +400,8 @@ def get_default_region_connectors(
     progressive_shell_rule = logicfactory.ProgressiveRule(
         [ctenums.ItemID.RAINBOW_SHELL, ctenums.ItemID.PRISMSHARD]
     )
+    progressive_bike_key_rule = logicfactory.ProgressiveRule(
+        [ItemID.BIKE_KEY, ItemID.RACE_LOG])
     eot_portal_rule = logictypes.LogicRule(
         list(list(x) for x in combinations(CharID, 4))
     ) & logictypes.LogicRule([ItemID.GATE_KEY])
@@ -659,29 +661,29 @@ def get_default_region_connectors(
         RegionConnector(
             "lab_32_west", "lab_32_middle",
             "bike_key_west",
-            rule=logictypes.LogicRule([ctenums.ItemID.BIKE_KEY])
+            rule=progressive_bike_key_rule(1)
         ),
         RegionConnector(
             "lab_32_west", "johnny_race",
             "johnny_race_west",
-            rule=logictypes.LogicRule([ctenums.ItemID.BIKE_KEY, ctenums.CharID.CRONO]),
+            rule=logictypes.LogicRule([ctenums.CharID.CRONO]) & progressive_bike_key_rule(1),
             reversible=False
         ),
         RegionConnector(
             "johnny_race", "johnny_race_log",
             "race_good_score",
-            rule=logictypes.LogicRule([ctenums.ItemID.RACE_LOG]),
+            rule=progressive_bike_key_rule(2),
             reversible=False
         ),
         RegionConnector(
             "lab_32_east", "lab_32_middle",
             "bike_key_east",
-            rule=logictypes.LogicRule([ctenums.ItemID.BIKE_KEY])
+            rule=progressive_bike_key_rule(1)
         ),
         RegionConnector(
             "lab_32_east", "johnny_race",
             "johnny_race_east",
-            rule=logictypes.LogicRule([ctenums.ItemID.BIKE_KEY, ctenums.CharID.CRONO]),
+            rule=logictypes.LogicRule([ctenums.CharID.CRONO]) & progressive_bike_key_rule(1),
             reversible=False
         ),
         RegionConnector(

@@ -25,7 +25,7 @@ _progressive_pendant_rule = ProgressiveRule([ItemID.PENDANT, ItemID.PENDANT_CHAR
 _progressive_sword_rule = ProgressiveRule([ItemID.MASAMUNE_1, ItemID.MASAMUNE_2])
 _progressive_clone_rule = ProgressiveRule([ItemID.C_TRIGGER, ItemID.CLONE])
 _progressive_shell_rule = ProgressiveRule([ItemID.RAINBOW_SHELL, ItemID.PRISMSHARD])
-
+_progressive_bike_key_rule = ProgressiveRule([ItemID.BIKE_KEY, ItemID.RACE_LOG])
 
 _fair_recruit_item: dict[CharID, ItemID] = {
     CharID.CRONO: ItemID.BIKE_KEY,
@@ -41,50 +41,6 @@ _fair_recruit_item: dict[CharID, ItemID] = {
 
 def get_fair_recruit_item(char_id: CharID) -> ItemID:
     return _fair_recruit_item[char_id]
-
-
-def can_access_magus_castle() -> LogicRule:
-    """Logic Rule for accessing Magus's Castle."""
-
-
-def can_access_dark_ages() -> LogicRule:
-    """Logic Rule for getting to Dark Ages"""
-    return LogicRule(
-        # initial_rules=[
-        #     [ItemID.PENDANT, ItemID.PENDANT_CHARGE],
-        #     [ItemID.DREAMSTONE],
-        #     [ItemID.MASAMUNE_1, CharID.FROG]
-        # ]
-        [Flags.HAS_DARK_AGES_TIMEGAUGE_ACCESS]
-    )
-
-def can_access_factory() -> LogicRule:
-    """Condition for accessing factory."""
-    return LogicRule([CharID.ROBO]) & (LogicRule([ItemID.BIKE_KEY]) | can_fly())
-
-
-def can_access_eot() -> LogicRule:
-    """Logic Rule for getting to End of Time"""
-    char_combs = combinations(CharID, 4)
-    rule = list(list(x) for x in char_combs)
-
-    char_rule = LogicRule(rule) & LogicRule([ItemID.GATE_KEY])
-    return can_access_factory() | char_rule
-
-
-def can_access_tyrano_lair() ->  LogicRule:
-    """Logic Rule for getting to Tyrano Lair"""
-    return can_fly() | LogicRule([ItemID.DREAMSTONE])
-
-def can_fly() ->  LogicRule:
-    # flight_from_da = LogicRule(
-    #     initial_rules=[
-    #         [ItemID.PENDANT_CHARGE, ItemID.RUBY_KNIFE],
-    #         [ItemID.JETSOFTIME]
-    #     ]
-    # )
-    # return can_access_dark_ages() & flight_from_da
-    return LogicRule([ScriptReward.FLIGHT])
 
 
 if __name__ == '__main__':

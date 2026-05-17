@@ -543,11 +543,12 @@ def add_key_item_count(
 
 
 _progressive_items = [
-        [ctenums.ItemID.PENDANT, ctenums.ItemID.PENDANT_CHARGE],
-        [ctenums.ItemID.MASAMUNE_1, ctenums.ItemID.MASAMUNE_2],
-        [ctenums.ItemID.RAINBOW_SHELL, ctenums.ItemID.PRISMSHARD],
-        [ctenums.ItemID.C_TRIGGER, ctenums.ItemID.CLONE]
-    ]
+    [ctenums.ItemID.PENDANT, ctenums.ItemID.PENDANT_CHARGE],
+    [ctenums.ItemID.MASAMUNE_1, ctenums.ItemID.MASAMUNE_2],
+    [ctenums.ItemID.RAINBOW_SHELL, ctenums.ItemID.PRISMSHARD],
+    [ctenums.ItemID.C_TRIGGER, ctenums.ItemID.CLONE],
+    [ctenums.ItemID.BIKE_KEY, ctenums.ItemID.RACE_LOG]
+]
 
 
 def get_progressive_item_groups():

@@ -617,7 +617,8 @@ def get_obj_keys(obj_str: str) -> list[ObjectiveType]:
             x for x in QuestID if x not in (
                 QuestID.OMEN_ELDER_SPAWN, QuestID.OMEN_MEGA_MUTANT,
                 # QuestID.OMEN_GIGA_MUTANT,
-                QuestID.OMEN_TERRA_MUTANT
+                QuestID.OMEN_TERRA_MUTANT,
+                QuestID.BEAST_CAVE, QuestID.ZEAL_PALACE_THRONE,
             )
         ]
         return ret_list

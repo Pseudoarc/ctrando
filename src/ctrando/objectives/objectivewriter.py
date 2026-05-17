@@ -257,26 +257,33 @@ def get_random_objectives_from_settings(
     for obj_id in range(8):
         pairs = base_distributions[obj_id].get_weight_object_pairs()
 
-        # Restrict pairs to items in pool
-        for ind, (weight, obj) in enumerate(pairs):
-            obj = [x for x in obj if x in pool]
-            pairs[ind] = (weight, obj)
+        dist_keys = base_distributions[obj_id].get_all_items()
+        # If an objective is forced by a spec, override overlap rules
+        if len(dist_keys) == 1:
+            forced_obj = next(iter(dist_keys))
+            if forced_obj is not None and forced_obj not in ret_list:
+                ret_list.append(forced_obj)
+        else:
+            # Restrict pairs to items in pool
+            for ind, (weight, obj) in enumerate(pairs):
+                obj = [x for x in obj if x in pool]
+                pairs[ind] = (weight, obj)
 
-        try:
-            cleaned_dist = distribution.Distribution[oty.ObjectiveType](*pairs)
-            new_obj = cleaned_dist.get_random_item(rng)
-        except distribution.ZeroWeightException:
-            new_obj = rng.choice(tuple(x for x in pool if x in oty.QuestID))
+            try:
+                cleaned_dist = distribution.Distribution[oty.ObjectiveType](*pairs)
+                new_obj = cleaned_dist.get_random_item(rng)
+            except distribution.ZeroWeightException:
+                new_obj = rng.choice(tuple(x for x in pool if x in oty.QuestID))
 
-        ret_list.append(new_obj)
-        for link in links:
-            if new_obj in link:
-                remove_list = (x for x in link if x in pool and x is not None)
-                for obj in remove_list:
-                    pool.remove(obj)
+            ret_list.append(new_obj)
+            for link in links:
+                if new_obj in link:
+                    remove_list = (x for x in link if x in pool and x is not None)
+                    for obj in remove_list:
+                        pool.remove(obj)
 
-        if new_obj is not None and new_obj in pool:
-            pool.remove(new_obj)
+            if new_obj is not None and new_obj in pool:
+                pool.remove(new_obj)
 
     return ret_list
 
