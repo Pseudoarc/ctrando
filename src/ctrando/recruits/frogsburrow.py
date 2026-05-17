@@ -63,6 +63,13 @@ def write_recruit_checks(script: LocationEvent):
     new_startup.append(
         owu.get_has_equipment_func(ctenums.ItemID.MASAMUNE_1, 0x7F0212)
     )
+    new_startup.append(
+        EF().add_if(
+            EC.if_mem_op_value(0x7F0212, OP.EQUALS, 0),
+            owu.get_has_equipment_func(ctenums.ItemID.MASAMUNE_2,
+                                       0x7F0212)
+        )
+    )
     script.insert_commands(new_startup.get_bytearray(), pos)
 
 

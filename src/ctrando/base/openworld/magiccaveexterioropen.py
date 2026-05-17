@@ -27,6 +27,10 @@ class EventMod(locationevent.LocEventMod):
             ctenums.ItemID.MASAMUNE_1, has_masa_addr, temp_addr
         )
 
+        has_masa2_func = owu.get_has_equipment_func(
+            ctenums.ItemID.MASAMUNE_2, has_masa_addr, temp_addr
+        )
+
         flag_block = (
             EF()
 
@@ -36,9 +40,14 @@ class EventMod(locationevent.LocEventMod):
                 .add_if(
                     EC.if_pc_recruited(ctenums.CharID.FROG),
                     has_masa_func
-                    .add_if(
+                    .add_if_else(
                         EC.if_mem_op_value(has_masa_addr, OP.EQUALS, 1),
-                        EF().add(EC.set_flag(memory.Flags.OW_MAGIC_CAVE_OPEN))
+                        EF().add(EC.set_flag(memory.Flags.OW_MAGIC_CAVE_OPEN)),
+                        has_masa2_func
+                        .add_if(
+                            EC.if_mem_op_value(has_masa_addr, OP.EQUALS, 1),
+                            EF().add(EC.set_flag(memory.Flags.OW_MAGIC_CAVE_OPEN)),
+                        )
                     )
                 )
             )

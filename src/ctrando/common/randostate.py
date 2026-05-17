@@ -111,6 +111,9 @@ class ConfigState:
         remove_item.set_desc_from_str("Remove character from battle")
         remove_item.secondary_stats.set_equipable_by(list(ctenums.CharID))
 
+        masa2 = item_db[ctenums.ItemID.MASAMUNE_2]
+        masa2.set_name_from_str("{sword}Masamune+")
+
         pcstat_manager = ctpcstats.PCStatsManager.read_from_ct_rom(ct_rom)
         characterwriter.fill_vanilla_tp_gaps(pcstat_manager)
 
