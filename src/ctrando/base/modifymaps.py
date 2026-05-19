@@ -343,6 +343,14 @@ def make_nr_600_map(
     end = script.find_exact_command(EC.return_cmd(), pos)
     script.delete_commands_range(pos, end)
 
+    pos = script.find_exact_command(
+        EC.if_flag(memory.Flags.INSIDE_NORTHERN_RUINS_1000), pos
+    )
+    script.delete_commands(pos, 1)
+    pos = script.find_exact_command(EC.jump_forward(0), pos)
+    script.delete_commands(pos, 2)
+
+    # Similar for the 600 exit
     script = script_manager[ctenums.LocID.NORTHERN_RUINS_ENTRANCE_600]
     pos, _ = script.find_command([0x49])
     new_block = (
@@ -354,3 +362,8 @@ def make_nr_600_map(
     pos += len(new_block)
     end = script.find_exact_command(EC.return_cmd(), pos)
     script.delete_commands_range(pos, end)
+
+    pos = script.find_exact_command(
+        EC.if_flag(memory.Flags.INSIDE_NORTHERN_RUINS_1000), pos
+    )
+    script.delete_jump_block(pos)

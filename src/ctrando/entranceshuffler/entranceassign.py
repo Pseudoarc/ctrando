@@ -406,7 +406,7 @@ def update_overworlds(
     pos = script.find_next_exact_command(
         oweventcommand.SetExitInactive(exit_index=7)
     )
-    script.delete_commands(pos-1, pos+3)
+    script.delete_commands(pos-1, pos+4)
 
     # Sunken Desert Exit
     pos = script.find_next_exact_command(
