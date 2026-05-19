@@ -3,6 +3,7 @@ from enum import Enum, auto
 from collections.abc import Iterable
 import copy
 from dataclasses import dataclass
+import math
 import typing
 
 from ctrando.base.openworld import cursedwoods
@@ -613,14 +614,29 @@ def get_obj_keys(obj_str: str) -> list[ObjectiveType]:
         raise ValueError("Invalid objective specifier.")
 
     if obj_str == "any_quest":
-        ret_list = [
-            x for x in QuestID if x not in (
-                QuestID.OMEN_ELDER_SPAWN, QuestID.OMEN_MEGA_MUTANT,
-                # QuestID.OMEN_GIGA_MUTANT,
-                QuestID.OMEN_TERRA_MUTANT,
-                QuestID.BEAST_CAVE, QuestID.ZEAL_PALACE_THRONE,
-            )
+        trim_quests = [QuestID.OMEN_ELDER_SPAWN, QuestID.OMEN_GIGA_MUTANT]
+        trimmed_overlaps = [
+            [quest for quest in overlap if quest not in trim_quests]
+            for overlap in _overlapping_quests
         ]
+        overlap_sizes = [len(x) for x in trimmed_overlaps]
+        overlap_lcm = math.lcm(*overlap_sizes)
+
+        overlap_quests = {
+            quest for overlap in _overlapping_quests for quest in overlap
+        }
+        non_overlap_quests = [x for x in QuestID if x not in overlap_quests]
+
+        ret_list: list[QuestID] = []
+        for overlap, overlap_size in zip(trimmed_overlaps, overlap_sizes):
+            repeat_count = overlap_size // overlap_size
+            ret_list += overlap*repeat_count
+
+        ret_list += overlap_lcm*non_overlap_quests
+
+        order = list(QuestID)
+        ret_list = sorted(ret_list, key=lambda x: order.index(x))
+
         return ret_list
     elif obj_str == "open_quest":
         return [
