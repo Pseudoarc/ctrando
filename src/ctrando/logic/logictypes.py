@@ -250,26 +250,18 @@ class LogicRule:
             return True
 
         for rule in self._rules:
+
             total_tokens = list(game.other_rewards) + list(game.key_items) + list(game.characters)
             can_access = True
             for requirement in rule:
-                if requirement not in total_tokens:
+                matches = [
+                    x for x in total_tokens if x == requirement and type(x) == type(requirement)
+                ]
+                if not matches:
                     can_access = False
                     break
                 else:
-                    total_tokens.remove(requirement)
-                # has_char = (
-                #     game.has_character(requirement) if requirement in CharID else False
-                # )
-                # has_key = (
-                #     game.has_key_item(requirement) if requirement in ItemID else False
-                # )
-                # has_other = (
-                #     game.has_other_reward(requirement)
-                # )
-                # if not (has_char or has_key or has_other):
-                #     can_access = False
-                #     break
+                    total_tokens.remove(matches[0])
 
             if can_access:
                 return True
