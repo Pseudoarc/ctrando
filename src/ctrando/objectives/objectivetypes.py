@@ -614,7 +614,7 @@ def get_obj_keys(obj_str: str) -> list[ObjectiveType]:
         raise ValueError("Invalid objective specifier.")
 
     if obj_str == "any_quest":
-        trim_quests = [QuestID.OMEN_ELDER_SPAWN, QuestID.OMEN_GIGA_MUTANT]
+        trim_quests = [QuestID.OMEN_ELDER_SPAWN, QuestID.OMEN_TERRA_MUTANT]
         trimmed_overlaps = [
             [quest for quest in overlap if quest not in trim_quests]
             for overlap in _overlapping_quests
