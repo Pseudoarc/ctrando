@@ -552,20 +552,14 @@ def get_ctrom_from_config(
     chesttext.ugly_hack_chest_str(ct_rom)
     config.item_db.write_to_ctrom(ct_rom)
 
+    replacement_dict = basepatch.get_progressive_base_dict()
     for tid, treasure in post_config.treasure_data_dict.items():
         assigned_treasure = config.treasure_assignment[tid]
-        # if assigned_treasure == ctenums.ItemID.NONE:
-        #     assigned_treasure = ctenums.ItemID.MOP
 
-        # TODO: Do progressive items more gracefully...
-        if assigned_treasure == ctenums.ItemID.PENDANT_CHARGE:
-            assigned_treasure = ctenums.ItemID.PENDANT
-        if assigned_treasure == ctenums.ItemID.MASAMUNE_2:
-            assigned_treasure = ctenums.ItemID.MASAMUNE_1
-        if assigned_treasure == ctenums.ItemID.PRISMSHARD:
-            assigned_treasure = ctenums.ItemID.RAINBOW_SHELL
-        if assigned_treasure == ctenums.ItemID.CLONE:
-            assigned_treasure = ctenums.ItemID.C_TRIGGER
+        if isinstance(assigned_treasure, ctenums.ItemID):
+            if assigned_treasure in replacement_dict:
+                pass
+            assigned_treasure = replacement_dict.get(assigned_treasure, assigned_treasure)
 
         treasure.reward = assigned_treasure
 

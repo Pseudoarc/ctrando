@@ -555,6 +555,16 @@ def get_progressive_item_groups():
     return copy.deepcopy(_progressive_items)
 
 
+def get_progressive_base_dict() -> dict[ctenums.ItemID, ctenums.ItemID]:
+    ret_dict: dict[ctenums.ItemID, ctenums.ItemID] = {}
+    for progression in _progressive_items:
+        for item in progression[1:]:
+            ret_dict[item] = progression[0]
+
+    return  ret_dict
+
+
+
 def patch_progressive_items(ct_rom: ctrom.CTRom):
     """
     Add progression:
