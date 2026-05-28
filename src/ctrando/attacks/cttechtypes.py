@@ -148,6 +148,10 @@ class EnemyTechControlHeader(ControlHeader):
     ROM_RW = ctt.AbsRomRW(0x0C6FC9)
 
 
+class EnemyAttackControlHeader(ControlHeader):
+    ROM_RW = ctt.AbsPointerRW(0x01D8FD)
+
+
 class EffectHeader(SizedBinaryData):
     """
     A class for representing an effect header.  Effect headers can be used for
@@ -252,6 +256,10 @@ class EnemyTechEffectHeader(EffectHeader):
     ROM_RW = ctt.AbsRomRW(0x0C7AC9)
 
 
+class EnemyAttackEffectHeader(EffectHeader):
+    ROM_RW = ctt.AbsPointerRW(0x01D946)
+
+
 # https://www.chronocompendium.com/Term/Tech_Data_Notes.html#Targeting_Data
 class TargetType(ctenums.StrIntEnum):
     ONE_PC = 0
@@ -293,6 +301,10 @@ class TargetData(SizedBinaryData):
     SIZE = 2
 
 
+class EnemyTechTargetData(TargetData):
+    ROM_RW = ctt.AbsRomRW(0x0C86C9)
+
+
 class PCTechTargetData(TargetData):
     ROM_RW = ctt.AbsPointerRW(0x01C25A)
 
@@ -307,8 +319,8 @@ class PCTechTargetData(TargetData):
     attack_target = byte_prop(1, 0xFF, ret_type=int)
 
 
-class TechGfxHeader(SizedBinaryData):
-    SIZE = 7
+class GfxHeader(SizedBinaryData):
+    SIZE = 6
 
     script_id = byte_prop(0, 0xFF)
     sprite_packet_1 = byte_prop(1)
@@ -316,6 +328,9 @@ class TechGfxHeader(SizedBinaryData):
     assembly_packet_1 = byte_prop(3)
     palette = byte_prop(4)
     assembly_packet_2 = byte_prop(5)
+
+class TechGfxHeader(GfxHeader):
+    SIZE = 7
     layer3_packet_id = byte_prop(6, 0xFF)
 
 
@@ -325,6 +340,14 @@ class PCTechGfxHeader(TechGfxHeader):
 
 class EnemyTechGfxHeader(TechGfxHeader):
     ROM_RW = ctt.AbsPointerRW(0x014694)
+
+
+class EnemyBaseAttackGfxHeader(GfxHeader):
+    ROM_RW = ctt.AbsRomRW(0x0D4926)
+
+
+class EnemyAltAttackGfxHeader(GfxHeader):
+    ROM_RW = ctt.AbsRomRW(0x0D4F26)
 
 
 class PCTechBattleGroup(SizedBinaryData):
