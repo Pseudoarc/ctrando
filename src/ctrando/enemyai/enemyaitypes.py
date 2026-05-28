@@ -210,6 +210,16 @@ class IfHPLessThanEqual(_EnemyAICondition):
     target = cty.byte_prop(1, ret_type=Target)
     hp = cty.bytes_prop(2, 2)
 
+    def __init__(self, *args,
+                 target: Target | None = None,
+                 hp: int | None = None,
+                 **kwargs):
+        super().__init__(*args, **kwargs)
+        self._set_properties(
+            ("target", target),
+            ("hp", hp)
+        )
+
     def __str__(self):
         return f"If HP of {self.target} <= {self.hp}"
 
