@@ -32,6 +32,7 @@ class TechOptions:
     _default_black_hole_min: typing.ClassVar[float] = 10.0
     _default_show_full_tech_list = False
     _default_custom_damage_mps: typing.ClassVar[tuple[int, ...]] = tuple()
+    _default_normalize_techs: typing.ClassVar[bool] = False
 
     def __init__(
             self,
@@ -44,7 +45,8 @@ class TechOptions:
             black_hole_factor: float = _default_black_hole_factor,
             show_full_tech_list: bool = _default_show_full_tech_list,
             balance_tech_mps: bool = False,
-            custom_damage_mps: Sequence[int] = _default_custom_damage_mps
+            custom_damage_mps: Sequence[int] = _default_custom_damage_mps,
+            normalize_techs: bool = _default_normalize_techs
     ):
 
         self.tech_order = tech_order
@@ -64,6 +66,7 @@ class TechOptions:
         self.show_full_tech_list = show_full_tech_list
         self.balance_tech_mps = balance_tech_mps
         self.custom_damage_mps = list(custom_damage_mps)
+        self.normalize_techs = normalize_techs
 
     @classmethod
     def get_argument_spec(cls) -> argumenttypes.ArgSpec:
@@ -114,6 +117,9 @@ class TechOptions:
                 [x for x in range(25)], cls._default_custom_damage_mps,
                 "Custom pool of mps for damage techs",
                 int, str, True
+            ),
+            "normalize_techs": argumenttypes.FlagArg(
+                "Modify tech powers and costs to balance tech utility"
             )
         }
 
@@ -177,18 +183,19 @@ class TechOptions:
             default=argparse.SUPPRESS
         )
 
-        cls.get_argument_spec()["custom_damage_mps"].add_to_argparse(
-            "--custom-damage-mps", group
-        )
+        spec = cls.get_argument_spec()
+        for name in ("custom_damage_mps", "normalize_techs"):
+            arg = spec[name]
+            arg.add_to_argparse(
+                argumenttypes.attr_name_to_arg_name(name), group
+            )
+
 
     @classmethod
     def extract_from_namespace(
             cls, namespace: argparse.Namespace
     ) -> typing.Self:
-        attr_names = ["tech_order", "tech_damage", "tech_damage_random_factor_min",
-                      "tech_damage_random_factor_max", "preserve_magic",
-                      "black_hole_min", "black_hole_factor", "show_full_tech_list",
-                      "balance_tech_mps", "custom_damage_mps"]
+        attr_names = list(cls.get_argument_spec().keys())
 
         return argumenttypes.extract_from_namespace(
             cls,
@@ -197,17 +204,10 @@ class TechOptions:
         )
 
     def __str__(self):
+        arg_names = self.get_argument_spec().keys()
         return (
-            f"{self.__class__.__name__}("
-            f"tech_order={self.tech_order}, "
-            f"tech_damage={self.tech_damage}, "
-            f"tech_damage_random_factor_min={self.tech_damage_random_factor_min}, "
-            f"tech_damage_random_factor_max={self.tech_damage_random_factor_max}, "
-            f"preserve_magic={self.preserve_magic}, "
-            f"black_hole_min={self.black_hole_min}, "
-            f"black_hole_factor={self.black_hole_factor}, "
-            f"show_full_tech_list={self.show_full_tech_list}"
-            f"balance_tech_mps={self.balance_tech_mps}"
+            f"{self.__class__.__name__}(" +
+            ", ".join(f"{name}={getattr(self, name, None)}" for name in arg_names) +
             ")"
         )
 

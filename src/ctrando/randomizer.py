@@ -19,7 +19,7 @@ from ctrando.shops import shoptypes, shoprando
 
 from ctrando.attacks import (
     pctechrandomizer, techdescriptions, pctech, animationscript, scriptreassign,
-    techmenu
+    techmenu, techrebalance
 )
 from ctrando.base import basepatch, xptpmod, modifymaps, chesttext
 from ctrando.bosses import staticbossscaling, bossrando, bosstypes
@@ -186,6 +186,9 @@ def get_random_config(
     working_rom = ctrom.CTRom(input_rom.getvalue())
     basepatch.mark_initial_free_space(working_rom)
     basepatch.apply_mauron_player_tech_patch(working_rom)
+
+    if settings.tech_options.normalize_techs:
+        techrebalance.rebalance_vanilla_tech_man(config.pctech_manager)
 
     if settings.character_options.use_phys_marle:
         charactermods.make_phys_marle(
