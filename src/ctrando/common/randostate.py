@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 
 from ctrando.characters import characterwriter
 from ctrando.shops import shoptypes
-from ctrando.attacks import pctech, animationscript
+from ctrando.attacks import pctech, animationscript, enemytech
 from ctrando.bosses import bosstypes, bossrando
 from ctrando.enemyai import enemyaimanager, vanillafixes
 from ctrando.enemydata import enemystats
@@ -168,7 +168,7 @@ class ConfigState:
 @dataclass()
 class PostConfigState:
     """
-    State that is not directly configured by the settings
+    State that is not directly configured by the settings/subject to randomization.
     """
     script_manager: ScriptManager
     overworld_manager: OWManager
@@ -177,6 +177,7 @@ class PostConfigState:
     treasure_data_dict: dict[ctenums.TreasureID, ttypes.RewardSpot]
     enemy_sprite_dict: dict[ctenums.EnemyID, enemystats.EnemySpriteData]
     enemy_ai_manager: enemyaimanager.EnemyAIManager
+    enemy_attack_manager: enemytech.EnemyAttackManager
 
     @classmethod
     def get_default_state_from_ctrom(cls, ct_rom: ctrom.CTRom):
@@ -194,8 +195,12 @@ class PostConfigState:
         vanillafixes.fix_son_of_sun_ai(enemy_ai_manager)
         vanillafixes.fix_magus_masa2_ai(enemy_ai_manager)
 
+        enemy_attack_manager = enemytech.EnemyAttackManager.read_from_ctrom(ct_rom)
+
+
         return cls(script_manager, overworld_manager, loc_exit_dict, loc_data_dict,
-                   treasure_data_dict, enemy_sprite_dict, enemy_ai_manager)
+                   treasure_data_dict, enemy_sprite_dict, enemy_ai_manager,
+                   enemy_attack_manager)
 
     def write_to_ctrom(self, ct_rom: ctrom.CTRom, clean: bool = False):
         locationtypes.write_exit_dict_to_ctrom(ct_rom, self.loc_exit_dict)
@@ -210,6 +215,8 @@ class PostConfigState:
 
         for loc_id, loc_data in self.loc_data_dict.items():
             loc_data.write_to_ctrom(ct_rom, loc_id)
+
+        self.enemy_attack_manager.write_to_ctrom(ct_rom)
 
         self.enemy_ai_manager.write_to_ct_rom(ct_rom)
         self.overworld_manager.write_all_overworlds_to_ctrom()
