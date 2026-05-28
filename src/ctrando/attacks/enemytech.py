@@ -1,4 +1,5 @@
 """Module for modifying enemy techs and attacks."""
+import typing
 from collections.abc import Sequence
 import copy
 from dataclasses import dataclass
@@ -44,13 +45,13 @@ class EnemyTech:
         self.graphics = graphics
 
     @classmethod
-    def read_from_ctrom(cls, ct_rom: ctrom.CTRom, tech_id: int) -> EnemyTech:
+    def read_from_ctrom(cls, ct_rom: ctrom.CTRom, tech_id: int) -> typing.Self:
         control = ctt.EnemyTechControlHeader.read_from_ctrom(ct_rom, tech_id)
         effect = ctt.EnemyTechEffectHeader.read_from_ctrom(ct_rom, tech_id)
         target = ctt.EnemyTechTargetData.read_from_ctrom(ct_rom, tech_id)
         graphics = ctt.EnemyTechGfxHeader.read_from_ctrom(ct_rom, tech_id)
 
-        return EnemyTech(control, effect, target, graphics)
+        return cls(control, effect, target, graphics)
 
 
 
@@ -64,11 +65,11 @@ class EnemyAttack:
         self.effect = effect
 
     @classmethod
-    def read_from_ctrom(cls, ct_rom: ctrom.CTRom, attack_id: int) -> EnemyAttack:
+    def read_from_ctrom(cls, ct_rom: ctrom.CTRom, attack_id: int) -> typing.Self:
         control = ctt.EnemyAttackControlHeader.read_from_ctrom(ct_rom, attack_id)
         effect = ctt.EnemyAttackEffectHeader.read_from_ctrom(ct_rom, attack_id)
 
-        return EnemyAttack(control, effect)
+        return cls(control, effect)
 
 
 class EnemyAttackManager:
