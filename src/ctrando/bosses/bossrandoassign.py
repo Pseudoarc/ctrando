@@ -1263,6 +1263,16 @@ def assign_ozzies_fort_final(
     bru.update_boss_object_load(script, boss.parts[1], slash_obj)
     bru.update_boss_object_load(script, boss.parts[2], flea_obj)
 
+    pos, _ = script.find_command([0x8B], script.get_object_start(slash_obj))
+    script.replace_command_at_pos(
+        pos, EC.set_object_coordinates_tile(0x25, 0x0F)
+    )
+
+    pos, _ = script.find_command([0x8B], script.get_object_start(flea_obj))
+    script.replace_command_at_pos(
+        pos, EC.set_object_coordinates_tile(0x2D, 0x0F)
+    )
+
 
 def assign_black_omen_zeal(
         script_manager: scriptmanager.ScriptManager,
