@@ -8,8 +8,7 @@ is intended to be fought at.
 The difference between this internal level and the current scaling level determine how much
 the enemy's stats should be scaled.
 Weaker bosses have been made more threatening by reducing their internal level
-In this scheme, some techs are dominant and others are
-never worthwhile, even at high mp.  With the setting `normalize_enemies=true`, the balance
+With the setting `normalize_enemies=true`, the balance
 changes enumerated below will be made.
 
 ## Summary of Changes
