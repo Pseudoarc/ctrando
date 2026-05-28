@@ -2347,12 +2347,16 @@ def fix_vanilla_techs(tech_man: PCTechManager):
 
 
 def get_iron_orb_percent(iron_orb_mp: int) -> int:
-    min_percent = 30
-    max_percent = 100
+    # min_percent = 30
+    # max_percent = 100
+    #
+    # percent =  min_percent + (max_percent-min_percent)*iron_orb_mp/20
+    # percent = round(percent/10)*10
+    # return percent
 
-    percent =  min_percent + (max_percent-min_percent)*iron_orb_mp/20
-    percent = round(percent/10)*10
-    return percent
+    if iron_orb_mp < 15:
+        return 50
+    return 100
 
 
 def get_black_hole_percent(black_hole_mp: int, bh_min: float, bh_factor: float) -> int:

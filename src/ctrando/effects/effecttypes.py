@@ -556,6 +556,7 @@ def get_iron_orb_rt() -> assemble.ASMList:
         inst.LDA(0x2C, AM.DIR),
         inst.LSR(mode=AM.NO_ARG),
         inst.LSR(mode=AM.NO_ARG),
+        inst.LSR(mode=AM.NO_ARG),
         inst.STA(0x2C, AM.DIR),
         "end",
         inst.LDA(0x2C, AM.DIR),
