@@ -101,23 +101,27 @@ class EnemyOptions:
     _default_sightscope_all = False
     _default_forced_sightscope = False
     _default_shuffle_enemies = False
+    _default_normalize_enemies = False
 
     def __init__(
             self,
             sightscope_all: bool = _default_sightscope_all,
             forced_sightscope: bool = _default_forced_sightscope,
-            shuffle_enemies: bool = _default_shuffle_enemies
+            shuffle_enemies: bool = _default_shuffle_enemies,
+            normalize_enemies: bool = _default_normalize_enemies
     ):
         self.sightscope_all = sightscope_all
         self.forced_sightscope = forced_sightscope
         self.shuffle_enemies = shuffle_enemies
+        self.normalize_enemies = normalize_enemies
 
     @classmethod
     def get_argument_spec(cls) -> argumenttypes.ArgSpec:
         return {
             "sightscope_all": argumenttypes.FlagArg("Enable sightscope usage on all enemies."),
             "forced_sightscope": argumenttypes.FlagArg("Sightscope effect will be present without the item equipped."),
-            "shuffle_enemies": argumenttypes.FlagArg("Normal enemy types are shuffled (respects enemy size)")
+            "shuffle_enemies": argumenttypes.FlagArg("Normal enemy types are shuffled (respects enemy size)"),
+            "normalize_enemies": argumenttypes.FlagArg("Modify enemy stats to balanced overly easy/difficult enemies")
         }
 
     @classmethod
@@ -146,13 +150,18 @@ class EnemyOptions:
             help="Normal enemy types are shuffled (respects enemy size)",
             default=argparse.SUPPRESS
         )
+        group.add_argument(
+            "--normalize-enemies",
+            action="store_true",
+            help="Modify enemy stats to balanced overly easy/difficult enemies",
+            default=argparse.SUPPRESS
+        )
 
     @classmethod
     def extract_from_namespace(
             cls, namespace: argparse.Namespace
     ) -> typing.Self:
-        attr_names = ["sightscope_all", "forced_sightscope", "shuffle_enemies"]
-
+        attr_names = list(cls.get_argument_spec().keys())
         return argumenttypes.extract_from_namespace(
             cls,
             arg_names=attr_names,
@@ -164,7 +173,9 @@ class EnemyOptions:
             f"{self.__class__.__name__}("
             f"sightscope_all={self.sightscope_all}, "
             f"forced_sightscope={self.forced_sightscope}, "
-            f"shuffle_enemies={self.shuffle_enemies}"
+            f"shuffle_enemies={self.shuffle_enemies}, "
+            f"normalize_enemies={self.normalize_enemies}",
+            ")"
         )
 
 

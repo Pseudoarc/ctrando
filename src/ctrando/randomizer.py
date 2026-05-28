@@ -31,7 +31,7 @@ from ctrando import encounters
 from ctrando.encounters import omenelevators
 
 from ctrando.enemyai import randofixes
-from ctrando.enemyscaling import patchscaling
+from ctrando.enemyscaling import patchscaling, enemyrebalance
 from ctrando.entranceshuffler import (
     entrancefiller, entranceassign, regionmap, maptraversal, locregions,
     portalshuffle
@@ -521,6 +521,13 @@ def get_ctrom_from_config(
     )
     staticbossscaling.set_element_safety_level(post_config.enemy_ai_manager,
                                                settings.scaling_options.static_scaling_options.element_safety_level)
+
+    if settings.enemy_options.normalize_enemies:
+        enemyrebalance.normalize_bosses(
+            config.enemy_data_dict,
+            post_config.enemy_ai_manager,
+            post_config.enemy_attack_manager
+        )
 
     enemystats.set_enemy_sightscope_settings(
         ct_rom, config.enemy_data_dict,
