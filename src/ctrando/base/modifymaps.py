@@ -367,3 +367,29 @@ def make_nr_600_map(
         EC.if_flag(memory.Flags.INSIDE_NORTHERN_RUINS_1000), pos
     )
     script.delete_jump_block(pos)
+
+def add_giants_claw_vertigo(
+        script_manager: sm.ScriptManager,
+        loc_exit_dict: dict[ctenums.LocID, list[lt.LocationExit]],
+        loc_data_dict: dict[ctenums.LocID, lt.LocationData],
+):
+    script = script_manager[ctenums.LocID.GIANTS_CLAW_ENTRANCE]
+    pos = script.get_function_start(0, FID.ACTIVATE)
+    script.insert_commands(
+        EC.copy_tiles(
+            9, 5, 0xA, 0x8,
+            0x2B, 0x19, True, True, False, True,
+            True, True, True
+        ).to_bytearray(), pos
+    )
+
+    new_exit = loc_exit_dict[ctenums.LocID.GIANTS_CLAW_ENTRANCE][2].get_copy()
+    new_exit.exit_x, new_exit.exit_y = 0x2B, 0x1B
+    loc_exit_dict[ctenums.LocID.GIANTS_CLAW_ENTRANCE].append(new_exit)
+
+    loc_data_dict[ctenums.LocID.ANCIENT_TYRANO_LAIR_VERTIGO].music = 0x46
+
+    return_exit = loc_exit_dict[ctenums.LocID.ANCIENT_TYRANO_LAIR_VERTIGO][-1]
+    return_exit.destination = ctenums.LocID.GIANTS_CLAW_ENTRANCE
+    return_exit.dest_x, return_exit.dest_y = 0x2C, 0x1B
+    pass
