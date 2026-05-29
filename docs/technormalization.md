@@ -44,7 +44,7 @@ This also helps Dark Matter to not be a complete letdown in element shuffle.
 Perhaps it should be made to match Luminaire at 50 power.
 
 ## Physical Techs
-Slurp Cut and Cyclone have terrible mp efficiency, even at 20 mp.
+Slurp Cut and Cyclone have terrible mp efficiency and are often not worthwhile, even at 20 mp.
 The boost to Slurp Cut makes it mostly in-line with Leap Slash.
 The boost to Cyclone makes it better but still worse than Spincut 
 (as it should be since cyclone has small AoE).

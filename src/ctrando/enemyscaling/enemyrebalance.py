@@ -89,7 +89,7 @@ def normalize_bosses(
 
         script = ai_manager.script_dict[bit_id]
         block = script.action_script[-1]
-        block.action_list = block.action_list[:-1]  # Remove a wander
+        block.action_list = block.action_list[:-1]  # Remove a wander command
 
     # R-Series More HP.  Slightly less offense.
     stats = stat_dict[ctenums.EnemyID.R_SERIES]
@@ -142,18 +142,18 @@ def normalize_bosses(
     stats = stat_dict[ctenums.EnemyID.YAKRA_XIII]
     _adjust_stat(stats, "hp", 0.75)
 
-    yakra_13_replacments = {
+    yakra_13_replacements = {
         0x0E: free_tech_ids.pop(),
         0xA8: free_tech_ids.pop()
     }
 
-    for tech_id, replacement_id in yakra_13_replacments.items():
+    for tech_id, replacement_id in yakra_13_replacements.items():
         base_tech = attack_manager.get_tech(tech_id)
         base_tech.effect.power = round(base_tech.effect.power*1.15)
         attack_manager.set_tech(base_tech, replacement_id)
 
     script = ai_manager.script_dict[ctenums.EnemyID.YAKRA_XIII]
-    _update_usage(script, yakra_13_replacments)
+    _update_usage(script, yakra_13_replacements)
 
     hp_thresh = round(stats.hp*2/3)
     block = script.action_script[1]
