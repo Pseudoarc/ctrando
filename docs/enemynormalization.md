@@ -7,9 +7,12 @@ The dyanamic scaling algorithm uses an internal level stat to represent what lev
 is intended to be fought at.
 The difference between this internal level and the current scaling level determine how much
 the enemy's stats should be scaled.
-Weaker bosses have been made more threatening by reducing their internal level
+Weaker bosses have been made more threatening by reducing their internal level, but this
+has also lead to more bloated hp.
 With the setting `normalize_enemies=true`, the balance
-changes enumerated below will be made.
+changes enumerated below will be made.  
+These are meant to make bosses less spongy and more threatening without changing any
+fundamental mechanics.
 
 ## Summary of Changes
 
