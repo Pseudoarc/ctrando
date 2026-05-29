@@ -393,26 +393,18 @@ def update_overworlds(
         ow_manager: owmanager.OWManager
 ):
     """
-    - Never disable the Magus castle exit.
-    - Never disable the Sunken Desert exit
     - NO: Default Lavos Crash in Preshistory.  Do this with starting rewards.
     - Break up Zenan Bridge 1000 (?)
     - Never update the NR exits to say Heros Grave
     """
 
-    # Magus Castle Exit and 600 AD Heros Grave
+    # 600 AD Heros Grave
     script = ow_manager[ctenums.OverWorldID.MIDDLE_AGES].event
 
     pos = script.find_next_exact_command(
         oweventcommand.SetExitInactive(exit_index=7)
     )
-    script.delete_commands(pos-1, pos+4)
-
-    # Sunken Desert Exit
-    pos = script.find_next_exact_command(
-        oweventcommandhelper.branch_if_flag_set(memory.Flags.OW_SUNKEN_DESERT_COMPLETE)
-    )
-    script.delete_commands(pos, pos+1)
+    script.delete_commands(pos-1, pos+2)
 
     # Present Heros Grave
     script =  ow_manager[ctenums.OverWorldID.PRESENT].event

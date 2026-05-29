@@ -99,16 +99,29 @@ def modify_overworld(overworld: ow.Overworld):
         ind,
         owh.branch_if_flag_reset(memory.Flags.OW_MAGUS_DEFEATED))
 
+    # 34C47B            [012D] CallFunc [C2:7BC4]
+    # 22000013          [0130] If(Mem.7E0000 == 00) Goto [0143]
+    # 26A81B800F        [0134] If(Mem.7E1BA8 & 80) Goto [0143]   <-- Remove
+    # 09480D7F          [0139] AddObject([0948], t0)
+    # 440005            [013D] BitMath(Exit05, 80, Set)
+    # 440006            [0140] BitMath(Exit06, 80, Set)
+    # 27AB1B400B        [0143] If(Mem.7E1BAB	 !& 40) Goto [014E]
+    # - The first If checks if the desert quest has begun (callfunc sets 7E00000)
+    # - The second If checks if the desert quest is complete.  Delete this one
+    #   to keep the desert exit available
+
+    ind = script.find_next_exact_command(
+        owh.branch_if_flag_set(memory.Flags.OW_SUNKEN_DESERT_COMPLETE))
+    script.delete_commands(ind, ind+1)
+
     # 4CA61B8A08        [014E] If(Mem.StorylineCtr < 8A) Goto [0156]
     # - If Magus not defeated, skip resetting the castle entrance
     #      450009            [0153] BitMath(Exit09, 80, Reset)
-    # - Replace with a check to the Magus Defeated OW Flag
-    # - TODO: Possibly allow re-entrance to Magus's Castle for boxes?
+    # - Remove these commands so the castle can be reentered
 
     ind = script.find_next_exact_command(
         owh.branch_if_storyline_lt(0x8A), start=ind)
-    script.replace_jump_command(
-        ind, owh.branch_if_flag_reset(memory.Flags.OW_MAGUS_DEFEATED))
+    script.delete_commands(ind, ind+2)
 
     # 4CA61B5A19        [0166] If(Mem.StorylineCtr < 5A) Goto [017F]
     #  - If Ozzie has not yet summoned Zombor, skip the following
