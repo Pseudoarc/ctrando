@@ -799,11 +799,11 @@ def get_default_region_connectors(
             "shared_tyrano_claw",
             reversible=False
         ),
-        RegionConnector(
-            "tyrano_lair", "shared_tyrano_claw",
-            "shared_tyrano_claw",
-            reversible=False
-        ),
+        # RegionConnector(
+        #     "tyrano_lair", "shared_tyrano_claw",
+        #     "shared_tyrano_claw",
+        #     reversible=False
+        # ),
         RegionConnector(
             "magic_cave_entrance", "magic_cave",
             "open_magic_cave",
