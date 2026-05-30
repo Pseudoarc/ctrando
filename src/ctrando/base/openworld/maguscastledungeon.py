@@ -35,6 +35,8 @@ class EventMod(locationevent.LocEventMod):
         # Fast tab
         pos, end = script.get_function_bounds(8, FID.ACTIVATE)
         owu.remove_item_pause(script, pos, end)
+        pos = script.find_exact_command(EC.party_follow(), pos)
+        script.delete_commands(pos, 1)
 
         # Link Ayla and Magus to Crono's functions.
         for char_id in (ctenums.CharID.AYLA, ctenums.CharID.MAGUS):
