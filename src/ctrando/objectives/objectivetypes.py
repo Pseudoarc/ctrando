@@ -540,6 +540,10 @@ _boss_spot_locator_dict: dict[bty.BossSpotID, HookLocator] = {
     )
 }
 
+_boss_spot_locator_dict[bty.BossSpotID.OCEAN_PALACE_TWIN_GOLEM_ALT] = (
+    _boss_spot_locator_dict[bty.BossSpotID.OCEAN_PALACE_TWIN_GOLEM]
+)
+
 for eq_class in _associated_objs:
     try:
         quest_id = next(x for x in eq_class if isinstance(x, QuestID))
