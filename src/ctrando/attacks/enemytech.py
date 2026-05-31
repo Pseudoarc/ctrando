@@ -5,7 +5,7 @@ import copy
 from dataclasses import dataclass
 
 from ctrando.attacks import cttechtypes as ctt
-from ctrando.common import ctenums, ctrom
+from ctrando.common import byteops, ctenums, ctrom
 from ctrando.enemydata.enemystats import EnemyStats
 
 
@@ -140,6 +140,12 @@ class EnemyAttackManager:
             ct_rom.seek(ref.file_loc)
             ct_rom.write(int.to_bytes(new_ptr, 3, "little"))
 
+    @staticmethod
+    def _repoint_attack_effects(ct_rom: ctrom.CTRom, new_rom_start: int):
+        ptr_loc = ctt.EnemyAttackEffectHeader.ROM_RW.get_ptr_loc(ct_rom)
+        ct_rom.seek(ptr_loc)
+        ct_rom.write(new_rom_start.to_bytes(3, "little"))
+
     @classmethod
     def read_from_ctrom(
             cls,
@@ -194,13 +200,14 @@ class EnemyAttackManager:
                     ctt.EnemyAttackControlHeader.SIZE*new_num_attacks,
                     hint=0x410000
                 )
-                self._repoint_data(ct_rom, new_atk_control_st, _atk_control_refs)
+                self._repoint_data(ct_rom, byteops.to_rom_ptr(new_atk_control_st),
+                                   _atk_control_refs)
 
                 new_atk_effect_st = ct_rom.space_manager.get_free_addr(
                     ctt.EnemyAttackEffectHeader.SIZE*new_num_attacks,
                     hint=0x410000
                 )
-                self._repoint_data(ct_rom, new_atk_effect_st, _atk_effect_refs)
+                self._repoint_attack_effects(ct_rom, byteops.to_rom_ptr(new_atk_effect_st))
 
         for ind, attack in enumerate(self.enemy_attacks):
             attack.control.write_to_ctrom(ct_rom, ind)

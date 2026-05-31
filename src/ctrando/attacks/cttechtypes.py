@@ -256,8 +256,90 @@ class EnemyTechEffectHeader(EffectHeader):
     ROM_RW = ctt.AbsRomRW(0x0C7AC9)
 
 
+class AttackEffRomRW(ctt.RomRW):
+    def __init__(self):
+        self._ptr_loc: int | None = None
+        self._ptr: int = -1
+        self._use_cached_ptr_loc = True
+
+    @staticmethod
+    def get_ptr_loc(ct_rom: ctrom.CTRom) -> int:
+        hook_addr = 0x01D943
+        ct_rom.seek(hook_addr)
+        val = ct_rom.read(1)[0]
+        if val != 0x5C:  # Unpatched ROM
+            return 0x01D946
+
+        rom_ptr = int.from_bytes(ct_rom.read(3), "little")
+        file_ptr = byteops.to_file_ptr(rom_ptr)
+        ct_rom.seek(file_ptr)
+
+        for _ in range(10):
+            val = ct_rom.read(1)[0]
+            if val == 0xBF:
+                break
+        else:
+            raise ValueError("Fail to find pointer load")
+
+        ret_val = ct_rom.tell()
+
+        return ret_val
+
+    def get_ptr(self, ct_rom: ctrom.CTRom):
+        if self._ptr_loc is None or not self._use_cached_ptr_loc:
+            ptr_loc = self.get_ptr_loc(ct_rom)
+        else:
+            ptr_loc = self._ptr_loc
+
+        return ptr_loc
+        # ct_rom.seek(ptr_loc)
+        # rom_ptr = int.from_bytes(ct_rom.read(3), "little")
+        # self._ptr = byteops.to_file_ptr(rom_ptr)
+
+
+
+    def get_data_start_from_ctrom(self, ct_rom: ctrom.CTRom) -> int:
+        ct_rom.seek(self.get_ptr(ct_rom))
+        rom_ptr = int.from_bytes(ct_rom.read(3), 'little')
+        file_ptr = byteops.to_file_ptr(rom_ptr)
+        return file_ptr
+
+    def read_data_from_ctrom(self, ct_rom: ctrom.CTRom,
+                             num_bytes: int,
+                             record_num: int = 0) -> bytes:
+        """
+        Use the absolute pointer on the ROM to read data.
+        """
+        start = self.get_data_start_from_ctrom(ct_rom)
+        ct_rom.seek(start + num_bytes*record_num)
+        return ct_rom.read(num_bytes)
+
+    def write_data_to_ct_rom(self, ct_rom: ctrom.CTRom,
+                             data: typing.ByteString,
+                             record_num: int = 0):
+        """
+        Use the absolute pointer on the rom to write data.
+        """
+        mark_used = ctrom.freespace.FSWriteType.MARK_USED
+        start = self.get_data_start_from_ctrom(ct_rom)
+        ct_rom.seek(start + len(data)*record_num)
+        ct_rom.write(data, mark_used)
+
+    def free_data_on_ct_rom(self, ct_rom: ctrom.CTRom, num_bytes,
+                            record_num: int = 0):
+        """
+        Use the absolute pointer on the rom to free data.
+        """
+        mark_free = ctrom.freespace.FSWriteType.MARK_FREE
+        start = self.get_data_start_from_ctrom(ct_rom) + num_bytes*record_num
+        ct_rom.space_manager.mark_block(
+            (start, start+num_bytes), mark_free
+        )
+
+
+
 class EnemyAttackEffectHeader(EffectHeader):
-    ROM_RW = ctt.AbsPointerRW(0x01D946)
+    ROM_RW = AttackEffRomRW()
 
 
 # https://www.chronocompendium.com/Term/Tech_Data_Notes.html#Targeting_Data
