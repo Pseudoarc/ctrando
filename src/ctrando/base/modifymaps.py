@@ -4,7 +4,9 @@ import copy
 from ctrando.base import openworldutils as owu
 from ctrando.common import ctenums, memory
 from ctrando.locations import locationtypes as lt, scriptmanager as sm
-from ctrando.locations.eventcommand import EventCommand as EC, Operation as OP, FuncSync as FS
+from ctrando.locations.eventcommand import (
+    EventCommand as EC, Operation as OP, FuncSync as FS, Facing
+)
 from ctrando.locations.locationevent import FunctionID as FID
 from ctrando.locations.eventfunction import EventFunction as EF
 
@@ -367,6 +369,75 @@ def make_nr_600_map(
         EC.if_flag(memory.Flags.INSIDE_NORTHERN_RUINS_1000), pos
     )
     script.delete_jump_block(pos)
+
+    # Fix Basement Corridor to return to the correct entrance
+    script = script_manager[ctenums.LocID.NORTHERN_RUINS_BASEMENT]
+    pos = script.find_exact_command(
+        EC.if_mem_op_value(0x7F0214, OP.GREATER_OR_EQUAL, 0x1A)
+    )
+    script.insert_commands(
+        EF()
+        .add_if(
+            EC.if_mem_op_value(0x7F0212, OP.EQUALS, 5),
+            EF().add_if(
+                EC.if_mem_op_value(0x7F0214, OP.LESS_OR_EQUAL, 0x14),
+                EF().add_if_else(
+                    EC.if_flag(memory.Flags.INSIDE_NORTHERN_RUINS_600),
+                    EF().add(
+                        EC.change_location(
+                            ctenums.LocID.NORTHERN_RUINS_ENTRANCE_600,
+                            0x7, 0x5, Facing.LEFT,
+                            unk=2, wait_vblank=False
+                        )
+                    ),
+                    EF().add(
+                        EC.change_location(
+                            ctenums.LocID.NORTHERN_RUINS_ENTRANCE,
+                            0x7, 0x5, Facing.LEFT,
+                            unk=2, wait_vblank=False
+                        )
+                    )
+                )
+            )
+        ).get_bytearray(), pos
+    )
+    loc_exit_dict[ctenums.LocID.NORTHERN_RUINS_BASEMENT].pop(0)
+
+    script = script_manager[ctenums.LocID.NORTHERN_RUINS_LANDING]
+    pos = script.find_exact_command(
+        EC.end_cmd()
+    )
+    script.insert_commands(
+        EF()
+        .set_label("loop")
+        .add(EC.get_pc_coordinates(0, 0x7F0212, 0x7F0214))
+        .add_if(
+            EC.if_mem_op_value(0x7F0212, OP.EQUALS, 0x36),
+            EF().add_if(
+                EC.if_mem_op_value(0x7F0214, OP.LESS_OR_EQUAL, 0x26),
+                EF().add_if_else(
+                    EC.if_flag(memory.Flags.INSIDE_NORTHERN_RUINS_600),
+                    EF().add(
+                        EC.change_location(
+                            ctenums.LocID.NORTHERN_RUINS_ENTRANCE_600,
+                            0x16, 0x6, Facing.LEFT,
+                            unk=2, wait_vblank=False
+                        )
+                    ),
+                    EF().add(
+                        EC.change_location(
+                            ctenums.LocID.NORTHERN_RUINS_ENTRANCE,
+                            0x16, 0x6, Facing.LEFT,
+                            unk=2, wait_vblank=False
+                        )
+                    )
+                )
+            )
+        ).jump_to_label(EC.jump_back(0), "loop")
+        .get_bytearray(), pos
+    )
+    loc_exit_dict[ctenums.LocID.NORTHERN_RUINS_LANDING].pop(0)
+
 
 def add_giants_claw_vertigo(
         script_manager: sm.ScriptManager,
