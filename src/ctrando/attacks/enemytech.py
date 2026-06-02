@@ -142,7 +142,7 @@ class EnemyAttackManager:
 
     @staticmethod
     def _repoint_attack_effects(ct_rom: ctrom.CTRom, new_rom_start: int):
-        ptr_loc = ctt.EnemyAttackEffectHeader.ROM_RW.get_ptr_loc(ct_rom)
+        ptr_loc = ctt.EnemyAttackEffectHeader.ROM_RW.get_ptr_loc_on_ct_rom(ct_rom)
         ct_rom.seek(ptr_loc)
         ct_rom.write(new_rom_start.to_bytes(3, "little"))
 

@@ -263,7 +263,7 @@ class AttackEffRomRW(ctt.RomRW):
         self._use_cached_ptr_loc = True
 
     @staticmethod
-    def get_ptr_loc(ct_rom: ctrom.CTRom) -> int:
+    def get_ptr_loc_on_ct_rom(ct_rom: ctrom.CTRom) -> int:
         hook_addr = 0x01D943
         ct_rom.seek(hook_addr)
         val = ct_rom.read(1)[0]
@@ -285,21 +285,16 @@ class AttackEffRomRW(ctt.RomRW):
 
         return ret_val
 
-    def get_ptr(self, ct_rom: ctrom.CTRom):
+    def get_ptr_loc(self, ct_rom: ctrom.CTRom):
         if self._ptr_loc is None or not self._use_cached_ptr_loc:
-            ptr_loc = self.get_ptr_loc(ct_rom)
+            ptr_loc = self.get_ptr_loc_on_ct_rom(ct_rom)
         else:
             ptr_loc = self._ptr_loc
 
         return ptr_loc
-        # ct_rom.seek(ptr_loc)
-        # rom_ptr = int.from_bytes(ct_rom.read(3), "little")
-        # self._ptr = byteops.to_file_ptr(rom_ptr)
-
-
 
     def get_data_start_from_ctrom(self, ct_rom: ctrom.CTRom) -> int:
-        ct_rom.seek(self.get_ptr(ct_rom))
+        ct_rom.seek(self.get_ptr_loc(ct_rom))
         rom_ptr = int.from_bytes(ct_rom.read(3), 'little')
         file_ptr = byteops.to_file_ptr(rom_ptr)
         return file_ptr
