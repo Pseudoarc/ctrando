@@ -232,6 +232,7 @@ def _make_hex_mist_data(
     base_tech = copy.deepcopy(base_tech)
     base_tech.graphics_header.layer3_packet_id = 0x04
     base_tech.effect_headers[0].power = 0x2A  # Match Flare
+    base_tech.effect_mps[0] = 20
     base_tech.name = "*Hex Mist"
 
     return _TechData(base_tech, base_animation)
