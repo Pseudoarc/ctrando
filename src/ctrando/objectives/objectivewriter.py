@@ -231,7 +231,7 @@ def get_linked_objs(
     linked_spots = oty.get_associated_objectives()
 
     links = [
-        tuple(boss_assign_dict.get(item, item) for item in link)
+        (link[0], boss_assign_dict[link[1]])
         for link in linked_spots
     ]
 
@@ -249,8 +249,18 @@ def get_random_objectives_from_settings(
         for obj_spec in objective_settings.objective_specifiers
     ]
 
-    links = get_linked_objs(boss_assign_dict)
-    links = links + oty.get_overlapping_quests()
+    overlap_quests: list[set[oty.ObjectiveType]] = [set(x) for x in oty.get_overlapping_quests()]
+    other_links: list[set[oty.ObjectiveType]] = []
+    boss_quest_links = get_linked_objs(boss_assign_dict)
+    for link in boss_quest_links:
+        for overlap in overlap_quests:
+            if overlap.intersection(link):
+                overlap.update(link)
+                break
+        else:
+            other_links.append(set(link))
+
+    links = overlap_quests + other_links
 
     pool = list(total_keys)
     ret_list: list[oty.ObjectiveType] = []

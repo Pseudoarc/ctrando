@@ -457,7 +457,10 @@ _associated_objs: list[tuple[QuestID, bty.BossSpotID]] = [
     (QuestID.OMEN_GIGA_MUTANT, bty.BossSpotID.BLACK_OMEN_GIGA_MUTANT),
     (QuestID.OMEN_TERRA_MUTANT, bty.BossSpotID.BLACK_OMEN_TERRA_MUTANT),
     (QuestID.OMEN_ELDER_SPAWN, bty.BossSpotID.BLACK_OMEN_ELDER_SPAWN),
-    # Not death peak
+    (QuestID.MAGUS_CASTLE, bty.BossSpotID.MAGUS_CASTLE_FLEA),
+    (QuestID.MAGUS_CASTLE, bty.BossSpotID.MAGUS_CASTLE_SLASH),
+    # We do add death peak because it's given an explicit locator below
+    (QuestID.DEATH_PEAK, bty.BossSpotID.DEATH_PEAK)
 ]
 
 _boss_spot_locator_dict: dict[bty.BossSpotID, HookLocator] = {
