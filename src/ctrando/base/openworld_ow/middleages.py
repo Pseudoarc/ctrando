@@ -121,8 +121,7 @@ def modify_overworld(overworld: ow.Overworld):
     #  - Replace with newly created Zenan Complete OW flag
     #  - TESTING: Let the bridge always be walkable.
 
-    # TESTING: always let the bridge be walkable.  The bottom exit is still
-    #   disabled until the quest is complete.
+    # Always let the bridge be walkable.
     ind = script.find_next_exact_command(
         owh.branch_if_storyline_lt(0x5A), start=ind)
     script.delete_commands(ind)
