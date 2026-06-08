@@ -927,6 +927,21 @@ def apply_settings_free_patches(vanilla_rom: ctrom.CTRom):
     basepatch.base_patch_ct_rom(vanilla_rom)
     basepatch.apply_ow_warp_patch(vanilla_rom)
 
+    # Make 1000 AD broken Bridge tiles have the correct properties
+    map_props = owtileprops.OWMapTileProperties.read_from_ctrom(vanilla_rom, 0)
+    props = map_props.get_tile_props(186)
+    props.se_quad = owtileprops.TileProperty.SOLID_TO_HOVERCRAFT
+    props.sw_quad = owtileprops.TileProperty.SOLID_TO_HOVERCRAFT
+    map_props.set_tile_props(props, 186)
+
+    props = map_props.get_tile_props(202)
+    props.ne_quad = owtileprops.TileProperty.SOLID_TO_HOVERCRAFT
+    props.nw_quad = owtileprops.TileProperty.SOLID_TO_HOVERCRAFT
+    map_props.set_tile_props(props, 202)
+
+    map_props.free_data_on_ct_rom(vanilla_rom, 0)
+    map_props.write_to_ctrom(vanilla_rom, 0)
+
 
 def dump_prepatched_ctrom(
         vanilla_rom: ctrom.CTRom,
