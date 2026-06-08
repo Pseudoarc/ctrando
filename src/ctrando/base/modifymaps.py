@@ -94,6 +94,35 @@ def make_zenan_boss_map(
     del_end = orig_zenan_script.find_exact_command(EC.set_explore_mode(True)) + 2
     orig_zenan_script.delete_commands_range(pos, del_end)
 
+    # Don't allow backdooring the boss event
+    pos, cmd = orig_zenan_script.find_command(
+        [0x22], orig_zenan_script.get_function_start(1, FID.STARTUP)
+    )
+    pos += len(cmd)
+
+    prevent_backdoor_block = (
+        EF()
+        .add_if(
+            EC.if_not_flag(memory.Flags.OW_ZENAN_COMPLETE),
+            EF().add_if(
+                EC.if_mem_op_value(0x7F0212, OP.EQUALS, 0x06),
+                EF()
+                .add(EC.set_explore_mode(False))
+                .add(EC.auto_text_box(
+                    orig_zenan_script.add_py_string(
+                        "Nope{null}"
+                    )
+                ))
+                .add(EC.move_party(0x83, 9, 0x83, 9, 0x83, 9))
+                .add(EC.party_follow())
+                .add(EC.set_explore_mode(True))
+            )
+        )
+    )
+    orig_zenan_script.insert_commands(
+        prevent_backdoor_block.get_bytearray(), pos
+    )
+
     # Remove objects from the boss script
     zenan_boss_script = script_manager[ctenums.LocID.ZENAN_BRIDGE_BOSS]
     del_objs = sorted(

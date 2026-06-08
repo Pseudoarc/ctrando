@@ -43,18 +43,6 @@ def modify_overworld(overworld: ow.Overworld):
         owh.branch_if_storyline_lt(0x54), start=ind)
     script.delete_commands(ind)
 
-    ind = script.find_next_exact_command(
-        owc.SetExitActive(exit_type=0, exit_index=2))
-    target = ind+1
-    to_label = script.get_label(target)
-    script.insert_commands(
-        ind,
-        [
-            owh.branch_if_flag_reset(memory.Flags.OW_ZENAN_COMPLETE,
-                                     to_label)
-        ]
-    )
-
     # 0701212971        [00DC] SetTile(L2, x21, y29, 71)
     #  - The rock in front of the magic cave
     # 4CA61B8710        [00E1] If(Mem.StorylineCtr < 87) Goto [00F1]

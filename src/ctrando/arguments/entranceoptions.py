@@ -87,7 +87,7 @@ class EntranceShufflerOptions:
 
         vanilla_spot_temp: set[OWExit] = {spot for spot in vanilla_spots}
         vanilla_spot_temp.update(
-            [OWExit.MAGIC_CAVE_OPEN, OWExit.MAGIC_CAVE_CLOSED, OWExit.ZENAN_BRIDGE_600_SOUTH]
+            [OWExit.MAGIC_CAVE_OPEN, OWExit.MAGIC_CAVE_CLOSED]
         )
 
         ungrouped = {x for x in OWExit if x != OWExit.TYRANO_LAIR}

@@ -234,10 +234,7 @@ def get_default_exit_connectors() -> list[ExitConnector]:
         ExitConnector(OWExit.NORTHERN_RUINS_1000, LocExit.NORTHERN_RUINS_1000),
         ExitConnector(OWExit.WEST_CAPE, LocExit.WEST_CAPE),
         # truce_600_ow
-        ExitConnector(
-            OWExit.ZENAN_BRIDGE_600_NORTH, LocExit.ZENAN_BRIDGE_600_NORTH,
-            rule=logictypes.LogicRule([ItemID.JERKY, ItemID.JERKY])
-        ),
+        ExitConnector(OWExit.ZENAN_BRIDGE_600_NORTH, LocExit.ZENAN_BRIDGE_600_NORTH),
         ExitConnector(OWExit.TRUCE_CANYON, LocExit.TRUCE_CANYON),
         ExitConnector(OWExit.TRUCE_COUPLE_RESIDENCE_600, LocExit.TRUCE_COUPLE_RESIDENCE_600),
         ExitConnector(OWExit.TRUCE_SMITH_RESIDENCE, LocExit.TRUCE_SMITH_RESIDENCE),
@@ -249,9 +246,7 @@ def get_default_exit_connectors() -> list[ExitConnector]:
         ExitConnector(OWExit.GUARDIA_CASTLE_600, LocExit.GUARDIA_CASTLE_600),
         ExitConnector(OWExit.GUARDIA_FOREST_NORTH_600, LocExit.GUARDIA_FOREST_NORTH_600),
         # porre_600_ow
-        # Zenan 600 south is going just go to the same place as the north exit.
-        # ExitConnector(OWExit.ZENAN_BRIDGE_600_SOUTH, LocExit.ZENAN_BRIDGE_600_SOUTH)
-        # ExitConnector(OWExit.ZENAN_BRIDGE_600_SOUTH, LocExit.ZENAN_BRIDGE_600_SOUTH_BOSS)
+        ExitConnector(OWExit.ZENAN_BRIDGE_600_SOUTH, LocExit.ZENAN_BRIDGE_600_SOUTH),
         ExitConnector(OWExit.MAGIC_CAVE_OPEN, LocExit.MAGIC_CAVE_OPEN),
         ExitConnector(OWExit.MAGIC_CAVE_CLOSED, LocExit.MAGIC_CAVE_CLOSED),
         ExitConnector(OWExit.DORINO_BROMIDE_RESIDENCE, LocExit.DORINO_BROMIDE_RESIDENCE),
@@ -951,10 +946,21 @@ def get_default_region_connectors(
                                        logictypes.ScriptReward.FLIGHT]),
             reversible=False,
         ),
+        RegionConnector(
+            "zenan_bridge_600_north", "zenan_bridge_600",
+            "zenan_give_jerky",
+            rule=logictypes.LogicRule([ItemID.JERKY, ItemID.JERKY]),
+            reversible=False
+        ),
+        RegionConnector(
+            "zenan_bridge_600", "zenan_bridge_600_south",
+            "complete_zenan_quest",
+            reversible=False
+        ),
         # Remove this if we break zenan.
         RegionConnector(
             "truce_600_overworld", "porre_600_overworld",
-            "zenan_bridge_600",
+            "overworld_zenan_bridge_600",
         ),
         RegionConnector(
             "porre_1000_overworld", "porre_600_overworld",

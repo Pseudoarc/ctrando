@@ -971,15 +971,23 @@ def get_all_loc_regions() -> list[LocRegion]:
     )
     ret_list.append(trann_dome_sealed)
 
+    zenan_bridge_600_north = LocRegion(
+        "zenan_bridge_600_north",
+        loc_exits={LocExit.ZENAN_BRIDGE_600_NORTH},
+    )
     zenan_bridge_600 = LocRegion(
         "zenan_bridge_600",
-        loc_exits={LocExit.ZENAN_BRIDGE_600_NORTH},  # Ignore South Exit
         reward_spots={BSID.ZENAN_BRIDGE, TID.ZENAN_BRIDGE_CAPTAIN},
         region_loc_ids={LocID.ZENAN_BRIDGE_600, LocID.ZENAN_BRIDGE_BOSS},
         region_rewards=[QuestID.ZENAN_BRIDGE],
         is_combat_region=True
     )
-    ret_list.append(zenan_bridge_600)
+
+    zenan_bridge_600_south = LocRegion(
+        "zenan_bridge_600_south",
+        loc_exits={LocExit.ZENAN_BRIDGE_600_SOUTH}
+    )
+    ret_list.extend([zenan_bridge_600, zenan_bridge_600_south, zenan_bridge_600_north])
 
     tatas_house = LocRegion(
         "tatas_house",
