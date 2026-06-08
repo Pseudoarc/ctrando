@@ -487,7 +487,7 @@ class OverworldEvent:
     def read_from_ctrom(cls, ct_rom: ctrom.CTRom,
                         event_index: int) -> OverworldEvent:
         """Read an OverworldEvent from a CTRom"""
-        event_b = _ow_event_rw.read_data_from_ctrom(ct_rom, event_index)
+        event_b = _ow_event_rw.read_data_from_ctrom(ct_rom, None, event_index)
         return OverworldEvent(event_b)
 
     @classmethod

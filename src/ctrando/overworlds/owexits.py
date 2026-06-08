@@ -256,7 +256,7 @@ class OverworldExitPacket:
         """Read an OverworldExitPacket from CTRom."""
 
         return OverworldExitPacket(
-            _owexitpacket_rw.read_data_from_ctrom(ct_rom, packet_id)
+            _owexitpacket_rw.read_data_from_ctrom(ct_rom, None, packet_id)
         )
 
     @classmethod

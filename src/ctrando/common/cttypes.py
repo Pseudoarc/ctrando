@@ -350,12 +350,15 @@ class CompressedAbsPtrTableRW:
 
     def read_data_from_ctrom(self,
                              ct_rom: ctrom.CTRom,
+                             size: int | None = None,
                              record_index: int = 0) -> bytes:
         """Reads a data record from the CTRom."""
         ptr = self._get_ptr(ct_rom, record_index)
 
         # print(f'ptr: {ptr:06X}')
         data = ctcompression.decompress(ct_rom.getbuffer(), ptr)
+        if size is not None and len(data) != size:
+            raise ValueError(f"Expected {size} bytes, read {len(data)}")
 
         return data
 

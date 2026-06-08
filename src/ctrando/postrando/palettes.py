@@ -416,7 +416,8 @@ class OWPallete(SNESPalette):
 
     @classmethod
     def read_from_ct_rom(cls, ct_rom: ctrom.CTRom, index: int) -> typing.Self:
-        data = cls.ROM_RW.read_data_from_ctrom(ct_rom, index)
+        size = cls.NUM_COLORS*2
+        data = cls.ROM_RW.read_data_from_ctrom(ct_rom, size, index)
 
         return OWPallete.from_bytes(data)
 
