@@ -37,6 +37,7 @@ class EntranceShufflerOptions:
         OWExit.SNAIL_STOP, OWExit.KEEPERS_DOME, OWExit.TATAS_HOUSE,
     )
     _default_vanilla_spots: typing.ClassVar[tuple[OWExit, ...]] = ()
+    _num_preserve_spots_groups: typing.ClassVar[int] = 4
 
     @classmethod
     def get_argument_spec(cls) -> aty.ArgSpec:
@@ -52,10 +53,14 @@ class EntranceShufflerOptions:
                 "Spots guaranteed to not be shuffled. Takes precedence over preserve_spots"
             ),
             "shuffle_gates": aty.FlagArg("Shuffle where (non-algetty) portals lead to"),
-            "separate_gate_eras": aty.FlagArg("Shuffled gates must go to different eras")
+            "separate_gate_eras": aty.FlagArg("Shuffled gates must go to different eras"),
+            "lair_ruins_default_spot": aty.arg_from_enum(
+                OWExit, OWExit.LAST_VILLAGE_RESIDENCE,
+                "Default (vanilla) overworld exit to lair ruins portal"
+            )
         }
 
-        for ind in range(1, 4):
+        for ind in range(1, cls._num_preserve_spots_groups):
             arg_name = f"preserve_spots_{ind}"
             spec[arg_name] = aty.arg_multiple_from_enum(
                 OWExit, tuple(),
@@ -72,6 +77,7 @@ class EntranceShufflerOptions:
             rest_vanilla: bool = False,
             shuffle_gates: bool = False,
             separate_gate_eras: bool = False,
+            lair_ruins_default_spot: OWExit = OWExit.LAST_VILLAGE_RESIDENCE,
             **kwargs
     ):
         self.shuffle_entrances = shuffle_entrances
@@ -79,7 +85,7 @@ class EntranceShufflerOptions:
             set(preserve_spots)
         ]
 
-        for ind in range(1, 4):
+        for ind in range(1, self._num_preserve_spots_groups):
             arg_name = f"preserve_spots_{ind}"
             pool = kwargs.get(arg_name, set())
             if pool:
@@ -114,6 +120,15 @@ class EntranceShufflerOptions:
 
         self.shuffle_gates = shuffle_gates
         self.separate_gate_eras = separate_gate_eras
+
+        bad_lair_ruins_spots = (
+            OWExit.MAGIC_CAVE_OPEN, OWExit.MAGIC_CAVE_CLOSED,
+            OWExit.SUNKEN_DESERT, OWExit.GIANTS_CLAW,
+            OWExit.TYRANO_LAIR
+        )
+        if lair_ruins_default_spot in bad_lair_ruins_spots:
+            raise ValueError("Invalid Lair Ruins spot.")
+        self.lair_ruins_default_spot = lair_ruins_default_spot
 
     @classmethod
     def add_group_to_parser(cls, parser: argparse.ArgumentParser):

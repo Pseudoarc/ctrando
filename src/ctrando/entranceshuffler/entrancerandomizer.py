@@ -25,6 +25,7 @@ def get_random_exit_connectors(
             regionmap.get_default_exit_connectors(),
             entrance_options.preserve_groups,
             entrance_options.vanilla_spots,
+            entrance_options.lair_ruins_default_spot,
             rng
         )
 
@@ -362,6 +363,7 @@ def get_shuffled_exit_connectors(
         exit_connectors: list[regionmap.ExitConnector],
         preserve_groups: list[Sequence[OWExit]],
         vanilla_pool: list[OWExit],
+        default_lair_ruins_spot: OWExit,
         rng: RNGType
 ) -> list[regionmap.ExitConnector]:
     """
@@ -381,10 +383,10 @@ def get_shuffled_exit_connectors(
 
     # 1) Remove Tyrano Lair exit (always ruined)
     # 2) Remove the LV version of the portal area.
-    # 3) By default put the Lair Ruins on the main contient of LV instead of a dead end
     base_assignment[OWExit.LAIR_RUINS] = LocExit.TYRANO_LAIR
-    base_assignment[OWExit.LAST_VILLAGE_RESIDENCE] = LocExit.LAIR_RUINS
-    base_assignment[OWExit.LAST_VILLAGE_PORTAL] = LocExit.LAST_VILLAGE_RESIDENCE
+    repl_target = base_assignment[default_lair_ruins_spot]
+    base_assignment[default_lair_ruins_spot] = LocExit.LAIR_RUINS
+    base_assignment[OWExit.LAST_VILLAGE_PORTAL] = repl_target
 
     assign_dict: dict[OWExit, LocExit] = dict()
 
