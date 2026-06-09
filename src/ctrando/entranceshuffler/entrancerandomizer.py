@@ -381,8 +381,10 @@ def get_shuffled_exit_connectors(
 
     # 1) Remove Tyrano Lair exit (always ruined)
     # 2) Remove the LV version of the portal area.
+    # 3) By default put the Lair Ruins on the main contient of LV instead of a dead end
     base_assignment[OWExit.LAIR_RUINS] = LocExit.TYRANO_LAIR
-    base_assignment[OWExit.LAST_VILLAGE_PORTAL] = LocExit.LAIR_RUINS
+    base_assignment[OWExit.LAST_VILLAGE_RESIDENCE] = LocExit.LAIR_RUINS
+    base_assignment[OWExit.LAST_VILLAGE_PORTAL] = LocExit.LAST_VILLAGE_RESIDENCE
 
     assign_dict: dict[OWExit, LocExit] = dict()
 
