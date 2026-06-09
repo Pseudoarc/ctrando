@@ -443,6 +443,23 @@ def get_default_region_connectors(
                 ),
             )
 
+    if not logic_options.block_zenan_600:
+        extra_connectors.append(
+            RegionConnector(
+                "truce_600_overworld", "porre_600_overworld",
+                "overworld_zenan_bridge_600",
+            ),
+        )
+
+    if not logic_options.block_zenan_1000:
+        extra_connectors.append(
+            RegionConnector(
+                "truce_1000_overworld", "porre_1000_overworld",
+                "overworld_zenan_bridge_600",
+            ),
+        )
+
+
     portal_connectors = [
         RegionConnector(
             "millennial_fair", "truce_canyon",
@@ -956,11 +973,6 @@ def get_default_region_connectors(
             "zenan_bridge_600", "zenan_bridge_600_south",
             "complete_zenan_quest",
             reversible=False
-        ),
-        # Remove this if we break zenan.
-        RegionConnector(
-            "truce_600_overworld", "porre_600_overworld",
-            "overworld_zenan_bridge_600",
         ),
         RegionConnector(
             "porre_1000_overworld", "porre_600_overworld",

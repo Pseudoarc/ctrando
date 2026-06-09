@@ -3,7 +3,8 @@ import dataclasses
 
 from ctrando.arguments import logicoptions
 from ctrando.base.openworld import blackbirdscaffolding
-from ctrando.common import ctenums, memory
+from ctrando.common import ctenums, memory, ctrom
+from ctrando.overworlds import owmanager, oweventcommand as owc, owtileprops
 
 from ctrando.locations.locationevent import FunctionID as FID
 from ctrando.locations.eventcommand import EventCommand as EC, FuncSync as FS, Operation as OP
@@ -252,9 +253,44 @@ def lock_portals(script_manager: ScriptManager):
         )
 
 
+def block_zenan_600(ow_manager: owmanager.OWManager):
+    """
+    Make overworld travel across Zenan Bridge 600 impossible
+    """
+    script = ow_manager.overworld_dict[ctenums.OverWorldID.MIDDLE_AGES].event
+
+    ind = script.find_next_exact_command(
+        owc.SetTile(layer=2, x_coord=0xF, y_coord=0x1C, value=0x39)
+    )
+    script.delete_commands(ind, ind+4)
+
+
+def block_zenan_1000(ct_rom: ctrom.CTRom):
+    """
+    Make overworld travel across Zenan Bridge 1000 impossible
+    """
+
+    # Make 1000 AD broken Bridge tiles have the correct properties
+    map_props = owtileprops.OWMapTileProperties.read_from_ctrom(ct_rom, 0)
+    props = map_props.get_tile_props(186)
+    props.se_quad = owtileprops.TileProperty.SOLID_TO_HOVERCRAFT
+    props.sw_quad = owtileprops.TileProperty.SOLID_TO_HOVERCRAFT
+    map_props.set_tile_props(props, 186)
+
+    props = map_props.get_tile_props(202)
+    props.ne_quad = owtileprops.TileProperty.SOLID_TO_HOVERCRAFT
+    props.nw_quad = owtileprops.TileProperty.SOLID_TO_HOVERCRAFT
+    map_props.set_tile_props(props, 202)
+
+    map_props.free_data_on_ct_rom(ct_rom, 0)
+    map_props.write_to_ctrom(ct_rom, 0)
+
+
 def apply_logic_tweaks(
         logic_options: logicoptions.LogicOptions,
-        script_manager: ScriptManager
+        script_manager: ScriptManager,
+        ow_manager: owmanager.OWManager,
+        ct_rom: ctrom.CTRom
 ):
     if logic_options.hard_lavos_final_boss:
         apply_hard_lavos_end_boss(script_manager)
@@ -267,3 +303,9 @@ def apply_logic_tweaks(
 
     if logic_options.lock_gates:
         lock_portals(script_manager)
+
+    if logic_options.block_zenan_600:
+        block_zenan_600(ow_manager)
+
+    if logic_options.block_zenan_1000:
+        block_zenan_1000(ct_rom)

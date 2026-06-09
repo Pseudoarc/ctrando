@@ -619,7 +619,8 @@ def get_ctrom_from_config(
 
     omenelevators.write_omen_elevators(post_config.script_manager, config.omen_elevator_data)
     ### Logic Tweaks
-    logictweaks.apply_logic_tweaks(settings.logic_options, post_config.script_manager)
+    logictweaks.apply_logic_tweaks(settings.logic_options, post_config.script_manager,
+                                   post_config.overworld_manager, ct_rom)
     b=time.time()
     print(f"({b-a})")
 
