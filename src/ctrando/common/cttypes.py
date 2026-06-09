@@ -363,12 +363,16 @@ class CompressedAbsPtrTableRW:
         return data
 
     def free_data_on_ct_rom(self, ct_rom: ctrom.CTRom,
+                            size: int | None,
                             record_index: int):
         """Frees the existing data record on the CTRom."""
         ptr = self._get_ptr(ct_rom, record_index)
         existing_size = ctcompression.get_compressed_length(
             ct_rom.getbuffer(), ptr
         )
+
+        if size is not None and existing_size != size:
+            raise ValueError
 
         mark_free = ctrom.freespace.FSWriteType.MARK_FREE
         ct_rom.space_manager.mark_block(
@@ -382,7 +386,7 @@ class CompressedAbsPtrTableRW:
                              free_existing: bool = True):
         """Writes a new data record to the CTRom."""
         if free_existing:
-            self.free_data_on_ct_rom(ct_rom, record_index)
+            self.free_data_on_ct_rom(ct_rom, None, record_index)
 
         ptr_addr = self._get_ptr_addr(ct_rom, record_index)
         ptr = byteops.file_ptr_from_rom(ct_rom.getbuffer(), ptr_addr)
