@@ -504,6 +504,10 @@ _boss_spot_locator_dict: dict[bty.BossSpotID, HookLocator] = {
         ctenums.LocID.OZZIES_FORT_SUPER_SLASH, 0x09, FID.ACTIVATE,
         [EC.set_explore_mode(True)], False
     ),
+    bty.BossSpotID.OZZIES_FORT_TRIO: CommandSequenceLocator(
+        ctenums.LocID.OZZIES_FORT_LAST_STAND, 0x00, FID.STARTUP,
+        [0xD8, EC.party_follow()], False
+    ),
     bty.BossSpotID.OCEAN_PALACE_TWIN_GOLEM: CommandSequenceLocator(
         ctenums.LocID.OCEAN_PALACE_REGAL_ANTECHAMBER, 0xD, FID.STARTUP,
         [0xD8], True
