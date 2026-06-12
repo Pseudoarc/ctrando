@@ -110,7 +110,7 @@ def make_zenan_boss_map(
                 .add(EC.set_explore_mode(False))
                 .add(EC.auto_text_box(
                     orig_zenan_script.add_py_string(
-                        "Nope{null}"
+                        "Use other entrance until quest complete.{null}"
                     )
                 ))
                 .add(EC.move_party(0x83, 9, 0x83, 9, 0x83, 9))
