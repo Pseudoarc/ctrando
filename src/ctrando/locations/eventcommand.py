@@ -393,11 +393,14 @@ class EventCommand:
         return x
 
     @staticmethod
-    def set_own_drawing_status(is_drawn):
+    def set_own_drawing_status(is_drawn: bool, is_battle_active: bool = False):
         if is_drawn:
             cmd_id = 0x90
         else:
-            cmd_id = 0x91
+            if is_battle_active:
+                cmd_id = 0x7E
+            else:
+                cmd_id = 0x91
 
         x = event_commands[cmd_id].copy()
         # x = copy.copy(event_commands[cmd_id])

@@ -82,3 +82,47 @@ class EventMod(locationevent.LocEventMod):
 
             pos, _ = script.find_command([0xC1], pos)
             script.data[pos + 1] = normal_item_text
+
+        pos = script.find_exact_command(
+            EC.set_object_drawing_status(0xD, False),
+            script.get_object_start(0)
+        )
+        script.insert_commands(
+            EC.set_object_drawing_status(0xF, False).to_bytearray(),
+            pos
+        )
+
+        cls.add_departed_obj(script, 0x23, 0x19, 6)
+        cls.add_departed_obj(script, 0x2F, 0x16, 5)
+        cls.add_departed_obj(script, 0x3A, 0x1A, 6)
+        cls.add_departed_obj(script, 0x32, 0x14, 9)
+
+    @staticmethod
+    def change_slot(
+            script: locationevent.LocationEvent,
+            obj_id: int,
+            new_slot: int
+    ):
+        pos = script.get_object_start(obj_id)
+        pos, _ = script.find_command([0x83], pos)
+        val = script.data[pos+2]
+        val &= 0x80
+        val |= new_slot
+        script.data[pos+2] = val
+
+    @staticmethod
+    def add_departed_obj(
+            script: locationevent.LocationEvent,
+            x_tile: int, y_tile: int, slot: int
+    ):
+        startup = (
+            EF()
+            .add(EC.load_enemy(ctenums.EnemyID.DEPARTED, slot))
+            .add(EC.set_object_coordinates_tile(x_tile, y_tile))
+            .add(EC.set_own_drawing_status(False, is_battle_active=True))
+            .add(EC.return_cmd())
+            .add(EC.end_cmd())
+        )
+        obj_id = script.append_empty_object()
+        script.set_function(obj_id, FID.STARTUP, startup)
+        script.set_function(obj_id, FID.ACTIVATE, EF().add(EC.return_cmd()))
