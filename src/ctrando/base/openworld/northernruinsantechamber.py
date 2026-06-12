@@ -83,6 +83,9 @@ class EventMod(locationevent.LocEventMod):
             pos, _ = script.find_command([0xC1], pos)
             script.data[pos + 1] = normal_item_text
 
+        # The vanilla script doesn't hide defunct object 0xF when beginning the
+        # rightmost battle.  It will glitch out depending on what gets loaded
+        # for the Macabres.
         pos = script.find_exact_command(
             EC.set_object_drawing_status(0xD, False),
             script.get_object_start(0)
@@ -92,6 +95,9 @@ class EventMod(locationevent.LocEventMod):
             pos
         )
 
+        # Add departed objects with coordinates to match the defuncts and
+        # slots which are compatible so that other transforming enemies will
+        # work in the spot.
         cls.add_departed_obj(script, 0x23, 0x19, 6)
         cls.add_departed_obj(script, 0x2F, 0x16, 5)
         cls.add_departed_obj(script, 0x3A, 0x1A, 6)
