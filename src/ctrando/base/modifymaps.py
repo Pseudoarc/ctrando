@@ -402,6 +402,11 @@ def make_nr_600_map(
     # Fix Basement Corridor to return to the correct entrance
     script = script_manager[ctenums.LocID.NORTHERN_RUINS_BASEMENT]
     pos = script.find_exact_command(
+        EC.if_flag(memory.Flags.NORTHERN_RUINS_BASEMENT_SENTRIES_CLEARED)
+    )
+    script.delete_jump_block(pos)
+
+    pos = script.find_exact_command(
         EC.if_mem_op_value(0x7F0214, OP.GREATER_OR_EQUAL, 0x1A)
     )
     script.insert_commands(
@@ -428,8 +433,17 @@ def make_nr_600_map(
                     )
                 )
             )
-        ).get_bytearray(), pos
+        )
+        .add_if(
+            EC.if_flag(memory.Flags.NORTHERN_RUINS_BASEMENT_SENTRIES_CLEARED),
+            EF().add(EC.jump_back(0))
+        )
+        .get_bytearray(), pos
     )
+    pos_st, cmd = script.find_command([0x22])
+    pos_jump, cmd = script.find_command([0x11], pos_st)
+    script.data[pos_jump+1] = pos_jump-pos_st+1
+
     loc_exit_dict[ctenums.LocID.NORTHERN_RUINS_BASEMENT].pop(0)
 
     script = script_manager[ctenums.LocID.NORTHERN_RUINS_LANDING]
