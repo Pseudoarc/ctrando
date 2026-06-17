@@ -111,7 +111,7 @@ class SNESPalette:
     ROM_RW = _loc_palette_rw
 
     def __init__(self, colors: Sequence[SNESColor]):
-        if len(colors) != self.NUM_COLORS:
+        if self.NUM_COLORS is not None and len(colors) != self.NUM_COLORS:
             raise ValueError
 
         self.colors: list[SNESColor] = list(colors)
@@ -166,13 +166,18 @@ class SNESPalette:
             SNESColor.from_hex_str(hex_str) for hex_str in hex_strs
         ]
 
-        return SNESPalette(colors)
+        return cls(colors)
 
     @classmethod
     def from_bytes(cls, palette_b: typing.ByteString) -> typing.Self:
+        if cls.NUM_COLORS is None:
+            num_colors = len(palette_b)//2
+        else:
+            num_colors = cls.NUM_COLORS
+
         colors = tuple(
             SNESColor(palette_b[2 * ind: 2 * ind + 2])
-            for ind in range(cls.NUM_COLORS)
+            for ind in range(num_colors)
         )
         return cls(colors)
 
@@ -411,15 +416,15 @@ def build_magus_ow_palette(
 
 
 class OWPallete(SNESPalette):
-    NUM_COLORS = 0x80
+    NUM_COLORS = None
     ROM_RW = cty.CompressedAbsPtrTableRW(0x0228B2)
 
     @classmethod
     def read_from_ct_rom(cls, ct_rom: ctrom.CTRom, index: int) -> typing.Self:
-        size = cls.NUM_COLORS*2
-        data = cls.ROM_RW.read_data_from_ctrom(ct_rom, size, index)
+        # size = cls.NUM_COLORS*2
+        data = cls.ROM_RW.read_data_from_ctrom(ct_rom, None, index)
 
-        return OWPallete.from_bytes(data)
+        return cls.from_bytes(data)
 
     def set_pc_palette(self, index: int, palette: SinglePCOWPalette):
         start = index*SinglePCOWPalette.NUM_COLORS*2
@@ -629,3 +634,75 @@ def build_magus_portrait_palette(
     ]
 
     return PortraitPallete(colors)
+
+
+# Formulas from https://www.easyrgb.com/en/math.php
+# Mentioned on https://stackoverflow.com/questions/15408522/rgb-to-xyz-and-lab-colours-conversion
+def rgb255_to_xyz(red: int, green: int, blue: int) -> tuple[float, float, float]:
+    norm_red = (red / 255)
+    norm_green = (green / 255)
+    norm_blue = (blue / 255)
+
+    if norm_red > 0.04045:
+        norm_red = ((norm_red + 0.055) / 1.055) ** 2.4
+    else:
+        norm_red = norm_red / 12.92
+    if norm_green > 0.04045:
+        norm_green = ((norm_green + 0.055) / 1.055) ** 2.4
+    else:
+        norm_green = norm_green / 12.92
+    if norm_blue > 0.04045:
+        norm_blue = ((norm_blue + 0.055) / 1.055) ** 2.4
+    else:
+        norm_blue = norm_blue / 12.92
+
+    norm_red = norm_red * 100
+    norm_green = norm_green * 100
+    norm_blue = norm_blue * 100
+
+    x = norm_red * 0.4124 + norm_green * 0.3576 + norm_blue * 0.1805
+    y = norm_red * 0.2126 + norm_green * 0.7152 + norm_blue * 0.0722
+    z = norm_red * 0.0193 + norm_green * 0.1192 + norm_blue * 0.9505
+
+    return x,y,z
+
+
+def xyz_to_cielab(
+        x: float, y: float, z: float,
+        ref_x: float = 94.811,
+        ref_y: float = 100.0,
+        ref_z: float = 107.304,
+):
+    """Using D65 reference"""
+
+    norm_x = x / ref_x
+    norm_y = y / ref_y
+    norm_z = z / ref_z
+
+    if norm_x > 0.008856:
+        norm_x = norm_x ** (1 / 3)
+    else:
+        norm_x = (7.787 * norm_x) + (16 / 116)
+    if norm_y > 0.008856:
+        norm_y = norm_y ** (1 / 3)
+    else:
+        norm_y = (7.787 * norm_y) + (16 / 116)
+    if norm_z > 0.008856:
+        norm_z = norm_z ** (1 / 3)
+    else:
+        norm_z = (7.787 * norm_z) + (16 / 116)
+
+    cie_l = (116 * norm_y) - 16
+    cie_a = 500 * (norm_x - norm_y)
+    cie_b = 200 * (norm_y - norm_z)
+
+    return cie_l, cie_a, cie_b
+
+def color_diff_rgb255(
+        red_1: int, green_1: int, blue_1: int,
+        red_2: int, green_2: int, blue_2: int,
+) -> float:
+    l1, a1, b1 = xyz_to_cielab(*rgb255_to_xyz(red_1, green_1, blue_1))
+    l2, a2, b2 = xyz_to_cielab(*rgb255_to_xyz(red_2, green_2, blue_2))
+
+    return ((l1-l2)**2 + (a1-a2)**2 + (b1-b2)**2) ** 0.5

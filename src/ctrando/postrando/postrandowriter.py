@@ -6,7 +6,7 @@ import random
 
 from ctrando.arguments import postrandooptions
 from ctrando.base.basepatch import apply_fast_ow_movement
-from ctrando.common import byteops, ctenums, ctrom, memory
+from ctrando.common import byteops, ctenums, ctrom, memory, cttypes as cty
 from ctrando.overworlds.owmanager import OWManager
 from ctrando.locations.scriptmanager import ScriptManager
 from ctrando.locations.locationevent import LocationEvent, FunctionID as FID
@@ -14,6 +14,10 @@ from ctrando.locations.eventcommand import EventCommand as EC, Operation as OP
 from ctrando.locations.eventfunction import EventFunction as EF
 from ctrando.postrando import gameoptions, palettes, flashreduce
 from ctrando.strings import ctstrings
+
+
+class OWSprite(cty.BinaryData):
+    ROM_RW = cty.CompressedAbsPtrTableRW(0x022B76)
 
 
 def set_auto_run(ct_rom: ctrom.CTRom):
@@ -287,3 +291,17 @@ def write_post_rando_options(
         patch = files("ctrando.postrando").joinpath("msu1", "ct_msu1.ips")
         patch_obj = io.BytesIO(patch.read_bytes())
         ct_rom.apply_ips_patch(patch_obj)
+
+    # img = convert.Image.open("/home/ross/Downloads/nu2.png")
+    # dat, palette = convert.png_to_ct_bytes(img)
+    #
+    # for palette_id in (4, 5, 7, 8, 9):
+    #     ow_pal = palettes.OWPallete.read_from_ct_rom(ct_rom, palette_id)
+    #     # for color in ow_pal.colors[0x80:0x90]:
+    #     #     print(color)
+    #     # input()
+    #     ow_pal.colors[0x80:0x90] = palette[:]
+    #     ow_pal.write_to_ctrom(ct_rom, palette_id)
+    #
+    # ow_sprite = OWSprite(dat)
+    # ow_sprite.write_to_ctrom(ct_rom, 1)
