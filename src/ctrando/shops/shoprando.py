@@ -4,6 +4,8 @@ import enum
 import math
 import typing
 
+from numpy import fft
+
 from ctrando.items import itemdata
 from ctrando.shops import shoptypes
 from ctrando.arguments import shopoptions, gearrandooptions
@@ -11,6 +13,7 @@ from ctrando.common import ctenums, distribution
 from ctrando.common.ctenums import ItemID as IID
 from ctrando.common.random import RNGType
 
+_MAX_SHOP_ITEMS = 31
 
 class ItemTier(enum.Enum):
     CONS_D = enum.auto()
@@ -332,6 +335,14 @@ def randomize_shop_inventory(
 
     no_assign_shop_ids = [ctenums.ShopID.EMPTY_12, ctenums.ShopID.EMPTY_14,
                           ctenums.ShopID.LAST_VILLAGE]
+
+    # Get shop capacities
+    shop_capacity_dict = {
+        shop_id: len(shop_manager.shop_dict[shop_id])
+        for shop_id in ctenums.ShopID
+        if shop_id not in no_assign_shop_ids
+    }
+
     if shop_options.shop_inventory_randomization == shopoptions.ShopInventoryType.SHUFFLE:
 
         shop_ids = [shop_id for shop_id in ctenums.ShopID
@@ -344,13 +355,6 @@ def randomize_shop_inventory(
         for shop_id, inventory in zip(shop_ids, inventories):
             shop_manager.shop_dict[shop_id] = inventory
     else:
-        # Get shop capacities
-        shop_capacity_dict = {
-            shop_id: len(shop_manager.shop_dict[shop_id])
-            for shop_id in ctenums.ShopID
-            if shop_id not in no_assign_shop_ids
-        }
-
         if shop_options.shop_capacity_randomization == shopoptions.ShopCapacityType.SHUFFLE:
             new_capacities = list(shop_capacity_dict.values())
             rng.shuffle(new_capacities)
@@ -389,8 +393,12 @@ def randomize_shop_inventory(
             else:
                 raise ValueError
 
-            new_items = sorted(new_items, key=shop_item_sort_index)
             shop_manager.shop_dict[shop_id] = new_items
+
+
+    ensure_guaranteed_shop_items(shop_manager, shop_options.guaranteed_shop_items, rng)
+    for shop_id, shop_items in shop_manager.shop_dict.items():
+        shop_manager.shop_dict[shop_id] = sorted(shop_items, key=shop_item_sort_index)
 
 
 def set_balanced_prices(
@@ -584,6 +592,58 @@ def get_restricted_dist_dict(
                 pass
 
     return ret_dict
+
+
+def ensure_guaranteed_shop_items(
+        shop_man: shoptypes.ShopManager,
+        guaranteed_items: list[ctenums.ItemID],
+        rng: RNGType
+):
+    guaranteed_items_set = set(guaranteed_items)
+    shop_length_dict: dict[ctenums.ShopID, int] = dict()
+    shop_weight_dict: dict[ctenums.ShopID, int] = dict()
+    total_items: set[ctenums.ItemID] = set()
+
+    for shop_id, shop_items in shop_man.shop_dict.items():
+        total_items.update(shop_items)
+        shop_length_dict[shop_id] = len(shop_items)
+        shop_weight_dict[shop_id] = len([x for x in shop_items if x not in guaranteed_items_set])
+
+    for shop_id, shop_items in shop_man.shop_dict.items():
+        total_items.update(shop_items)
+
+    for item in guaranteed_items:
+        if item not in total_items:
+            # Find a random shop with an item to replace
+            shop_list = list(ctenums.ShopID)
+            rng.shuffle(shop_list)
+            for shop_id in shop_list:
+                shop_items = shop_man.shop_dict[shop_id]
+                indices = list(range(len(shop_items)))
+                rng.shuffle(indices)
+                for ind, in indices:
+                    item_id = shop_items[ind]
+                    if item_id not in guaranteed_items_set:
+                        shop_items[ind] = item
+                        break
+                else:
+                    continue
+
+                # If the item loop breaks prematurely, this break his hit
+                # meaning the insertion was successful.
+                break
+            else:
+                # If no shop had a replaceable item, increase a capacity
+                for shop_id in shop_list:
+                    shop_items = shop_man.shop_dict[shop_id]
+                    if len(shop_items) < 31:
+                        shop_items.append(item)
+                        break
+
+
+
+
+
 
 
 def apply_shop_settings(

@@ -108,6 +108,7 @@ class ShopOptions:
     _default_item_price_min_multiplier: typing.ClassVar[float] = 0.5
     _default_item_price_max_multiplier: typing.ClassVar[float] = 2.0
     _default_item_price_randomization_exclusions: typing.ClassVar[list[ctenums.ItemID]] = []
+    _default_guaranteed_shop_items: typing.ClassVar[tuple[ctenums.ItemID, ...]] = tuple()
     def __init__(
             self,
             shop_inventory_randomization: ShopInventoryType = _default_shop_inventory,
@@ -119,6 +120,7 @@ class ShopOptions:
             item_price_min_multiplier: float = _default_item_price_min_multiplier,
             item_price_max_multiplier: float = _default_item_price_max_multiplier,
             item_price_randomization_exclusions: typing.Optional[list[ctenums.ItemID]] = None,
+            guaranteed_shop_items: typing.Sequence[ctenums.ItemID] = _default_guaranteed_shop_items,
     ):
         self.shop_inventory_randomization = shop_inventory_randomization
         self.shop_capacity_randomization = shop_capacity_randomization
@@ -147,6 +149,8 @@ class ShopOptions:
             item_price_randomization_exclusions = list(self._default_item_price_randomization_exclusions)
         self.item_price_randomization_exclusions = list(item_price_randomization_exclusions)
 
+        self.guaranteed_shop_items = list(guaranteed_shop_items)
+
     @classmethod
     def get_argument_spec(cls) -> argumenttypes.ArgSpec:
 
@@ -165,9 +169,9 @@ class ShopOptions:
             "not_buyable_items": argumenttypes.arg_multiple_from_enum(
                 ctenums.ItemID, cls._default_not_buyable,
                 help_text="Items which can never appear in shops",
-                available_pool=[
-                    x for x in ctenums.ItemID if x not in cls.unused_items
-                ]
+                # available_pool=[
+                #     x for x in ctenums.ItemID if x not in cls.unused_items
+                # ]
             ),
             "not_sellable_items": argumenttypes.arg_multiple_from_enum(
                 ctenums.ItemID, cls._default_not_buyable,
@@ -194,80 +198,34 @@ class ShopOptions:
                 "maximum price multiplier that an item's price can roll",
                 type_fn=float
             ),
+            "guaranteed_shop_items": argumenttypes.arg_multiple_from_enum(
+                ctenums.ItemID, cls._default_guaranteed_shop_items,
+                "Items guaranteed to appear in some shop",
+                available_pool=[
+                    x for x in ctenums.ItemID if x not in cls.unused_items
+                ],
+                allow_duplicates=False
+            )
         }
 
     @classmethod
     def add_group_to_parser(cls, parser: argparse.ArgumentParser):
         """Add Shop/Item options to parser."""
+
         group = parser.add_argument_group(
             "Shop/Item Options",
             "Items related to item prices and shop inventory"
         )
 
-        argumenttypes.add_str_enum_to_group(
-            group, "--shop-inventory-randomization",
-            ShopInventoryType,
-        )
-
-        argumenttypes.add_str_enum_to_group(
-            group, "--shop-capacity-randomization",
-            ShopCapacityType,
-            help_str=(
-                "Only considered if --shop-inventory-randomization is"
-                "not \"vanilla\" or \"shuffle\""
+        for attr_name, arg in cls.get_argument_spec().items():
+            arg.add_to_argparse(
+                argumenttypes.attr_name_to_arg_name(attr_name),
+                group
             )
-        )
-
-        group.add_argument(
-            "--not-buyable-items",
-            nargs="*",
-            type=functools.partial(argumenttypes.str_to_enum, enum_type=ctenums.ItemID),
-            default=argparse.SUPPRESS
-        )
-
-        group.add_argument(
-            "--not-sellable-items",
-            nargs="*",
-            type=functools.partial(argumenttypes.str_to_enum, enum_type=ctenums.ItemID),
-            default=argparse.SUPPRESS
-        )
-
-        argumenttypes.add_str_enum_to_group(
-            group, "--item-base-prices",
-            ItemBasePrice,
-        )
-
-        argumenttypes.add_str_enum_to_group(
-            group, "--item-price-randomization",
-            ItemSalePrice,
-        )
-
-        group.add_argument(
-            "--item-price-min-multiplier",
-            type=float, default=argparse.SUPPRESS,
-            help="minimum price multiplier (default 0.50) that an item's price can roll"
-        )
-
-        group.add_argument(
-            "--item-price-max-multiplier",
-            type=float, default=argparse.SUPPRESS,
-            help="maximum price multiplier (default 2.00) that an item's price can roll"
-        )
 
     @classmethod
     def extract_from_namespace(cls, namespace: argparse.Namespace):
-        attr_names = [
-            "shop_inventory_randomization", "shop_capacity_randomization",
-            "not_buyable_items", "not_sellable_items",
-            "item_base_prices",
-            "item_price_randomization",
-            "item_price_min_multiplier", "item_price_max_multiplier"
-        ]
+        return argumenttypes.extract_from_namespace(
+            cls, arg_names=cls.get_argument_spec().keys(), namespace=namespace
+        )
 
-        init_dict: dict[str, typing.Any] = dict()
-
-        for attr_name in attr_names:
-            if hasattr(namespace, attr_name):
-                init_dict[attr_name] = getattr(namespace, attr_name)
-
-        return ShopOptions(**init_dict)

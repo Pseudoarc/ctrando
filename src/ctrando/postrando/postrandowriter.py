@@ -292,7 +292,8 @@ def write_post_rando_options(
         patch_obj = io.BytesIO(patch.read_bytes())
         ct_rom.apply_ips_patch(patch_obj)
 
-    # img = convert.Image.open("/home/ross/Downloads/nu2.png")
+    # from ctrando.graphics import convert
+    # img = convert.Image.open("/home/ross/Downloads/theman.png")
     # dat, palette = convert.png_to_ct_bytes(img)
     #
     # for palette_id in (4, 5, 7, 8, 9):
