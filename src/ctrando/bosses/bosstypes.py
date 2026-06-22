@@ -5,6 +5,7 @@ describing the default relationship between them.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 import copy
 import enum
 import typing
@@ -150,6 +151,16 @@ class BossID(enum.StrEnum):
     LAVOS_CORE = "lavos3"
     ZEAL = "zeal"
     ZEAL_2 = "zeal2"
+    HARD_LAVOS = "hard_lavos"
+    GAUNTLET_DRAGON_TANK = "gauntlet_dragon_tank"
+    GAUNTLET_GUARDIAN = "gauntlet_guardian"
+    GAUNTLET_HECKRAN = "gauntlet_heckran"
+    GAUNTLET_ZOMBOR = "gauntlet_zombor"
+    GAUNTLET_MASA_MUNE = "gauntlet_masa_mune"
+    GAUNTLET_NIZBEL = "gauntlet_nizbel"
+    GAUNTLET_MAGUS = "gauntlet_magus"
+    GAUNTLET_TYRANO = "gauntlet_tyrano"
+    GAUNTLET_GIGA_GAIA = "gauntlet_giga_gaia"
 
     def __str__(self):
         if self == BossID.MAGUS_NORTH_CAPE:
@@ -417,6 +428,33 @@ _default_schemes: dict[BossID, BossScheme] = {
     BossID.FLEA: _BS(_BP(_EID.FLEA, 7)),
     BossID.FLEA_PLUS: _BS(_BP(_EID.FLEA_PLUS, 7)),
     BossID.GATO: _BS(_BP(_EID.GATO, 6)),
+    BossID.GAUNTLET_DRAGON_TANK: _BS(
+        _BP(_EID.LAVOS_DRAGON_TANK, 3),
+        _BP(_EID.LAVOS_TANK_LEFT_HEAD, 9),
+        _BP(_EID.LAVOS_TANK_RIGHT_GRINDER, 0xA)
+    ),
+    BossID.GAUNTLET_GIGA_GAIA: _BS(
+        _BP(_EID.LAVOS_GIGA_GAIA_HEAD, 6),
+        _BP(_EID.LAVOS_GIGA_GAIA_LEFT, 7, (0x30, 0x20)),
+        _BP(_EID.LAVOS_GIGA_GAIA_RIGHT, 9, (-0x30, 0x20))
+    ),
+    BossID.GAUNTLET_GUARDIAN: BossScheme(
+        BossPart(_EID.LAVOS_GUARDIAN, 3),
+        BossPart(_EID.LAVOS_GUARDIAN_LEFT, 7, (-0x3A, -0x08)),
+        BossPart(_EID.LAVOS_GUARDIAN_RIGHT, 8, (0x40, -0x08))
+    ),
+    BossID.GAUNTLET_HECKRAN: BossScheme(BossPart(_EID.LAVOS_HECKRAN, 3),),
+    BossID.GAUNTLET_MASA_MUNE: BossScheme(BossPart(_EID.LAVOS_MASA_MUNE, 6)),
+    BossID.GAUNTLET_MAGUS: BossScheme(BossPart(_EID.LAVOS_MAGUS, 3)),
+    BossID.GAUNTLET_NIZBEL: BossScheme(BossPart(_EID.LAVOS_NIZBEL, 3)),
+    BossID.GAUNTLET_TYRANO: _BS(
+        _BP(_EID.LAVOS_TYRANO_AZALA, 7),
+        _BP(_EID.LAVOS_TYRANO, 3)  # Not real disp b/c not randomizing
+    ),
+    BossID.GAUNTLET_ZOMBOR: BossScheme(
+        BossPart(_EID.LAVOS_ZOMBOR_UPPER, 9),
+        BossPart(_EID.LAVOS_ZOMBOR_BOTTOM, 3, (0, 0x20))
+    ),
     BossID.GIGA_GAIA: _BS(
         _BP(_EID.GIGA_GAIA_HEAD, 6),
         _BP(_EID.GIGA_GAIA_LEFT, 7, (0x30, 0x20)),
@@ -432,6 +470,9 @@ _default_schemes: dict[BossID, BossScheme] = {
         BossPart(_EID.GUARDIAN, 3),
         BossPart(_EID.GUARDIAN_BIT, 7, (-0x3A, -0x08)),
         BossPart(_EID.GUARDIAN_BIT, 8, (0x40, -0x08))
+    ),
+    BossID.HARD_LAVOS: BossScheme(
+        BossPart(_EID.LAVOS_OCEAN_PALACE, 3)
     ),
     BossID.HECKRAN: BossScheme(BossPart(_EID.HECKRAN, 3),),
     BossID.INNER_LAVOS: BossScheme(
@@ -577,17 +618,42 @@ def get_minibosses() -> list[BossID]:
             BossID.DALTON, BossID.KRAWLIE]
 
 
+def get_lavos_bosses() -> list[BossID]:
+    return [
+        BossID.LAVOS_CORE, BossID.LAVOS_SHELL, BossID.INNER_LAVOS,
+        BossID.HARD_LAVOS,
+        BossID.GAUNTLET_DRAGON_TANK, BossID.GAUNTLET_ZOMBOR,
+        BossID.GAUNTLET_GUARDIAN, BossID.GAUNTLET_HECKRAN,
+        BossID.GAUNTLET_MASA_MUNE, BossID.GAUNTLET_NIZBEL,
+        BossID.GAUNTLET_MAGUS, BossID.GAUNTLET_TYRANO, BossID.GAUNTLET_GIGA_GAIA
+    ]
+
+
 def get_end_bosses() -> list[BossID]:
     return [
         BossID.MAMMON_M, BossID.ZEAL_2,
-        BossID.LAVOS_CORE, BossID.LAVOS_SHELL, BossID.INNER_LAVOS,   # Hard Lavos?
-    ]
+    ] + get_lavos_bosses()
 
 
 def get_assignable_bosses() -> list[BossID]:
     minibosses = get_minibosses()
     endbosses = get_end_bosses()
-    exclusions = minibosses + endbosses + [BossID.MAGUS_NORTH_CAPE, BossID.MAGUS, BossID.BLACK_TYRANO]
+    exclusions = minibosses + endbosses + [BossID.MAGUS, BossID.BLACK_TYRANO]
     return [
         BossID(x) for x in BossID if x not in exclusions
     ]
+
+
+def get_bosses() -> list[BossID]:
+    exclusions = get_minibosses()
+    return [BossID(x) for x in BossID if x not in exclusions]
+
+def get_enemy_ids(boss_ids: Sequence[BossID]) -> list[ctenums.EnemyID]:
+    ret_enemy_ids = []
+    for boss_id in boss_ids:
+        scheme = get_default_scheme(boss_id)
+        ret_enemy_ids += list(set(
+            part.enemy_id for part in scheme.parts
+        ))
+
+    return ret_enemy_ids
