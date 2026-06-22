@@ -621,7 +621,7 @@ def ensure_guaranteed_shop_items(
                 shop_items = shop_man.shop_dict[shop_id]
                 indices = list(range(len(shop_items)))
                 rng.shuffle(indices)
-                for ind, in indices:
+                for ind in indices:
                     item_id = shop_items[ind]
                     if item_id not in guaranteed_items_set:
                         shop_items[ind] = item
