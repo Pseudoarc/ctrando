@@ -22,3 +22,11 @@ class EventMod(locationevent.LocEventMod):
             EC.set_flag(memory.Flags.BUCKET_AVAILABLE).to_bytearray(),
             pos
         )
+
+        pos = script.get_object_start(0xC)
+        for ind in range(3):
+            pos = script.find_exact_command(EC.if_flag(memory.Flags.HARD_LAVOS_DEFEATED), pos)
+            script.delete_jump_block(pos)
+
+            if ind == 0:
+                pos = script.get_object_start(0xD)
