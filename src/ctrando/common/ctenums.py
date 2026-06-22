@@ -1466,7 +1466,7 @@ class EnemyID(StrIntEnum):
     LAVOS_2_RIGHT = 0xCD
     LAVOS_3_CORE = 0xCE
     GUARDIAN_BIT = 0xCF
-    GUARDIAN_BYTE = 0xD0
+    BYTE = 0xD0
     GIGA_GAIA_HEAD = 0xD1
     GIGA_GAIA_LEFT = 0xD2
     GIGA_GAIA_RIGHT = 0xD3
