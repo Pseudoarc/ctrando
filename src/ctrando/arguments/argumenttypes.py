@@ -9,9 +9,10 @@ from dataclasses import dataclass, fields
 from enum import Enum, StrEnum
 import typing
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Sequence
 from typing import Protocol, TypeVar, Any
-from unicodedata import lookup
+
+from ctrando.common import distribution, ctenums
 
 
 class SettingsError(Exception):
@@ -247,9 +248,11 @@ def enum_to_str(
         enum_member: _ET,
         enum_type: typing.Type[_ET],
         force_enum_names: bool = False
-):
+) -> str:
     if issubclass(enum_type, StrEnum) and not force_enum_names:
-        return enum_member.value
+        if not isinstance(enum_member, StrEnum):
+            raise TypeError
+        return enum_member.value  # noinspection PyTypeChecker
 
     return enum_member.name.lower()
 
@@ -543,15 +546,117 @@ class SettingsObject(typing.Protocol):
         ...
 
 
-def main():
+class DistAction(argparse.Action):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._lookup_dict = str_to_enum_dict(ctenums.ItemID)
 
-    class Foo(StrEnum):
-        a_elem = "a"
-        b_elem = "b"
+    def __call__(
+            self,
+            parser: argparse.ArgumentParser,
+            namespace: argparse.Namespace,
+            values: str | Sequence[Any] | None,
+            option_string: str | None = None
+    ) -> None:
+        if option_string is None:
+            raise ValueError
 
-    print(str_to_enum_dict(Foo))
+        if values is None:
+            values = []
+        elif isinstance(values, str):
+            values = [values]
+
+        dist = self.parse_dist(values)
+        setattr(namespace, self.dest, dist)
 
 
+    def parse_dist(self, data: Sequence[typing.Any]) -> distribution.Distribution[_ET] | None:
 
-if __name__ == "__main__":
-    main()
+        if not data:
+            return None
+
+        weight_val_pairs: list[tuple[float, list[ctenums.ItemID]]] = []
+        for entry in data:
+            if not isinstance(entry, str):
+                raise ValueError
+
+            entry = "".join(entry.split())
+
+            parts = entry.split(":")
+            if len(parts) == 2:
+                weight_str, items = parts
+                weight = float(weight_str)
+            elif len(parts) == 1:
+                weight, items = 1.0, parts[0]
+            else:
+                raise ValueError
+
+            item_str_list = items.split(",")
+            item_list: list[ctenums.ItemID] = []
+            for item_str in item_str_list:
+                if "#" in item_str:
+                    item_str, quantity_str = item_str.split("#")
+                    quantity = int(quantity_str)
+                else:
+                    quantity = 1
+
+                item = self._lookup_dict[item_str]
+                item_list += [item] * quantity
+
+            weight_val_pairs.append(tuple((weight, item_list)))
+
+        return distribution.Distribution(*weight_val_pairs)
+
+
+class DistArgument[_ET]:
+    def __init__(
+            self,
+            enum_type: typing.Type[_ET],
+            default_value: distribution.Distribution[_ET] | None,
+            help_text: str,
+            available_pool: Sequence[_ET],
+    ):
+        self._lookup_dict = str_to_enum_dict(enum_type)
+        self.default_value = default_value
+        self.available_pool = set(available_pool)
+        self.help_text = help_text
+        self.enum_type = enum_type
+
+    def add_to_argparse(
+            self,
+            argparse_name: str,
+            argparse_obj: argparse.ArgumentParser | argparse._ArgumentGroup
+    ):
+        argparse_obj.add_argument(
+            argparse_name, nargs="*",
+            help=self.help_text,
+            action=DistAction,
+            default=argparse.SUPPRESS
+        )
+
+    def get_toml_value(self, value: typing.Any) -> typing.Any:
+        if not isinstance(value, distribution.Distribution):
+            return []
+
+        def get_item_str(name: str, count: int) -> str:
+            suffix = f"#{count}" if count != 1 else ""
+            return name+suffix
+
+        ret_val: list[str] = []
+        for weight, obj_list in value.get_weight_object_pairs():
+            item_counts: dict[str, int] = {}
+            for elem in obj_list:
+                if not isinstance(elem, self.enum_type):
+                    raise ValueError
+                if elem not in self.available_pool:
+                    raise ValueError(f"Invalid Item: {elem}")
+
+                elem_name = enum_to_str(elem, self.enum_type)
+                item_counts[elem_name] += 1
+
+            ret_val.append(
+                ", ".join(get_item_str(name, count) for name, count in item_counts.items())
+            )
+
+        return ret_val
+
