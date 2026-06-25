@@ -4,6 +4,124 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <stdbool.h>
+#include <stdlib.h>
+
+
+unsigned int get_le16(char* buf, int pos){
+    return (unsigned int)(unsigned char)(buf[pos]) + ((unsigned int)(unsigned char)(buf[pos+1]) << 8);
+}
+
+
+static PyObject* decompress(PyObject* self, PyObject* args)
+{
+    Py_buffer buffer;
+    PyObject* result;
+    char header = 0;
+    const char* source;
+    int i = 0;
+    int j = 0;
+    int len_source = 0;
+    int buf_pos = 0;
+    int out_pos = 0;
+    int end_pos = 0;
+    int src_pos = 0;
+    int add_byte = 0;
+    int main_len = 0;
+    int temp = 0;
+    unsigned char copy_size = 0;
+    unsigned int copy_offset = 0;
+    bool smallwidth = false;
+
+    char* out_buf = (char *)malloc(0x10000*sizeof(char));
+
+    if (out_buf == NULL)
+        return PyErr_NoMemory();
+
+    if (!PyArg_ParseTuple(args, "y*i", &buffer, &buf_pos))
+        return NULL;
+
+    source = buffer.buf;
+    len_source = buffer.len;
+
+    if ((buf_pos + 2) >= len_source){
+        return NULL;
+    }
+
+    main_len = get_le16(source, buf_pos);
+    out_pos = 0;
+    src_pos = buf_pos + 2;
+    add_byte = src_pos + main_len;
+    if (add_byte >= len_source){
+        return NULL;
+    }
+
+    if (source[add_byte] & 0xC0)
+    {
+        smallwidth = true;
+    }
+
+    end_pos = add_byte;
+
+    while (true){
+        // fprintf(stderr, "state: %d, %d\n", src_pos, out_pos);
+        if (src_pos == end_pos){
+            if ((source[src_pos] & 0x3F) == 0){
+                // should return out_buf[0: out_pos]
+                break;
+            } else {
+                temp = get_le16(source, src_pos+1);
+                end_pos = buf_pos + temp;
+                if (end_pos >= len_source){
+                    return NULL;
+                }
+
+                src_pos += 3;
+            }
+        }
+
+        header = source[src_pos];
+        src_pos += 1;
+        //fprintf(stderr, "header: %d\n", header);
+
+        for(i=0;i<8;i++){
+            if (src_pos == end_pos)
+                break;
+            else if ((header & (1 << i)) == 0){
+                // Uncompressed, copy next byte
+                // fprintf(stderr, "state: %d, %d\n", src_pos, out_pos);
+                out_buf[out_pos] = source[src_pos];
+                out_pos += 1;
+                src_pos += 1;
+            } else {
+                copy_size = source[src_pos + 1];
+                copy_offset = get_le16(source, src_pos);
+                if (smallwidth){
+                    copy_size = copy_size >> 3;
+                    copy_offset = copy_offset & 0x07FF;
+                }
+                else {
+                    copy_size = copy_size >> 4;
+                    copy_offset = copy_offset & 0x0FFF;
+                }
+
+                copy_size += 3;
+
+                for(j=0; j< copy_size; j++){
+                    out_buf[out_pos + j] = out_buf[out_pos - copy_offset + j];
+                }
+
+                out_pos += copy_size;
+                src_pos += 2;
+            }
+        }
+
+    }
+    result = PyByteArray_FromStringAndSize(out_buf, out_pos);
+    free(out_buf);
+    PyBuffer_Release(&buffer);
+    return result;
+}
+
 
 static PyObject* compress(PyObject* self, PyObject* args)
 {
@@ -30,7 +148,6 @@ static PyObject* compress(PyObject* self, PyObject* args)
   int best_len_st = 0;
   int ret_choice = 0;
   PyObject* result;
-  PyObject* arg1;
   Py_buffer buffer;
 
   compressed_lengths[0] = compressed_lengths[1] = 0x10000;
@@ -202,6 +319,7 @@ static PyObject* compress(PyObject* self, PyObject* args)
 
 static PyMethodDef CompressMethods[] = {
     {"compress", compress, METH_VARARGS, "compress an event."},
+    {"decompress", decompress, METH_VARARGS, "decompress bytes"},
     {NULL, NULL, 0, NULL}
 };
 

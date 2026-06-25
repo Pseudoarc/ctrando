@@ -241,7 +241,7 @@ def add_decompressed_gfx_packets(ct_rom: ctrom.CTRom):
     gfx_ptr_st = 0x242000
     ct_rom.seek(gfx_ptr_st + 7*3)
 
-    packet_dict: dict[int: bytes] = {}
+    packet_dict: dict[int, bytes] = {}
 
     for packet_id in range(7, 0xF8):
         ptr = int.from_bytes(ct_rom.read(3), "little")
@@ -272,6 +272,4 @@ def apply_full_patch(ct_rom):
     force_enemies_decompressed(ct_rom)
     force_npcs_decompressed(ct_rom)
     add_decompressed_gfx_packets(ct_rom)
-
     patch_graphics_loading(ct_rom)
-

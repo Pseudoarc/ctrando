@@ -5,7 +5,7 @@ from ctrando.common.byteops import to_little_endian
 # ctcompress is the fast C library.  If it's not present, use the python
 # implementation.
 try:
-    from ctrando.compression.ctcompress import compress
+    from ctrando.compression.ctcompress import compress, decompress
     print('Using C compression implementation.')
 except ImportError:
     print('C compression module not found.  Falling back to python.')
@@ -13,8 +13,12 @@ except ImportError:
         """Compress with CT compression"""
         return compress_py_2(source)
 
+    def decompress(source: bytearray, start: int) -> bytearray:
+        """Decompress with CT decompression"""
+        return decompress_py(source, start)
 
-def decompress(rom, start):
+
+def decompress_py(rom: ByteString, start: int):
     out_buffer = bytearray([0 for i in range(0, 0x10000)])
 
     # First two bytes are little endian size of compressed packet
