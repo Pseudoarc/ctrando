@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 
-unsigned int get_le16(char* buf, int pos){
+unsigned int get_le16(char* buf, unsigned int pos){
     return (unsigned int)(unsigned char)(buf[pos]) + ((unsigned int)(unsigned char)(buf[pos+1]) << 8);
 }
 
@@ -22,9 +22,9 @@ static PyObject* decompress(PyObject* self, PyObject* args)
     int j = 0;
     int len_source = 0;
     int buf_pos = 0;
-    int out_pos = 0;
-    int end_pos = 0;
-    int src_pos = 0;
+    unsigned int out_pos = 0;
+    unsigned int end_pos = 0;
+    unsigned int src_pos = 0;
     int add_byte = 0;
     int main_len = 0;
     int temp = 0;
@@ -61,9 +61,10 @@ static PyObject* decompress(PyObject* self, PyObject* args)
     }
 
     end_pos = add_byte;
+    if (end_pos >= len_source){return NULL;}
 
     while (true){
-        // fprintf(stderr, "state: %d, %d\n", src_pos, out_pos);
+//         fprintf(stderr, "state: %d, %d\n", src_pos, out_pos);
         if (src_pos == end_pos){
             if ((source[src_pos] & 0x3F) == 0){
                 // should return out_buf[0: out_pos]
@@ -81,18 +82,19 @@ static PyObject* decompress(PyObject* self, PyObject* args)
 
         header = source[src_pos];
         src_pos += 1;
-        //fprintf(stderr, "header: %d\n", header);
+        // fprintf(stderr, "header: %u\n", (unsigned char)header);
 
         for(i=0;i<8;i++){
             if (src_pos == end_pos)
                 break;
             else if ((header & (1 << i)) == 0){
+                if (out_pos >= 0x10000 || src_pos >= len_source){return NULL;}
                 // Uncompressed, copy next byte
-                // fprintf(stderr, "state: %d, %d\n", src_pos, out_pos);
                 out_buf[out_pos] = source[src_pos];
                 out_pos += 1;
                 src_pos += 1;
             } else {
+                if (src_pos +2 >= len_source){return NULL;}
                 copy_size = source[src_pos + 1];
                 copy_offset = get_le16(source, src_pos);
                 if (smallwidth){
@@ -105,7 +107,10 @@ static PyObject* decompress(PyObject* self, PyObject* args)
                 }
 
                 copy_size += 3;
-
+                if ((out_pos+copy_size > 0x10000) || (out_pos < copy_offset)){
+                    PyErr_SetString(PyExc_IndexError, "Copy range exceeds out buffer");
+                    return NULL;
+                }
                 for(j=0; j< copy_size; j++){
                     out_buf[out_pos + j] = out_buf[out_pos - copy_offset + j];
                 }
