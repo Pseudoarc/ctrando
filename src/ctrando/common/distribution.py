@@ -1,7 +1,7 @@
 """
 Implement Distribution objects.
 
-A Distribtuion is just a collection of (weight, value_list) pairs.
+A Distribtution is just a collection of (weight, value_list) pairs.
 When generating a random item from the distribution, pick a pair based on
 the weights, then return a random element of the pair's value_list.
 """
@@ -10,8 +10,6 @@ from __future__ import annotations
 
 import copy
 import itertools
-import random
-# import random
 from collections.abc import Iterable, Sequence
 import typing
 
@@ -52,19 +50,19 @@ class Distribution(typing.Generic[T]):
         """
 
         self.__total_weight = 0
-        self.weight_object_pairs: list[typing.Tuple[WeightType, ObjType]] = []
+        self.weight_object_pairs: list[typing.Tuple[WeightType, list[T]]] = []
 
         self.set_weight_object_pairs(list(weight_object_pairs))
 
     @staticmethod
     def _handle_weight_object_pairs(
             weight_object_pairs: typing.Sequence[typing.Tuple[WeightType, ObjType]]
-    ) -> list[typing.Tuple[WeightType, ObjType]]:
+    ) -> list[typing.Tuple[WeightType,list[T]]]:
         """
         Replace non-sequences with a one element list so that random.choice()
         can be used.
         """
-        new_pairs: list[tuple[WeightType, ObjType]] = []
+        new_pairs: list[tuple[WeightType, list[T]]] = []
         for ind, pair in enumerate(weight_object_pairs):
             weight, obj = pair
 
@@ -94,7 +92,6 @@ class Distribution(typing.Generic[T]):
         First choose a weight-object pair based on weights.  Then (uniformly)
         choose an element of that object.
         """
-        # target = random.randrange(0, self.__total_weight)
         target = rng.random()*self.__total_weight
 
         cum_weight = 0
@@ -106,6 +103,13 @@ class Distribution(typing.Generic[T]):
 
         raise ValueError('No choice made.')
 
+    def get_all_items_multiplicity(self) -> list[T]:
+        ret = list()
+        for _, items in self.weight_object_pairs:
+            ret.extend(items)
+
+        return ret
+
     def get_all_items(self) -> set[T]:
         ret = set()
         for weight, items in self.weight_object_pairs:
@@ -113,7 +117,7 @@ class Distribution(typing.Generic[T]):
 
         return ret
 
-    def get_weight_object_pairs(self):
+    def get_weight_object_pairs(self) -> list[tuple[float, list[T]]]:
         """Returns list of (weight, object_list) pairs in the Distribution."""
         return list(self.weight_object_pairs)
 
@@ -209,6 +213,7 @@ class DistributionGenerator(typing.Generic[T]):
 def main():
     """Sample for using Distribution and DistributionGenerator"""
     from ctrando.common.ctenums import ItemID
+    import random
 
     symbol_dict = {
         "wood_sword": [ItemID.WOOD_SWORD],
