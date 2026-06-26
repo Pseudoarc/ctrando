@@ -546,10 +546,13 @@ class SettingsObject(typing.Protocol):
         ...
 
 
-class DistAction(argparse.Action):
+class DistAction(argparse.Action, typing.Generic[_ET]):
+    ENUM_TYPE: typing.Type[_ET] = ctenums.ItemID
+    KEYWORD_DICT: dict[str, Sequence[_ET]] = dict()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._lookup_dict = str_to_enum_dict(ctenums.ItemID)
+        self._lookup_dict: dict[str, _ET] = str_to_enum_dict(self.ENUM_TYPE)
 
     def __call__(
             self,
@@ -600,8 +603,13 @@ class DistAction(argparse.Action):
                 else:
                     quantity = 1
 
-                item = self._lookup_dict[item_str]
-                item_list += [item] * quantity
+                if item_str in self._lookup_dict:
+                    items = [self._lookup_dict[item_str]] * quantity
+                elif item_str in self.KEYWORD_DICT:
+                    items = list(self.KEYWORD_DICT[item_str]) * quantity
+                else:
+                    raise KeyError
+                item_list += items
 
             weight_val_pairs.append(tuple((weight, item_list)))
 
