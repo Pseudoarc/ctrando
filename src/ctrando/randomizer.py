@@ -264,7 +264,11 @@ def get_random_config(
     )
 
     ### Enemy Charm/Drop
-    rewardrando.apply_reward_rando(settings.battle_rewards, config.enemy_data_dict, rng)
+    rewardrando.apply_reward_rando(
+        settings.battle_rewards, config.enemy_data_dict,
+        settings.gear_rando_options.ds_item_pool,
+        rng
+    )
 
     ### Enemy Reshuffle
     config.enemy_assign_dict = enemyrando.get_enemy_shuffle(settings.enemy_options.shuffle_enemies, rng)
