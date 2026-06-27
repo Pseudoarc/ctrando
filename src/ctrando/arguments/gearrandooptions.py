@@ -186,7 +186,7 @@ class GearRandoOptions:
         ItemID.STARSCYTHE, ItemID.DOOMSICKLE, ItemID.MOP, ItemID.SWALLOW,
         ItemID.SLASHER_2, ItemID.RAINBOW
     )
-    _default_ds_item_pool: typing.ClassVar[tuple[ItemID]] = tuple(DSItem)
+    _default_ds_item_pool: typing.ClassVar[tuple[DSItem]] = tuple(DSItem)
     _default_ds_replacement_chance: int = 50
     _default_bronze_fist_policy: typing.ClassVar[BronzeFistPolicy] = BronzeFistPolicy.VANILLA
 
@@ -218,10 +218,10 @@ class GearRandoOptions:
 
     def __init__(
             self,
-            ds_item_pool: Iterable[DSItem] = _default_ds_item_pool,
+            ds_item_pool: typing.Sequence[DSItem] = _default_ds_item_pool,
             ds_replacement_chance: int = _default_ds_replacement_chance,
             bronze_fist_policy: BronzeFistPolicy = _default_bronze_fist_policy,
-            weapon_rando_pool: list[ItemID] = _default_weapon_pool,
+            weapon_rando_pool: typing.Sequence[ItemID] = _default_weapon_pool,
             weapon_rando_effect_scheme: GearRandoScheme = _default_rando_scheme,
             weapon_rando_stat_boost_scheme: GearRandoScheme = _default_rando_scheme,
             forced_weapon_effects: Iterable[WE] = _default_forced_weapon_effects,
