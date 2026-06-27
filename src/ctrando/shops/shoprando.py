@@ -253,6 +253,25 @@ def get_random_tiered_item(
     return item_id
 
 
+def get_random_shop_items(
+        shop_dist: distribution.Distribution[IID],
+        capacity: int,
+        rng: RNGType
+):
+    chosen_items: set[ctenums.ItemID] = set()
+    while len(chosen_items) < capacity:
+        next_item = shop_dist.get_random_item(rng)
+        if next_item not in chosen_items:
+            chosen_items.add(next_item)
+
+        try:
+            shop_dist = shop_dist.get_restricted_distribution(chosen_items)
+        except distribution.ZeroWeightException:
+            break
+
+    return list(chosen_items)
+
+
 def get_random_tiered_shop_items(
         tier_distribution: distribution.Distribution[ItemTier],
         distribution_dict: dict[ItemTier, ItemDist],
@@ -390,6 +409,10 @@ def randomize_shop_inventory(
                     tier_dist, dist_dict, capacity, rng)
             elif inv_type == shopoptions.ShopInventoryType.FULL_RANDOM:
                 new_items = rng.sample(item_pool, k=capacity)
+            elif inv_type == shopoptions.ShopInventoryType.CUSTOM_RANDOM:
+                dist = shopoptions.get_shop_distribution(shop_options.custom_shop_item_spec)
+                dist = dist.get_restricted_distribution(shop_options.not_buyable_items)
+                new_items = get_random_shop_items(dist, capacity, rng)
             else:
                 raise ValueError
 
@@ -600,50 +623,63 @@ def ensure_guaranteed_shop_items(
         rng: RNGType
 ):
     guaranteed_items_set = set(guaranteed_items)
-    shop_length_dict: dict[ctenums.ShopID, int] = dict()
-    shop_weight_dict: dict[ctenums.ShopID, int] = dict()
-    total_items: set[ctenums.ItemID] = set()
-
-    for shop_id, shop_items in shop_man.shop_dict.items():
-        total_items.update(shop_items)
-        shop_length_dict[shop_id] = len(shop_items)
-        shop_weight_dict[shop_id] = len([x for x in shop_items if x not in guaranteed_items_set])
-
-    for shop_id, shop_items in shop_man.shop_dict.items():
-        total_items.update(shop_items)
-
+    guaranteed_item_count_dict: dict[ctenums.ItemID, int] ={}
     for item in guaranteed_items:
-        if item not in total_items:
-            # Find a random shop with an item to replace
-            shop_list = list(ctenums.ShopID)
-            rng.shuffle(shop_list)
-            for shop_id in shop_list:
-                shop_items = shop_man.shop_dict[shop_id]
-                indices = list(range(len(shop_items)))
-                rng.shuffle(indices)
-                for ind in indices:
-                    item_id = shop_items[ind]
-                    if item_id not in guaranteed_items_set:
-                        shop_items[ind] = item
-                        break
-                else:
-                    continue
+        guaranteed_item_count_dict[item] =  guaranteed_item_count_dict.get(item, 0) + 1
 
-                # If the item loop breaks prematurely, this break his hit
-                # meaning the insertion was successful.
-                break
+    total_item_dict: dict[ctenums.ItemID, int] = {
+        x: 0 for x in ctenums.ItemID
+    }
+
+    for shop_id, shop_items in shop_man.shop_dict.items():
+        for item in shop_items:
+            total_item_dict[item] += 0
+
+    for item, count in guaranteed_item_count_dict.items():
+        good_shop_ids = [
+            shop_id for shop_id, item_list in shop_man.shop_dict.items()
+            if item in item_list
+        ]
+        needed_placements = count - len(good_shop_ids)
+        if needed_placements <= 0:
+            continue
+
+        bad_shop_ids = [
+            shop_id for shop_id in shop_man.shop_dict.keys()
+            if shop_id not in good_shop_ids
+        ]
+        bad_shop_ids_set = set(bad_shop_ids)
+
+        rng.shuffle(bad_shop_ids)
+        for shop_id in bad_shop_ids:
+            shop_items = shop_man.shop_dict[shop_id]
+            indices = list(range(len(shop_items)))
+            rng.shuffle(indices)
+            for ind in indices:
+                item_id = shop_items[ind]
+                if item_id not in guaranteed_items_set:
+                    shop_items[ind] = item
+                    needed_placements -= 1
+                    bad_shop_ids_set.remove(shop_id)
+                    break
             else:
-                # If no shop had a replaceable item, increase a capacity
-                for shop_id in shop_list:
-                    shop_items = shop_man.shop_dict[shop_id]
-                    if len(shop_items) < 31:
-                        shop_items.append(item)
-                        break
+                continue
 
+            if needed_placements == 0:
+                break
+        else:  # Couldn't make a replacement without increasing capacity
+            eligible_shops = [
+                shop_id for shop_id in bad_shop_ids_set
+                if len(shop_man.shop_dict[shop_id]) < 31
+            ]
 
+            if len(eligible_shops) < needed_placements:
+                chosen_shops = eligible_shops
+            else:
+                chosen_shops = rng.sample(eligible_shops, k=needed_placements)
 
-
-
+            for shop_id in chosen_shops:
+                shop_man.shop_dict[shop_id].append(item)
 
 
 def apply_shop_settings(

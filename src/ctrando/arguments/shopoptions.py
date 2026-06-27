@@ -4,13 +4,16 @@ import functools
 import typing
 
 from ctrando.arguments import argumenttypes
-from ctrando.common import ctenums
+from ctrando.common import ctenums, distribution
+from ctrando.common.ctenums import ItemID
+
 
 class ShopInventoryType(enum.StrEnum):
     VANILLA = "vanilla"
     SHUFFLE = "shuffle"
     FULL_RANDOM = "full_random"
     TIERED_RANDOM = "tiered_random"
+    CUSTOM_RANDOM = "custom_random"
 
 
 class ShopCapacityType(enum.StrEnum):
@@ -29,6 +32,143 @@ class ItemSalePrice(enum.StrEnum):
     VANILLA = "vanilla"
     RANDOM = "random"
     RANDOM_MULTIPLIER = "random_multiplier"
+
+_shop_keyword_dict: dict[str, typing.Sequence[ctenums.ItemID]] = {
+    item_id.name.lower(): (item_id,) for item_id in ctenums.ItemID
+}
+_shop_keyword_dict.update({
+    "cons_d": (ctenums.ItemID.POWER_MEAL, ctenums.ItemID.TONIC),
+    "cons_c": (
+        ctenums.ItemID.MID_TONIC, ctenums.ItemID.SHELTER,
+        ctenums.ItemID.REVIVE, ctenums.ItemID.HEAL,
+    ),
+    "cons_b": (ctenums.ItemID.FULL_TONIC, ctenums.ItemID.ETHER,
+               ctenums.ItemID.ETHER),
+    "cons_a": (
+        ctenums.ItemID.MID_ETHER, ctenums.ItemID.POWER_TAB,
+        ctenums.ItemID.MAGIC_TAB, ctenums.ItemID.LAPIS,
+        ctenums.ItemID.SHIELD, ctenums.ItemID.BARRIER
+    ),
+    "cons_s": (
+        ctenums.ItemID.FULL_ETHER, ctenums.ItemID.FULL_ETHER, ctenums.ItemID.FULL_ETHER,
+        ctenums.ItemID.HYPERETHER, ctenums.ItemID.HYPERETHER,
+        ctenums.ItemID.ELIXIR, ctenums.ItemID.ELIXIR,
+        ctenums.ItemID.MEGAELIXIR
+    ),
+    "gear_starter": (
+        ctenums.ItemID.HIDE_TUNIC, ctenums.ItemID.HIDE_CAP,
+        ctenums.ItemID.KARATE_GI, ctenums.ItemID.WOOD_SWORD,
+        ctenums.ItemID.BRONZEEDGE, ctenums.ItemID.AIR_GUN,
+        ctenums.ItemID.BRONZE_BOW, ctenums.ItemID.TIN_ARM,
+        ctenums.ItemID.DARKSCYTHE,
+    ),
+    "weapon_d": (
+        ctenums.ItemID.IRON_BLADE, ctenums.ItemID.STEELSABER,
+        ctenums.ItemID.LODE_SWORD, ctenums.ItemID.BOLT_SWORD,
+        ctenums.ItemID.IRON_BOW, ctenums.ItemID.IRON_BOW,
+        ctenums.ItemID.LODE_BOW, ctenums.ItemID.LODE_BOW,
+        ctenums.ItemID.DART_GUN, ctenums.ItemID.DART_GUN,
+        ctenums.ItemID.AUTO_GUN, ctenums.ItemID.AUTO_GUN,
+    ) + (ctenums.ItemID.HAMMER_ARM, ctenums.ItemID.MIRAGEHAND)*2,
+    "weapon_c": (
+        ctenums.ItemID.RED_KATANA, ctenums.ItemID.FLINT_EDGE, ctenums.ItemID.AEON_BLADE,
+        ctenums.ItemID.ROBIN_BOW, ctenums.ItemID.SAGE_BOW, ctenums.ItemID.SAGE_BOW,
+        ctenums.ItemID.PLASMA_GUN, ctenums.ItemID.RUBY_GUN, ctenums.ItemID.RUBY_GUN,
+        ctenums.ItemID.STONE_ARM, ctenums.ItemID.DOOMFINGER, ctenums.ItemID.MAGMA_HAND,
+        ctenums.ItemID.FLASHBLADE, ctenums.ItemID.PEARL_EDGE, ctenums.ItemID.PEARL_EDGE
+    ),
+    "weapon_b": (
+        ctenums.ItemID.DEMON_EDGE, ctenums.ItemID.ALLOYBLADE, ctenums.ItemID.STAR_SWORD,
+        ctenums.ItemID.DREAM_BOW, ctenums.ItemID.COMETARROW, ctenums.ItemID.COMETARROW,
+        ctenums.ItemID.DREAM_GUN, ctenums.ItemID.MEGABLAST, ctenums.ItemID.MEGABLAST,
+        ctenums.ItemID.BIG_HAND, ctenums.ItemID.KAISER_ARM, ctenums.ItemID.GIGA_ARM,
+        ctenums.ItemID.RUNE_BLADE, ctenums.ItemID.DEMON_HIT, ctenums.ItemID.BRAVESWORD
+    ),
+    "weapon_a": (
+        ctenums.ItemID.VEDICBLADE, ctenums.ItemID.KALI_BLADE, ctenums.ItemID.SHIVA_EDGE,
+        ctenums.ItemID.SLASHER_2,
+    ) + (
+        ctenums.ItemID.SONICARROW, ctenums.ItemID.SIREN
+    )*2 + (
+        ctenums.ItemID.SHOCK_WAVE, ctenums.ItemID.TERRA_ARM, ctenums.ItemID.BRAVESWORD,
+        ctenums.ItemID.STARSCYTHE
+    )*4,
+    "weapon_s": (
+        ctenums.ItemID.RAINBOW, ctenums.ItemID.VALKERYE, ctenums.ItemID.WONDERSHOT,
+        ctenums.ItemID.CRISIS_ARM, ctenums.ItemID.DOOMSICKLE, ctenums.ItemID.MASAMUNE_2
+    ),
+    "armor_d": (
+        ctenums.ItemID.BRONZEMAIL, ctenums.ItemID.MAIDENSUIT, ctenums.ItemID.IRON_SUIT,
+        ctenums.ItemID.BRONZEHELM, ctenums.ItemID.IRON_HELM, ctenums.ItemID.BERET
+    ),
+    "armor_c": (
+        ctenums.ItemID.TITAN_VEST, ctenums.ItemID.GOLD_SUIT, ctenums.ItemID.DARK_MAIL,
+        ctenums.ItemID.MIST_ROBE, ctenums.ItemID.GOLD_HELM, ctenums.ItemID.ROCK_HELM,
+    ),
+    "armor_b": (
+        ctenums.ItemID.RUBY_VEST, ctenums.ItemID.MESO_MAIL, ctenums.ItemID.LUMIN_ROBE,
+        ctenums.ItemID.FLASH_MAIL, ctenums.ItemID.WHITE_VEST, ctenums.ItemID.BLACK_VEST,
+        ctenums.ItemID.BLUE_VEST, ctenums.ItemID.RED_VEST, ctenums.ItemID.CERATOPPER,
+        ctenums.ItemID.GLOW_HELM, ctenums.ItemID.TABAN_HELM
+    ),
+    "armor_a": (
+        ctenums.ItemID.LODE_VEST, ctenums.ItemID.AEON_SUIT, ctenums.ItemID.TABAN_VEST, ctenums.ItemID.WHITE_MAIL,
+        ctenums.ItemID.BLACK_MAIL, ctenums.ItemID.BLUE_MAIL, ctenums.ItemID.RED_MAIL,
+        ctenums.ItemID.LODE_HELM, ctenums.ItemID.AEON_HELM, ctenums.ItemID.DOOM_HELM,
+        ctenums.ItemID.DARK_HELM, ctenums.ItemID.RBOW_HELM, ctenums.ItemID.MERMAIDCAP,
+        ctenums.ItemID.SIGHT_CAP, ctenums.ItemID.MEMORY_CAP, ctenums.ItemID.TIME_HAT
+    ),
+    "armor_s": (
+        ctenums.ItemID.ZODIACCAPE, ctenums.ItemID.NOVA_ARMOR, ctenums.ItemID.PRISMDRESS,
+        ctenums.ItemID.MOON_ARMOR, ctenums.ItemID.GLOOM_CAPE, ctenums.ItemID.TABAN_SUIT,
+        ctenums.ItemID.VIGIL_HAT, ctenums.ItemID.PRISM_HELM, ctenums.ItemID.GLOOM_HELM,
+        ctenums.ItemID.HASTE_HELM,ctenums.ItemID.SAFE_HELM
+    ),
+    "accessory_d": (ctenums.ItemID.WALLET, ctenums.ItemID.CHARM_TOP, ctenums.ItemID.THIRD_EYE),
+    "accessory_c": (ctenums.ItemID.RIBBON, ctenums.ItemID.POWERGLOVE, ctenums.ItemID.DEFENDER, ctenums.ItemID.SIGHTSCOPE),
+    "accessory_b": (
+        ctenums.ItemID.BANDANA, ctenums.ItemID.POWERSCARF, ctenums.ItemID.MAGICSCARF, 
+        ctenums.ItemID.MUSCLERING, ctenums.ItemID.BERSERKER, ctenums.ItemID.RAGE_BAND
+    ),
+    "accessory_a": (
+        ctenums.ItemID.HIT_RING, ctenums.ItemID.POWER_RING, ctenums.ItemID.MAGIC_RING, 
+        ctenums.ItemID.FRENZYBAND, ctenums.ItemID.WALL_RING, ctenums.ItemID.MAGIC_SEAL, 
+        ctenums.ItemID.SPEED_BELT, ctenums.ItemID.SILVERSTUD, ctenums.ItemID.SILVERERNG
+    ),
+    "accessory_s": (
+        ctenums.ItemID.GREENDREAM, ctenums.ItemID.POWER_SEAL, ctenums.ItemID.GOLD_ERNG, 
+        ctenums.ItemID.GOLD_STUD, ctenums.ItemID.SUN_SHADES, ctenums.ItemID.PRISMSPECS, 
+        ctenums.ItemID.DASH_RING, ctenums.ItemID.AMULET, ctenums.ItemID.FLEA_VEST, 
+        ctenums.ItemID.DRAGON_TEAR, ctenums.ItemID.VALOR_CREST
+    ) + (
+        ctenums.ItemID.POWER_SEAL, ctenums.ItemID.POWER_SEAL,
+        ctenums.ItemID.SUN_SHADES, ctenums.ItemID.FLEA_VEST,
+    ),
+    "rock": (
+        ctenums.ItemID.BLUE_ROCK, ctenums.ItemID.BLACK_ROCK, ctenums.ItemID.GOLD_ROCK,
+        ctenums.ItemID.WHITE_ROCK, ctenums.ItemID.SILVERROCK
+    ),
+    "key_nonprogression": (
+        ctenums.ItemID.PETAL, ctenums.ItemID.FANG, ctenums.ItemID.HORN, 
+        ctenums.ItemID.FEATHER, ctenums.ItemID.PETALS_2, ctenums.ItemID.FANGS_2, 
+        ctenums.ItemID.HORNS_2, ctenums.ItemID.FEATHERS_2,
+    ),
+    "key_progression": (
+        ctenums.ItemID.C_TRIGGER, ctenums.ItemID.CLONE, ctenums.ItemID.PENDANT,
+        ctenums.ItemID.PENDANT_CHARGE, ctenums.ItemID.DREAMSTONE, ctenums.ItemID.RUBY_KNIFE,
+        ctenums.ItemID.JETSOFTIME, ctenums.ItemID.TOOLS, ctenums.ItemID.RAINBOW_SHELL,
+        ctenums.ItemID.PRISMSHARD, ctenums.ItemID.JERKY, ctenums.ItemID.JERKY,
+        ctenums.ItemID.BENT_HILT, ctenums.ItemID.BENT_SWORD, ctenums.ItemID.HERO_MEDAL,
+        ctenums.ItemID.MASAMUNE_1, ctenums.ItemID.TOMAS_POP, ctenums.ItemID.MOON_STONE,
+        ctenums.ItemID.SUN_STONE, ctenums.ItemID.BIKE_KEY, ctenums.ItemID.SEED,
+        ctenums.ItemID.GATE_KEY, ctenums.ItemID.RACE_LOG
+    )
+})
+_shop_item_dist_generator = distribution.DistributionGenerator[ctenums.ItemID](
+    _shop_keyword_dict
+)
+def get_shop_distribution(spec_str: str):
+    return _shop_item_dist_generator.generate_distribution(spec_str)
 
 
 class ShopOptions:
@@ -109,6 +249,17 @@ class ShopOptions:
     _default_item_price_max_multiplier: typing.ClassVar[float] = 2.0
     _default_item_price_randomization_exclusions: typing.ClassVar[list[ctenums.ItemID]] = []
     _default_guaranteed_shop_items: typing.ClassVar[tuple[ctenums.ItemID, ...]] = tuple()
+    _default_shop_item_spec: str = """
+    30: [cons_c], 5: [cons_b], 2: [cons_a], 1:[cons_s],
+    5: [weapon_d], 10: [weapon_c], 5: [weapon_b], 2: [weapon_a], 1:[weapon_s],
+    5: [armor_d], 10: [armor_c], 5: [armor_b], 2:[armor_a], 1:[ armor_s],
+    5: [accessory_d], 10: [accessory_c], 
+    5: [accessory_b], 2:[accessory_a], 1:[accessory_s],
+    1: [rock]
+    1: [key_progression]
+    2: [key_nonprogression]
+    """
+
     def __init__(
             self,
             shop_inventory_randomization: ShopInventoryType = _default_shop_inventory,
@@ -121,6 +272,7 @@ class ShopOptions:
             item_price_max_multiplier: float = _default_item_price_max_multiplier,
             item_price_randomization_exclusions: typing.Optional[list[ctenums.ItemID]] = None,
             guaranteed_shop_items: typing.Sequence[ctenums.ItemID] = _default_guaranteed_shop_items,
+            custom_shop_item_spec: str = _default_shop_item_spec
     ):
         self.shop_inventory_randomization = shop_inventory_randomization
         self.shop_capacity_randomization = shop_capacity_randomization
@@ -150,6 +302,7 @@ class ShopOptions:
         self.item_price_randomization_exclusions = list(item_price_randomization_exclusions)
 
         self.guaranteed_shop_items = list(guaranteed_shop_items)
+        self.custom_shop_item_spec = custom_shop_item_spec
 
     @classmethod
     def get_argument_spec(cls) -> argumenttypes.ArgSpec:
@@ -204,7 +357,21 @@ class ShopOptions:
                 available_pool=[
                     x for x in ctenums.ItemID if x not in cls.unused_items
                 ],
-                allow_duplicates=False
+                allow_duplicates=True
+            ),
+            "custon_shop_item_dist": argumenttypes.StringArgument(
+                "Distribution for shop items",
+                parser=get_shop_distribution,
+                default_value="""
+                30: [cons_c], 5: [cons_b], [2:cons_a], [1: cons_s],
+                5: [weapon_d], 10: [weapon_c], 5: [weapon_b], [2:weapon_a], [1: weapon_s],
+                5: [armor_d], 10: [armor_c], 5: [armor_b], [2:armor_a], [1: armor_s],
+                5: [accessory_d], 10: [accessory_c], 
+                5: [accessory_b], [2:accessory_a], [1: accessory_s],
+                1: [accessory_rock]
+                1: [key_progression]
+                2: [key_nonprogression]
+                """
             )
         }
 
