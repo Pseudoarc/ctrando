@@ -1450,20 +1450,20 @@ def free_script_strings_on_ct_rom(
         free_script_string(ct_rom, ptr)
 
 
-def write_location_script_to_ctrom(
+def write_location_script_to_freespace(
         script: LocationEvent,
         ct_rom: ctrom.CTRom,
-        dest_loc_id: int
-):
-    """Write a script to a CTRom in a given location's spot."""
+        hint: int = 0x410000
+) -> int:
+    """Returns addr where script was written"""
     FSW = ctrom.freespace.FSWriteType
 
     strings_len = sum(len(string) for string in script.strings)
-    string_ptrs_len = 2*len(script.strings)
+    string_ptrs_len = 2 * len(script.strings)
     total_string_len = strings_len + string_ptrs_len
 
     new_string_index = ct_rom.space_manager.get_free_addr(
-        total_string_len, hint = 0x410000)
+        total_string_len, hint=hint)
     string_data_pos = (new_string_index & 0x00FFFF) + string_ptrs_len
 
     # print(f"*** To: [{new_string_index:06X}, {new_string_index + total_string_len:06X}) (strings)***")
@@ -1480,11 +1480,22 @@ def write_location_script_to_ctrom(
     script.set_string_index(to_rom_ptr(new_string_index))
 
     compr_script = ctcomp.compress(script.get_bytearray())
-    new_script_ptr = ct_rom.space_manager.get_free_addr(len(compr_script))
+    new_script_ptr = ct_rom.space_manager.get_free_addr(len(compr_script), hint)
     # print(f"*** To: [{new_script_ptr:06X}, {new_script_ptr+len(compr_script):06X})***")
     ct_rom.seek(new_script_ptr)
     ct_rom.write(compr_script, FSW.MARK_USED)
 
+    return new_script_ptr
+
+
+def write_location_script_to_ctrom(
+        script: LocationEvent,
+        ct_rom: ctrom.CTRom,
+        dest_loc_id: int,
+        hint: int = 0x410000
+):
+    """Write a script to a CTRom in a given location's spot."""
+    new_script_ptr = write_location_script_to_freespace(script, ct_rom, hint)
     set_loc_event_ptr(ct_rom.getbuffer(), dest_loc_id, new_script_ptr)
 
 
