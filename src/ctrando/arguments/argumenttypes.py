@@ -616,6 +616,18 @@ class DistAction(argparse.Action, typing.Generic[_ET]):
         return distribution.Distribution(*weight_val_pairs)
 
 
+def make_dist_action_class(
+        enum_type: typing.Type[_ET],
+        keyword_dict: dict[str, Sequence[_ET]]
+) -> typing.Type[DistAction[_ET]]:
+
+    class CustomDistAction(DistAction):
+        ENUM_TYPE = enum_type
+        KEYWORD_DICT = dict(keyword_dict)
+
+    return CustomDistAction
+
+
 class DistArgument[_ET]:
     def __init__(
             self,
@@ -623,12 +635,14 @@ class DistArgument[_ET]:
             default_value: distribution.Distribution[_ET] | None,
             help_text: str,
             available_pool: Sequence[_ET],
+            keyword_dict: dict[str, Sequence[_ET]],
     ):
         self._lookup_dict = str_to_enum_dict(enum_type)
         self.default_value = default_value
         self.available_pool = set(available_pool)
         self.help_text = help_text
         self.enum_type = enum_type
+        self.keyword_dict = dict(keyword_dict)
 
     def add_to_argparse(
             self,
@@ -638,7 +652,7 @@ class DistArgument[_ET]:
         argparse_obj.add_argument(
             argparse_name, nargs="*",
             help=self.help_text,
-            action=DistAction,
+            action=make_dist_action_class(self.enum_type, self.keyword_dict),
             default=argparse.SUPPRESS
         )
 

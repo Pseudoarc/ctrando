@@ -134,6 +134,7 @@ class DropGroup:
             ctenums.ItemID, None,
             f"Custom rewards for group {ind} drops",
             available_pool=[x for x in ctenums.ItemID if x not in _unusable_items],
+            keyword_dict=dict()
         )
 
         return ret_dict
@@ -219,6 +220,7 @@ class CharmGroup:
             ctenums.ItemID, None,
             f"Custom rewards for group {ind} charms",
             available_pool=[x for x in ctenums.ItemID if x not in _unusable_items],
+            keyword_dict=dict()
         )
 
         # ret_dict["custom_charm_reward_pool" + suffix] = argumenttypes.arg_multiple_from_enum(
