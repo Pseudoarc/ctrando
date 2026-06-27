@@ -9,8 +9,10 @@ from ctrando.asm import assemble
 from ctrando.asm import instructions as inst, assemble
 from ctrando.characters import ctpcstats
 from ctrando.common import byteops, ctrom, freespace, memory, ctenums, randostate, asmpatcher
+from ctrando.compression import ctcompression
 from ctrando.base import apply_openworld, apply_openworld_ow, chesttext, modifyitems, disablecharacter, chestmod
 from ctrando.base import decompressed_graphics
+from ctrando.locations import locationevent, scriptmanager
 
 def apply_tf_compressed_enemy_gfx_hack(ct_rom: ctrom.CTRom):
     '''
@@ -461,10 +463,8 @@ def mark_vanilla_dialogue_free(vanilla_rom: ctrom.CTRom):
         (0x3F4460, 0x3F8C60),  # ptrs and dialogue and junk.
     )
 
-    MARK_FREE = ctrom.freespace.FSWriteType.MARK_FREE
-
     for block in dialogue_blocks:
-        vanilla_rom.space_manager.mark_block(block, MARK_FREE)
+        vanilla_rom.space_manager.mark_block(block, ctrom.freespace.FSWriteType.MARK_FREE)
 
 
 def get_scaling_key_items() -> list[ctenums.ItemID]:
@@ -1299,7 +1299,6 @@ def base_patch_ct_rom(ct_rom: ctrom.CTRom):
     ct_rom.make_exhirom()
 
     mark_initial_free_space(ct_rom)
-    decompressed_graphics.apply_full_patch(ct_rom)
     # apply_fast_ow_movement(ct_rom)  # Moved -- Uses settings for autorun
     patch_blackbird(ct_rom)
     patch_timegauge_alt(ct_rom)
@@ -1322,6 +1321,9 @@ def base_patch_ct_rom(ct_rom: ctrom.CTRom):
 
     chestmod.move_treasure_strings(ct_rom)
     chestmod.add_new_modes(ct_rom)
+
+    move_scripts_to_slow_rom(ct_rom)
+    decompressed_graphics.apply_full_patch(ct_rom)
 
     # Debug
     ct_rom.seek(0x01FFFF)
@@ -2143,6 +2145,50 @@ def apply_ow_warp_patch(
     asmpatcher.apply_jmp_patch(
         routine, hook_addr, ct_rom, return_addr
     )
+
+
+def move_scripts_to_slow_rom(
+        vanilla_ct_rom: ctrom.CTRom
+):
+
+    mark_free = ctrom.freespace.FSWriteType.MARK_FREE
+
+    # usage_data: dict[int, list[ctenums.LocID]] = {ind: [] for ind in range(0x205)}
+    # for loc_id in ctenums.LocID:
+    #     loc_data_st = 0x360000
+    #     event_ind_st = loc_data_st + 14 * loc_id + 8
+    #
+    #     loc_script_ind = int.from_bytes(vanilla_ct_rom.getbuffer()[event_ind_st:event_ind_st + 2], "little")
+    #     usage_data[loc_script_ind].append(loc_id)
+
+    bad_script_ids = set(
+        list(range(75, 82)) +
+        list(range(102, 111)) +
+        list(range(0xE7, 0xEC)) +
+        list(range(0x140, 0x143))
+    )
+    for script_id in range(513):
+        if script_id in bad_script_ids:
+            continue
+        ptr_st = 0x3CF9F0 + 3*script_id
+        ptr = int.from_bytes(vanilla_ct_rom.getbuffer()[ptr_st: ptr_st+3], "little")
+        ptr = byteops.to_file_ptr(ptr)
+
+        script = locationevent.LocationEvent.from_rom(vanilla_ct_rom.getbuffer(), ptr)
+        length = ctcompression.get_compressed_length(vanilla_ct_rom.getbuffer(), ptr)
+
+        vanilla_ct_rom.space_manager.mark_block(
+            (ptr, ptr+length), mark_free
+        )
+        # print(f"Marking ({ptr:06X}, {ptr+length:06X}) free")
+        new_ptr = locationevent.write_location_script_to_freespace(
+            script, vanilla_ct_rom, 0x410000)
+        new_rom_ptr = byteops.to_rom_ptr(new_ptr)
+        vanilla_ct_rom.seek(ptr_st)
+        vanilla_ct_rom.write(new_ptr.to_bytes(3, "little"))
+
+    mark_vanilla_dialogue_free(vanilla_ct_rom)
+    # vanilla_ct_rom.space_manager.print_blocks()
 
 
 def main():
