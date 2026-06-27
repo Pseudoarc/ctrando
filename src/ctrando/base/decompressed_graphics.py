@@ -108,7 +108,9 @@ def patch_graphics_loading(ct_rom: ctrom.CTRom):
 
     total_size = ptr_table_size + len(needed_banks)*rt_size + jump_rt_size
 
-    start_addr = ct_rom.space_manager.get_free_addr(total_size, 0x410000)
+    start_addr = ct_rom.space_manager.get_free_addr(total_size, 0x000000)
+    if start_addr > 0x400000:
+        raise ValueError
     ptr_table_st = start_addr
     gfx_rt_st = start_addr + ptr_table_size
 
@@ -257,7 +259,7 @@ def add_decompressed_gfx_packets(ct_rom: ctrom.CTRom):
         )
 
     for packet_id, packet in packet_dict.items():
-        new_addr = ct_rom.space_manager.get_free_addr(len(packet), 0x430000)
+        new_addr = ct_rom.space_manager.get_free_addr(len(packet), 0x000000)
         ct_rom.seek(new_addr)
         ct_rom.write(packet, ctrom.freespace.FSWriteType.MARK_USED)
 
