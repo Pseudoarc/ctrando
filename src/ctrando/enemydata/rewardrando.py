@@ -119,7 +119,7 @@ _pool_dict: dict[battlerewards.EnemyPoolType, Sequence[ctenums.EnemyID]] = {
 }
 
 
-def get_pool_enemy_ids(pool_type: EnemyPoolType) -> Sequence[ctenums.EnemyID]:
+def get_pool_enemy_ids(pool_type: battlerewards.EnemyPoolType) -> Sequence[ctenums.EnemyID]:
     return list(_pool_dict[pool_type])
 
 
