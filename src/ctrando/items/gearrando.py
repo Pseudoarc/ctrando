@@ -511,6 +511,8 @@ def randomize_weapons_group(
 
     if group_options.effect_scheme != gearrandooptions.GearRandoScheme.NO_CHANGE:
         for item_id, effect in zip(weapon_pool, effects):
+            if effect == WeaponEffects.INVALID_NO_CHANGE:
+                continue
             cur_stats = item_db[item_id].stats
             cur_stats.has_effect = False
 
@@ -524,6 +526,8 @@ def randomize_weapons_group(
 
     if group_options.boost_scheme != gearrandooptions.GearRandoScheme.NO_CHANGE:
         for item_id, boost in zip(weapon_pool, boosts):
+            if boost == BoostID.INVALID_NO_CHANGE:
+                continue
             cur_secondary_stats = item_db[item_id].secondary_stats
             cur_secondary_stats.stat_boost_index = boost
 
