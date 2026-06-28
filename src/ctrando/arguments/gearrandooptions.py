@@ -47,10 +47,11 @@ class DSItem(enum.Enum):
     # Accessories
     VALOR_CREST = enum.auto()
     DRAGONS_TEAR = enum.auto()
-    CHAMPIONS_BADGE = enum.auto
+    CHAMPIONS_BADGE = enum.auto()
 
 
 _weapon_effect_symbol_dict: dict[str, list[WE]] = {
+    "no_change": [WE.INVALID_NO_CHANGE],
     "none": [WE.NONE],
     "wonder": [WE.WONDERSHOT],
     "doom": [WE.DOOMSICKLE],
@@ -78,6 +79,7 @@ def get_weapon_effect_distribution(spec_str: str):
 
 
 _boost_symbol_dict: dict[str, list[BoostID]] = {
+    "no_change": [BoostID.INVALID_NO_CHANGE],
     "none": [BoostID.NOTHING],
     "speed_1": [BoostID.SPEED_1],
     "hit_2": [BoostID.HIT_2],
