@@ -14,6 +14,8 @@ class EnemyPoolType(enum.StrEnum):
     MIDBOSSES = "midbosses"
     BOSSES = "bosses"
     BOSSES_NO_LAVOS = "bosses_no_lavos"
+    NORMAL_ENEMIES = "normal_enemies"
+    HARD_ENEMIES = "hard_enemies"
     CUSTOM = "custom"
 
 

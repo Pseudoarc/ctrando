@@ -56,8 +56,66 @@ _pool_dict: dict[battlerewards.EnemyPoolType, Sequence[ctenums.EnemyID]] = {
         ctenums.EnemyID.ATROPOS_XR, ctenums.EnemyID.GATO, ctenums.EnemyID.SUPER_SLASH,
         ctenums.EnemyID.FLEA_PLUS, ctenums.EnemyID.KRAWLIE, ctenums.EnemyID.DALTON
     ),
-    battlerewards.EnemyPoolType.BOSSES: tuple(bty.get_enemy_ids(bty.get_boss_ids())),
+    battlerewards.EnemyPoolType.BOSSES: (
+        tuple(bty.get_enemy_ids(bty.get_boss_ids()))
+        + (ctenums.EnemyID.SPEKKIO_FROG, ctenums.EnemyID.SPEKKIO_FROG,
+           ctenums.EnemyID.SPEKKIO_OGRE, ctenums.EnemyID.SPEKKIO_OMNICRONE,
+           ctenums.EnemyID.SPEKKIO_MASA_MUNE, ctenums.EnemyID.SPEKKIO_NU)
+    ),
     battlerewards.EnemyPoolType.BOSSES_NO_LAVOS: tuple(bty.get_enemy_ids(_non_lavos_boss_ids)),
+    battlerewards.EnemyPoolType.NORMAL_ENEMIES: (
+        ctenums.EnemyID.REPTITE_GREEN, ctenums.EnemyID.KILWALA, ctenums.EnemyID.HENCH_PURPLE,
+        ctenums.EnemyID.OMICRONE, ctenums.EnemyID.BLUE_IMP, ctenums.EnemyID.GREEN_IMP,
+        ctenums.EnemyID.STONE_IMP, ctenums.EnemyID.ROLY, ctenums.EnemyID.POLY,
+        ctenums.EnemyID.ROLYPOLY, ctenums.EnemyID.ROLY_RIDER, ctenums.EnemyID.BLUE_EAGLET,
+        ctenums.EnemyID.GOLD_EAGLET, ctenums.EnemyID.RED_EAGLET, ctenums.EnemyID.AVIAN_CHAOS,
+        ctenums.EnemyID.IMP_ACE, ctenums.EnemyID.BANTAM_IMP, ctenums.EnemyID.GNASHER,
+        ctenums.EnemyID.GNAWER, ctenums.EnemyID.NAGA_ETTE, ctenums.EnemyID.OCTOPOD,
+        ctenums.EnemyID.OCTOBLUSH, ctenums.EnemyID.OCTOBINO, ctenums.EnemyID.DECEASED,
+        ctenums.EnemyID.DECEDENT, ctenums.EnemyID.MACABRE, ctenums.EnemyID.GUARD,
+        ctenums.EnemyID.FREE_LANCER, ctenums.EnemyID.OUTLAW, ctenums.EnemyID.JUGGLER,
+        ctenums.EnemyID.MAGE, ctenums.EnemyID.FLY_TRAP, ctenums.EnemyID.MEAT_EATER,
+        ctenums.EnemyID.MAN_EATER, ctenums.EnemyID.KRAKKER, ctenums.EnemyID.EGDER,
+        ctenums.EnemyID.REPTITE_PURPLE, ctenums.EnemyID.BLUE_SHIELD, ctenums.EnemyID.YODU_DE,
+        ctenums.EnemyID.INCOGNITO, ctenums.EnemyID.PEEPINGDOOM, ctenums.EnemyID.JINN_BOTTLE,
+        ctenums.EnemyID.EVILWEEVIL, ctenums.EnemyID.TEMPURITE, ctenums.EnemyID.DIABLOS,
+        ctenums.EnemyID.GARGOYLE, ctenums.EnemyID.GRIMALKIN, ctenums.EnemyID.HENCH_BLUE,
+        ctenums.EnemyID.T_POLE, ctenums.EnemyID.CROAKER, ctenums.EnemyID.AMPHIBITE,
+        ctenums.EnemyID.MAD_BAT, ctenums.EnemyID.VAMP, ctenums.EnemyID.SCOUTER,
+        ctenums.EnemyID.FLYCLOPS, ctenums.EnemyID.BUGGER, ctenums.EnemyID.DEBUGGER,
+        ctenums.EnemyID.SORCERER, ctenums.EnemyID.JINN, ctenums.EnemyID.BARGHEST,
+        ctenums.EnemyID.CRATER, ctenums.EnemyID.VOLCANO, ctenums.EnemyID.SHITAKE,
+        ctenums.EnemyID.HETAKE, ctenums.EnemyID.SHIST, ctenums.EnemyID.PAHOEHOE,
+        ctenums.EnemyID.NEREID, ctenums.EnemyID.SAVE_POINT_ENEMY, ctenums.EnemyID.SHADOW,
+        ctenums.EnemyID.ACID, ctenums.EnemyID.ALKALINE, ctenums.EnemyID.ION,
+        ctenums.EnemyID.ANION, ctenums.EnemyID.THRASHER, ctenums.EnemyID.LASHER,
+        ctenums.EnemyID.GOBLIN, ctenums.EnemyID.OGRE, ctenums.EnemyID.CAVE_BAT,
+        ctenums.EnemyID.OGAN, ctenums.EnemyID.FLUNKY, ctenums.EnemyID.GROUPIE,
+        ctenums.EnemyID.WINGED_APE, ctenums.EnemyID.CAVE_APE, ctenums.EnemyID.MEGASAUR,
+        ctenums.EnemyID.BLUE_BEAST, ctenums.EnemyID.RED_BEAST, ctenums.EnemyID.AVIAN_REX,
+        ctenums.EnemyID.RAT, ctenums.EnemyID.GREMLIN, ctenums.EnemyID.RUNNER,
+        ctenums.EnemyID.PROTO_2, ctenums.EnemyID.PROTO_3, ctenums.EnemyID.BUG,
+        ctenums.EnemyID.BEETLE, ctenums.EnemyID.RAIN_FROG, ctenums.EnemyID.BELLBIRD,
+        ctenums.EnemyID.TERRASAUR, ctenums.EnemyID.MUTANT, ctenums.EnemyID.FAKE_FLEA,
+        ctenums.EnemyID.OZZIE_MAGUS_CHAINS, ctenums.EnemyID.ROLY_BOMBER, ctenums.EnemyID.OCTORIDER,
+        ctenums.EnemyID.BYTE, ctenums.EnemyID.RED_SCOUT, ctenums.EnemyID.BLUE_SCOUT,
+        ctenums.EnemyID.BASHER
+    ),
+    battlerewards.EnemyPoolType.HARD_ENEMIES: (
+        ctenums.EnemyID.OMNICRONE, ctenums.EnemyID.SENTRY, ctenums.EnemyID.REAPER,
+        ctenums.EnemyID.DEFUNCT, ctenums.EnemyID.DEPARTED, ctenums.EnemyID.MOHAVOR,
+        ctenums.EnemyID.HEXAPOD, ctenums.EnemyID.BLOB, ctenums.EnemyID.ALIEN,
+        ctenums.EnemyID.BEAST, ctenums.EnemyID.LIZARDACTYL, ctenums.EnemyID.NU,
+        ctenums.EnemyID.NU_2, ctenums.EnemyID.PROTO_4, ctenums.EnemyID.DEBUGGEST,
+        ctenums.EnemyID.GOON, ctenums.EnemyID.PANEL, ctenums.EnemyID.RUMINATOR,
+        ctenums.EnemyID.BASE, ctenums.EnemyID.MARTELLO, ctenums.EnemyID.METAL_MUTE,
+        ctenums.EnemyID.CYBOT, ctenums.EnemyID.TUBSTER, ctenums.EnemyID.GIGASAUR,
+        ctenums.EnemyID.LEAPER, ctenums.EnemyID.FOSSIL_APE,
+        ctenums.EnemyID.OZZIE_FORT, ctenums.EnemyID.SYNCHRITE,
+        ctenums.EnemyID.MASA, ctenums.EnemyID.MUNE, ctenums.EnemyID.OZZIE_ZENAN,
+        ctenums.EnemyID.LASER_GUARD, ctenums.EnemyID.RUBBLE, ctenums.EnemyID.TURRET,
+        ctenums.EnemyID.BOSS_ORB, ctenums.EnemyID.SIDE_KICK
+    )
 }
 
 
