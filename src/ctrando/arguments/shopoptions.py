@@ -37,6 +37,10 @@ _shop_keyword_dict: dict[str, typing.Sequence[ctenums.ItemID]] = {
     item_id.name.lower(): (item_id,) for item_id in ctenums.ItemID
 }
 _shop_keyword_dict.update({
+    "all": tuple(x for x in ctenums.ItemID),
+    "cons_all": tuple(x for x in ctenums.ItemID
+                       if ctenums.ItemID.ACCESSORY_END_BC < x <ctenums.ItemID.PETAL),
+    "gear_all": tuple(x for x in ctenums.ItemID if x < ctenums.ItemID.ACCESSORY_END_BC),
     "cons_d": (ctenums.ItemID.POWER_MEAL, ctenums.ItemID.TONIC),
     "cons_c": (
         ctenums.ItemID.MID_TONIC, ctenums.ItemID.SHELTER,
@@ -359,7 +363,7 @@ class ShopOptions:
                 ],
                 allow_duplicates=True
             ),
-            "custon_shop_item_dist": argumenttypes.StringArgument(
+            "custom_shop_item_spec": argumenttypes.StringArgument(
                 "Distribution for shop items",
                 parser=get_shop_distribution,
                 default_value="""
