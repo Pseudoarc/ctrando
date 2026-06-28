@@ -1752,7 +1752,8 @@ class ArmorEffects(StrIntEnum):
 
 class WeaponEffects(StrIntEnum):
     """Enum of possible effects that can go on weapons."""
-
+    # This is a sentinel value.  If actually assigned will cause an exception.
+    INVALID_NO_CHANGE = 0x100
     NONE = 0x00
     CRIT_X2 = 0x01
     WONDERSHOT = 0x02
@@ -2072,6 +2073,8 @@ class NpcID(StrIntEnum):
 
 
 class BoostID(StrIntEnum):
+    # Invalid BoostID to represent that a boost should not be changed.
+    INVALID_NO_CHANGE = 0x100
     NOTHING = 0x00
     SPEED_1 = 0x01
     HIT_2 = 0x02
