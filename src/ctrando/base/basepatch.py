@@ -359,7 +359,7 @@ def mark_initial_free_space(vanilla_rom: ctrom.CTRom):
         (0x06FC51, 0x06FD00),
         (0x0BF164, 0x0C0000),  # junk + unused
         # (0x0C0424, 0x0C047E),  # Reserved for Stat Boosts
-        (0x0C066C, 0x0C06A4),
+        # (0x0C066C, 0x0C06A4),  # Not really free.  Key item stats
         (0x0C36F4, 0x0C3A09),  # Unused + Junk
         (0x0C43AF, 0x0C4700),
         (0x0CFC2C, 0x0D0000),  # Junk + Unused
