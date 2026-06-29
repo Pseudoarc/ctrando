@@ -33,3 +33,6 @@ class EventMod(locationevent.LocEventMod):
             .add(EC.auto_text_box(item_str_id))
             .get_bytearray(), pos
         )
+
+        pos = script.find_exact_command(EC.party_follow(), pos)
+        script.insert_commands(EC.set_explore_mode(True).to_bytearray(), pos)
