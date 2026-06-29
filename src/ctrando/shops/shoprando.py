@@ -411,7 +411,10 @@ def randomize_shop_inventory(
                 new_items = rng.sample(item_pool, k=capacity)
             elif inv_type == shopoptions.ShopInventoryType.CUSTOM_RANDOM:
                 dist = shop_options.custom_shop_item_spec
-                dist = dist.get_restricted_distribution(shop_options.not_buyable_items, False)
+                dist = dist.get_restricted_distribution(
+                    shop_options.not_buyable_items + list(shop_options.unused_items),
+                    False
+                )
                 new_items = get_random_shop_items(dist, capacity, rng)
             else:
                 raise ValueError
