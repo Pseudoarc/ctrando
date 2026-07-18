@@ -180,13 +180,20 @@ class EventCommand:
 
     @staticmethod
     def change_location(location, x_coord, y_coord, facing=0,
-                        unk=0, wait_vblank=True) -> EventCommand:
+                        unk=0, wait_vblank=True,
+                        force_command_id: int | None = None) -> EventCommand:
         # There are many different change location commands.  I'll update this
         # as I understand their differences.
+
         if wait_vblank:
             cmd = 0xE1
         else:
             cmd = 0xE0
+        if force_command_id is not None:
+            if force_command_id in EventCommand.change_loc_commands:
+                cmd = force_command_id
+            else:
+                raise ValueError(f"Invalid change location command id: {cmd:02X}")
 
         ret_cmd = event_commands[cmd].copy()
         # ret_cmd = copy.copy(event_commands[cmd])
