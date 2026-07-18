@@ -135,7 +135,8 @@ class EventMod(locationevent.LocEventMod):
         change_loc_block = (
             EF()
             .add(EC.assign_val_to_mem(0, memory.Memory.KEEPSONG, 1))
-            .append(
+            .add_if(
+                EC.if_flag(memory.Flags.EPOCH_OBTAINED_LOC),
                 owu.get_epoch_set_block(
                     ctenums.LocID.OW_DARK_AGES,
                     0x270, 0x258
