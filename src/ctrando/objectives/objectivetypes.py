@@ -498,11 +498,11 @@ _boss_spot_locator_dict: dict[bty.BossSpotID, HookLocator] = {
     ),
     bty.BossSpotID.OZZIES_FORT_FLEA_PLUS: CommandSequenceLocator(
         ctenums.LocID.OZZIES_FORT_FLEA_PLUS, 0x09, FID.ACTIVATE,
-        [EC.set_explore_mode(True)], False
+        [EC.party_follow()], False
     ),
     bty.BossSpotID.OZZIES_FORT_SUPER_SLASH: CommandSequenceLocator(
         ctenums.LocID.OZZIES_FORT_SUPER_SLASH, 0x09, FID.ACTIVATE,
-        [EC.set_explore_mode(True)], False
+        [EC.party_follow()], False
     ),
     bty.BossSpotID.OZZIES_FORT_TRIO: CommandSequenceLocator(
         ctenums.LocID.OZZIES_FORT_LAST_STAND, 0x00, FID.STARTUP,
@@ -519,7 +519,7 @@ _boss_spot_locator_dict: dict[bty.BossSpotID, HookLocator] = {
     ),
     bty.BossSpotID.BEAST_CAVE: CommandSequenceLocator(
         ctenums.LocID.BEAST_NEST, 0x00, FID.STARTUP,
-        [EC.set_explore_mode(True)], False
+        [EC.party_follow()], False
     ),
     bty.BossSpotID.ARRIS_DOME: CommandSequenceLocator(
         ctenums.LocID.ARRIS_DOME_GUARDIAN_CHAMBER, 0x09, FID.ACTIVATE,
