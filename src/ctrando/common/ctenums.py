@@ -1926,7 +1926,7 @@ class NpcID(StrIntEnum):
     # {6D} UNUSED
     MOONSTONE = 0x6E
     # {6F} Metal mug
-    # {70} Blue star
+    BLUE_STAR = 0x70
     GIANT_BLUE_STAR = 0x71
     RED_FLAME = 0x72
     GIANT_RED_FLAME = 0x73
