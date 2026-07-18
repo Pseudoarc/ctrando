@@ -28,3 +28,13 @@ class EventMod(locationevent.LocEventMod):
 
         # Copying Crono because the rest have linked functions which will break.
         owu.insert_pc_object(script, ctenums.CharID.MAGUS, 1, 7)
+
+        pos = script.get_object_start(9)
+        pos = script.find_exact_command(EC.return_cmd(), pos)
+        script.insert_commands(
+            EC.set_solidity_properties(False, False)
+            .to_bytearray(), pos
+        )
+        script.set_function(
+            9, FID.TOUCH, EF().add(EC.return_cmd())
+        )
