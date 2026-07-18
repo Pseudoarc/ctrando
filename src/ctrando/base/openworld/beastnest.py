@@ -41,12 +41,20 @@ class EventMod(locationevent.LocEventMod):
         # Set a spot for beast cave boss objective.
         # pos = script.find_exact_command(EC.set_flag(memory.Flags.BEAST_CAVE_BOSS_DEFEATED))
         pos, cmd = script.find_command([0xEA], pos)
+        pos, cmd = script.find_command([0xD8], pos)
+        script.data[pos+2] |= 0x80
         pos, _ = script.find_command([0xEA], pos + len(cmd))
-        script.insert_commands(
-            EF().add(EC.set_explore_mode(False))
+        new_block = (
+            EF()
+            .add(EC.play_song(0x3C))
+            .add(EC.party_follow())
             .add(EC.set_explore_mode(True))
-            .get_bytearray(), pos
         )
+        script.insert_commands(
+           new_block.get_bytearray(), pos
+        )
+        pos += len(new_block)
+        script.delete_commands(pos, 1)
 
         for obj_id in range(0xA, 0x11):
             pos = script.find_exact_command(
