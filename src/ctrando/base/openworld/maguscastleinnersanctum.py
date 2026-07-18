@@ -28,13 +28,50 @@ class EventMod(locationevent.LocEventMod):
         - Add animations to Ayla and Magus
         """
         cls.modify_pc_objs(script)
+        cls.modify_storyline_checks(script)
         cls.modify_magus_scene(script)
+        cls.modify_post_magus_state(script)
 
         pos = script.find_exact_command(
             EC.party_follow(), script.get_object_start(0xC)
         )
         script.insert_commands(EC.set_explore_mode(True).to_bytearray(), pos)
         # TODO: Maybe shorten some of the pauses.
+
+    @classmethod
+    def modify_post_magus_state(cls, script: Event):
+        pos = script.find_exact_command(
+            EC.if_mem_op_value(0x7F0226, OP.EQUALS, 1),
+            script.get_function_start(0, FID.ACTIVATE)
+        )
+        pos, cmd = script.find_command([0x2E], pos)
+        script.insert_commands(
+            EC.if_not_flag(memory.Flags.OW_MAGUS_DEFEATED, len(cmd)+1)
+            .to_bytearray(), pos
+        )
+
+        pos = script.get_function_start(0xA, FID.ACTIVATE) - 1
+        script.insert_commands(
+            EF()
+            .add_if(
+                EC.if_flag(memory.Flags.OW_MAGUS_DEFEATED),
+                EF().add(EC.decision_box(
+                    script.add_py_string(
+                        "Warp to Dark Ages?{line break}"
+                        "   Yes{line break}"
+                        "   No{null}"
+                    ), 1, 2
+                ))
+                .add_if(
+                    EC.if_result_equals(1),
+                    EF().add(EC.change_location(
+                        ctenums.LocID.DARK_AGES_PORTAL, 0x7, 0xA,
+                        Facing.DOWN, 1, False
+                    ))
+                )
+            ).get_bytearray(), pos
+        )
+
 
     @classmethod
     def modify_magus_scene(cls, script: Event):
@@ -95,28 +132,16 @@ class EventMod(locationevent.LocEventMod):
             Facing.DOWN, 1, False
         )
         epoch_loc_cmd.command = 0xDD
-
-        no_epoch_loc_cmd = EC.change_location(
-            ctenums.LocID.OW_MIDDLE_AGES, 0x54, 0x3C,
-            Facing.DOWN, 1, False
-        )
-        no_epoch_loc_cmd.command = 0xDD
         change_loc_block = (
             EF()
             .add(EC.assign_val_to_mem(0, memory.Memory.KEEPSONG, 1))
-            .add_if_else(
-                EC.if_flag(memory.Flags.EPOCH_OBTAINED_LOC),
-                EF()
-                .append(
-                    owu.get_epoch_set_block(
-                        ctenums.LocID.OW_DARK_AGES,
-                        0x270, 0x258
-                    )
+            .append(
+                owu.get_epoch_set_block(
+                    ctenums.LocID.OW_DARK_AGES,
+                    0x270, 0x258
                 )
-                .add(epoch_loc_cmd),
-                EF()
-                .add(no_epoch_loc_cmd)
             )
+            .add(epoch_loc_cmd)
         )
 
         # script.data[pos:pos+len(repl_cmd)] = repl_cmd.to_bytearray()

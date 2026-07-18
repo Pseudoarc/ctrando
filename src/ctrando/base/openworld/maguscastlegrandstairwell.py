@@ -54,7 +54,7 @@ class EventMod(locationevent.LocEventMod):
 
         new_block = (
             EF()
-            .add_if(
+            .add_if_else(
                 EC.if_pc_recruited(ctenums.CharID.MAGUS),
                 EF().add(EC.decision_box(
                     script.add_py_string(
@@ -62,7 +62,18 @@ class EventMod(locationevent.LocEventMod):
                         "   Throne of Defense (normal){line break}"
                         "   Castle Entrance{null}"
                     ), 1, 2
-                ))
+                )),
+                EF()
+                .add_if(
+                    EC.if_flag(memory.Flags.OW_MAGUS_DEFEATED),
+                    EF().add(EC.decision_box(
+                        script.add_py_string(
+                            "Where to?{line break}"
+                            "   Hall of Aggression (normal){line break}"
+                            "   Grand Stairway{null}"
+                        ), 1, 2
+                    ))
+                )
             )
         )
 
