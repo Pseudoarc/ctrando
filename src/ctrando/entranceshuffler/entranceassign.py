@@ -363,20 +363,6 @@ def post_assignment_update_scripts(
     pos, _ = script.find_command([0xDF], pos)
     script.data[pos] = 0xE1
 
-    # Magus Castle - Clean up ending cutscene
-    magus_end_exit = locexitdata.LocOWExits.MAGUS_LAIR_END_SCENE_EPOCH
-    script = script_manager[magus_end_exit.value.loc_id]
-    obj_id, fn_id = magus_end_exit.value.obj_id, magus_end_exit.value.func_id
-    pos = script.get_function_start(obj_id, fn_id)
-    pos, cmd = script.find_command(eventcommand.EventCommand.change_loc_commands, pos)
-    for __ in range(magus_end_exit.value.cmd_id):
-        pos += len(cmd)
-        pos, cmd = script.find_command(eventcommand.EventCommand.change_loc_commands, pos)
-
-    script.insert_commands(
-        EC.assign_val_to_mem(0, memory.Memory.KEEPSONG, 1).to_bytearray(),
-        pos
-    )
     # print(script.get_function(obj_id, fn_id))
     # input()
 
