@@ -459,6 +459,15 @@ def get_default_region_connectors(
             ),
         )
 
+    if logic_options.magus_castle_logical_connection:
+        extra_connectors.append(
+            RegionConnector(
+                "magus_castle", "dark_ages_portal",
+                "defeat_magus_warp",
+                reversible=False
+            )
+        )
+
 
     portal_connectors = [
         RegionConnector(

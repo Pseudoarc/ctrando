@@ -128,7 +128,9 @@ class LogicOptions:
         "incentive_factor", "excluded_spots", "decay_factor",
         "hard_lavos_end_boss", "starter_rewards", "out_of_logic_starter_rewards",
         "force_early_flight", "boats_of_time", "jets_of_time", "min_flight_depth",
-        "lock_gates", "disable_element_locks", "block_zenan_600", "block_zenan_1000"
+        "lock_gates", "disable_element_locks", "block_zenan_600", "block_zenan_1000",
+        "magus_castle_logical_connection"
+
     )
     name: typing.ClassVar[str] = "Logic Options"
     description: typing.ClassVar[str] = "Options for the distribution of key items"
@@ -151,7 +153,8 @@ class LogicOptions:
             lock_gates: bool = False,
             disable_element_locks: bool = False,
             block_zenan_600: bool = False,
-            block_zenan_1000: bool = False
+            block_zenan_1000: bool = False,
+            magus_castle_logical_connection: bool = False,
     ):
         self.additional_key_items = sorted(additional_key_items)
         self.forced_spots = forced_spots
@@ -171,6 +174,7 @@ class LogicOptions:
         self.disable_element_locks = disable_element_locks
         self.block_zenan_600 = block_zenan_600
         self.block_zenan_1000 = block_zenan_1000
+        self.magus_castle_logical_connection = magus_castle_logical_connection
 
 
     @classmethod
@@ -261,8 +265,10 @@ class LogicOptions:
             ),
             "block_zenan_1000": argumenttypes.FlagArg(
                 "Prevent overworld travel across Zenan Bridge in 1000"
+            ),
+            "magus_castle_logical_connection": argumenttypes.FlagArg(
+                "Magus's castle is a logical connection to the dark ages cave."
             )
-
         }
 
     @classmethod
@@ -368,7 +374,7 @@ class LogicOptions:
         )
 
         for arg in ["min_flight_depth", "lock_gates", "disable_element_locks",
-                    "block_zenan_600", "block_zenan_1000"]:
+                    "block_zenan_600", "block_zenan_1000", "magus_castle_logical_connection"]:
             cls.get_argument_spec()[arg].add_to_argparse(
                 argumenttypes.attr_name_to_arg_name(arg), group
             )
