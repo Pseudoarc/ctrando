@@ -478,7 +478,8 @@ def get_scaling_key_items() -> list[ctenums.ItemID]:
             ItemID.BENT_HILT, ItemID.BENT_SWORD,
             ItemID.HERO_MEDAL, ItemID.MASAMUNE_1, ItemID.MASAMUNE_2,
             ItemID.TOMAS_POP, ItemID.MOON_STONE, ItemID.SUN_STONE,
-            ItemID.BIKE_KEY, ItemID.SEED, ItemID.GATE_KEY
+            ItemID.BIKE_KEY, ItemID.SEED, ItemID.GATE_KEY,
+            ItemID.RACE_LOG, ItemID.YAKRA_KEY
         ]
 
 
