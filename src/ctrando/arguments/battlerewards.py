@@ -392,7 +392,7 @@ class XPTPGRewards:
         'fix_tp_doubling': "TP rewards are not duplicated for every gained tech level",
         "xp_penalty_level": "Levels past this level become more difficult to obtain",
         "xp_penalty_percent": "For each level beyond the penalty, the requirement grows by this percent",
-        "level_cap": "Levels beyond the level cap will have prohibitively large requirements.",
+        "level_cap": "Levels can not be gained beyond this cap.",
         "boss_xp_factor": "Boss xp is additionally multiplied by this factor",
         "boss_tp_factor": "Boss tp is additionally multiplied by this factor",
         "midboss_reward_factor": "Midboss xp/tp is additionally multiplied by this factor",
