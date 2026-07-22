@@ -3,7 +3,7 @@ from collections.abc import Iterable, Sequence
 import functools
 import typing
 from ctrando.arguments import argumenttypes, shopoptions
-from ctrando.arguments.argumenttypes import str_to_enum, str_to_enum_dict
+from ctrando.arguments.argumenttypes import str_to_enum_dict
 from ctrando.common import ctenums, memory
 from ctrando.logic.logictypes import RewardType, ScriptReward
 
@@ -280,7 +280,7 @@ class LogicOptions:
         group.add_argument(
             "--additional-key-items",
             nargs="*",
-            type=functools.partial(str_to_enum, enum_type=ctenums.ItemID),
+            type=argumenttypes.str_to_enum_fn_maker(enum_type=ctenums.ItemID),
             help="Extra (non-progression) items to add to the key item pool.",
             default=argparse.SUPPRESS
         )
@@ -288,7 +288,7 @@ class LogicOptions:
         group.add_argument(
             "--forced-spots",
             nargs="*",
-            type=functools.partial(str_to_enum, enum_type=ctenums.TreasureID),
+            type=argumenttypes.str_to_enum_fn_maker(ctenums.TreasureID),
             help="Spots forced to have key items.",
             default=argparse.SUPPRESS
         )
@@ -296,7 +296,7 @@ class LogicOptions:
         group.add_argument(
             "--loose-key-items",
             nargs="*",
-            type=functools.partial(str_to_enum, enum_type=ctenums.ItemID),
+            type=argumenttypes.str_to_enum_fn_maker(enum_type=ctenums.ItemID),
             help="Key items to place randomly instead of in forced spots (when more items then spots)",
             default=argparse.SUPPRESS
         )
@@ -304,7 +304,7 @@ class LogicOptions:
         group.add_argument(
             "--incentive-spots",
             nargs="*",
-            type=functools.partial(str_to_enum, enum_type=ctenums.TreasureID),
+            type=argumenttypes.str_to_enum_fn_maker(enum_type=ctenums.TreasureID),
             help="Spots with increased probability to have key items.",
             default=argparse.SUPPRESS
         )
@@ -319,7 +319,7 @@ class LogicOptions:
         group.add_argument(
             "--excluded-spots",
             nargs="*",
-            type=functools.partial(str_to_enum, enum_type=ctenums.TreasureID),
+            type=argumenttypes.str_to_enum_fn_maker(enum_type=ctenums.TreasureID),
             help="Spots which are forbidden to have key items.",
             default=argparse.SUPPRESS
         )

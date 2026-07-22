@@ -115,9 +115,10 @@ def get_stat_boot_distribution(spec_str: str):
     return _boost_dist_generator.generate_distribution(spec_str)
 
 
+_item_id_to_str_fn = aty.str_to_enum_fn_maker(ctenums.ItemID)
 def weapon_pool_verify(in_string: str) -> ItemID:
     """return stringified weapon name + verificaion"""
-    item_id = aty.str_to_enum(in_string, ItemID)
+    item_id = _item_id_to_str_fn(in_string)
     if not 0 < item_id < ItemID.WEAPON_END_5A:
         raise ValueError(f"{in_string} is not a weapon")
 
@@ -297,7 +298,7 @@ class GearRandoOptions:
                 "weapon_rando_pool"+suffix: aty.MultipleDiscreteSelection(
                     cls.all_weapons, cls._default_weapon_pool,
                     "Weapons whose effects will be shuffled",
-                    choice_from_str_fn=functools.partial(aty.str_to_enum, enum_type=ItemID),
+                    choice_from_str_fn=aty.str_to_enum_fn_maker(enum_type=ItemID),
                     str_from_choice_fn=functools.partial(aty.enum_to_str, enum_type=ItemID)
                 ),
                 "weapon_rando_effect_scheme"+suffix: aty.arg_from_enum(
@@ -351,7 +352,7 @@ class GearRandoOptions:
             "--ds-item-pool",
             nargs="*",
             help="DS Items which may appear.",
-            type=functools.partial(aty.str_to_enum, enum_type=DSItem),
+            type=aty.str_to_enum_fn_maker(enum_type=DSItem),
             default=argparse.SUPPRESS
         )
 

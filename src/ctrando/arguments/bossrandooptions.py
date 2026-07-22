@@ -117,8 +117,8 @@ class BossRandoOptions:
         group.add_argument(
             "--vanilla-boss-spots",
             nargs="*",
-            type=functools.partial(aty.str_to_enum, enum_type=bosstypes.BossSpotID,
-                                   force_enum_names=True),
+            type=aty.str_to_enum_fn_maker(enum_type=bosstypes.BossSpotID,
+                                          force_enum_names=True),
             help="Spots which must keep their vanilla boss (also midboss).",
             default=argparse.SUPPRESS
         )
@@ -126,8 +126,8 @@ class BossRandoOptions:
         group.add_argument(
             "--boss-pool",
             nargs="+",
-            type=functools.partial(aty.str_to_enum, enum_type=bosstypes.BossID,
-                                   force_enum_names=True),
+            type=aty.str_to_enum_fn_maker(enum_type=bosstypes.BossID,
+                                          force_enum_names=True),
             help="Bosses to include in assignment (only when --boss-rando-scheme=\"random\")",
             default=argparse.SUPPRESS
         )
@@ -135,8 +135,8 @@ class BossRandoOptions:
         group.add_argument(
             "--midboss-pool",
             nargs="+",
-            type=functools.partial(aty.str_to_enum, enum_type=bosstypes.BossID,
-                                   force_enum_names=True),
+            type=aty.str_to_enum_fn_maker(enum_type=bosstypes.BossID,
+                                          force_enum_names=True),
             help="Midbosses to include in assignment (only when --midboss-rando-scheme=\"random\")",
             default=argparse.SUPPRESS
         )

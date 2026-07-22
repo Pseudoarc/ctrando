@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import argparse
+import difflib
 import functools
-from collections.abc import Iterable
 import enum
 import inspect
 from dataclasses import dataclass, fields
@@ -100,8 +100,7 @@ def add_enum_to_group(
     def type_fn(string: str) -> _ET:
         if string not in inv_dict:
             raise ValueError
-        return inv_dict.get(string, ...)
-
+        return inv_dict[string]
 
     options: dict[str, typing.Any] = {
         "action": "store",
@@ -235,13 +234,26 @@ def str_to_enum_dict(
     return lookup_dict
 
 
-def str_to_enum(
-        string: str,
-        enum_type: typing.Type[enum.Enum],
+def str_to_enum_fn_maker(
+        enum_type: typing.Type[_ET],
         force_enum_names: bool = False
-):
+) -> Callable[[str], _ET]:
     lookup_dict = str_to_enum_dict(enum_type, force_enum_names)
-    return lookup_dict[string]
+
+    def str_to_enum_fn(string: str):
+        if string not in lookup_dict:
+            options = difflib.get_close_matches(
+                string, lookup_dict.keys()
+            )
+            raise argparse.ArgumentTypeError(
+                f"Option {string} invalid.  Possible choices: " +
+                ", ".join(x for x in options) +
+                "."
+            )
+
+        return lookup_dict[string]
+
+    return str_to_enum_fn
 
 
 def enum_to_str(
@@ -404,8 +416,8 @@ def arg_from_enum(
 ):
     return DiscreteCategorialArg(
         list(enum_type), default_value, help_text,
-        choice_from_str_fn=functools.partial(str_to_enum, enum_type=enum_type,
-                                             force_enum_names=force_enum_names),
+        str_to_enum_fn_maker(enum_type=enum_type,
+                             force_enum_names=force_enum_names),
         str_from_choice_fn=functools.partial(enum_to_str, enum_type=enum_type,
                                              force_enum_names=force_enum_names)
     )
@@ -501,8 +513,9 @@ def arg_multiple_from_enum(
 ):
     if available_pool is not None:
         pool = list(available_pool)
+        str_to_enum_fn = str_to_enum_fn_maker(enum_type, force_enum_names)
         def choice_from_str_fn(val: str) -> _ET:
-            choice = str_to_enum(val, enum_type, force_enum_names)
+            choice = str_to_enum_fn(val)
             if choice not in pool:
                 raise ValueError
             return choice
@@ -513,8 +526,8 @@ def arg_multiple_from_enum(
             return enum_to_str(val, enum_type, force_enum_names)
     else:
         pool = list(enum_type)
-        choice_from_str_fn = functools.partial(
-            str_to_enum, enum_type=enum_type, force_enum_names=force_enum_names)
+        choice_from_str_fn = str_to_enum_fn_maker(
+            enum_type=enum_type, force_enum_names=force_enum_names)
         str_from_choice_fn = functools.partial(
             enum_to_str, enum_type=enum_type, force_enum_names=force_enum_names)
 

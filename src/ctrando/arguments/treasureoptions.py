@@ -7,10 +7,8 @@ import enum
 import typing
 
 from ctrando.arguments import argumenttypes
-from ctrando.arguments.argumenttypes import str_to_enum, str_to_enum_dict
 from ctrando.arguments import shopoptions
 from ctrando.common.ctenums import ItemID, TreasureID as TID
-from ctrando.treasures.treasuretypes import RewardType
 
 
 class TreasurePool(enum.StrEnum):
@@ -326,7 +324,7 @@ class TreasureOptions:
                     x for x in ItemID if x not in shopoptions.ShopOptions.unused_items
                 ], cls._default_johnny_low_item,
                 "Low tier Johnny item reward",
-                choice_from_str_fn=functools.partial(argumenttypes.str_to_enum, enum_type=ItemID),
+                choice_from_str_fn=argumenttypes.str_to_enum_fn_maker(enum_type=ItemID),
                 str_from_choice_fn=functools.partial(argumenttypes.enum_to_str, enum_type=ItemID)
             ),
             "johnny_low_quantity": argumenttypes.DiscreteNumericalArg(
@@ -344,7 +342,7 @@ class TreasureOptions:
                     x for x in ItemID if x not in shopoptions.ShopOptions.unused_items
                 ], cls._default_johnny_mid_item,
                 "Mid tier Johnny item reward",
-                choice_from_str_fn=functools.partial(argumenttypes.str_to_enum, enum_type=ItemID),
+                choice_from_str_fn=argumenttypes.str_to_enum_fn_maker(enum_type=ItemID),
                 str_from_choice_fn=functools.partial(argumenttypes.enum_to_str, enum_type=ItemID)
             ),
             "johnny_mid_quantity": argumenttypes.DiscreteNumericalArg(
@@ -362,7 +360,7 @@ class TreasureOptions:
                     x for x in ItemID if x not in shopoptions.ShopOptions.unused_items
                 ], cls._default_johnny_high_item,
                 "High tier Johnny item reward",
-                choice_from_str_fn=functools.partial(argumenttypes.str_to_enum, enum_type=ItemID),
+                choice_from_str_fn=argumenttypes.str_to_enum_fn_maker(enum_type=ItemID),
                 str_from_choice_fn=functools.partial(argumenttypes.enum_to_str, enum_type=ItemID)
             ),
             "johnny_high_quantity": argumenttypes.DiscreteNumericalArg(
