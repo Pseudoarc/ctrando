@@ -66,7 +66,7 @@ class EventMod(locationevent.LocEventMod):
             .add(EC.load_npc(ctenums.NpcID.GIANT_BLUE_STAR))
             .add(EC.set_object_coordinates_pixels(0x26, 0x146))
             .add_if(
-                EC.if_mem_op_value(cls.room_status_addr, OP.EQUALS, 0),
+                EC.if_not_flag(memory.Flags.ZEAL_HAS_FALLEN),
                 EF()
                 .add(EC.set_own_drawing_status(False))
                 .add(EC.disable_script_processing(obj_id))
@@ -97,5 +97,7 @@ class EventMod(locationevent.LocEventMod):
             .add(EC.assign_val_to_mem(1, memory.Memory.KEEPSONG, 1))
             .add(EC.change_location(0x1A2, 0x07, 0x10,
                                     force_command_id=0xDF))
-            .add(EC.return_cmd())
+        )
+        script.set_function(
+            obj_id, FID.TOUCH, EF().add(EC.return_cmd())
         )
