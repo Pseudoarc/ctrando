@@ -604,6 +604,21 @@ def update_boss_names(
     string = string.replace("robot guards", chosen_category)
     script.strings[11] = ctstrings.CTString.from_str(string, True)
 
+    # Geno Dome
+    spot_id = bty.BossSpotID.GENO_DOME_FINAL
+    boss_id = boss_assign_dict[spot_id]
+    script = script_manager[ctenums.LocID.GENO_DOME_LABS]
+    string = ctstrings.CTString.ct_bytes_to_ascii(script.strings[9])
+    string = string.replace(
+        "Mother Brain", bty.get_boss_dialogue_name(boss_id)
+    )
+    script.strings[9] = ctstrings.CTString.from_str(string, True)
+    # for ind, ct_string in enumerate(script.strings):
+    #     string = ctstrings.CTString.ct_bytes_to_ascii(ct_string)
+    #     print(f"{ind:02X}: {string}")
+    #
+    # input()
+
 
 def write_bosses_to_ct_rom(
         boss_assign_dict: dict[bty.BossSpotID, bty.BossID],
