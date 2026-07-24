@@ -372,16 +372,7 @@ class ShopOptions:
             "custom_shop_item_spec": argumenttypes.StringArgument(
                 "Distribution for shop items",
                 parser=get_shop_distribution,
-                default_value="""
-                30: [cons_c], 5: [cons_b], [2:cons_a], [1: cons_s],
-                5: [weapon_d], 10: [weapon_c], 5: [weapon_b], [2:weapon_a], [1: weapon_s],
-                5: [armor_d], 10: [armor_c], 5: [armor_b], [2:armor_a], [1: armor_s],
-                5: [accessory_d], 10: [accessory_c], 
-                5: [accessory_b], [2:accessory_a], [1: accessory_s],
-                1: [accessory_rock]
-                1: [key_progression]
-                2: [key_nonprogression]
-                """
+                default_value=cls._default_shop_item_spec
             ),
             "show_all_chars_in_shop": argumenttypes.FlagArg(
                 "All characters will be shown when shopping."
