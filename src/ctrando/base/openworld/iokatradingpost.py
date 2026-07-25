@@ -33,6 +33,7 @@ class EventMod(locationevent.LocEventMod):
     trade_selection = 0x7F020C
     materials_required_addr = 0x7F0232
     armor_materials_required_addr = 0x7F0234
+    trade_status = 0x7F0236
     armor_flag = memory.Flags.HAS_ALGETTY_PORTAL
 
     trade_selection_dict: dict[int, TradeSelection] = {
@@ -57,7 +58,25 @@ class EventMod(locationevent.LocEventMod):
         - Remove storyline lock on trading
         """
 
+        #
+        pos = script.find_exact_command(
+            EC.if_storyline_counter_lt(0x8A),
+            script.get_function_start(9, FID.ACTIVATE)
+        )
+        script.replace_jump_cmd(
+            pos, EC.if_mem_op_value(cls.trade_status, OP.EQUALS, 0)
+        )
+
+        #
         pos = script.get_object_start(0)
+        script.insert_commands(
+            EF()
+            .add_if_else(
+                EC.if_flag(cls.upgrade_flag),
+                EF().add(EC.set_byte(cls.trade_status)),
+                EF().add(EC.reset_byte(cls.trade_status))
+            ).get_bytearray(), pos
+        )
 
         while True:
             pos, cmd = script.find_command_opt([0x18], pos)
@@ -67,7 +86,7 @@ class EventMod(locationevent.LocEventMod):
 
             if cmd.args[0] == 0x72:
                 script.delete_jump_block(pos)
-            elif cmd.args[0] == 0x8A:
+            elif cmd.args[0] == 0x8A:  # may not be needed
                 script.replace_jump_cmd(
                     pos, EC.if_not_flag(memory.Flags.HAS_DARK_AGES_TIMEGAUGE_ACCESS)
                 )
@@ -109,6 +128,7 @@ class EventMod(locationevent.LocEventMod):
         # Other
         cls.modify_material_count_checks(script)
         cls.modify_elder_activate(script)
+        cls.add_state_change_sparkle(script)
 
     @classmethod
     def make_trading_post_block(
@@ -127,7 +147,8 @@ class EventMod(locationevent.LocEventMod):
             EF()
             .add(EC.assign_val_to_mem(base_item_id, 0x7F0200, 1))
             .add_if(
-                EC.if_flag(cls.upgrade_flag),
+                # EC.if_flag(cls.upgrade_flag),
+                EC.if_mem_op_value(cls.trade_status, OP.EQUALS, 1),
                 EF().add(EC.assign_val_to_mem(upgrade_item_id, 0x7F0200, 1))
             )
             .add(EC.decision_box(trade_confirm_string_id, 1, 2, "top"))
@@ -339,6 +360,50 @@ class EventMod(locationevent.LocEventMod):
         script.insert_commands(new_block.get_bytearray(), pos)
 
 
+    @classmethod
+    def add_state_change_sparkle(cls, script: locationevent.LocationEvent):
+        """Add a sparkle to switch between base and upgrade."""
+        obj_id = script.append_empty_object()
+        script.set_function(
+            obj_id, FID.STARTUP,
+            EF()
+            .add(EC.load_npc(ctenums.NpcID.GIANT_BLUE_STAR))
+            .add(EC.set_object_coordinates_tile(0x29, 0xA))
+            .add(EC.set_solidity_properties(False, False))
+            .add_if(
+                EC.if_mem_op_value(cls.trade_status, OP.EQUALS, 0),
+                EF()
+                .add(EC.set_own_drawing_status(False))
+                .add(EC.remove_object(obj_id))
+            ).add(EC.return_cmd())
+            .add(EC.end_cmd())
+        )
+
+        script.set_function(
+            obj_id, FID.ACTIVATE,
+            EF()
+            .add_if_else(
+                EC.if_mem_op_value(cls.trade_status, OP.EQUALS, 0),
+                EF()
+                .add(EC.set_byte(cls.trade_status))
+                .add(EC.auto_text_box(
+                    script.add_py_string(
+                        "Trading Post Set to Upgraded Version.{null}"
+                    )
+                )),
+                EF()
+                .add(EC.reset_byte(cls.trade_status))
+                .add(EC.auto_text_box(
+                    script.add_py_string(
+                        "Trading Post Set to Base Version.{null}"
+                    )
+                ))
+            )
+        )
+
+        script.set_function(
+            obj_id, FID.TOUCH, EF().add(EC.return_cmd())
+        )
 
 
 
