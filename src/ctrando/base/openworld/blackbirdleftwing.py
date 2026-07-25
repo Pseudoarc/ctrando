@@ -92,8 +92,19 @@ class EventMod(locationevent.LocEventMod):
 
         # Copy other parts of the script to get the Epoch to fly by and have the party
         # jump on it.
+        # Now also include the bb ducts tab
         epoch_flyby = (
             EF()
+            .add_if(
+                EC.if_not_flag(memory.Flags.BLACKBIRD_DUCTS_MAGIC_TAB),
+                EF()
+                .add(EC.assign_val_to_mem(ctenums.ItemID.MAGIC_TAB, 0x7F0200, 1))
+                .add(EC.add_item_memory(0x7F0200))
+                .add(EC.set_flag(memory.Flags.BLACKBIRD_DUCTS_MAGIC_TAB))
+                .add(EC.auto_text_box(
+                    owu.add_default_treasure_string(script)
+                ))
+            )
             .add(EC.set_flag(memory.Flags.HAS_COMPLETED_BLACKBIRD))
             .add(EC.play_song(0x22)).add(EC.pause(1))
             .add(EC.call_obj_function(6, FID.ARBITRARY_0, 4, FS.SYNC))

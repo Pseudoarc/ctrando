@@ -632,6 +632,54 @@ class ScriptTreasure:
             return Gold(gold_amt)
 
 
+class BackupTreasure(RewardSpotProperty):
+    def __init__(
+            self,
+            base_reward_spot: RewardSpot,
+            backup_reward_spot: RewardSpot,
+            reward: RewardType = ctenums.ItemID.MOP
+    ):
+        self.base_spot = base_reward_spot
+        self.backup_spot = backup_reward_spot
+
+        self.base_spot.reward = reward,
+        self.backup_spot.reward = reward
+        self._reward = reward
+        self.reward = reward
+
+    @property
+    def reward(self) -> RewardType:
+        return self._reward
+
+    @reward.setter
+    def reward(self, val: RewardType):
+        self._reward = val
+        self.base_spot.reward = val
+        self.backup_spot.reward = val
+
+    def write_to_ct_rom(self, ct_rom: ctrom.CTRom,
+                        script_manager: typing.Optional[ScriptManager] = None):
+        self.base_spot.write_to_ct_rom(ct_rom, script_manager)
+        self.backup_spot.write_to_ct_rom(ct_rom, script_manager)
+
+    def read_reward_from_ct_rom(
+            self, ct_rom: ctrom.CTRom,
+            script_manager: typing.Optional[ScriptManager] = None
+
+    ) -> RewardType:
+        reward_base = self.base_spot.read_reward_from_ct_rom(
+            ct_rom, script_manager
+        )
+        reward_backup = self.backup_spot.read_reward_from_ct_rom(
+            ct_rom, script_manager
+        )
+
+        if reward_base != reward_backup:
+            raise ValueError
+
+        return reward_base
+
+
 class SpriteScriptTreasure(ScriptTreasure):
     """ScriptTreasure that gets drawn on screen."""
 
@@ -1815,8 +1863,9 @@ def get_base_treasure_dict() -> dict[ctenums.TreasureID, RewardSpot]:
         TID.DEATH_PEAK_POWER_TAB: ScriptTreasure(
             LocID.DEATH_PEAK_ENTRANCE, 0xA, FID.ACTIVATE
         ),
-        TID.BLACKBIRD_DUCTS_MAGIC_TAB: ScriptTreasure(
-            LocID.BLACKBIRD_DUCTS, 9, FID.ACTIVATE
+        TID.BLACKBIRD_DUCTS_MAGIC_TAB: BackupTreasure(
+            ScriptTreasure(LocID.BLACKBIRD_DUCTS, 9, FID.ACTIVATE),
+            ScriptTreasure(LocID.BLACKBIRD_LEFT_WING, 0x18, FID.STARTUP)
         ),
         TID.KEEPERS_DOME_MAGIC_TAB: ScriptTreasure(
             LocID.KEEPERS_DOME_CORRIDOR, 0x12, FID.ACTIVATE
