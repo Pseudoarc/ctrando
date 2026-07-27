@@ -261,7 +261,8 @@ class StatGrowth(ctt.BinaryData):
     # $C1/F64A 69 FA 25    ADC #$25FA
     # ...
     # $C1/F656 BF 00 00 CC LDA $CC0000,x
-    ROM_RW = ctt.LocalPointerRW(0x01F659, 0x01F64B)
+    # ROM_RW = ctt.LocalPointerRW(0x01F659, 0x01F64B)
+    ROM_RW = ctt.AbsRomRW(0x0C25FA)
 
     _stat_offset_dict: dict[PCStat, int] = {
         PCStat.POWER: 0,
