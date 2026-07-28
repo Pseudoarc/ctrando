@@ -49,7 +49,8 @@ def assign_pc_to_spot(char_id: ctenums.CharID,
 
     # script.insert_commands(new_block.get_bytearray(), pos)
     modify_reunion_scene(char_id, script_man, min_level, min_techlevel,
-                         scale_level_to_lead, scale_techlevel_to_lead)
+                         scale_level_to_lead, scale_techlevel_to_lead,
+                         scale_gear)
 
 
 def modify_reunion_scene(char_id: ctenums.CharID,
