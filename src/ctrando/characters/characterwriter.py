@@ -87,7 +87,7 @@ def apply_mdef_restrictions(
         mdef_growth = pc_stat_man.pc_stat_dict[char_id].stat_growth.get_stat_growth(
             ctpcstats.PCStat.MAGIC_DEFENSE
         )
-        mdef_growth = sorted([0, round(mdef_growth*mdef_scale_factor), 99])[1]
+        mdef_growth = sorted([0, round(mdef_growth*mdef_scale_factor), 0xFF])[1]
         pc_stat_man.pc_stat_dict[char_id].stat_growth.set_stat_growth(
             ctpcstats.PCStat.MAGIC_DEFENSE, mdef_growth
         )
