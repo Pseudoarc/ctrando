@@ -1,0 +1,16 @@
+### Battle Rewards
+xp_scale = 6.0
+tp_scale = 5.0
+split_xp=false
+split_tp=false
+fix_tp_doubling=true  # TP rewards are not duplicated for every gained tech level
+
+xp_penalty_level = 40
+xp_penalty_percent = 25
+level_cap = 55
+
+boss_xp_factor = 0.5           # Boss XP is additionally multiplied by this factor
+boss_tp_factor = 1.0           # Boss TP is additionally multiplied by this factor
+normalize_boss_xp = false      # Bosses give a full level's worth of XP before other modifiers
+midboss_reward_factor = 0.5
+normalize_boss_xp = true

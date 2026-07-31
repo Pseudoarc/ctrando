@@ -1,0 +1,15 @@
+### Battle Rewards
+xp_scale=1.0  # Factor by which to scale XP earned in battle
+tp_scale=1.0  # Factor by which to scale TP earned in battle
+# g_scale=1.0  # Not implemented yet
+split_xp=false  # XP is split among living party members so smaller parties get more
+split_tp=false # TP is split among living party members so smaller parties get more
+fix_tp_doubling=false  # TP rewards are not duplicated for every gained tech level
+
+xp_penalty_level=99      # Levels past this level become more difficult to obtain
+xp_penalty_percent=20    # For each level beyond the penalty, the requirement grows by this percent
+level_cap=99             # Levels beyond the level cap will have prohibitively large requirements.
+
+boss_xp_factor=1.0           # Boss XP is additionally multiplied by this factor
+boss_tp_factor=1.0           # Boss TP is additionally multiplied by this factor
+normalize_boss_xp=false      # Bosses give a full level's worth of XP before other modifiers
