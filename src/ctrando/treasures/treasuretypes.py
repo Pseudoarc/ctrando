@@ -17,6 +17,14 @@ from ctrando.locations.locationevent import FunctionID as FID
 from ctrando.locations.eventcommand import EventCommand as EC, Operation as OP, get_command
 from ctrando.locations.eventfunction import EventFunction as EF
 
+
+# TODO: Make a uniform way to handle rewards
+class RewardBase:
+
+    def get_replacement_reward_string(self, orig_str: str) -> str:
+        ...
+
+
 class Gold(int):
 
     def __new__(cls, val):
@@ -422,8 +430,8 @@ class ChestTreasure:
         self.write_to_ctrom(ct_rom)
 
     def read_reward_from_ct_rom(self,
-                                ct_rom,
-                                script_manager: typing.Optional[ScriptManager] = None) -> RewardType:
+                                ct_rom: ctrom.CTRom,
+                                script_manager: ScriptManager) -> RewardType:
         chest_data = ChestTreasureData.read_from_ctrom(ct_rom, self.chest_index)
 
         if chest_data.is_copying_location():
