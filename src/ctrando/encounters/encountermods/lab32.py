@@ -29,6 +29,7 @@ def apply_all_encounter_reduction(script_manager: ScriptManager):
     )
 
     pos = script.get_object_start(0)
+    bodies: list[EF] = []
     for start_cmd, body_end_cmd in zip(start_cmds, body_end_cmds):
 
         start = script.find_exact_command(start_cmd, pos)
@@ -36,11 +37,12 @@ def apply_all_encounter_reduction(script_manager: ScriptManager):
         body_end = script.find_exact_command(body_end_cmd, body_st)
 
         body = EF().from_bytearray(script.data[body_st:body_end])
+        bodies.append(body)
         script.delete_jump_block(start)
 
+    for body in bodies:
         encounterutils.add_battle_object(script, body)
-
-
 
     pos = script.find_exact_command(EC.return_cmd(), script.get_object_start(1)) + 1
     script.insert_commands(EC.end_cmd().to_bytearray(), pos)
+
