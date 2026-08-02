@@ -513,6 +513,17 @@ def get_huffman_table(rom: bytearray) -> list[bytearray]:
     return huffman_table
 
 
+def pre_process_string(in_str: str) -> str:
+    """Remove bad chars.  Update commonly-used ones"""
+    for keyword in CTString.keywords:
+        in_str = in_str.replace(
+            f"{{{keyword}}}", ""
+        )
+
+    return in_str
+
+
+
 def main():
 
     ct_string = CTString.from_str(
