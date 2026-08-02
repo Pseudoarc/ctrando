@@ -193,14 +193,20 @@ class CTString(bytearray):
         super().__init__(*args, **kwargs)
 
     @classmethod
-    def from_str(cls, string: str, compress: bool = False):
+    def from_str(
+            cls, string: str, compress: bool = False,
+            ignore_undisplayable: bool = False
+    ):
         ct_str = cls()
 
         pos = 0
 
         while pos < len(string):
-            (ct_bytes, pos) = cls.get_token(string, pos)
-            ct_str.extend(ct_bytes)
+            try:
+                (ct_bytes, pos) = cls.get_token(string, pos)
+                ct_str.extend(ct_bytes)
+            except ValueError:
+                pos += 1
 
         if compress:
             ct_str = cls.huffman_tree.compress(ct_str)
@@ -265,7 +271,6 @@ class CTString(bytearray):
                 vals = [0x03, int(keyword.split(' ')[1], 16)]
                 ct_bytes = bytes(vals)
             else:
-                print(keyword.split(' ')[0])
                 raise ValueError(f"unknown keyword \'{keyword}\'")
         elif char == '\r' and pos+1 < len(string) and string[pos+1] == '\n':
             length = 2
@@ -510,11 +515,10 @@ def get_huffman_table(rom: bytearray) -> list[bytearray]:
 
 def main():
 
-    with open("/home/ross/Documents/ct.sfc", "rb") as infile:
-        rom = infile.read()
-        get_huffman_table(rom)
-        input()
-    pass
+    ct_string = CTString.from_str(
+        "as;lkdjf^^p{~ok", compress=True, ignore_undisplayable=True
+    )
+    print(ct_string)
 
 
 if __name__ == '__main__':
