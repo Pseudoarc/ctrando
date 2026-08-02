@@ -81,6 +81,7 @@ class GeneralOptions:
     options_file: typing.Optional[Path] = None
     list_keys: typing.Optional[KeyListType] = None
     preset: typing.Optional[str] = None
+    multiworld: typing.Optional[bool] = None
 
     @classmethod
     def add_group_to_parser(cls, parser: argparse.ArgumentParser):
@@ -132,6 +133,12 @@ class GeneralOptions:
             type=lambda x: preset_dict[x]
         )
 
+        general_group.add_argument(
+            "--multiworld",
+            help="Enable Archipelago multiworld",
+            default=argparse.SUPPRESS
+        )
+
         argumenttypes.add_str_enum_to_group(
             general_group, "--list-keys",
             KeyListType,
@@ -176,13 +183,19 @@ class GeneralOptions:
         else:
             list_keys = None
 
+        if hasattr(namespace, "multiworld"):
+            multiworld = getattr(namespace, "multiworld")
+        else:
+            multiworld = None
+
         return cls(
             input_file=input_file,
             output_directory=output_directory,
             seed=seed,
             options_file=options_file,
             list_keys=list_keys,
-            preset=preset
+            preset=preset,
+            multiworld=multiworld
         )
 
 

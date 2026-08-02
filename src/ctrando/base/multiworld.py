@@ -1,13 +1,13 @@
 """Allow items to be gained by setting certain memory."""
 
-from ctrando.asm import instructions as inst, assemble
+from ctrando.asm import assemble
+from ctrando.asm import instructions as inst
 from ctrando.asm.instructions import AddressingMode as AM
+from ctrando.common import asmpatcher, byteops, ctrom, freespace
 
-from ctrando.common import asmpatcher, byteops, ctenums, ctrom
-from ctrando.strings import ctstrings
+ROM_VALIDATION_ADDR = 0x3F8C03
 
-
-def patch_remote_items(
+def _patch_remote_items(
         ct_rom: ctrom.CTRom,
         item_count_addr: int,
         buffer_addr: int
@@ -47,3 +47,20 @@ def patch_remote_items(
     rom_addr = byteops.to_rom_ptr(addr)
     ct_rom.seek(0x0000AD)
     ct_rom.write(inst.JSL(rom_addr, AM.LNG).to_bytearray())
+
+def write_player_validation_data(ct_rom: ctrom.CTRom, encoded_name: bytes):
+    """Write the player validation data to the ROM"""
+    ct_rom.seek(ROM_VALIDATION_ADDR)
+    ct_rom.write(b"APRDI" + encoded_name)
+
+def apply_multiworld_patches(ct_rom: ctrom.CTRom):
+    """Apply the  multiworld related patches and changes"""
+
+    # Reserve memory for player validation
+    block = (ROM_VALIDATION_ADDR, 0x20)
+    if not ct_rom.space_manager.is_block_free(block):
+        raise freespace.FreeSpaceError(f"Multiworld validation block already in use: {block}")
+
+    ct_rom.space_manager.mark_block(block, freespace.FSWriteType.MARK_USED)
+
+    _patch_remote_items(ct_rom, 0x7F003B, 0x7F0039)
