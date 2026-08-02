@@ -20,8 +20,8 @@ from ctrando.shops import shoptypes, shoprando, shopchars
 from ctrando.attacks import (
     pctechrandomizer, techdescriptions, techmenu, techrebalance
 )
-from ctrando.base import basepatch, xptpmod, modifymaps, chesttext
 from ctrando.bosses import staticbossscaling, bossrando, bosstypes, lavosgauntlettypes, lavosgauntlet
+from ctrando.base import basepatch, xptpmod, modifymaps, chesttext, multiworld
 from ctrando.characters import characterwriter, charactermods
 from ctrando.common import ctrom, ctenums, randostate
 from ctrando.common.random import RNGType
@@ -452,6 +452,9 @@ def get_ctrom_from_config(
     effecttypes.expand_effect_mods(
         ct_rom, config.pctech_manager
     )
+
+    if settings.general_options.multiworld:
+        multiworld.apply_multiworld_patches(ct_rom)
 
     if settings.shop_options.show_all_chars_in_shop:
         shopchars.patch_shop_visibility(ct_rom)
