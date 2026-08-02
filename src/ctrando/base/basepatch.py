@@ -1327,9 +1327,6 @@ def base_patch_ct_rom(ct_rom: ctrom.CTRom):
 
     chestmod.move_treasure_strings(ct_rom)
     chestmod.add_new_modes(ct_rom)
-    remoteitems.patch_remote_items(
-        ct_rom, 0x7F003B, 0x7F0039
-    )
     move_scripts_to_slow_rom(ct_rom)
     decompressed_graphics.apply_full_patch(ct_rom)
 
