@@ -149,18 +149,10 @@ def add_new_modes(
 
     normal_return_rom_addr = 0xC01F23
 
-
-
     # 16 bit A/X/Y
     # We have the treasure bytes in A.  X/Y seem unimportant.
     # DP is 0x0100
-    rt: assemble.ASMList = [
-        inst.BIT(0x2000, AM.IMM16),   # Using 0x2000 for alt rewards
-        inst.BNE("tech_reward"),
-        inst.AND(0x01FF, AM.IMM16),
-        inst.STA(0x7F0200, AM.LNG),
-        inst.JMP(0xC01E6D, AM.LNG),
-        "tech_reward",
+    tech_level_rt: assemble.ASMList = [
         inst.AND(0x0007, AM.IMM16),
         inst.TAX(),
         inst.TXY(),
@@ -254,6 +246,52 @@ def add_new_modes(
         inst.LDA(0x20, AM.IMM8),
         inst.TSB(0x54, AM.DIR),
         inst.STZ(0x02A1, AM.ABS),
+        inst.RTL()
+    ]
+
+    tech_level_rt_addr = asmpatcher.add_jsl_routine(
+        tech_level_rt, ct_rom
+    )
+    tech_level_rt_rom_addr = byteops.to_rom_ptr(tech_level_rt_addr)
+
+
+    ap_item_rt: assemble.ASMList = [
+        inst.AND(0x00FF, AM.IMM16),
+        inst.SEP(0x20),
+        inst.STA(0x2A, AM.DIR),
+        inst.LDA(0x97, AM.DIR),
+        inst.STA(0x2E, AM.DIR),
+        inst.LDA(0x01, AM.IMM8),
+        inst.STA(0x29, AM.DIR),
+        inst.STZ(0x30, AM.DIR),
+        inst.LDA(0x20, AM.IMM8),
+        inst.TRB(0x54, AM.DIR),
+        inst.STZ(0x02A1, AM.ABS),
+        inst.RTL()
+    ]
+
+    ap_item_rt_addr = asmpatcher.add_jsl_routine(
+        ap_item_rt, ct_rom
+    )
+    ap_item_rt_rom_addr = byteops.to_rom_ptr(ap_item_rt_addr)
+
+    # 16 bit A/X/Y
+    # We have the treasure bytes in A.  X/Y seem unimportant.
+    # DP is 0x0100
+    rt: assemble.ASMList = [
+        inst.BIT(0x2000, AM.IMM16),   # Using 0x2000 for alt rewards
+        inst.BNE("alt_reward"),
+        inst.AND(0x01FF, AM.IMM16),
+        inst.STA(0x7F0200, AM.LNG),
+        inst.JMP(0xC01E6D, AM.LNG),
+        "alt_reward",
+        inst.BIT(0x0100, AM.IMM16),
+        inst.BEQ("tech_level"),
+        inst.JSL(ap_item_rt_rom_addr, AM.LNG),
+        inst.BRA("jump_back"),
+        "tech_level",
+        inst.JSL(tech_level_rt_rom_addr, AM.LNG),
+        "jump_back",
         inst.JMP(normal_return_rom_addr, AM.LNG)
     ]
 
