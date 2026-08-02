@@ -3,6 +3,7 @@ This module provides data types for manipulating spots in the game which can
 give a reward.  It also provides an association of ctenums.TreasureID to the
 appropriate treasure objects.
 """
+import enum
 import typing
 
 from ctrando.base.openworld import iokatradingpost
@@ -169,6 +170,16 @@ class ChestRW(ctt.RomRW):
 
         space_man.mark_block((start, end), ctrom.freespace.FSWriteType.MARK_FREE)
 
+# Gold and Empty are checked as flags
+# 0x20 is considered a flag for other reward.
+class ChestMode(enum.IntEnum):
+    ITEM = 0x00
+    GOLD = 0x80
+    EMPTY = 0x40
+    TECH_LEVEL = 0x20
+    AP_ITEM = 0x21
+
+
 
 class ChestTreasureData(ctt.BinaryData):
     """
@@ -182,24 +193,39 @@ class ChestTreasureData(ctt.BinaryData):
     y_coord = ctt.byte_prop(1)
     has_gold = ctt.bytes_prop(2, 2, 0x8000)
 
-    def set_has_techlevel(self, char_id: ctenums.CharID):
-        self.has_gold = False
-        self.is_empty = False
-        self[2] = 0x20
-        self[3] = char_id
+    @property
+    def chest_mode(self) -> ChestMode:
+        return ChestMode(self[3])
+
+    @chest_mode.setter
+    def chest_mode(self, val: ChestMode):
+        self[3] = int(ChestMode(val))
+
+    @property
+    def ap_item_string_index(self):
+        if self.chest_mode != ChestMode.AP_ITEM:
+            raise ValueError
+
+        return self[4]
+
+    @ap_item_string_index.setter
+    def ap_item_string_index(self, val: int):
+        if self.chest_mode != ChestMode.AP_ITEM:
+            raise ValueError
+
+        self[4] = val
+
 
     @property
     def has_techlevel(self) -> bool:
-        return bool(self[3] & 0x20)
+        return self.chest_mode == ChestMode.TECH_LEVEL
 
     @has_techlevel.setter
     def has_techlevel(self, val: bool):
         if val:
-            self.has_gold = False
-            self.is_empty = False
-            self[3] |= 0x20
+            self.chest_mode = ChestMode.TECH_LEVEL
         else:
-            self[3] &= (0xFF-0x20)
+            self[3] = ChestMode.ITEM
 
     @property
     def techlevel_char(self) -> ctenums.CharID | None:
