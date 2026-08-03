@@ -192,9 +192,14 @@ def repoint_stat_boosts(ct_rom: ctrom.CTRom, new_file_addr: int):
     ct_rom.seek(0x0292CF)  # During menu
     ct_rom.write(new_rom_addr.to_bytes(3, "little"))
 
+
+    # C1CE9F  A2 D7 29       LDX #$29D7
     # C1CED1  A2 D7 29       LDX #$29D7
-    ct_rom.seek(0x01CED2)
-    ct_rom.write(int.to_bytes(new_rom_addr & 0xFFFF, 2, "little"))
+    # C1CF03  A2 D7 29       LDX #$29D7
+    for addr in (0x01CEA0, 0x01CED2, 0x01CF04):
+        ct_rom.seek(addr)
+        ct_rom.seek(addr)
+        ct_rom.write(int.to_bytes(new_rom_addr & 0xFFFF, 2, "little"))
 
     # FDB159  BF 01 00 CC    LDA $CC0001,X
     ct_rom.seek(0x3DB15A)  # Before Battle
