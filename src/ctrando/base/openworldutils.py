@@ -474,15 +474,17 @@ def get_portal_exit_func(
     return ret_func
 
 
+def get_default_treasure_string() -> str:
+    return "{line break}Got 1 {item}!{line break}" "{itemdesc}{null}"
+
+
 def add_default_treasure_string(script: Event) -> int:
     """
     Put the standard "Got 1 {item} ... " string into a script.  Returns the
     index of the inserted string.
     """
 
-    return script.add_py_string(
-        "{line break}Got 1 {item}!{line break}" "{itemdesc}{null}"
-    )
+    return script.add_py_string(get_default_treasure_string())
 
 
 def get_add_item_block_function(
@@ -518,7 +520,7 @@ def insert_add_item_block(
 
     if got_item_string_index is None:
         got_item_string_index = script.add_py_string(
-            "{line break}Got 1 {item}!{line break}" "{itemdesc}{null}"
+            get_default_treasure_string()
         )
 
     block = (

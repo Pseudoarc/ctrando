@@ -5,8 +5,10 @@ appropriate treasure objects.
 """
 import enum
 import typing
+from dataclasses import dataclass
 
 from ctrando.base.openworld import iokatradingpost
+from ctrando.base import openworldutils as owu
 from ctrando.common import byteops, ctenums, ctrom, cttypes as ctt, memory
 from ctrando.common.ctenums import TreasureID as TID, LocID
 from ctrando.locations import locationevent, eventcommand
@@ -19,15 +21,92 @@ from ctrando.locations.eventfunction import EventFunction as EF
 
 
 # TODO: Make a uniform way to handle rewards
-class RewardBase:
+class RewardBase(typing.Protocol):
 
-    def get_replacement_reward_string(self, orig_str: str) -> str:
+    def assign_to_chest_data(self, chest_data: "ChestTreasureData"):
+        ...
+
+    def get_replacement_reward_string(
+            self, reward_str: str, orig_gold_amt: int | None) -> str:
+
+        if "itemdesc" in reward_str or orig_gold_amt is not None:
+            return self.get_full_reward_string()
+        elif "{item}" in reward_str:
+            return reward_str.replace(
+                "{item}", self.get_short_name()
+            )
+
+        raise ValueError
+
+    def assign_to_script(self, script: locationevent.LocationEvent,
+                         add_reward_pos: int,
+                         set_mem_pos: int | None):
+        ...
+
+    def get_setter_event_function(self) -> EF:
+        ...
+
+    def get_full_reward_string(self) -> str:
+        ...
+
+    def get_short_name(self) -> str:
         ...
 
 
-class Gold(int):
+class ItemReward(RewardBase):
+    def __init__(self, item_id: ctenums.ItemID):
+        self.item_id = item_id
 
-    def __new__(cls, val):
+    def assign_to_chest_data(self, chest_data: "ChestTreasureData"):
+        chest_data.chest_mode = ChestMode.ITEM
+        chest_data.held_item = self.item_id
+
+    def get_short_name(self) -> str:
+        return str(self.item_id)
+
+    def get_full_reward_string(self) -> str:
+        return owu.get_default_treasure_string()
+
+    def assign_to_script(self, script: locationevent.LocationEvent,
+                         add_reward_pos: int,
+                         set_mem_pos: int | None):
+        if set_mem_pos is None:
+            raise ValueError("Can't find item memory set command")
+        script.data[set_mem_pos + 1] = int(self.item_id)
+
+        if script.data[add_reward_pos] == 0xCD:  # Gold
+            script.insert_commands(
+                EC.add_item_memory(0x7F0200).to_bytearray(), add_reward_pos
+            )
+            script.delete_commands(add_reward_pos + 2, 1)
+        elif script.data[add_reward_pos] != 0xC7:
+            script.data[add_reward_pos + 1] = int(self.item_id)
+
+    def get_setter_event_function(self) -> EF:
+        return (
+            EF()
+            .add(EC.assign_val_to_mem(self.item_id, 0x7F0200))
+            .add(EC.add_item_memory(0x7F0200))
+        )
+
+    def get_replacement_reward_string(
+            self, reward_str: str, orig_gold_amt: int | None) -> str:
+        if "item" in reward_str:
+            return reward_str
+
+        # Must be gold
+        treasure_part = ScriptTreasure._treasure_str_part(reward_str, orig_gold_amt)
+        if orig_gold_amt not in treasure_part:
+            raise ValueError
+
+        return reward_str.replace(
+            treasure_part, "{item}!{line break}{itemdesc}"
+        )
+
+
+class Gold(int, RewardBase):
+
+    def __new__(cls, val) -> typing.Self:
         int_val = int(val)
 
         if int_val % 2 != 0:
@@ -36,16 +115,60 @@ class Gold(int):
         if int_val not in range(0, 2**16):
             raise ValueError("Gold must be in range(0, 65355)")
 
-        result = int.__new__(cls, int_val)
-        return result
+        result = super().__new__(cls, int_val)
+        return result  # noinspection PyTypeChecker
+
+    def assign_to_script(self, script: locationevent.LocationEvent,
+                         add_reward_pos: int,
+                         set_mem_pos: int | None):
+        add_gold_cmd = EC.add_gold(self)
+        script.insert_commands(add_gold_cmd.to_bytearray(), add_reward_pos)
+        script.delete_commands(add_reward_pos + len(add_gold_cmd), 1)
+
+    def get_setter_event_function(self) -> EF:
+        return EF().add(EC.add_gold(self))
+
+    def get_short_name(self) -> str:
+        return "Cash"
+
+    def get_full_reward_string(self) -> str:
+        return f"{{line break}}Got {self}G!{{null}}"
+
+    def get_replacement_reward_string(
+            self, reward_str: str, orig_gold_amt: int | None) -> str:
+        if orig_gold_amt is not None:
+            for target in (f"{orig_gold_amt}G",
+                           f"{orig_gold_amt} G"):
+                if target in reward_str:
+                    repl_part = target
+                    break
+            else:
+                raise ValueError
+
+            return reward_str.replace(target, self.get_reward_str())
+
+        return super().get_replacement_reward_string(reward_str, orig_gold_amt)
 
     def get_reward_str(self) -> str:
         return f"{self}G"
 
 
-class TechLevelReward:
+class TechLevelReward(RewardBase):
     def __init__(self, char_id: ctenums.CharID):
         self.char_id = char_id
+
+    def assign_to_chest_data(self, chest_data: "ChestTreasureData"):
+        chest_data.chest_mode = ChestMode.TECH_LEVEL
+        chest_data.techlevel_char = self.char_id
+
+    def assign_to_script(self, script: locationevent.LocationEvent,
+                         add_reward_pos: int,
+                         set_mem_pos: int | None):
+        new_block = self.get_setter_event_function()
+        script.insert_commands(
+            new_block.get_bytearray(), add_reward_pos
+        )
+        script.delete_commands(add_reward_pos + len(new_block), 1)
 
     def get_setter_event_function(self) -> EF:
         char_tech_level_addr = 0x7E2830 + self.char_id
@@ -60,6 +183,12 @@ class TechLevelReward:
         )
         return new_block
 
+    def get_short_name(self) -> str:
+        return self.get_reward_str()
+
+    def get_full_reward_string(self) -> str:
+        return f"{{line break}}{self.get_desc_str()}{{null}}"
+
     def get_desc_str(self) -> str:
         char_name = str(self.char_id).title()
         return f"{char_name}'s Tech Level Increased!"
@@ -69,7 +198,7 @@ class TechLevelReward:
         return f"{char_name} Tech"
 
 
-class APReward:
+class APReward(RewardBase):
     def __init__(self,
                  item_name: str,
                  player_name: str,
@@ -77,6 +206,26 @@ class APReward:
         self.item_name = item_name
         self.player_name = player_name
         self.local_string_index = local_string_index
+
+    def assign_to_chest_data(self, chest_data: "ChestTreasureData"):
+        chest_data.chest_mode = ChestMode.AP_ITEM
+        if self.local_string_index is None:
+            raise ValueError("Local string index must be set before writing")
+        chest_data.ap_item_string_index = self.local_string_index
+
+    def assign_to_script(self, script: locationevent.LocationEvent,
+                         add_reward_pos: int,
+                         set_mem_pos: int | None):
+        script.delete_commands(add_reward_pos, 1)
+
+    def get_setter_event_function(self) -> EF:
+        return EF()
+
+    def get_short_name(self) -> str:
+        return "AP Item"
+
+    def get_full_reward_string(self) -> str:
+        return self.get_reward_str()
 
     def get_reward_str(self):
         return (
@@ -108,7 +257,7 @@ class _RewardSpotBase(typing.Protocol):
 
     def read_reward_from_ct_rom(
             self, ct_rom: ctrom.CTRom,
-            script_manager: typing.Optional[ScriptManager] = None
+            script_manager: ScriptManager
 
     ) -> RewardType:
         """Read the reward currently held in this spot"""
@@ -380,16 +529,23 @@ class ChestTreasureData(ctt.BinaryData):
     @reward.setter
     def reward(self, val: RewardType):
         if isinstance(val, ctenums.ItemID):
-            self.held_item = val
-        elif isinstance(val, TechLevelReward):
-            self.has_techlevel = True
-            self.techlevel_char = val.char_id
-        elif isinstance(val, APReward):
-            self.chest_mode = ChestMode.AP_ITEM
-            self.ap_item_string_index = val.local_string_index
-        else:
-            self.has_gold = True
-            self.gold = val
+            val = ItemReward(val)
+
+        val.assign_to_chest_data(self)
+        # if isinstance(val, ctenums.ItemID):
+        #     self.chest_mode = ChestMode.ITEM
+        #     self.held_item = val
+        # elif isinstance(val, TechLevelReward):
+        #     self.chest_mode = ChestMode.TECH_LEVEL
+        #     self.has_techlevel = True
+        #     self.techlevel_char = val.char_id
+        # elif isinstance(val, APReward):
+        #     self.chest_mode = ChestMode.AP_ITEM
+        #     self.ap_item_string_index = val.local_string_index
+        # else:
+        #     self.chest_mode = ChestMode.GOLD
+        #     self.has_gold = True
+        #     self.gold = val
 
     @property
     def copy_location(self) -> ctenums.LocID:
@@ -477,6 +633,12 @@ class ChestTreasure:
         )
 
 
+@dataclass
+class _ScriptRewardData:
+    add_reward_pos: int
+    set_mem_pos: int
+
+
 class ScriptTreasure:
     """
     A class for writing rewards to places in a script where a reward can be
@@ -484,18 +646,20 @@ class ScriptTreasure:
     """
 
     def __init__(
-        self,
-        location: ctenums.LocID,
-        object_id: int,
-        function_id: int,
-        reward: RewardType = ctenums.ItemID.MOP,
-        item_num: int = 0,
+            self,
+            location: ctenums.LocID,
+            object_id: int,
+            function_id: int,
+            reward: RewardType = ctenums.ItemID.MOP,
+            item_num: int = 0,
+            num_reward_strings: int = 1
     ):
         self.reward = reward
         self.location = location
         self.object_id = object_id
         self.function_id = function_id
         self.item_num = item_num
+        self.num_reward_strings = num_reward_strings
 
     def __repr__(self):
         x = (
@@ -507,24 +671,54 @@ class ScriptTreasure:
         return x
 
     @staticmethod
+    def _treasure_str_part(
+            string: str,
+            orig_gold_amt: int | None
+    ) -> str:
+        """Only meant for normal treasure strings (gold/item)"""
+        if "{itemdesc}" in string:
+            return string
+        if "{item}" in string:
+            return "{item}"
+        if orig_gold_amt is not None:
+            for target in (f"{orig_gold_amt}G",
+                           f"{orig_gold_amt} G"):
+                if target in string:
+                    return target
+
+        return None
+
+    @staticmethod
+    def _get_item_replacement_str(
+            treasure_str: str,
+            orig_gold_amt: int | None,
+    ) -> str:
+        if "item" in treasure_str:
+            return treasure_str
+
+        # Must be gold
+        treasure_part = ScriptTreasure._treasure_str_part(treasure_str, orig_gold_amt)
+        if str(orig_gold_amt) not in treasure_part:
+            raise ValueError
+
+        return treasure_str.replace(
+            treasure_part, "{item}!{line break}{itemdesc}"
+        )
+
+    @staticmethod
     def update_get_reward_text(
-        script: locationevent.LocationEvent,
-        start: int | None,
-        end: int,
-        reward: RewardType,
-        orig_gold_amt: typing.Optional[int] = None,
+            script: locationevent.LocationEvent,
+            start: int | None,
+            end: int,
+            reward: RewardType,
+            orig_gold_amt: typing.Optional[int] = None,
+            num_updates: int = 1
     ):
-        if isinstance(reward, ctenums.ItemID):
-            if reward == ctenums.ItemID.NONE:
-                repl_str = "Nothing"
-            else:
-                repl_str = "{item}!{line break}{itemdesc}"
-        else:
-            repl_str = f"{reward} G"
 
         pos: typing.Optional[int] = start
         text_cmds = [0xBB, 0xC1, 0xC2]
-        while True:
+        updates_made = 0
+        while updates_made < num_updates:
             pos, cmd = script.find_command_opt(text_cmds, pos, end)
 
             if pos is None:
@@ -536,38 +730,37 @@ class ScriptTreasure:
             string = script.strings[str_ind]
             py_string = ctstrings.CTString.ct_bytes_to_ascii(string)
 
-            orig_str = None
-            if "{item}!{line break}{itemdesc}" in py_string:
-                orig_str = "{item}!{line break}{itemdesc}"
-            elif "{item}!" in py_string:
-                orig_str = "{item}!"
-            elif "{item}" in py_string:
-                orig_str = "{item}"
-                repl_str = repl_str.replace("!{line break}{itemdesc}", "")
-            elif f"{orig_gold_amt}G" in py_string:
-                orig_str = f"{orig_gold_amt}G!"
-            elif f"{orig_gold_amt} G" in py_string:
-                orig_str = f"{orig_gold_amt} G!"
+            # orig_str = None
+            # if "{item}!{line break}{itemdesc}" in py_string:
+            #     orig_str = "{item}!{line break}{itemdesc}"
+            # elif "{item}!" in py_string:
+            #     orig_str = "{item}!"
+            # elif "{item}" in py_string:
+            #     orig_str = "{item}"
+            #     repl_str = repl_str.replace("!{line break}{itemdesc}", "")
+            # elif f"{orig_gold_amt}G" in py_string:
+            #     orig_str = f"{orig_gold_amt}G!"
+            # elif f"{orig_gold_amt} G" in py_string:
+            #     orig_str = f"{orig_gold_amt} G!"
 
+            orig_str = ScriptTreasure._treasure_str_part(py_string, orig_gold_amt)
             if orig_str is not None:
-                if isinstance(reward, TechLevelReward):
-                    repl_str = reward.get_reward_str()
-                    new_str = py_string.replace(orig_str, repl_str)
-                    new_str = new_str.replace("{itemdesc}",
-                                              reward.get_desc_str())
-                elif isinstance(reward, APReward):
-                    new_str = reward.get_reward_str()
+                if isinstance(reward, ctenums.ItemID):
+                    new_str = ScriptTreasure._get_item_replacement_str(py_string, orig_gold_amt)
                 else:
-                    new_str = py_string.replace(orig_str, repl_str)
-                    if "{item}" not in repl_str or orig_str == "{item}":
-                        new_str = new_str.replace("{itemdesc}", "")
+                    new_str = reward.get_replacement_reward_string(
+                        py_string, orig_gold_amt
+                    )
 
-                new_ind = script.add_py_string(new_str)
-                script.data[pos + 1] = new_ind
+
+                updates_made += 1
+
+                if new_str != py_string:
+                    new_ind = script.add_py_string(new_str)
+                    script.data[pos + 1] = new_ind
                 # print(orig_str, new_str)
                 # print(py_string)
                 # input()
-                break
 
             pos += len(cmd)
 
@@ -578,16 +771,11 @@ class ScriptTreasure:
         return fn_start, fn_end
 
 
-    def write_to_ct_rom(self, ct_rom: ctrom.CTRom,
-                        script_manager: typing.Optional[ScriptManager] = None):
-        """
-        Insert the desired reward into the event script in the state
-        """
-        if script_manager is None:
-            raise ValueError
-        script = script_manager[self.location]
-        fn_start, fn_end = self._get_search_start_end(script)
-
+    def _find_mem_set_add_rwd(
+            self, script: locationevent.LocationEvent,
+            fn_start: int,
+            fn_end: int,
+    ):
         pos: typing.Optional[int] = fn_start
         num_mem_set_cmds_found = 0
         mem_set_pos: typing.Optional[int] = None
@@ -607,8 +795,6 @@ class ScriptTreasure:
             pos, cmd = script.find_command_opt([0x4F, 0xCA, 0xCD, 0xC7, 0xFD], pos, fn_end)
 
             if pos is None:
-                # print(self)
-                # print(num_mem_set_cmds_found, num_add_rwd_cmds_found)
                 raise locationevent.CommandNotFoundException(
                     f"{self.location}: " "Failed to find item setting commands."
                 )
@@ -631,6 +817,23 @@ class ScriptTreasure:
 
             pos += len(cmd)
 
+        return _ScriptRewardData(add_rwd_pos, mem_set_pos)
+
+
+    def write_to_ct_rom(self, ct_rom: ctrom.CTRom,
+                        script_manager: typing.Optional[ScriptManager] = None):
+        """
+        Insert the desired reward into the event script in the state
+        """
+        if script_manager is None:
+            raise ValueError
+        script = script_manager[self.location]
+        fn_start, fn_end = self._get_search_start_end(script)
+
+        pos_data = self._find_mem_set_add_rwd(script, fn_start, fn_end)
+        add_rwd_pos = pos_data.add_reward_pos
+        mem_set_pos = pos_data.set_mem_pos
+
         if script.data[add_rwd_pos] == 0xCD:
             add_gold_cmd = eventcommand.get_command(script.data, add_rwd_pos)
             added_gold = add_gold_cmd.args[-1]
@@ -638,39 +841,15 @@ class ScriptTreasure:
             added_gold = None
 
         ScriptTreasure.update_get_reward_text(
-            script, mem_set_pos, fn_end, self.reward, added_gold
+            script, mem_set_pos, fn_end, self.reward, added_gold, self.num_reward_strings
         )
 
         if isinstance(self.reward, ctenums.ItemID):
-            # Update the mem_set and add_rwd locations
-            if mem_set_pos is None:
-                raise ValueError("Can't find item memory set command")
-            script.data[mem_set_pos + 1] = int(self.reward)
-            if script.data[add_rwd_pos] == 0xCD:
-                script.insert_commands(
-                    EC.add_item_memory(0x7F0200).to_bytearray(), add_rwd_pos
-                )
-                script.delete_commands(add_rwd_pos+2, 1)
-            elif script.data[add_rwd_pos] != 0xC7:
-                script.data[add_rwd_pos + 1] = int(self.reward)
-        elif isinstance(self.reward, TechLevelReward):
-            new_block = self.reward.get_setter_event_function()
-            script.insert_commands(
-                new_block.get_bytearray(), add_rwd_pos
-            )
-            script.delete_commands(add_rwd_pos + len(new_block), 1)
-        elif isinstance(self.reward, APReward):
-            script.delete_commands(add_rwd_pos, 1)
-        else:  # The reward is gold
-            add_gold_cmd = EC.add_gold(self.reward)
+            reward = ItemReward(self.reward)  # Wrap ItemID
+        else:
+            reward = self.reward
 
-            # Note, we do insert then add because of weirdness if this happens
-            # to be at the end of an if-block.
-            script.insert_commands(add_gold_cmd.to_bytearray(), add_rwd_pos)
-            script.delete_commands(add_rwd_pos + len(add_gold_cmd), 1)
-
-            # Also note, we keep the mem set command intact in case we ever
-            # want to use this method to set this ScriptTreasure another time.
+        reward.assign_to_script(script, add_rwd_pos, mem_set_pos)
 
     def read_reward_from_ct_rom(
             self, ct_rom: ctrom.CTRom,
@@ -872,12 +1051,8 @@ class MasaMuneTreasure(ScriptTreasure):
                 EC.assign_val_to_mem(self.reward, 0x7F0200, 1).to_bytearray(), pos
             )
             repl_str = "{item}"
-        elif isinstance(self.reward, TechLevelReward):
-            repl_str = "Tech Level"
-        elif isinstance(self.reward, APReward):
-            repl_str = "AP Item"
         else:
-            repl_str = f"{int(self.reward)}G"
+            repl_str = self.reward.get_short_name()
 
         dec_str = ctstrings.CTString.ct_bytes_to_ascii(script.strings[str_ind]).replace("Masamune", repl_str)
         script.strings[str_ind] = ctstrings.CTString.from_str(dec_str, True)
@@ -928,12 +1103,7 @@ class BekklerTreasure(ScriptTreasure):
         if isinstance(self.reward, ctenums.ItemID):
             script.data[pos + 1] = int(self.reward)
         else:
-            if isinstance(self.reward, TechLevelReward):
-                repl_str = self.reward.get_reward_str()
-            elif isinstance(self.reward, APReward):
-                repl_str = "AP Item"
-            else:
-                repl_str = "wad of cash"
+            repl_str = self.reward.get_short_name()
 
             pos, cmd = script.find_command([0xC0], pos)
             str_ind = int(cmd.args[0])
@@ -964,14 +1134,10 @@ class PrismShardTreasure(ScriptTreasure):
         string = script.strings[str_ind]
         py_string = ctstrings.CTString.ct_bytes_to_ascii(string)
 
-        if isinstance(self.reward, Gold | TechLevelReward):
-            reward_str = self.reward.get_reward_str()
+        if not isinstance(self.reward, ctenums.ItemID):
+            reward_str = self.reward.get_short_name()
             py_string = py_string.replace("{item}", reward_str)
             script.strings[str_ind] = ctstrings.CTString.from_str(py_string)
-        elif isinstance(self.reward, APReward):
-            py_string = py_string.replace("{item}", "AP Item")
-            script.strings[str_ind] = ctstrings.CTString.from_str(py_string)
-
 
 
 class ChargeableTreasure(ScriptTreasure):
@@ -988,12 +1154,10 @@ class ChargeableTreasure(ScriptTreasure):
         )
         str_id = script.data[pos + 1]
 
-        if isinstance(self.reward, TechLevelReward):
-            item_str = "Tech Level"
-        elif isinstance(self.reward, APReward):
-            item_str = "AP Item"
+        if isinstance(self.reward, ctenums.ItemID):
+            item_str = "{item}"
         else:
-            item_str = str(self.reward)
+            item_str = self.reward.get_short_name()
 
         new_str_id = script.add_py_string(
             f"A {item_str} is reacting to the pendant.{{linebreak+0}}"
@@ -1002,6 +1166,15 @@ class ChargeableTreasure(ScriptTreasure):
             "   No.{null}"
         )
         script.data[pos+1] = new_str_id
+
+        if isinstance(self.reward, ctenums.ItemID):
+            # Warning:  This will break re-reading treasure assignment
+            #           because of a strange number of memory set commands.
+            #           But this is required for ds names to be correct.
+            script.insert_commands(
+                EC.assign_val_to_mem(self.reward, 0x7F0200, 1)
+                .to_bytearray(), pos
+            )
 
 
 class SplitChargeableTreasure:
@@ -1089,33 +1262,12 @@ class HuntingRangeNuTreasure(ScriptTreasure):
             if isinstance(self.reward, ctenums.ItemID):
                 script.data[pos+1] = self.reward
             else:
-                if isinstance(self.reward, TechLevelReward):
-                    new_block = self.reward.get_setter_event_function()
-                    new_block.add(
-                        EC.auto_text_box(
-                            script.add_py_string(
-                                "{line break}" +
-                                self.reward.get_desc_str() + "{null}"
-                            )
-                        )
+                new_block = self.reward.get_setter_event_function()
+                new_block.add(
+                    EC.auto_text_box(
+                        script.add_py_string(self.reward.get_full_reward_string())
                     )
-                elif isinstance(self.reward, APReward):
-                    new_block = (
-                        EF()
-                        .add(EC.auto_text_box(
-                            script.add_py_string(self.reward.get_reward_str())
-                        ))
-                    )
-                else:
-                    new_block = (
-                        EF().add(EC.add_gold(self.reward))
-                        .add(EC.auto_text_box(
-                            script.add_py_string(
-                                "{line break}"
-                                f"Got {self.reward}G!{{null}}"
-                            )
-                        ))
-                    )
+                )
                 script.insert_commands(new_block.get_bytearray(), pos)
                 pos += len(new_block)
                 script.delete_commands(pos, 3)
@@ -1792,7 +1944,8 @@ def get_base_treasure_dict() -> dict[ctenums.TreasureID, RewardSpot]:
             LocID.ZENAN_BRIDGE_BOSS, object_id=0x1, function_id=FID.STARTUP
         ),
         TID.SNAIL_STOP_KEY: ScriptTreasure(
-            LocID.SNAIL_STOP, object_id=0x09, function_id=0x01
+            LocID.SNAIL_STOP, object_id=0x09, function_id=0x01,
+            num_reward_strings=2
         ),
         TID.LAZY_CARPENTER: ScriptTreasure(
             LocID.CHORAS_CARPENTER_1000, object_id=0x08, function_id=0x01
@@ -1812,44 +1965,9 @@ def get_base_treasure_dict() -> dict[ctenums.TreasureID, RewardSpot]:
         TID.TABAN_GIFT_SUIT: ScriptTreasure(
             LocID.LUCCAS_WORKSHOP, object_id=0x08, function_id=0x01, item_num=0
         ),
-        # TID.TRADING_POST_RANGED_WEAPON: ScriptTreasure(
-        #     location=LocID.IOKA_TRADING_POST,
-        #     object_id=0x0C,
-        #     function_id=0x04,
-        #     item_num=0,
-        # ),
-        # TID.TRADING_POST_ACCESSORY: ScriptTreasure(
-        #     location=LocID.IOKA_TRADING_POST,
-        #     object_id=0x0C,
-        #     function_id=0x04,
-        #     item_num=1,
-        # ),
-        # TID.TRADING_POST_TAB: ScriptTreasure(
-        #     location=LocID.IOKA_TRADING_POST,
-        #     object_id=0x0C,
-        #     function_id=0x04,
-        #     item_num=2,
-        # ),
-        # TID.TRADING_POST_MELEE_WEAPON: ScriptTreasure(
-        #     location=LocID.IOKA_TRADING_POST,
-        #     object_id=0x0C,
-        #     function_id=0x04,
-        #     item_num=3,
-        # ),
-        # TID.TRADING_POST_ARMOR: ScriptTreasure(
-        #     location=LocID.IOKA_TRADING_POST,
-        #     object_id=0x0C,
-        #     function_id=0x04,
-        #     item_num=4,
-        # ),
-        # TID.TRADING_POST_HELM: ScriptTreasure(
-        #     location=LocID.IOKA_TRADING_POST,
-        #     object_id=0x0C,
-        #     function_id=0x04,
-        #     item_num=5,
-        # ),
         TID.JERKY_GIFT: ScriptTreasure(
-            location=LocID.PORRE_MAYOR_1F, object_id=0x08, function_id=0x01, item_num=0
+            location=LocID.PORRE_MAYOR_1F, object_id=0x08, function_id=0x01, item_num=0,
+            num_reward_strings=3
         ),
         TID.DENADORO_ROCK: ScriptTreasure(
             location=LocID.DENADORO_CAVE_OF_MASAMUNE_EXTERIOR,
@@ -1890,7 +2008,8 @@ def get_base_treasure_dict() -> dict[ctenums.TreasureID, RewardSpot]:
         TID.TATA_REWARD: ScriptTreasure(LocID.TATAS_HOUSE_1F, 9, FID.ACTIVATE),
         TID.TOMA_REWARD: ScriptTreasure(LocID.CHORAS_CAFE, 0xD, FID.ACTIVATE),
         TID.MELCHIOR_FORGE_MASA: ScriptTreasure(
-            LocID.MELCHIORS_KITCHEN, 8, FID.ACTIVATE
+            LocID.MELCHIORS_KITCHEN, 8, FID.ACTIVATE,
+            num_reward_strings=2
         ),
         TID.EOT_GASPAR_REWARD: ScriptTreasure(
             LocID.END_OF_TIME, 0x1C, FID.ACTIVATE

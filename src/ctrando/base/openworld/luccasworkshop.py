@@ -26,6 +26,7 @@ class EventMod(locationevent.LocEventMod):
         cls.update_lucca_object(script)
         cls.always_show_taban(script)
         cls.modify_taban_rewards(script)
+        cls.update_sunstone_rewards(script)
 
     @classmethod
     def modify_taban_rewards(cls, script: locationevent.LocationEvent):
@@ -63,11 +64,6 @@ class EventMod(locationevent.LocEventMod):
         script.delete_commands(pos, 3)
 
 
-
-
-
-
-
     @classmethod
     def update_sunstone_rewards(cls, script: locationevent.LocationEvent):
         """
@@ -76,11 +72,11 @@ class EventMod(locationevent.LocEventMod):
         """
 
         pos = script.get_function_start(3, FID.ARBITRARY_1)
-        pos = script.find_exact_command(EC.add_item(    ctenums.ItemID.WONDERSHOT))
+        pos = script.find_exact_command(EC.add_item(ctenums.ItemID.WONDERSHOT))
         owu.update_add_item(script, pos)
 
         pos = script.find_exact_command_opt(EC.add_item(ctenums.ItemID.SUN_SHADES))
-        owu.update_charge_chest_base_loc(script, pos)
+        owu.update_add_item(script, pos)
 
     @classmethod
     def update_lucca_object(cls, script: locationevent.LocationEvent):

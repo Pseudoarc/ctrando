@@ -58,3 +58,4 @@ class EventMod(locationevent.LocEventMod):
         pos = script.get_function_start(0x19, FID.ACTIVATE)
         script.replace_jump_cmd(pos, EC.if_has_item(ctenums.ItemID.PENDANT_CHARGE))
 
+        owu.update_add_item(script, pos)

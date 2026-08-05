@@ -24,7 +24,10 @@ class EventMod(locationevent.LocEventMod):
         Modify Blackbird Ducts for an Open World.
         - Add Crono and Magus to the map.
         - Pre-set some flags to avoid plot
+        - treasure pickup
         """
         owu.insert_pc_object(script, ctenums.CharID.MAGUS, 1, 6)
         owu.insert_pc_object(script, ctenums.CharID.CRONO, 1, 1)
         owu.add_exploremode_to_partyfollows(script)
+
+        owu.update_add_item(script, script.get_function_start(9, FID.ACTIVATE))

@@ -1,4 +1,5 @@
 """Openworld Death Peak Entrance"""
+from ctrando.base import openworldutils as owu
 from ctrando.common import ctenums, memory
 from ctrando.locations import locationevent
 from ctrando.locations.locationevent import LocationEvent as Event, FunctionID as FID
@@ -16,6 +17,7 @@ class EventMod(locationevent.LocEventMod):
         Update the Death Peak Entrance Event.
         - Spawn Poyozos with clone and trigger
         - Exploremode after partyfollow
+        - Tab pickup text
         """
 
         new_block = (
@@ -45,3 +47,9 @@ class EventMod(locationevent.LocEventMod):
         pos += len(ins_block)
 
         script.delete_commands(pos, 1)
+
+        # tab pickup
+        owu.update_add_item(
+            script,
+            script.get_function_start(0xA, FID.ACTIVATE)
+        )

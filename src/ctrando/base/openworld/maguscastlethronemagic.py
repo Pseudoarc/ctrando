@@ -30,6 +30,7 @@ class EventMod(locationevent.LocEventMod):
 
         start, end = script.get_function_bounds(0xD, FID.ACTIVATE)
         owu.remove_item_pause(script, start, end)
+        owu.update_add_item(script, start)
 
     @classmethod
     def modify_flea_scenes(cls, script: Event):
