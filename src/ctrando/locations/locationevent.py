@@ -322,6 +322,10 @@ class LocationEvent:
 
         return self.add_string(ct_str)
 
+    def replace_string(self, new_string: str, index: int):
+        ct_str = ctstrings.CTString.from_str(new_string, compress=True)
+        self.strings[index] = ct_str
+
     def add_string(self, new_string: bytearray) -> int:
         self.strings.append(new_string)
         self.modified_strings = True

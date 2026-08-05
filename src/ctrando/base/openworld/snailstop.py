@@ -23,6 +23,7 @@ class EventMod(locationevent.LocEventMod):
         """
         Modify Snail Stop for an Open World.
         - Modify flags/checks for receiving reward.
+        - Add normal treasure string
         """
 
         pos = script.find_exact_command(
@@ -45,4 +46,12 @@ class EventMod(locationevent.LocEventMod):
         script.insert_commands(
             EC.assign_val_to_mem(ctenums.ItemID.JERKY, 0x7F0200, 1).to_bytearray(),
             pos
+        )
+        pos = script.find_exact_command(
+            EC.add_item(ctenums.ItemID.JERKY), pos
+        ) + len(EC.add_item(ctenums.ItemID.JERKY))
+
+        script.insert_commands(
+            EC.auto_text_box(owu.add_default_treasure_string(script))
+            .to_bytearray(), pos
         )

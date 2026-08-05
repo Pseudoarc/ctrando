@@ -9,6 +9,8 @@ from ctrando.locations.eventfunction import EventFunction as EF
 from ctrando.locations.locationevent import FunctionID as FID, LocationEvent as Event
 
 from ctrando.base import openworldutils as owu
+from strings import ctstrings
+
 
 class EventMod(locationevent.LocEventMod):
     """EventMod for Guardia Throneroom 600"""
@@ -33,6 +35,13 @@ class EventMod(locationevent.LocEventMod):
         cls.modify_manoria_return_scene(script)
         cls.modify_shell_turn_in(script)
         cls.fix_partyfollows(script)
+
+        # Chef treasure normalization
+        pos = script.get_function_start(0xF, FID.STARTUP)
+        for ind in range(2):
+            pos, cmd = script.find_command([0xCA], pos)
+            pos, cmd = script.find_command([0xC1], pos)
+            script.data[pos + 1] = owu.add_default_treasure_string(script)
 
     @classmethod
     def update_pc_startups(cls, script: Event):
