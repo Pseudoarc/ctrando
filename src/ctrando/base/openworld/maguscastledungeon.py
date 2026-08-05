@@ -35,6 +35,7 @@ class EventMod(locationevent.LocEventMod):
         # Fast tab
         pos, end = script.get_function_bounds(8, FID.ACTIVATE)
         owu.remove_item_pause(script, pos, end)
+        owu.update_add_item(script, pos)
         pos = script.find_exact_command(EC.party_follow(), pos)
         script.delete_commands(pos, 1)
 

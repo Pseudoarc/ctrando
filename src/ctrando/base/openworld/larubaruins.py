@@ -7,6 +7,7 @@ from ctrando.locations.eventcommand import EventCommand as EC, FuncSync as FS, \
     Operation as OP, Facing, get_command
 from ctrando.locations.eventfunction import EventFunction as EF
 from ctrando.locations.locationevent import FunctionID as FID, LocationEvent as Event
+from strings import ctstrings
 
 
 class EventMod(locationevent.LocEventMod):
@@ -21,6 +22,7 @@ class EventMod(locationevent.LocEventMod):
         - Add dreamstone turn-in to the chief.
         - Remove storyline lock on the name change/rock Nu
         - Remove scene of the girl saying Kino is taken
+        - Normalize silverrock pickup
         """
 
         # Ayla normal startup, delete the storyline check
@@ -34,6 +36,15 @@ class EventMod(locationevent.LocEventMod):
 
         cls.remove_intro_scenes(script)
         cls.modify_chief(script)
+
+        pos = script.find_exact_command(
+            EC.add_item(ctenums.ItemID.SILVERROCK),
+            script.get_function_start(0xD, FID.ACTIVATE)
+        )
+        pos, cmd = script.find_command([0xBB], pos)
+        str_index = cmd.args[0]
+        script.replace_string(owu.get_default_treasure_string(), str_index)
+
 
     @classmethod
     def remove_intro_scenes(cls, script: Event):

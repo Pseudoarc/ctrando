@@ -18,7 +18,6 @@ class EventMod(locationevent.LocEventMod):
         - Update tab treasure spot on ground.
         """
 
-        owu.remove_item_pause(
-            script,
-            script.get_function_start(0xB, FID.ACTIVATE)
-        )
+        pos = script.get_function_start(0xB, FID.ACTIVATE)
+        owu.update_add_item(script, pos)
+        owu.remove_item_pause(script, pos)

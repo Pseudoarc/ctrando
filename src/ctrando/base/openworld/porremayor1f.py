@@ -42,6 +42,8 @@ class EventMod(locationevent.LocEventMod):
             "Never heard of it!{null}"
         )
 
+        default_treasure_str_id = owu.add_default_treasure_string(script)
+
         mayor_obj_id = 8
         pos = script.get_function_start(mayor_obj_id, FID.ACTIVATE)
         script.insert_commands(
@@ -50,8 +52,21 @@ class EventMod(locationevent.LocEventMod):
         )
 
         pos = script.find_exact_command(EC.add_item(ctenums.ItemID.MOON_STONE), pos)
-        script.replace_command_at_pos(pos, EC.add_item_memory(0x7F0200))
-        script.insert_commands(EC.set_explore_mode(False).to_bytearray(), pos)
+        block = (
+            EF()
+            .add(EC.set_explore_mode(False))
+            .add(EC.add_item_memory(0x7F0200))
+        )
+        script.insert_commands(block.get_bytearray(), pos)
+        pos += len(block)
+        script.delete_commands(pos, 1)
+
+        pos, cmd = script.find_command([0xF1], pos)
+        pos += len(cmd)
+        script.insert_commands(
+            EC.auto_text_box(owu.add_default_treasure_string(script)).to_bytearray(),
+            pos
+        )
 
         pos = script.find_exact_command(EC.jump_forward(0), pos)
         script.insert_commands(EC.set_explore_mode(True).to_bytearray(), pos)

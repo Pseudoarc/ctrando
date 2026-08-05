@@ -28,6 +28,11 @@ class EventMod(locationevent.LocEventMod):
         cls.shorten_pyramid_cutscene(script)
         cls.split_pyramid_chests(script)
 
+        for obj_id in (0x13, 0x14):
+            pos = script.get_function_start(obj_id, FID.ACTIVATE)
+            owu.update_add_item(script, pos)
+
+
     @classmethod
     def shorten_pyramid_cutscene(cls, script: Event):
         """
