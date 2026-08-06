@@ -135,7 +135,7 @@ class GeneralOptions:
         )
 
         general_group.add_argument(
-            "--multiworld",
+            "--multiworld", action="store_true",
             help="Enable Archipelago multiworld",
             default=argparse.SUPPRESS
         )

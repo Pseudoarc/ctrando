@@ -453,9 +453,6 @@ def get_ctrom_from_config(
         ct_rom, config.pctech_manager
     )
 
-    if settings.general_options.multiworld:
-        multiworld.apply_multiworld_patches(ct_rom)
-
     if settings.shop_options.show_all_chars_in_shop:
         shopchars.patch_shop_visibility(ct_rom)
 
@@ -468,6 +465,10 @@ def get_ctrom_from_config(
 
     print("Setting Random Data...", end="")
     a = time.time()
+
+    if settings.general_options.multiworld:
+        multiworld.apply_multiworld_patches(ct_rom, post_config.script_manager)
+
 
     # The lock was probably caused by bad tile copying
     # randofixes.fix_movement_locks(post_config.enemy_ai_manager)
