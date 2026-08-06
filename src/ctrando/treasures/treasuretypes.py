@@ -216,7 +216,12 @@ class APReward(RewardBase):
     def assign_to_script(self, script: locationevent.LocationEvent,
                          add_reward_pos: int,
                          set_mem_pos: int | None):
-        script.delete_commands(add_reward_pos, 1)
+        if set_mem_pos is None:
+            raise ValueError
+        script.replace_command_at_pos(
+            set_mem_pos,
+            EC.add_item(ctenums.ItemID.NONE)
+        )
 
     def get_setter_event_function(self) -> EF:
         return EF()
