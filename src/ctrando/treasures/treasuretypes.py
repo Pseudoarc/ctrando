@@ -1173,11 +1173,10 @@ class ChargeableTreasure(ScriptTreasure):
         script.data[pos+1] = new_str_id
 
         if isinstance(self.reward, ctenums.ItemID):
-            # Warning:  This will break re-reading treasure assignment
-            #           because of a strange number of memory set commands.
-            #           But this is required for ds names to be correct.
+            # Warning: Using the clunky memory copy command to avoid detection in
+            #          in scripts with multiple items.
             script.insert_commands(
-                EC.assign_val_to_mem(self.reward, 0x7F0200, 1)
+                EC.copy_memory(0x7F0200, self.reward.to_bytes(2, "little"))
                 .to_bytearray(), pos
             )
 
