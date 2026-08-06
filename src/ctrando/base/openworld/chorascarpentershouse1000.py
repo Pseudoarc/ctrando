@@ -4,7 +4,7 @@ from ctrando.common import ctenums
 from ctrando.locations import locationevent
 from ctrando.locations.eventcommand import EventCommand as EC
 from ctrando.locations.locationevent import LocationEvent as Event, FunctionID as FID
-from strings import ctstrings
+from ctrando.strings import ctstrings
 
 
 class EventMod(locationevent.LocEventMod):
