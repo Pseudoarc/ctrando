@@ -242,25 +242,26 @@ def get_sphere_dict(
 
     total_regions = set(region_map.name_connector_dict.keys())
     ret_dict = {name: 0 for name in total_regions}
-
-    while True:
-        traverser.step(treasure_dict, recruit_dict)
-        regions = traverser.reached_regions
-        regions.intersection_update(total_regions)
-
-        if not regions:
-            raise ValueError
-
-        for region in regions:
-            ret_dict[region] = sphere
-
-        total_regions.difference_update(regions)
-        if not total_regions:
-            break
-
-        sphere += 1
-
     return ret_dict
+
+    #while True:
+    #    traverser.step(treasure_dict, recruit_dict)
+    #    regions = traverser.reached_regions
+    #    regions.intersection_update(total_regions)
+
+    #    if not regions:
+    #        raise ValueError
+
+    #    for region in regions:
+    #        ret_dict[region] = sphere
+
+    #    total_regions.difference_update(regions)
+    #    if not total_regions:
+    #        break
+
+    #    sphere += 1
+
+    #return ret_dict
 
 
 def main():
@@ -269,4 +270,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
