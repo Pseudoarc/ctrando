@@ -10,7 +10,7 @@ from ctrando.asm import instructions as inst, assemble
 from ctrando.characters import ctpcstats
 from ctrando.common import byteops, ctrom, freespace, memory, ctenums, randostate, asmpatcher
 from ctrando.compression import ctcompression
-from ctrando.base import apply_openworld, apply_openworld_ow, chesttext, modifyitems, disablecharacter, chestmod, remoteitems
+from ctrando.base import apply_openworld, apply_openworld_ow, chesttext, modifyitems, disablecharacter, chestmod, multiworld
 from ctrando.base import decompressed_graphics
 from ctrando.locations import locationevent, scriptmanager
 
@@ -437,7 +437,8 @@ def mark_initial_free_space(vanilla_rom: ctrom.CTRom):
         (0x3D6693, 0x3D6800),
         (0x3D8E64, 0x3D9000),
         (0x3DBB67, 0x3DC000),
-        (0x3F8C03, 0x3F8C60),  # junk
+        # (0x3F8C03, 0x3F8C60),  # junk, first 32 bytes used for multiworld
+        (0x3F8C23, 0x3F8C60),  # junk
         (0x3D9FEB, 0x3DA000),
     )
 

@@ -162,7 +162,9 @@ class Flags(enum.Enum):
     EPOCH_CAN_FLY = FlagData(Memory.EPOCH_STATUS, 0x20)
     EPOCH_IS_FLYING = FlagData(Memory.EPOCH_STATUS, 0x40)
     EPOCH_OBTAINED = FlagData(Memory.EPOCH_STATUS, 0x80)
-    # 7F0050 (Memory.CourtFlags)
+    # 0x7F0021
+    VICTORY_FLAG = FlagData(0x7F0021, 0x01)
+    # 0x7F0050 (Memory.CourtFlags)
     GUARDIA_BASEMENT_GNASHERS_BATTLE = FlagData(0x7F0050, 0x08)
     KINGS_TRIAL_COMPLETE = FlagData(Memory.COURTFLAGS, 0x40)
     OBTAINED_YAKRA_KEY = FlagData(Memory.COURTFLAGS, 0x80)
