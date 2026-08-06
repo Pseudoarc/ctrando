@@ -48,63 +48,69 @@ def add_objectives_to_map(
 
     # Now add regions/rules for objective counts
     obj_rule = logicfactory.ProgressiveRule(list(obj_items))
-    portal_region = locregions.LocRegion(
-        "algetty_portal_objectives",
-        region_rewards=[memory.Flags.HAS_ALGETTY_PORTAL]
-    )
-    portal_connector = regionmap.RegionConnector(
-        "starting_rewards", "algetty_portal_objectives",
-        f"complete_portal_objecitves ({options.num_algetty_portal_objectives})",
-        rule=obj_rule(options.num_algetty_portal_objectives),
-        reversible=False
-    )
 
-    omen_region = locregions.LocRegion(
-        "unlock_omen_objectives",
-        region_rewards=[memory.Flags.BLACK_OMEN_ZEAL_AVAILABLE]
-    )
-    omen_boss_region = locregions.LocRegion(
-        "omen_final_bosses"
-    )
+    if options.num_algetty_portal_objectives <= len(objectives):
+        portal_region = locregions.LocRegion(
+            "algetty_portal_objectives",
+            region_rewards=[memory.Flags.HAS_ALGETTY_PORTAL]
+        )
+        portal_connector = regionmap.RegionConnector(
+            "starting_rewards", "algetty_portal_objectives",
+            f"complete_portal_objecitves ({options.num_algetty_portal_objectives})",
+            rule=obj_rule(options.num_algetty_portal_objectives),
+            reversible=False
+        )
+        region_map.add_loc_region(portal_region)
+        region_map.add_region_connector(portal_connector)
 
-    omen_connector = regionmap.RegionConnector(
-        "starting_rewards", "unlock_omen_objectives",
-        f"complete_omen_objecitves ({options.num_omen_objectives})",
-        rule=obj_rule(options.num_omen_objectives)
-    )
-    omen_boss_connector = regionmap.RegionConnector(
-        "black_omen", "omen_final_bosses",
-        f"final_omen_door",
-        rule=logictypes.LogicRule([memory.Flags.BLACK_OMEN_ZEAL_AVAILABLE])
-    )
+    if options.num_omen_objectives <= len(objectives):
+        omen_region = locregions.LocRegion(
+            "unlock_omen_objectives",
+            region_rewards=[memory.Flags.BLACK_OMEN_ZEAL_AVAILABLE]
+        )
+        omen_boss_region = locregions.LocRegion(
+            "omen_final_bosses"
+        )
 
-    bucket_region = locregions.LocRegion(
-        "unlock_bucket_objectives",
-        region_rewards=[memory.Flags.BUCKET_AVAILABLE]
-    )
-    bucket_connector = regionmap.RegionConnector(
-        "starting_rewards", "unlock_bucket_objectives",
-        f"complete_bucket_objecitves ({options.num_bucket_objectives})",
-        rule=obj_rule(options.num_bucket_objectives),
-        reversible=False
-    )
+        omen_connector = regionmap.RegionConnector(
+            "starting_rewards", "unlock_omen_objectives",
+            f"complete_omen_objecitves ({options.num_omen_objectives})",
+            rule=obj_rule(options.num_omen_objectives)
+        )
+        omen_boss_connector = regionmap.RegionConnector(
+            "black_omen", "omen_final_bosses",
+            f"final_omen_door",
+            rule=logictypes.LogicRule([memory.Flags.BLACK_OMEN_ZEAL_AVAILABLE])
+        )
+        region_map.add_loc_region(omen_region)
+        region_map.add_loc_region(omen_boss_region)
+        region_map.add_region_connector(omen_connector)
+        region_map.add_region_connector(omen_boss_connector)
 
-    timegauge_region = locregions.LocRegion(
-        "timegauge_1999_objectives",
-        region_rewards=[memory.Flags.HAS_APOCALYPSE_TIMEGAUGE_ACCESS]
-    )
-    timegauge_connector = regionmap.RegionConnector(
-        "starting_rewards", "timegauge_1999_objectives",
-        f"complete_timegauge_1999_objecitves ({options.num_timegauge_objectives})",
-        rule=obj_rule(options.num_timegauge_objectives),
-        reversible=False
-    )
+    if options.num_bucket_objectives <= len(objectives):
+        bucket_region = locregions.LocRegion(
+            "unlock_bucket_objectives",
+            region_rewards=[memory.Flags.BUCKET_AVAILABLE]
+        )
+        bucket_connector = regionmap.RegionConnector(
+            "starting_rewards", "unlock_bucket_objectives",
+            f"complete_bucket_objecitves ({options.num_bucket_objectives})",
+            rule=obj_rule(options.num_bucket_objectives),
+            reversible=False
+        )
+        region_map.add_loc_region(bucket_region)
+        region_map.add_region_connector(bucket_connector)
 
-    for region in (portal_region, omen_region, omen_boss_region, bucket_region, timegauge_region):
-        region_map.add_loc_region(region)
-
-    for connector in (
-        portal_connector, omen_connector, omen_boss_connector, bucket_connector,
-        timegauge_connector
-    ):
-        region_map.add_region_connector(connector)
+    if options.num_timegauge_objectives <= len(objectives):
+        timegauge_region = locregions.LocRegion(
+            "timegauge_1999_objectives",
+            region_rewards=[memory.Flags.HAS_APOCALYPSE_TIMEGAUGE_ACCESS]
+        )
+        timegauge_connector = regionmap.RegionConnector(
+            "starting_rewards", "timegauge_1999_objectives",
+            f"complete_timegauge_1999_objecitves ({options.num_timegauge_objectives})",
+            rule=obj_rule(options.num_timegauge_objectives),
+            reversible=False
+        )
+        region_map.add_loc_region(timegauge_region)
+        region_map.add_region_connector(timegauge_connector)

@@ -449,6 +449,8 @@ def write_test_objectives(
 
     reward_text = ""
     for ind, (key, val) in enumerate(obj_rewards.items()):
+        if val > len(objectives):
+            continue
         count_str = "Objectives:" if val > 1 else "Objective:"
         reward_text += f"{val} {count_str} {key}"
         if ind + 1 == len(items):
@@ -459,7 +461,14 @@ def write_test_objectives(
             end_str = "{line break}"
         reward_text += end_str
 
-    obj_text += reward_text
+    if reward_text:
+        obj_text += reward_text
+    else:
+        obj_text = (
+            "MOM: You were so excited about the{line break}"
+            "Millennial Fair that you didn't set{line break}"
+            "objective rewards, did you...?{null}"
+        )
     script.strings[6] = ctstrings.CTString.from_ascii(obj_text)
 
     script = script_manager[ctenums.LocID.LOAD_SCREEN]
@@ -476,6 +485,9 @@ def write_test_objectives(
             obj_str += "{full break}"
         else:
             obj_str += "{linebreak+0}"
+
+    if not obj_str:
+        obj_str = "No objectives specified.{null}"
 
     new_obj_id = script.append_empty_object()
     script.set_function(
@@ -509,7 +521,8 @@ def write_test_objectives(
     # Write objective ids to title screen memory
     obj_enum_dict = oty.enumerate_objectives()
     obj_ids: list[int] = []
-    for objective in objectives:
+    temp_objs = objectives + [None]*(8-len(objectives))
+    for objective in temp_objs:
         obj_ids.append(obj_enum_dict[objective])
 
     payload = bytes(obj_ids)
