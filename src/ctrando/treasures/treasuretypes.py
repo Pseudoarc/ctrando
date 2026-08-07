@@ -216,10 +216,10 @@ class APReward(RewardBase):
     def assign_to_script(self, script: locationevent.LocationEvent,
                          add_reward_pos: int,
                          set_mem_pos: int | None):
-        if set_mem_pos is None:
+        if add_reward_pos is None:
             raise ValueError
         script.replace_command_at_pos(
-            set_mem_pos,
+            add_reward_pos,
             EC.add_item(ctenums.ItemID.NONE)
         )
 
