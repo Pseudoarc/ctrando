@@ -6,6 +6,7 @@ from ctrando.asm import assemble
 from ctrando.asm import instructions as inst
 from ctrando.asm.instructions import AddressingMode as AM
 from ctrando.base.openworldutils import CommandNotFoundException
+from ctrando.base import chestmod
 from ctrando.common import (
     asmpatcher,
     byteops,
@@ -13,11 +14,14 @@ from ctrando.common import (
     ctrom,
     freespace,
     memory,
-    randostate,
 )
 from ctrando.locations.eventcommand import EventCommand
+from ctrando.locations.scriptmanager import ScriptManager
 
 ROM_VALIDATION_ADDR = 0x3F8C03
+
+TECH_LEVEL_MODE = 0x40
+ITEM_MODE = 0x20
 
 def _patch_remote_items(
         ct_rom: ctrom.CTRom,
@@ -28,15 +32,32 @@ def _patch_remote_items(
 
     # C000AD  22 87 1F C0    JSL $C01F87
 
-    rt: assemble.ASMList = [
+    tech_level_rt = chestmod.get_add_techlevel_block()
+    tech_level_jsl = tech_level_rt + [inst.RTL()]
+    tech_level_addr = asmpatcher.add_jsl_routine(tech_level_jsl, ct_rom,
+                                                 0x410000)
+    tech_level_rom_addr = byteops.to_rom_ptr(tech_level_addr)
+
+    base_rt: assemble.ASMList = [
+        inst.PHX(),
+        inst.PHY(),
         inst.PHP(),
         inst.SEP(0x20),
         inst.REP(0x10),
         inst.LDA(buffer_addr+1, AM.LNG),
         inst.BEQ("end"),
         # Deliver the thing
+        inst.BIT(0x40, AM.IMM8),
+        inst.BEQ("try_item"),
+        # Tech level
+        inst.REP(0x20),
+        inst.LDA(buffer_addr, AM.LNG),
+        inst.JSL(tech_level_rom_addr),
+        inst.BRA("clear_buf"),
+        "try_item",
         inst.BIT(0x20, AM.IMM8),
         inst.BEQ("clear_buf"),
+        # Item
         inst.LDA(buffer_addr, AM.LNG),
         inst.TAY(),
         inst.LDA(0x01, AM.IMM8),
@@ -50,17 +71,36 @@ def _patch_remote_items(
         inst.STA(buffer_addr, AM.LNG),
         "end",
         inst.PLP(),
+        inst.PLY(),
+        inst.PLX(),
+    ]
+
+    loc_rt = base_rt + [
         # old call
         inst.JSL(0xC01F87, AM.LNG),
         inst.RTL()
     ]
 
-    addr = asmpatcher.add_jsl_routine(rt, ct_rom)
-    rom_addr = byteops.to_rom_ptr(addr)
-    ct_rom.seek(0x0000AD)
-    ct_rom.write(inst.JSL(rom_addr, AM.LNG).to_bytearray())
+    ow_rt = base_rt + [
+        inst.TDC(),
+        inst.SEP(0x20),
+        inst.LDA(0x027C, AM.ABS),
+        inst.ASL(mode=AM.NO_ARG),
+        inst.TAX(),
+        inst.RTL()
+    ]
 
-def _add_victory_flag(ct_rom: ctrom.CTRom, script_manager: randostate.ScriptManager):
+    loc_addr = asmpatcher.add_jsl_routine(loc_rt, ct_rom)
+    loc_rom_addr = byteops.to_rom_ptr(loc_addr)
+    ct_rom.seek(0x0000AD)
+    ct_rom.write(inst.JSL(loc_rom_addr, AM.LNG).to_bytearray())
+
+    ow_addr = asmpatcher.add_jsl_routine(ow_rt, ct_rom)
+    ow_rom_addr = byteops.to_rom_ptr(ow_addr)
+    ct_rom.seek(0x0223D2)
+    ct_rom.write(inst.JSL(ow_rom_addr, AM.LNG).to_bytearray() + bytearray([0xEA, 0xEA]))
+
+def _add_victory_flag(ct_rom: ctrom.CTRom, script_manager: ScriptManager):
     """
     Add a victory flag to the ending selector scene so that the AP client
     can detect when the player finishes the game.
@@ -85,7 +125,7 @@ def write_player_validation_data(ct_rom: ctrom.CTRom, encoded_name: bytes):
     ct_rom.seek(ROM_VALIDATION_ADDR)
     ct_rom.write(b"APRDI" + encoded_name)
 
-def apply_multiworld_patches(ct_rom: ctrom.CTRom, script_manager: randostate.ScriptManager):
+def apply_multiworld_patches(ct_rom: ctrom.CTRom, script_manager: ScriptManager):
     """Apply the  multiworld related patches and changes"""
 
     # Reserve memory for player validation
