@@ -4,8 +4,6 @@ import enum
 import math
 import typing
 
-from numpy import fft
-
 from ctrando.items import itemdata
 from ctrando.shops import shoptypes
 from ctrando.arguments import shopoptions, gearrandooptions
