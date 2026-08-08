@@ -4,7 +4,7 @@ from ctrando.asm import assemble
 from ctrando.asm import instructions as inst, assemble
 from ctrando.asm.instructions import AddressingMode as AM
 
-from ctrando.common import asmpatcher, byteops, ctenums, ctrom
+from ctrando.common import asmpatcher, byteops, ctenums, ctrom, memory
 from ctrando.strings import ctstrings
 
 # Chest Data:
@@ -124,6 +124,104 @@ def move_treasure_strings(
 
     ct_rom.seek(0x002104)
     ct_rom.write(int.to_bytes(new_rom_addr >> 16, 1))
+
+
+def get_add_techlevel_block() -> assemble.ASMList:
+    """
+    No text commands.  Just set the tech level.
+    Assume 16-bit A holding two-byte treasure.  Really just need
+    char_id in low byte.
+    """
+
+    tech_level_start = 0x7E2830
+    techs_learned_start = tech_level_start + 7
+    tp_next_ram_offset = 0x7E262D
+    tp_thresh_rom_start = 0xCC26FA
+    stat_offset_rom_start = 0xFDA83B
+
+    normal_return_rom_addr = 0xC01F23
+
+    temp_lng = memory.Memory.AP_TEMP_LO
+
+    prefix = "_techlevel_rt_"
+    rt: assemble.ASMList = [
+        inst.AND(0x0007, AM.IMM16),
+        inst.TAX(),
+        inst.TXY(),
+        inst.SEP(0x20),
+        inst.LDA(tech_level_start, AM.LNG_X),
+        inst.CMP(0x08, AM.IMM8),
+        inst.BEQ("end"),
+        inst.INC(mode=AM.NO_ARG),
+        inst.STA(tech_level_start, AM.LNG_X),
+        inst.CMP(0x08, AM.IMM8),
+        inst.BCC("after_setting_max"),
+        inst.REP(0x20),
+        inst.TYA(),
+        inst.ASL(mode=AM.NO_ARG),
+        inst.TAX(),
+        inst.LDA(stat_offset_rom_start, AM.LNG_X),
+        inst.TAX(),
+        inst.LDA(0x0000, AM.IMM16),
+        inst.SEP(0x20),
+        inst.LDA(0x7E0010, AM.LNG_X),
+        inst.ORA(0x10, AM.IMM8),
+        inst.STA(0x7E0010, AM.LNG_X),
+        inst.TYX(),
+        inst.LDA(tech_level_start, AM.LNG_X),
+        "after_setting_max",
+        inst.TAY(),
+        inst.LDA(0xFF, AM.IMM8),
+        "bitmask_loop_start",
+        inst.CPY(0x0008, AM.IMM16),
+        inst.BCS("write_bitmask"),
+        inst.ASL(mode=AM.NO_ARG),
+        inst.INY(mode=AM.NO_ARG),
+        inst.BRA("bitmask_loop_start"),
+        "write_bitmask",
+        inst.STA(techs_learned_start, AM.LNG_X),
+        # Write new TP till next
+        inst.LDA(tech_level_start, AM.LNG_X),
+        inst.CMP(0x08, AM.IMM8),
+        inst.BNE("tp_next_not_max"),
+        inst.REP(0x20),
+        inst.LDA(0xFFFF, AM.IMM16),
+        inst.TXY(),
+        inst.BRA("write_tp_next"),
+        "tp_next_not_max",
+        inst.TXA(),
+        inst.ASL(mode=AM.NO_ARG),
+        inst.ASL(mode=AM.NO_ARG),
+        inst.ASL(mode=AM.NO_ARG),
+        inst.STA(temp_lng, AM.LNG),
+        inst.LDA(tech_level_start, AM.LNG_X),
+        inst.CLC(),
+        inst.ADC(temp_lng, AM.LNG),
+        inst.ASL(mode=AM.NO_ARG),  # pc_id*16 + 2*tech_level
+        inst.TXY(),
+        inst.TAX(),
+        inst.REP(0x20),
+        inst.LDA(tp_thresh_rom_start, AM.LNG_X),
+        "write_tp_next",
+        inst.STA(temp_lng, AM.LNG),
+        inst.TYA(),
+        inst.ASL(mode=AM.NO_ARG),
+        inst.TAX(),
+        inst.REP(0x20),
+        inst.LDA(stat_offset_rom_start, AM.LNG_X),
+        inst.TAX(),
+        inst.LDA(temp_lng, AM.LNG),
+        inst.STA(0x7E002D, AM.LNG_X),
+        "end",
+    ]
+
+    for ind, item in enumerate(rt):
+        if isinstance(item, str):
+            rt[ind] = prefix+item
+        if label := getattr(item, "label", "") :
+            setattr(item, "label", prefix+label)
+
+    return rt
 
 
 def add_new_modes(
