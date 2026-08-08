@@ -9,7 +9,7 @@ from ctrando.locations.eventfunction import EventFunction as EF
 from ctrando.locations.locationevent import FunctionID as FID, LocationEvent as Event
 
 from ctrando.base import openworldutils as owu
-from strings import ctstrings
+from ctrando.strings import ctstrings
 
 
 class EventMod(locationevent.LocEventMod):

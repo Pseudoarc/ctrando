@@ -21,7 +21,7 @@ from ctrando.attacks import (
     pctechrandomizer, techdescriptions, pctech, animationscript, scriptreassign,
     techmenu, techrebalance
 )
-from ctrando.base import basepatch, xptpmod, modifymaps, chesttext
+from ctrando.base import basepatch, xptpmod, modifymaps, chesttext, multiworld
 from ctrando.bosses import staticbossscaling, bossrando, bosstypes
 from ctrando.characters import characterwriter, charactermods
 from ctrando.common import ctrom, ctenums, randostate
@@ -171,7 +171,8 @@ def extract_settings(*in_args: str) -> arguments.Settings:
 
 def get_random_config(
         settings: arguments.Settings,
-        input_rom: ctrom.CTRom
+        input_rom: ctrom.CTRom,
+        rng: typing.Optional[RNGType] = None
 ) -> randostate.ConfigState:
     """
     Test: Try to do everyting EXCEPT rom changes (incl. scripts).  Then combine all rom changes.
@@ -179,9 +180,10 @@ def get_random_config(
 
     config = randostate.ConfigState.get_default_config_from_ctrom(input_rom)
 
-    # noinspection PyTypeChecker
-    rng: RNGType = random.Random()
-    rng.seed(settings.general_options.seed, version=2)
+    if rng is None:
+        # noinspection PyTypeChecker
+        rng: RNGType = random.Random()
+        rng.seed(settings.general_options.seed, version=2)
 
     working_rom = ctrom.CTRom(input_rom.getvalue())
     basepatch.mark_initial_free_space(working_rom)
@@ -461,6 +463,10 @@ def get_ctrom_from_config(
 
     print("Setting Random Data...", end="")
     a = time.time()
+
+    if settings.general_options.multiworld:
+        multiworld.apply_multiworld_patches(ct_rom, post_config.script_manager)
+
 
     # The lock was probably caused by bad tile copying
     # randofixes.fix_movement_locks(post_config.enemy_ai_manager)

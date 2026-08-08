@@ -990,13 +990,13 @@ def get_default_region_connectors(
                                        logictypes.ScriptReward.FLIGHT]),
             reversible=False,
         ),
-        RegionConnector(
-            "porre_1000_overworld", "porre_600_overworld",
-            "flight_600",
-            rule=logictypes.LogicRule([logictypes.ScriptReward.EPOCH,
-                                       logictypes.ScriptReward.FLIGHT]),
-            reversible=False,
-        ),
+        #RegionConnector(
+        #    "porre_1000_overworld", "porre_600_overworld",
+        #    "flight_600",
+        #    rule=logictypes.LogicRule([logictypes.ScriptReward.EPOCH,
+        #                               logictypes.ScriptReward.FLIGHT]),
+        #    reversible=False,
+        #),
         RegionConnector(
             "porre_1000_overworld", "choras_600_overworld",
             "flight_600",

@@ -48,6 +48,10 @@ class Memory(enum.IntEnum):
     TO_SCALE_TEMP = 0x7E2884
     TEMP_SCALED_XP_LO = 0x7E2885
     TEMP_SCALED_XP_HI = 0x7E2886
+    AP_ITEM_DELIVERY_LO = 0x7E2887
+    AP_ITEM_DELIVERY_HI = 0x7E2888
+    AP_ITEM_COUNTER_LO = 0x7E2889
+    AP_ITEM_COUNTER_HI = 0x7E288A
     # End old time gauge memory
     ACTIVE_PC1 = 0x7E2980
     ACTIVE_PC2 = 0x7E2981
@@ -158,7 +162,9 @@ class Flags(enum.Enum):
     EPOCH_CAN_FLY = FlagData(Memory.EPOCH_STATUS, 0x20)
     EPOCH_IS_FLYING = FlagData(Memory.EPOCH_STATUS, 0x40)
     EPOCH_OBTAINED = FlagData(Memory.EPOCH_STATUS, 0x80)
-    # 7F0050 (Memory.CourtFlags)
+    # 0x7F0021
+    VICTORY_FLAG = FlagData(0x7F0021, 0x01)
+    # 0x7F0050 (Memory.CourtFlags)
     GUARDIA_BASEMENT_GNASHERS_BATTLE = FlagData(0x7F0050, 0x08)
     KINGS_TRIAL_COMPLETE = FlagData(Memory.COURTFLAGS, 0x40)
     OBTAINED_YAKRA_KEY = FlagData(Memory.COURTFLAGS, 0x80)
