@@ -52,6 +52,8 @@ class Memory(enum.IntEnum):
     AP_ITEM_DELIVERY_HI = 0x7E2888
     AP_ITEM_COUNTER_LO = 0x7E2889
     AP_ITEM_COUNTER_HI = 0x7E288A
+    AP_TEMP_LO = 0x7E288B
+    AP_TEMP_HI = 0x7E288C
     # End old time gauge memory
     ACTIVE_PC1 = 0x7E2980
     ACTIVE_PC2 = 0x7E2981
