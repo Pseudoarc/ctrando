@@ -21,7 +21,8 @@ class EventMod(locationevent.LocEventMod):
 
         pos = script.get_function_start(0xC, FID.ACTIVATE)
         pos = script.find_exact_command(
-            EC.if_mem_op_value(0x7F0214, OP.GREATER_THAN, 0)
+            EC.if_mem_op_value(0x7F0214, OP.GREATER_THAN, 0),
+            pos
         )
         script.replace_jump_cmd(
             pos, EC.if_flag(memory.Flags.OBTAINED_NAGAETTE_BROMIDE)
