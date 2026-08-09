@@ -18,8 +18,7 @@ from ctrando.common import (
 from ctrando.locations.eventcommand import EventCommand
 from ctrando.locations.scriptmanager import ScriptManager
 
-ROM_VALIDATION_ADDR = 0x3F8C03
-
+ROM_VALIDATION_ADDR = 0x3AFAA0
 TECH_LEVEL_MODE = 0x40
 ITEM_MODE = 0x20
 
