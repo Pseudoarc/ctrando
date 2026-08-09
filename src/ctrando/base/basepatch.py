@@ -432,13 +432,13 @@ def mark_initial_free_space(vanilla_rom: ctrom.CTRom):
         (0x38FFF4, 0x390000),
         # (0x39AFE9, 0x39B000),  # moved to dialogue freeing
         # (0x39FA76, 0x3A0000),  # Junk,  moved to dialogue freeing
-        (0x3AFAA0, 0x3B0000),  # Junk
+        #(0x3AFAA0, 0x3B0000),  # Junk, First 32 bytes used for multiworld
+        (0x3AFAC0, 0x3B0000),  # Junk
         (0x3BFFD0, 0x3C0000),  # Junk
         (0x3D6693, 0x3D6800),
         (0x3D8E64, 0x3D9000),
         (0x3DBB67, 0x3DC000),
-        # (0x3F8C03, 0x3F8C60),  # junk, first 32 bytes used for multiworld
-        (0x3F8C23, 0x3F8C60),  # junk
+        (0x3F8C03, 0x3F8C60),  # junk
         (0x3D9FEB, 0x3DA000),
     )
 
