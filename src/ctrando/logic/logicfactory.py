@@ -12,6 +12,9 @@ class ProgressiveRule:
         self.progression = list(progression)
 
     def __call__(self, progression_level: int = 1) -> LogicRule:
+        if progression_level == 0:
+            return LogicRule()
+
         progression_level = sorted([1, progression_level, len(self.progression)])[1]
 
         rules = [
