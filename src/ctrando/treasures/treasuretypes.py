@@ -572,9 +572,13 @@ class ChestTreasure:
     A class which represents a treasure chest.  Implements RewardSpot.
     """
 
-    def __init__(self, chest_index: int, reward: RewardType = ctenums.ItemID.MOP):
+    def __init__(
+            self, chest_index: int, reward: RewardType = ctenums.ItemID.MOP,
+            copy_location: ctenums.LocID | None = None
+    ):
         self.reward = reward
         self.chest_index = chest_index
+        self.copy_location = copy_location
 
     def write_to_ct_rom(
             self, ct_rom: ctrom.CTRom,
@@ -583,6 +587,24 @@ class ChestTreasure:
         if isinstance(self.reward, APReward):
             loc_id = get_chest_loc_id(self.chest_index)
             script = script_manager[loc_id]
+
+            if self.copy_location is not None:
+                copy_script = script_manager[self.copy_location]
+                num_own_strings = len(script.strings)
+                num_copy_strings = len(copy_script.strings)
+
+                # We have to pad the scripts to have the same
+                # number of strings
+                if num_own_strings < num_copy_strings:
+                    needed_strs = num_copy_strings - num_own_strings
+                    dummy_str = ctstrings.CTString.from_str("{null}")
+                    script.strings.extend([dummy_str]*needed_strs)
+                elif num_own_strings > num_copy_strings:
+                    needed_strs = num_own_strings - num_copy_strings
+                    dummy_str = ctstrings.CTString.from_str("{null}")
+                    copy_script.strings.extend([dummy_str] * needed_strs)
+                copy_script.add_py_string(self.reward.get_reward_str())
+
             str_ind = script.add_py_string(
                 self.reward.get_reward_str()
             )
@@ -1274,7 +1296,7 @@ class HuntingRangeNuTreasure(ScriptTreasure):
                 )
                 script.insert_commands(new_block.get_bytearray(), pos)
                 pos += len(new_block)
-                script.delete_commands(pos, 3)
+                script.delete_commands(pos, 4)
 
     def read_reward_from_ct_rom(
             self, ct_rom: ctrom.CTRom,
@@ -1684,16 +1706,25 @@ def get_base_treasure_dict() -> dict[ctenums.TreasureID, RewardSpot]:
         TID.DACTYL_NEST_2: ChestTreasure(0xB0),
         TID.DACTYL_NEST_3: ChestTreasure(0xB1),
         # Non-CS
-        TID.TYRANO_LAIR_THRONE_1: ChestTreasure(0xB2),
-        TID.TYRANO_LAIR_THRONE_2: ChestTreasure(0xB3),
+        TID.TYRANO_LAIR_THRONE_1: ChestTreasure(
+            0xB2, copy_location=ctenums.LocID.TYRANO_LAIR_THRONEROOM),
+        TID.TYRANO_LAIR_THRONE_2: ChestTreasure(
+            0xB3, copy_location=ctenums.LocID.TYRANO_LAIR_THRONEROOM),
         # TYRANO_LAIR_THRONE: 0xB4 (Unused?)
-        TID.TYRANO_LAIR_TRAPDOOR: ChestTreasure(0xB5),
-        TID.TYRANO_LAIR_KINO_CELL: ChestTreasure(0xB6),
+        TID.TYRANO_LAIR_TRAPDOOR: ChestTreasure(
+            0xB5, copy_location=ctenums.LocID.ANCIENT_TYRANO_LAIR
+        ),
+        TID.TYRANO_LAIR_KINO_CELL: ChestTreasure(
+            0xB6, copy_location=ctenums.LocID.ANCIENT_TYRANO_LAIR),
         # TYRANO_LAIR Unused? : 0xB7
-        TID.TYRANO_LAIR_MAZE_1: ChestTreasure(0xB8),
-        TID.TYRANO_LAIR_MAZE_2: ChestTreasure(0xB9),
-        TID.TYRANO_LAIR_MAZE_3: ChestTreasure(0xBA),
-        TID.TYRANO_LAIR_MAZE_4: ChestTreasure(0xBB),
+        TID.TYRANO_LAIR_MAZE_1: ChestTreasure(
+            0xB8, copy_location=ctenums.LocID.ANCIENT_TYRANO_LAIR_VERTIGO),
+        TID.TYRANO_LAIR_MAZE_2: ChestTreasure(
+            0xB9, copy_location=ctenums.LocID.ANCIENT_TYRANO_LAIR_VERTIGO),
+        TID.TYRANO_LAIR_MAZE_3: ChestTreasure(
+            0xBA, copy_location=ctenums.LocID.ANCIENT_TYRANO_LAIR_VERTIGO),
+        TID.TYRANO_LAIR_MAZE_4: ChestTreasure(
+            0xBB, copy_location=ctenums.LocID.ANCIENT_TYRANO_LAIR_VERTIGO),
         # 0xBC - 0xCF - BLACK_OMEN
         TID.BLACK_OMEN_AUX_COMMAND_MID: ChestTreasure(0xBC),
         TID.BLACK_OMEN_AUX_COMMAND_NE: ChestTreasure(0xBD),
