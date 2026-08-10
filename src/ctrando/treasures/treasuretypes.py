@@ -118,6 +118,10 @@ class Gold(int, RewardBase):
         result = super().__new__(cls, int_val)
         return result  # noinspection PyTypeChecker
 
+    def assign_to_chest_data(self, chest_data: "ChestTreasureData"):
+        chest_data.chest_mode = ChestMode.GOLD
+        chest_data.gold = self
+
     def assign_to_script(self, script: locationevent.LocationEvent,
                          add_reward_pos: int,
                          set_mem_pos: int | None):
