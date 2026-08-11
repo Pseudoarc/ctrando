@@ -748,7 +748,7 @@ def get_default_region_connectors(
             rule=logictypes.LogicRule([memory.Flags.NORTHERN_RUINS_REPAIRS_COMPLETE])
         ),
         RegionConnector(
-            "northern_ruins_1000", "northern_ruins_1000_sealed",
+            "northern_ruins_1000_repaired", "northern_ruins_1000_sealed",
             "northern_ruins_1000_pendant_charge",
             rule=charge_rule(2)
         ),
