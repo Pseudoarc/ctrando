@@ -187,6 +187,7 @@ class EventMod(locationevent.LocEventMod):
             .add(EC.move_party(0x84, 0x86, 0x83, 0x88, 0x84, 0x8B))
             .add(EC.generic_command(0xD8, 0x83, 0xC0))
             .add(EC.set_flag(memory.Flags.OW_ZENAN_COMPLETE))
+            .add(EC.set_flag(memory.Flags.ZENAN_CAPTAIN_ITEM))
             .add(EC.assign_val_to_mem(ctenums.ItemID.GOLD_HELM, 0x7F0200, 1))
             .add(EC.add_item_memory(0x7F0200))
             .add(EC.auto_text_box(got_item_id))
