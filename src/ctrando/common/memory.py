@@ -145,6 +145,7 @@ class Memory(enum.IntEnum):
     KEEPSONG = 0x7F01ED
 
     PARTYFOLLOW_TEMP_ADDR = 0x7F03FE
+    EVENT_RESULT_BYTE = 0x7F0A80  # one per object
 
 
 @dataclass

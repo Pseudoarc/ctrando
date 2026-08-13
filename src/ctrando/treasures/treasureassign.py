@@ -10,10 +10,10 @@ import math
 
 from ctrando.arguments.gearrandooptions import DSItem
 from ctrando.locations.scriptmanager import ScriptManager
-from ctrando.locations.locationevent import FunctionID as FID
+from ctrando.locations.locationevent import FunctionID as FID, EC
 from ctrando.arguments import treasureoptions, gearrandooptions, recruitoptions
 from ctrando.base.openworld import iokatradingpost, lab32west, lab32east
-from ctrando.common import ctenums, ctrom, distribution, piecewiselinear as pwl
+from ctrando.common import ctenums, ctrom, distribution, memory, piecewiselinear as pwl
 from ctrando.common.ctenums import TreasureID as TID
 from ctrando.common.random import RNGType
 from ctrando.items import itemdata
@@ -742,3 +742,186 @@ def handle_forced_loot(
             item_pool.extend([item_id] * (-count))
 
 
+def split_charged_chests(
+        script_manager: ScriptManager,
+        treasure_dict: dict[TID, ttypes.RewardSpot]
+):
+    """Make the charged checks into two completely independent checks."""
+
+    # Guardia Castle Sealed:
+    # - Doesn't set the 1000 flag in 600
+    spot = treasure_dict[TID.GUARDIA_CASTLE_SEALED_600]
+    if not isinstance(spot, ttypes.SplitChargeableTreasure):
+        raise TypeError
+
+    script = script_manager[spot.base_loc_spot.location]
+    pos, cmd = script.find_command(
+        [0xC0],
+        script.get_function_start(
+            spot.base_loc_spot.object_id, spot.base_loc_spot.function_id)
+    )
+    script.replace_command_at_pos(
+        pos,
+        EC.assign_val_to_mem(
+            2, memory.Memory.EVENT_RESULT_BYTE + 2*spot.base_loc_spot.object_id, 1)
+    )
+
+    script = script_manager[spot.charge_loc_base_spot.location]
+    pos = script.get_function_start(
+        spot.charge_loc_base_spot.object_id,
+        spot.charge_loc_base_spot.function_id
+    )
+    script.insert_commands(
+        EC.set_flag(memory.Flags.GUARDIA_CASTLE_SEALED_CHEST_CHARGED).to_bytearray(),
+        pos
+    )
+    pos = script.find_exact_command(
+        EC.if_flag(memory.Flags.GUARDIA_CASTLE_SEALED_600_OBTAINED)
+    )
+    script.delete_jump_block(pos)
+    treasure_dict[TID.GUARDIA_CASTLE_SEALED_600] = ttypes.BackupTreasure(
+        ttypes.ScriptTreasure(
+            spot.base_loc_spot.location,
+            spot.base_loc_spot.object_id,
+            spot.base_loc_spot.function_id,
+            spot.base_loc_spot.reward,
+            spot.base_loc_spot.item_num,
+            spot.base_loc_spot.num_reward_strings-1,
+        ), spot.charge_loc_base_spot, spot.reward
+    )
+
+
+    elem_base_tids = (
+        # TID.GUARDIA_CASTLE_SEALED_600,
+        TID.TRUCE_INN_SEALED_600,
+        TID.PORRE_ELDER_SEALED_1, TID.PORRE_ELDER_SEALED_2
+    )
+
+    elem_charge_spot_flags = (
+        # memory.Flags.GUARDIA_CASTLE_SEALED_1000_OBTAINED,
+        memory.Flags.TRUCE_INN_SEALED_1000_OBTAINED,
+        memory.Flags.PORRE_ELDER_SEALED_1_OBTAINED,
+        memory.Flags.PORRE_ELDER_SEALED_2_OBTAINED,
+    )
+
+    elem_is_charged_flags = (
+        # memory.Flags.GUARDIA_CASTLE_SEALED_CHEST_CHARGED,
+        memory.Flags.TRUCE_INN_SEALED_CHEST_CHARGED,
+        memory.Flags.PORRE_MAYOR_SEALED_1_CHARGED,
+        memory.Flags.PORRE_MAYOR_SEALED_2_CHARGED
+    )
+
+    for tid, charge_spot_flag, is_charged_Flag in zip(
+            elem_base_tids, elem_charge_spot_flags, elem_is_charged_flags):
+        spot = treasure_dict[tid]
+        if not isinstance(spot, ttypes.SplitChargeableTreasure):
+            raise TypeError
+
+        script = script_manager[spot.base_loc_spot.location]
+        pos, end = script.get_function_bounds(
+            spot.base_loc_spot.object_id, spot.base_loc_spot.function_id
+        )
+
+        pos, cmd = script.find_command(
+            [0xC0],
+            script.get_function_start(
+                spot.base_loc_spot.object_id, spot.base_loc_spot.function_id),
+        )
+        script.replace_command_at_pos(
+            pos,
+            EC.assign_val_to_mem(
+                2, memory.Memory.EVENT_RESULT_BYTE + 2*spot.base_loc_spot.object_id, 1)
+        )
+
+        pos = script.find_exact_command(
+            EC.set_flag(charge_spot_flag), pos
+        )
+        script.delete_commands(pos, 1)
+
+        script = script_manager[spot.charge_loc_base_spot.location]
+        pos = script.get_function_start(
+            spot.charge_loc_base_spot.object_id,
+            spot.charge_loc_base_spot.function_id
+        )
+        script.insert_commands(
+            EC.set_flag(is_charged_Flag).to_bytearray(), pos
+        )
+
+        treasure_dict[tid] = ttypes.BackupTreasure(
+            ttypes.ScriptTreasure(
+                spot.base_loc_spot.location,
+                spot.base_loc_spot.object_id,
+                spot.base_loc_spot.function_id,
+                spot.base_loc_spot.reward,
+                spot.base_loc_spot.item_num,
+                spot.base_loc_spot.num_reward_strings-1,
+            ),
+            spot.charge_loc_base_spot, spot.reward
+        )
+
+    # Now NR chargeable
+    base_tids = (
+        TID.NORTHERN_RUINS_ANTECHAMBER_SEALED_600, TID.NORTHERN_RUINS_BACK_LEFT_SEALED_600,
+        TID.NORTHERN_RUINS_BACK_RIGHT_SEALED_600
+    )
+
+    base_flags = (
+        memory.Flags.NORTHERN_RUINS_ANTECHAMBER_SEALED_600_OBTAINED,
+        memory.Flags.NORTHERN_RUINS_BACK_LEFT_SEALED_600_OBTAINED,
+        memory.Flags.NORTHERN_RUINS_BACK_RIGHT_SEALED_600_OBTAINED
+    )
+
+    upgrade_flags = (
+        memory.Flags.NORTHERN_RUINS_ANTECHAMBER_SEALED_1000_OBTAINED,
+        memory.Flags.NORTHERN_RUINS_BACK_LEFT_SEALED_1000_OBTAINED,
+        memory.Flags.NORTHERN_RUINS_BACK_RIGHT_SEALED_1000_OBTAINED
+    )
+
+    charge_flags = (
+        memory.Flags.NORTHERN_RUINS_ANTECHAMBER_SEALED_CHEST_CHARGED,
+        memory.Flags.NORTHERN_RUINS_BACK_LEFT_SEALED_CHEST_CHARGED,
+        memory.Flags.NORTHERN_RUINS_BACK_RIGHT_SEALED_CHEST_CHARGED
+    )
+
+    for tid, base_flag, upgrade_flag, charge_flag in zip(
+        base_tids, base_flags, upgrade_flags, charge_flags
+    ):
+        spot = treasure_dict[tid]
+        if not isinstance(spot, ttypes.ChargeableTreasure):
+            raise ValueError
+
+        script = script_manager[spot.location]
+        pos = script.get_object_start(spot.object_id)
+        script.insert_commands(EC.set_flag(charge_flag).to_bytearray(), pos)
+
+        pos = script.get_function_start(spot.object_id, spot.function_id)
+        pos, cmd = script.find_command([0xC0], pos)
+        script.replace_command_at_pos(
+            pos,
+            EC.assign_val_to_mem(2, memory.Memory.EVENT_RESULT_BYTE + 2*spot.object_id, 1)
+        )
+        pos = script.find_exact_command(EC.set_flag(upgrade_flag), pos)
+        pos += len(EC.set_flag(upgrade_flag))
+        pos = script.find_exact_command(EC.set_flag(upgrade_flag), pos)
+        script.delete_commands(pos, 1)
+
+        treasure_dict[tid] = ttypes.ScriptTreasure(
+            spot.location, spot.object_id, spot.function_id, spot.reward, spot.item_num,
+            spot.num_reward_strings
+        )
+
+
+    # Normal boxes
+    tids = (TID.NORTHERN_RUINS_BASEMENT_600, TID.NORTHERN_RUINS_ANTECHAMBER_LEFT_600)
+    flags = (memory.Flags.NORTHERN_RUINS_BASEMENT_CHEST_1000_OBTAINED,
+             memory.Flags.NORTHERN_RUINS_ANTECHAMBER_CHEST_1000_OBTAINED)
+    for tid, flag in zip(tids, flags):
+        spot = treasure_dict[tid]
+        if not isinstance(spot, ttypes.ScriptTreasure):
+            raise ValueError
+        script = script_manager[spot.location]
+        cmd = EC.set_flag(flag)
+        pos = script.get_function_start(spot.object_id, spot.function_id)
+        pos = script.find_exact_command(cmd, pos) + len(cmd)
+        pos = script.find_exact_command(cmd, pos)
+        script.delete_commands(pos, 1)
