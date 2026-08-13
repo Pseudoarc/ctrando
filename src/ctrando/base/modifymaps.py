@@ -87,12 +87,15 @@ def make_zenan_boss_map(
         .add(EC.fade_screen())
         .add(EC.change_location(ctenums.LocID.ZENAN_BRIDGE_BOSS, 0xB, 0x8))
     )
+
+    del_end = orig_zenan_script.find_exact_command(EC.set_explore_mode(True))
+    orig_zenan_script.delete_commands_range(pos, del_end)
     orig_zenan_script.insert_commands(
         new_block.get_bytearray(), pos
     )
     pos += len(new_block)
-    del_end = orig_zenan_script.find_exact_command(EC.set_explore_mode(True)) + 2
-    orig_zenan_script.delete_commands_range(pos, del_end)
+    orig_zenan_script.delete_commands(pos, 1)  # Delete final explore mode
+
 
     # Don't allow backdooring the boss event
     pos, cmd = orig_zenan_script.find_command(
