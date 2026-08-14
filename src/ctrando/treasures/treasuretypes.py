@@ -1553,7 +1553,8 @@ def get_base_treasure_dict() -> dict[ctenums.TreasureID, RewardSpot]:
         # end non-cs
         # This is the "copy tyrano lair" chest data
         # TID.GIANTS_CLAW_KINO_CELL: ChestTreasure(0x19),
-        TID.GIANTS_CLAW_TRAPS: ChestTreasure(0x1A),
+        TID.GIANTS_CLAW_TRAPS: ChestTreasure(
+            0x1A, copy_location=ctenums.LocID.TYRANO_LAIR_STORAGE),
         TID.TRUCE_CANYON_1: ChestTreasure(0x1B),
         TID.TRUCE_CANYON_2: ChestTreasure(0x1C),
         TID.KINGS_ROOM_600: ChestTreasure(0x1D),
