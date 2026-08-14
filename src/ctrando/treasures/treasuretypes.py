@@ -1661,9 +1661,12 @@ def get_base_treasure_dict() -> dict[ctenums.TreasureID, RewardSpot]:
         TID.SEWERS_2: ChestTreasure(0x85),
         TID.SEWERS_3: ChestTreasure(0x86),
         # Non-CS
-        TID.DEATH_PEAK_SOUTH_FACE_KRAKKER: ChestTreasure(0x87),
-        TID.DEATH_PEAK_SOUTH_FACE_SPAWN_SAVE: ChestTreasure(0x88),
-        TID.DEATH_PEAK_SOUTH_FACE_SUMMIT: ChestTreasure(0x89),
+        TID.DEATH_PEAK_SOUTH_FACE_KRAKKER: ChestTreasure(
+            0x87, copy_location=ctenums.LocID.DEATH_PEAK_GUARDIAN_SPAWN),
+        TID.DEATH_PEAK_SOUTH_FACE_SPAWN_SAVE: ChestTreasure(
+            0x88, copy_location=ctenums.LocID.DEATH_PEAK_GUARDIAN_SPAWN),
+        TID.DEATH_PEAK_SOUTH_FACE_SUMMIT: ChestTreasure(
+            0x89, copy_location=ctenums.LocID.DEATH_PEAK_GUARDIAN_SPAWN),
         TID.DEATH_PEAK_FIELD: ChestTreasure(0x8A),
         # End Non-CS block
         TID.GENO_DOME_1F_1: ChestTreasure(0x8B),
