@@ -58,6 +58,8 @@ def _patch_remote_items(
         inst.BIT(0x20, AM.IMM8),
         inst.BEQ("clear_buf"),
         # Item
+        inst.LDA(0x00, AM.IMM8),
+        inst.XBA(),
         inst.LDA(buffer_addr, AM.LNG),
         inst.TAY(),
         inst.LDA(0x01, AM.IMM8),
