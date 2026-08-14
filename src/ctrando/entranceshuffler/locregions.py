@@ -833,8 +833,6 @@ def get_all_loc_regions() -> list[LocRegion]:
             "northern_ruins_1000_repaired",
             reward_spots={
                 TID.NORTHERN_RUINS_ANTECHAMBER_LEFT_1000,
-                TID.NORTHERN_RUINS_LANDING_POWER_TAB,
-                TID.NORTHERN_RUINS_HEROS_GRAVE_MAGIC_TAB,
             },
         )
     )
@@ -852,7 +850,9 @@ def get_all_loc_regions() -> list[LocRegion]:
 
     northern_ruins_1000_frog = LocRegion(
         "northern_ruins_1000_frog",
-        reward_spots={TID.NORTHERN_RUINS_BASEMENT_1000}
+        reward_spots={TID.NORTHERN_RUINS_BASEMENT_1000,
+                      TID.NORTHERN_RUINS_HEROS_GRAVE_MAGIC_TAB,
+                      TID.NORTHERN_RUINS_LANDING_POWER_TAB}
     )
     ret_list.append(northern_ruins_1000_frog)
 
