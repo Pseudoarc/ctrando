@@ -208,6 +208,7 @@ class TreasureOptions:
             tech_level_forced_spots =_default_tech_level_spots,
             guaranteed_loot = _default_guaranteed_loot,
             guaranteed_loot_exact = _default_guaranteed_loot_exact,
+            split_linked_chests: bool = True,
             **kwargs
     ):
         self.loot_pool = loot_pool
@@ -237,6 +238,7 @@ class TreasureOptions:
 
         self.guaranteed_loot = guaranteed_loot
         self.guaranteed_loot_exact = guaranteed_loot_exact
+        self.split_linked_chests = split_linked_chests
 
         if not (johnny_low_threshold <= johnny_mid_threshold <= johnny_high_threshold):
             raise ValueError("Johnny thresholds must be in order.")
@@ -400,6 +402,9 @@ class TreasureOptions:
                 ],
                 allow_duplicates=True
             ),
+            "split_linked_chests": argumenttypes.FlagArg(
+                "Remove dependency between versions of charged chests and the other NR chests",
+            )
         }
 
         for ind in range(1, 8):
@@ -462,7 +467,7 @@ class TreasureOptions:
                       "johnny_high_threshold", "johnny_high_item", "johnny_high_quantity",
                       "use_tech_level_treasures", "extra_tech_levels_per_char",
                       "tech_level_forced_spots",
-                      "guaranteed_loot", "guaranteed_loot_exact")
+                      "guaranteed_loot", "guaranteed_loot_exact", "split_linked_chests")
         for attr_name in attr_names:
             arg = spec[attr_name]
             arg_name = argumenttypes.attr_name_to_arg_name(attr_name)

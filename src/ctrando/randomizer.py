@@ -166,6 +166,10 @@ def extract_settings(*in_args: str) -> arguments.Settings:
 
     settings = arguments.Settings.extract_from_namespace(args)
     # print(f"Seed: {settings.general_options.seed}")
+
+    if settings.general_options.multiworld:
+        settings.treasure_options.split_linked_chests = True
+
     return settings
 
 
@@ -644,6 +648,10 @@ def get_ctrom_from_config(
                                              post_config.overworld_manager)
     b = time.time()
     print(f"({b-a})")
+
+    if settings.treasure_options.split_linked_chests:
+        treasureassign.split_charged_chests(post_config.script_manager,
+                                            post_config.treasure_data_dict)
 
     if make_tf_friendly:
         clean_scripts_for_tf(post_config.script_manager)
