@@ -140,6 +140,7 @@ _byte_pixel_width: dict[int, int] = {
     ind+0xA0: val
     for ind, (key, val) in enumerate(_symbol_pixel_width.items())
 }
+_byte_pixel_width[0] = 0
 def get_pixel_width(ct_bytes: typing.ByteString | int | str) -> int:
     if isinstance(ct_bytes, int):
         ct_bytes = bytes([ct_bytes])
@@ -364,6 +365,48 @@ class CTString(bytearray):
             pos += 1
 
         return ret_str
+
+
+def get_truncated_ct_bytes(ct_bytes: typing.ByteString,
+                      max_width: int, *,
+                      compress: bool = True,
+                      null_terminate: bool = True) -> CTString:
+    parts: list[bytearray] = []
+    for char in ct_bytes:
+        if char == 0:
+            break
+        elif char in range(0x21, 0xA0):
+            parts.append(CTString.huffman_table[char-0x21])
+        elif char in _byte_pixel_width:
+            parts.append(bytearray([char]))
+        else:
+            raise ValueError
+
+    decompressed_str = b''.join(parts)
+    total_width = 0
+    for ind, char in enumerate(decompressed_str):
+        total_width += _byte_pixel_width[char]
+        if total_width > max_width:
+            decompressed_str = decompressed_str[:ind]
+            break
+
+    if null_terminate and decompressed_str[-1] != 0:
+        decompressed_str = decompressed_str + b'\x00'
+
+    ret_ct_str = CTString(decompressed_str)
+    if compress:
+        ret_ct_str.compress()
+
+    return ret_ct_str
+
+
+def get_truncated_str(in_str: str, max_width: int):
+    ct_bytes = CTString.from_str(in_str)
+    ct_bytes = get_truncated_ct_bytes(ct_bytes, max_width,
+                                      compress=False,
+                                      null_terminate=False)
+    return CTString.ct_bytes_to_ascii(ct_bytes)
+
 
 
 class CTNameString(bytearray):
