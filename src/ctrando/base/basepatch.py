@@ -1366,6 +1366,16 @@ def base_patch_ct_rom(ct_rom: ctrom.CTRom):
     ct_rom.seek(0x010FED)
     ct_rom.write(b"\xEA" * 4)
 
+    # Guranteed Drops
+    # If charm == drop, item drops are guaranteed.  However, when the charm and
+    # drop are different, there is a chance of no drop.  This write makes the
+    # drop always happen regardless of the charm.
+
+    # Changing 0x5A = 90 to 0x64 = 100 would do it
+    # But let's go for overkill and make it 0xFF.
+    ct_rom.seek(0x3DAC28)
+    ct_rom.write(b'\xFF')
+
 
 def patch_max_tech_count(ct_rom: ctrom.CTRom):
     """Allow more than 0x7F techs on the rom."""
