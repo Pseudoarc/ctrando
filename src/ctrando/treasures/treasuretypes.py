@@ -207,7 +207,20 @@ class APReward(RewardBase):
                  item_name: str,
                  player_name: str,
                  local_string_index: int | None = None):
+        item_max_width = ctstrings.get_max_line_width_px() - ctstrings.get_pixel_width(
+            ctstrings.CTString.from_str("   Obtained ")
+        )
+        item_name = ctstrings.pre_process_string(item_name)
+        item_name = ctstrings.get_truncated_str(item_name, item_max_width)
+
         self.item_name = item_name
+
+        name_max_width = ctstrings.get_max_line_width_px() - ctstrings.get_pixel_width(
+            ctstrings.CTString.from_str("   For ")
+        )
+        player_name = ctstrings.pre_process_string(player_name)
+        player_name = ctstrings.get_truncated_str(player_name, name_max_width)
+
         self.player_name = player_name
         self.local_string_index = local_string_index
 
