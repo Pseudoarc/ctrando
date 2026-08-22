@@ -406,10 +406,10 @@ class ArmorTypes(enum.StrEnum):
 
 class EquipRandoOptions:
     _default_equipable_rando_scheme: typing.ClassVar[EquipRandoScheme] = EquipRandoScheme.VANILLA
-    _default_char_gain_type_percent: typing.ClassVar[float] = 0.50
-    _default_char_gain_personal_percent: typing.ClassVar[float] = 0.10
-    _default_char_lose_type_percent: typing.ClassVar[float] = 0.50
-    _default_gain_equip_percent: typing.ClassVar[float] = 0.50
+    _default_char_gain_type_percent: typing.ClassVar[int] = 50
+    _default_char_gain_personal_percent: typing.ClassVar[int] = 10
+    _default_char_lose_type_percent: typing.ClassVar[int] = 50
+    _default_gain_equip_percent: typing.ClassVar[int] = 50
 
     @classmethod
     def get_default_gain_chance(cls, armor_type: ArmorTypes) -> float:
