@@ -144,27 +144,11 @@ objective_5 = "any_quest"
 objective_6 = "any_quest"
 objective_7 = "any_quest"
 objective_8 = "any_quest"
-shuffle_entrances = true
+shuffle_entrances = false
 block_zenan_600 = false
 block_zenan_1000 = false
-preserve_spots = [
-    "northern_ruins_1000", "northern_ruins_600",
-    "millennial_fair",
-    "vortex_pt", "heckran_cave", "fionas_shrine",
-    "guardia_castle_1000", "snail_stop",
-    "zenan_bridge_600_north", "zenan_bridge_600_south",
-    "magus_lair",
-    "sunken_desert",
-    "guardia_castle_600", "manoria_cathedral", "tatas_house",
-    "cursed_woods", "denadoro_mts", "ozzies_fort",
-    "arris_dome", "proto_dome", "factory_ruins", "sun_keep_2300",
-    "death_peak", "geno_dome", "sun_palace",
-    "lair_ruins", "reptite_lair", "dactyl_nest",
-    "sun_keep_prehistory",
-    "terra_cave", "zeal_palace", "blackbird",
-    "north_cape", "last_village_commons"
-]
-rest_vanilla = true                    # Only shuffle locations specified by preserve_spots
+preserve_spots = []
+rest_vanilla = true
 shuffle_gates = false
 separate_gate_eras = true
 starter_min_level = 3

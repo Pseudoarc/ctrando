@@ -292,7 +292,7 @@ class GearRandoOptions:
                 "How to modify BronzeFist pre-shuffle"
             ),
         }
-        for ind in range(3):
+        for ind in range(8):
             suffix = "" if ind == 0 else f"_{ind+1}"
             group_dict= {
                 "weapon_rando_pool"+suffix: aty.MultipleDiscreteSelection(
