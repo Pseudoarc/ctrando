@@ -828,6 +828,13 @@ class EnemyAIScript:
 
         return list(used_indices)
 
+    def update_usage(self, replacement_dict: dict[int, int]):
+        for block in self.action_script + self.reaction_script:
+            for action in block.action_list:
+                tech_id: int = getattr(action, "tech_id", -1)
+                if tech_id in replacement_dict:
+                    setattr(action, "tech_id", replacement_dict[tech_id])
+
     @classmethod
     def get_script_ptr_start(cls, ct_rom: ctrom.CTRom) -> int:
         """Get the start of the script pointer table."""

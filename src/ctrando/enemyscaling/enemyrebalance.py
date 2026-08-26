@@ -67,7 +67,7 @@ def normalize_bosses(
     attack_manager.set_tech(counter_tech, new_tech_id)
 
     script = ai_manager.script_dict[ctenums.EnemyID.YAKRA]
-    _update_usage(script, {0x4E: new_tech_id})
+    script.update_usage({0x4E: new_tech_id})
 
     # Guardian
     guardian_ids = (ctenums.EnemyID.GUARDIAN, ctenums.EnemyID.LAVOS_GUARDIAN)
@@ -136,7 +136,7 @@ def normalize_bosses(
     attack_manager.set_tech(burp_tech, new_tech_id)
 
     script = ai_manager.script_dict[ctenums.EnemyID.GOLEM]
-    _update_usage(script, {0x5D: new_tech_id})
+    script.update_usage({0x5D: new_tech_id})
 
     # Yakra 13, stronger needles, earlier phase 2, less hp
     stats = stat_dict[ctenums.EnemyID.YAKRA_XIII]
@@ -153,7 +153,7 @@ def normalize_bosses(
         attack_manager.set_tech(base_tech, replacement_id)
 
     script = ai_manager.script_dict[ctenums.EnemyID.YAKRA_XIII]
-    _update_usage(script, yakra_13_replacements)
+    script.update_usage(yakra_13_replacements)
 
     hp_thresh = round(stats.hp*2/3)
     block = script.action_script[1]
