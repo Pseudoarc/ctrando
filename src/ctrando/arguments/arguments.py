@@ -50,7 +50,8 @@ class PresetData:
 class Presets(enum.Enum):
     BEGINNER = PresetData("Beginner Settings", "beginner.toml")
     DUNGEON_SHUFFLE = PresetData("Dungeon Shuffle", "dungeonshuffle.toml")
-    FF1R = PresetData("FF1R Winter 2025", "ffr-winter-marathon-main.toml")
+    MEDIUM_ENTRANCE =  PresetData("Medium Entrance", "mediumentrance.toml")
+    ENTRANCE_CSANITY = PresetData("Full Entrance/Loose KIs", "entrancecesanity.toml")
 
 
 class ModCategories(enum.Flag):
