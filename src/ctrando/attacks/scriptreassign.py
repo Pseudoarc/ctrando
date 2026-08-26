@@ -101,7 +101,7 @@ def write_magus_animation_scripts(
     for (tech_id, repl_char), new_script_id in _script_reassign_id_dict.items():
         tech = tech_man.get_tech(tech_id)
         orig_script_id = tech.graphics_header.script_id
-        script = animationscript.AnimationScript.read_from_ctrom(ct_rom, orig_script_id)
+        script = animationscript.PCTechAnimationScript.read_from_ctrom(ct_rom, orig_script_id)
         caster_obj_id = tech.battle_group.index(repl_char)
         caster_obj = script.main_script.caster_objects[caster_obj_id]
 
@@ -124,7 +124,7 @@ def main():
     for (tech_id, repl_char), new_script_id in _script_reassign_id_dict.items():
         tech = tech_man.get_tech(tech_id)
         orig_script_id = tech.graphics_header.script_id
-        script = animationscript.AnimationScript.read_from_ctrom(ct_rom, orig_script_id)
+        script = animationscript.PCTechAnimationScript.read_from_ctrom(ct_rom, orig_script_id)
         caster_obj_id = tech.battle_group.index(repl_char)
         caster_obj = script.main_script.caster_objects[caster_obj_id]
 
@@ -133,20 +133,6 @@ def main():
             if isinstance(cmd, ac._PlayAnimationBase):
                 cmd.animation_id = repl_dict.get(cmd.animation_id, cmd.animation_id)
         script.write_to_ctrom(ct_rom, new_script_id)
-
-    # script = animationscript.AnimationScript.read_from_ctrom(ct_rom, ctenums.TechID.ANTIPODE_2)
-    # lucca_obj = script.main_script.caster_objects[1]
-
-    # repl_dict = _magus_repl_anim[ctenums.CharID.LUCCA]
-    # for cmd in lucca_obj:
-    #     if isinstance(cmd, ac._PlayAnimationBase):
-    #         cmd.animation_id = repl_dict.get(cmd.animation_id, cmd.animation_id)
-
-    # script.write_to_ctrom(ct_rom, 0x84)
-    # tech = tech_man.get_tech(ctenums.TechID.ANTIPODE_2)
-    # tech.graphics_header.script_id = 0x84
-    # reassign_tech_to_magus(tech, ctenums.CharID.LUCCA)
-    # tech_man.add_tech(tech)
 
     tech_man.write_to_ctrom(ct_rom, 5, 5)
 

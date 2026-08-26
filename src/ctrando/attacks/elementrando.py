@@ -134,7 +134,7 @@ _elem_progression: dict[TechElement, tuple[ctenums.TechID, ...]] = {
 }
 
 def replace_animations(
-        anim_script: animationscript.AnimationScript,
+        anim_script: animationscript.PCTechAnimationScript,
         from_pc: ctenums.CharID,
         to_pc: ctenums.CharID,
         caster_id: int = 0
@@ -152,7 +152,7 @@ def replace_animations(
 @dataclasses.dataclass
 class _TechData:
     tech: pctech.PCTech
-    script: animationscript.AnimationScript
+    script: animationscript.PCTechAnimationScript
 
 
 def _make_hex_mist_data(
@@ -188,7 +188,7 @@ def _make_hex_mist_data(
         ac.ReturnCommand()
     ]
     script_id = base_tech.graphics_header.script_id
-    base_animation = animationscript.AnimationScript.read_from_ctrom(ct_rom, script_id)
+    base_animation = animationscript.PCTechAnimationScript.read_from_ctrom(ct_rom, script_id)
     if element == TechElement.WATER:
         caster_obj = base_animation.main_script.caster_objects[0]
         caster_obj[6:14] = [
@@ -300,7 +300,7 @@ def reassign_elemental_single_techs(
         _script_id = _tech.graphics_header.script_id
         return _TechData(
             _tech,
-            animationscript.AnimationScript.read_from_ctrom(ct_rom, _script_id)
+            animationscript.PCTechAnimationScript.read_from_ctrom(ct_rom, _script_id)
         )
 
     orig_data: dict[TechElement, tuple[_TechData, _TechData, _TechData]] = {
@@ -385,7 +385,7 @@ def chaos_reassign_elemental_single_techs(
         _script_id = _tech.graphics_header.script_id
         return _TechData(
             _tech,
-            animationscript.AnimationScript.read_from_ctrom(ct_rom, _script_id)
+            animationscript.PCTechAnimationScript.read_from_ctrom(ct_rom, _script_id)
         )
 
     elem_names = (
@@ -505,11 +505,11 @@ def get_reassign_techs(
     all_techs = tech_man.get_all_techs()
     combo_techs = {tech_id: tech for tech_id, tech in all_techs.items()
                    if tech.num_pcs > 1}
-    combo_tech_scripts: dict[int, animationscript.AnimationScript] = {}
+    combo_tech_scripts: dict[int, animationscript.PCTechAnimationScript] = {}
 
     for tech_id, tech in combo_techs.items():
         script_id = tech.graphics_header.script_id
-        combo_tech_scripts[script_id] = animationscript.AnimationScript.read_from_ctrom(
+        combo_tech_scripts[script_id] = animationscript.PCTechAnimationScript.read_from_ctrom(
             ct_rom, script_id)
 
     tech_char_usage: dict[int, dict[ctenums.CharID, str]] = {}
@@ -610,7 +610,7 @@ def get_reassign_techs(
 def make_new_combo_techs(
         tech_man: pctech.PCTechManager,
         combo_techs: dict[int, pctech.PCTech],
-        combo_tech_scripts: dict[int, animationscript.AnimationScript],
+        combo_tech_scripts: dict[int, animationscript.PCTechAnimationScript],
         char_tech_usage: dict[int, dict[ctenums.CharID, str]],
         use_magus_duals: bool,
 ) -> dict[frozenset[ctenums.CharID], list[_TechData]]:

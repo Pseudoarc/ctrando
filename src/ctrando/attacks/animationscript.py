@@ -51,42 +51,42 @@ class AnimationScriptHeader(cty.BinaryData):
     MAX_TARGETS = 5
     MAX_EFFECTS = 8
 
-    _casters = cty.byte_prop(0, 0xE0)
-    _targets = cty.byte_prop(0, 0x1F)
-    _effects = cty.byte_prop(1, 0xFF)
+    casters = cty.byte_prop(0, 0xE0)
+    targets = cty.byte_prop(0, 0x1F)
+    effects = cty.byte_prop(1, 0xFF)
 
     @property
     def num_casters(self) -> int:
-        return bin(self._casters).count("1")
+        return bin(self.casters).count("1")
 
     @num_casters.setter
     def num_casters(self, val):
         if not 1 <= val <= self.MAX_CASTERS:
             raise ValueError
 
-        self._casters = int(("1"*val).ljust(self.MAX_CASTERS, "0"), 2)
+        self.casters = int(("1" * val).ljust(self.MAX_CASTERS, "0"), 2)
 
     @property
     def num_targets(self) -> int:
-        return bin(self._targets).count("1")
+        return bin(self.targets).count("1")
 
     @num_targets.setter
     def num_targets(self, val):
         if not 0 <= val <= self.MAX_TARGETS:
             raise ValueError()
 
-        self._targets = int(("1" * val).ljust(self.MAX_TARGETS, "0"), 2)
+        self.targets = int(("1" * val).ljust(self.MAX_TARGETS, "0"), 2)
 
     @property
     def num_effects(self) -> int:
-        return bin(self._effects).count("1")
+        return bin(self.effects).count("1")
 
     @num_effects.setter
     def num_effects(self, val):
         if not 0 <= val <= self.MAX_EFFECTS:
             raise ValueError
 
-        self._effects = int(("1" * val).ljust(self.MAX_EFFECTS, "0"), 2)
+        self.effects = int(("1" * val).ljust(self.MAX_EFFECTS, "0"), 2)
 
     @property
     def num_objects(self) -> int:
@@ -144,24 +144,58 @@ class BankOffsetFinder:
 class SingleAnimationScript:
     def __init__(
             self,
-            caster_objects: Sequence[ObjectScript],
-            target_objects: Sequence[ObjectScript],
-            effect_objects: Sequence[ObjectScript]
+            caster_objects: Sequence[ObjectScript | None],
+            target_objects: Sequence[ObjectScript | None],
+            effect_objects: Sequence[ObjectScript | None]
     ):
 
         # This is just checking for coherent data in the number of objects
+        header = self.make_header(caster_objects, target_objects, effect_objects)
+
+        self.caster_objects: list[ObjectScript | None] = list(caster_objects)
+        self.target_objects: list[ObjectScript | None] = list(target_objects)
+        self.effect_objects: list[ObjectScript | None] = list(effect_objects)
+
+    def get_real_object_list(self) -> list[ObjectScript]:
+        return [
+            x for x in self.caster_objects if x is not None
+        ] + [
+            x for x in self.target_objects if x is not None
+        ] + [
+            x for x in self.effect_objects if x is not None
+        ]
+
+    @staticmethod
+    def make_header(
+            caster_objects, target_objects, effect_objects
+    ) -> AnimationScriptHeader:
         header = AnimationScriptHeader()
-        header.num_casters = len(caster_objects)
-        header.num_targets = len(target_objects)
-        header.num_effects = len(effect_objects)
+        caster_max_bit = 0x1 << (AnimationScriptHeader.MAX_CASTERS - 1)
+        caster_int = sum(
+            (caster_max_bit >> ind) for ind, obj in enumerate(caster_objects)
+            if obj is not None
+        )
 
-        self.caster_objects: list[ObjectScript] = list(caster_objects)
-        self.target_objects: list[ObjectScript] = list(target_objects)
-        self.effect_objects: list[ObjectScript] = list(effect_objects)
+        target_max_bit = 0x1 << (AnimationScriptHeader.MAX_TARGETS - 1)
+        target_int = sum(
+            (target_max_bit >> ind) for ind, obj in enumerate(target_objects)
+            if obj is not None
+        )
 
-    def get_object_list(self) -> list[ObjectScript]:
-        return self.caster_objects + self.target_objects + self.effect_objects
+        effect_max_bit = 0x1 << (AnimationScriptHeader.MAX_EFFECTS - 1)
+        effect_int = sum(
+            (effect_max_bit >> ind) for ind, obj in enumerate(effect_objects)
+            if obj is not None
+        )
 
+        header.casters = caster_int
+        header.effects = effect_int
+        header.targets = target_int
+
+        return header
+
+    def get_header(self):
+        return self.make_header(self.caster_objects, self.target_objects, self.effect_objects)
 
 # After Mauron Patch:
 # C14615  A8             TAY
@@ -174,7 +208,7 @@ class SingleAnimationScript:
 # C14623  85 42          STA $42
 
 
-class AnimationScript:
+class PCTechAnimationScript:
     FINDER: typing.ClassVar[BankOffsetFinder] = \
         BankOffsetFinder(0x014620, 0x014619)
 
@@ -198,51 +232,55 @@ class AnimationScript:
             for _ in range(num_objs)
         ]
 
-        main_casters: list[ObjectScript] = []
-        main_targets: list[ObjectScript] = []
-        main_effects: list[ObjectScript] = []
-        miss_casters: list[ObjectScript] = []
-        miss_targets: list[ObjectScript] = []
-        miss_effects: list[ObjectScript] = []
+        main_casters: list[ObjectScript | None] = []
+        main_targets: list[ObjectScript | None] = []
+        main_effects: list[ObjectScript | None] = []
+        miss_casters: list[ObjectScript | None] = []
+        miss_targets: list[ObjectScript | None] = []
+        miss_effects: list[ObjectScript | None] = []
 
         objects = (main_casters, main_targets, main_effects,
                    miss_casters, miss_targets, miss_effects)
-        counts = (main_header.num_casters, main_header.num_targets, main_header.num_effects,
-                  miss_header.num_casters, miss_header.num_targets, miss_header.num_effects)
+        masks = (main_header.casters, main_header.targets, main_header.effects,
+                 miss_header.casters, miss_header.targets, miss_header.effects)
+        counts = (
+            AnimationScriptHeader.MAX_CASTERS, AnimationScriptHeader.MAX_TARGETS,
+            AnimationScriptHeader.MAX_EFFECTS,
+            AnimationScriptHeader.MAX_CASTERS, AnimationScriptHeader.MAX_TARGETS,
+            AnimationScriptHeader.MAX_EFFECTS,
+        )
 
         bank = data_start & 0xFF0000
-        for object_group, count in zip(objects, counts):
+        for object_group, count, mask in zip(objects, counts, masks):
+            cur_bit = 1 << (count-1)
             for _ in range(count):
-                ptr = ptrs.pop(0)
-                addr = bank + ptr
-                script = extract_object_script(ct_rom, addr)
-                object_group.append(script)
+                if mask & cur_bit:
+                    ptr = ptrs.pop(0)
+                    addr = bank + ptr
+                    script = extract_object_script(ct_rom, addr)
+                    object_group.append(script)
+                else:
+                    object_group.append(None)
+                cur_bit >>= 1
 
         main_script = SingleAnimationScript(main_casters, main_targets, main_effects)
         miss_script = SingleAnimationScript(miss_casters, miss_targets, miss_effects)
 
-        return AnimationScript(main_script, miss_script)
+        return cls(main_script, miss_script)
 
     @classmethod
     def read_from_ctrom(cls, ct_rom: ctrom.CTRom, index: int) -> typing.Self:
-        """Read an AnimationScript from a CTRom"""
+        """Read an PCTechAnimationScript from a CTRom"""
         data_start = cls.FINDER.get_data_start(ct_rom, index)
         return cls.read_from_ctrom_addr(ct_rom, data_start)
 
 
     def write_to_ctrom(self, ct_rom: ctrom.CTRom, index: int):
-        main_header = AnimationScriptHeader()
-        main_header.num_casters = len(self.main_script.caster_objects)
-        main_header.num_targets = len(self.main_script.target_objects)
-        main_header.num_effects = len(self.main_script.effect_objects)
-
-        miss_header = AnimationScriptHeader()
-        miss_header.num_casters = len(self.miss_script.caster_objects)
-        miss_header.num_targets = len(self.miss_script.target_objects)
-        miss_header.num_effects = len(self.miss_script.effect_objects)
+        main_header = self.main_script.get_header()
+        miss_header = self.miss_script.get_header()
 
         total_objects = (
-            self.main_script.get_object_list() + self.miss_script.get_object_list()
+                self.main_script.get_real_object_list() + self.miss_script.get_real_object_list()
         )
 
         total_objects_b = [
@@ -284,20 +322,34 @@ class AnimationScript:
         ct_rom.write(offset.to_bytes(2, "little"))
 
 
-def read_enemy_tech_script_from_ctrom(ct_rom: ctrom.CTRom, index: int) -> AnimationScript:
+# C14536  BF F0 5F CD    LDA $CD5FF0,X  # Offset
+# C1453D  BF 65 F6 C5    LDA $C5F665,X  # Bank
+class EnemyAttackAnimationScript(PCTechAnimationScript):
+    FINDER = BankOffsetFinder(0x01453E, 0x014537)
+
+
+# C146F0  BF F0 61 CD    LDA $CD61F0,X  # Offset
+# C146F7  BF 65 F6 C5    LDA $C5F665,X  # Bank
+class EnemyTechAnimationScript(PCTechAnimationScript):
+    FINDER = BankOffsetFinder(0x0146F8, 0x0146F1)
+
+
+# TODO: Fold this into EnemyTechAnimationScript
+def read_enemy_tech_script_from_ctrom(ct_rom: ctrom.CTRom, index: int) -> EnemyTechAnimationScript:
     """
     Read an enemy script.  May need to change if a Mauron-style patch is applied.
     """
-    ptr_table_st = 0x0D61F0
-    ct_rom.seek(ptr_table_st + 2*index)
-    ptr = int.from_bytes(ct_rom.read(2), "little")
+    # ptr_table_st = 0x0D61F0
+    # ct_rom.seek(ptr_table_st + 2*index)
+    # ptr = int.from_bytes(ct_rom.read(2), "little")
+    #
+    # script_addr = 0x0D0000 + ptr
+    # return PCTechAnimationScript.read_from_ctrom_addr(ct_rom, script_addr)
+    return EnemyTechAnimationScript.read_from_ctrom(ct_rom, index)
 
-    script_addr = 0x0D0000 + ptr
-    return AnimationScript.read_from_ctrom_addr(ct_rom, script_addr)
 
-
-def make_arrow_rain_script(ct_rom: ctrom.CTRom) -> AnimationScript:
-    basic_script = AnimationScript.read_from_ctrom_addr(ct_rom, 0x0E041E)
+def make_arrow_rain_script(ct_rom: ctrom.CTRom) -> PCTechAnimationScript:
+    basic_script = PCTechAnimationScript.read_from_ctrom_addr(ct_rom, 0x0E041E)
     caster0 = [
         ac.SetObjectFacing(facing=0),
         ac.PerformSuperCommand(super_command=0x1D),
@@ -440,7 +492,7 @@ def make_arrow_rain_script(ct_rom: ctrom.CTRom) -> AnimationScript:
 
 def make_single_lucca_prot_all_script(ct_rom: ctrom.CTRom):
 
-    prot_scr = AnimationScript.read_from_ctrom(ct_rom, ctenums.TechID.PROTECT)
+    prot_scr = PCTechAnimationScript.read_from_ctrom(ct_rom, ctenums.TechID.PROTECT)
     cast_0 = [
         ac.SetObjectFacing(facing=0x01),
         ac.PlayAnimationOnce(animation_id=0x10),
@@ -643,9 +695,9 @@ def make_single_lucca_prot_all_script(ct_rom: ctrom.CTRom):
     return prot_scr
 
 
-def make_single_marle_haste_all_script(ct_rom: ctrom.CTRom) -> AnimationScript:
+def make_single_marle_haste_all_script(ct_rom: ctrom.CTRom) -> PCTechAnimationScript:
 
-    haste_scr = AnimationScript.read_from_ctrom(ct_rom, 0xD)
+    haste_scr = PCTechAnimationScript.read_from_ctrom(ct_rom, 0xD)
     caster_0 = [
         ac.LoadSpriteAtTarget(target=3),
         ac.SetObjectFacing(facing=0x15),
@@ -772,7 +824,7 @@ def make_single_marle_haste_all_script(ct_rom: ctrom.CTRom) -> AnimationScript:
 
 
 def make_marle_reraise_script(ct_rom: ctrom.CTRom):
-    reraise_scr = AnimationScript.read_from_ctrom(ct_rom, ctenums.TechID.LIFE)
+    reraise_scr = PCTechAnimationScript.read_from_ctrom(ct_rom, ctenums.TechID.LIFE)
 
     caster_0: ObjectScript = [
         ac.SetObjectFacing(facing=ac.EnumTarget.TARGET_0),
@@ -897,7 +949,7 @@ def make_marle_reraise_script(ct_rom: ctrom.CTRom):
     return  reraise_scr
 
 
-def make_gale_slash_script(ct_rom: ctrom.CTRom) -> AnimationScript:
+def make_gale_slash_script(ct_rom: ctrom.CTRom) -> PCTechAnimationScript:
     script = read_enemy_tech_script_from_ctrom(ct_rom, 0x74)
     # print_object_script(script.main_script.target_objects[0])
     # input()
@@ -917,7 +969,7 @@ def make_gale_slash_script(ct_rom: ctrom.CTRom) -> AnimationScript:
     return script
 
 
-def make_iron_orb_script(ct_rom: ctrom.CTRom) -> AnimationScript:
+def make_iron_orb_script(ct_rom: ctrom.CTRom) -> PCTechAnimationScript:
     script = read_enemy_tech_script_from_ctrom(ct_rom, 0x41)
 
     script.main_script.caster_objects[0][2] = ac.PlayAnimationOnce(animation_id=0x22)
@@ -928,10 +980,10 @@ def make_iron_orb_script(ct_rom: ctrom.CTRom) -> AnimationScript:
 
 
 def make_double_tap_script(ct_rom: ctrom.CTRom):
-    script = AnimationScript.read_from_ctrom_addr(ct_rom,
-                                                  0x0d7a6d,
-                                                  #0x0E0810
-                                                  )
+    script = PCTechAnimationScript.read_from_ctrom_addr(ct_rom,
+                                                        0x0d7a6d,
+                                                        #0x0E0810
+                                                        )
 
     script.main_script.caster_objects[0] = [
         ac.SetObjectFacing(facing=0xD),
@@ -1080,16 +1132,16 @@ def make_double_tap_script(ct_rom: ctrom.CTRom):
 
 
 class AnimationScriptManager:
-    """Class for reading/writing tech animation scripts"""
+    """Class for reading/writing pc tech animation scripts"""
 
-    def __init__(self, init_script_dict: dict[int, AnimationScript] | None = None):
+    def __init__(self, init_script_dict: dict[int, PCTechAnimationScript] | None = None):
         if init_script_dict is None:
-            init_script_dict: dict[int, AnimationScript] = dict()
+            init_script_dict: dict[int, PCTechAnimationScript] = dict()
 
         self.script_dict = init_script_dict
 
     def load_from_ctrom(self, index: int):
-        script = AnimationScript.read_from_ctrom(index)
+        script = PCTechAnimationScript.read_from_ctrom(index)
         self.script_dict[index] = script
 
     def write_to_ctrom(self, ct_rom: ctrom.CTRom):
@@ -1098,46 +1150,7 @@ class AnimationScriptManager:
 
 
 def main():
-    from ctrando.base import basepatch
-    from ctrando.postrando import palettes
-    import random
-
-    dalton_magus = palettes.SNESPalette.from_hex_sequence("#281820#E4DAA4#DCA264#B09058#DCA264#9C6A34#72897B#C6641E#3F626A#D47A34#34220C#302028")
-
-    ct_rom = ctrom.CTRom.from_file("/home/ross/Documents/ct.sfc")
-    dalton_magus.write_to_ctrom(ct_rom, 6)
-    basepatch.base_patch_ct_rom(ct_rom)
-    tech_man = pctech.PCTechManager.read_from_ctrom(ct_rom)
-    base_tech = tech_man.get_tech(ctenums.TechID.DARK_BOMB)
-    script_id = base_tech.graphics_header.script_id
-    base_tech.control_header.element = ctenums.Element.NONELEMENTAL
-    # tech.effect_headers[0] = pctech.ctt.PCTechEffectHeader(gale_slash_effect)
-    # tech.effect_headers[0].damage_formula_id = pctech.ctt.DamageFormula.PC_MELEE
-    base_tech.target_data = pctech.ctt.PCTechTargetData(b'\x07\x00')
-    base_tech.effect_headers[0].power = 0x2A
-    base_tech.graphics_header = pctech.ctt.PCTechGfxHeader(
-        bytes.fromhex("88 CE 0B 35 A9 A9 4A")
-    )
-    base_tech.graphics_header.script_id = script_id
-    base_tech.name = "*Burst Ball"
-
-    tech_man.set_tech_by_id(base_tech, ctenums.TechID.DARK_BOMB)
-
-    script = read_enemy_tech_script_from_ctrom(ct_rom, 0x88)
-    script.write_to_ctrom(ct_rom, script_id)
-
-    tech_man.write_to_ctrom(ct_rom, 5, 5)
-    #
-    # script = make_arrow_rain_script(ct_rom)
-    # script.write_to_ctrom(ct_rom, 0xA)
-    #
-    # script = make_single_marle_haste_all_script(ct_rom)
-    # script.write_to_ctrom(ct_rom, 0xD)
-
-    with open("/home/ross/Documents/ct-mod.sfc", "wb") as outfile:
-        outfile.write(ct_rom.getvalue())
-
-
+    ...
 
 
 if __name__ == "__main__":

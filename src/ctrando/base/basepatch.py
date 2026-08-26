@@ -204,11 +204,14 @@ def apply_mauron_enemy_tech_patch(
     ct_rom.seek(bank_table_addr)
     ct_rom.write(bank_table_b, FSW.MARK_USED)
 
+    bank_table_rom_addr = byteops.to_rom_ptr(bank_table_addr)
+    bank_table_rom_addr_str = bank_table_rom_addr.to_bytes(3, "little").hex()
     # This is Mauron's patch which fetches the tech script address using the
     # bank table.  I'm not disassembling it except to show the bank load.
     rt = bytearray.fromhex(
         "A8 0A AA BF F0 61 CD 85 40 BB"
-        "BF C6 DD CC"  # LDA $CCDDC6, X loads from the bank table
+        "BF" + bank_table_rom_addr_str +
+        # "BF C6 DD CC"  # LDA $CCDDC6, X loads from the bank table
         "8542E2207BA8AAB7409581C8B7409580C8BBC00400D0F098C221654085407BA8"
         "C2200680901FADB3A0D016A9010099AC5D5A980A0AA8A74099BD5DA54299BF5D7"
         "AE640E640C8C01000D0D57BE220ADB3A0F0099CB3A0A482848080C2"
@@ -1316,6 +1319,8 @@ def base_patch_ct_rom(ct_rom: ctrom.CTRom):
     modifyitems.add_crit_accessories(ct_rom)
 
     apply_mauron_player_tech_patch(ct_rom)
+    apply_mauron_enemy_tech_patch(ct_rom)
+    apply_mauron_enemy_attack_patch(ct_rom)
     patch_max_tech_count(ct_rom)
     expand_eventcommands(ct_rom)
     patch_level_up(ct_rom)
