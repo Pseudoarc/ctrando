@@ -1,8 +1,7 @@
 """Module for storing boss rando options."""
 import argparse
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 import enum
-import functools
 import typing
 
 from ctrando.arguments import argumenttypes as aty
@@ -42,21 +41,13 @@ class BossRandoOptions:
         bosstypes.BossID.KRAWLIE, bosstypes.BossID.SUPER_SLASH,
         bosstypes.BossID.FLEA_PLUS, bosstypes.BossID.ATROPOS_XR,
     )
-
-
-    _arg_names: typing.ClassVar[tuple[str, ...]] = (
-        "boss_randomization_type",
-        "midboss_randomization_type",
-        "vanilla_boss_spots",
-        "boss_pool", "midboss_pool"
+    _default_lavos_gauntlet_bosses = (
+        bosstypes.BossID.DRAGON_TANK, bosstypes.BossID.GUARDIAN,
+        bosstypes.BossID.HECKRAN, bosstypes.BossID.ZOMBOR,
+        bosstypes.BossID.MASA_MUNE, bosstypes.BossID.NIZBEL,
+        bosstypes.BossID.MAGUS, bosstypes.BossID.BLACK_TYRANO,
+        bosstypes.BossID.GIGA_GAIA
     )
-    _help_dict: typing.ClassVar[dict[str, str]] = {
-        "boss_randomization_type": "How bosses should be assigned to spots",
-        "midboss_randomization_type": "How midbosses should be assigned to spots",
-        "vanilla_boss_spots": "Spots which should always have their vanilla boss (or midboss)",
-        "boss_pool": "Bosses to include in assignment (only when boss type is \"random\")",
-        "midboss_pool": "Midbosses to include in assignment (only when midboss randomization type is \"random\")",
-    }
     _spec_dict: typing.ClassVar[aty.ArgSpec] = {
         "boss_randomization_type": aty.arg_from_enum(
             BossRandoType, _default_rando_scheme,"How bosses should be assigned to spots"
@@ -80,6 +71,14 @@ class BossRandoOptions:
             force_enum_names=True,
             available_pool=list(_default_midboss_pool)
         ),
+        "lavos_gauntlet_bosses": aty.arg_multiple_from_enum(
+            bosstypes.BossID, _default_lavos_gauntlet_bosses,
+            "Bosses to fight in the Lavos gauntlet (max 9)",
+            available_pool=_default_boss_pool + (bosstypes.BossID.ZEAL_2, bosstypes.BossID.MAMMON_M),
+        ),
+        "lavos_gauntlet_rewards": aty.FlagArg(
+            "Lavos Gauntlet bosses have the same rewards as the base bosses."
+        )
     }
     def __init__(
             self,
@@ -87,13 +86,17 @@ class BossRandoOptions:
             midboss_randomization_type: MidBossRandoType = _default_midboss_rando_scheme,
             vanilla_boss_spots: Iterable[bosstypes.BossSpotID] = _default_vanilla_spots,
             boss_pool: Iterable[bosstypes.BossID] = _default_boss_pool,
-            midboss_pool: Iterable[bosstypes.BossID] = _default_midboss_pool
+            midboss_pool: Iterable[bosstypes.BossID] = _default_midboss_pool,
+            lavos_gauntlet_bosses: Sequence[bosstypes.BossID] = _default_lavos_gauntlet_bosses,
+            lavos_gauntlet_rewards: bool = False
     ):
         self.midboss_randomization_type = midboss_randomization_type
         self.boss_randomization_type = boss_randomization_type
         self.vanilla_boss_spots = tuple(vanilla_boss_spots)
         self.boss_pool = tuple(boss_pool)
         self.midboss_pool = tuple(midboss_pool)
+        self.lavos_gauntlet_bosses = lavos_gauntlet_bosses
+        self.lavos_gauntlet_rewards = lavos_gauntlet_rewards
 
     @classmethod
     def get_argument_spec(cls) -> aty.ArgSpec:
@@ -106,49 +109,14 @@ class BossRandoOptions:
             "Options for how bosses are assigned to locations."
         )
 
-        aty.add_str_enum_to_group(
-            group, "--boss-randomization-type", BossRandoType,
-        )
-
-        aty.add_str_enum_to_group(
-            group, "--midboss-randomization-type", MidBossRandoType
-        )
-
-        group.add_argument(
-            "--vanilla-boss-spots",
-            nargs="*",
-            type=aty.str_to_enum_fn_maker(enum_type=bosstypes.BossSpotID,
-                                          force_enum_names=True),
-            help="Spots which must keep their vanilla boss (also midboss).",
-            default=argparse.SUPPRESS
-        )
-
-        group.add_argument(
-            "--boss-pool",
-            nargs="+",
-            type=aty.str_to_enum_fn_maker(enum_type=bosstypes.BossID,
-                                          force_enum_names=True),
-            help="Bosses to include in assignment (only when --boss-rando-scheme=\"random\")",
-            default=argparse.SUPPRESS
-        )
-
-        group.add_argument(
-            "--midboss-pool",
-            nargs="+",
-            type=aty.str_to_enum_fn_maker(enum_type=bosstypes.BossID,
-                                          force_enum_names=True),
-            help="Midbosses to include in assignment (only when --midboss-rando-scheme=\"random\")",
-            default=argparse.SUPPRESS
-        )
+        for attr_name, argument in cls.get_argument_spec().items():
+            arg_name = aty.attr_name_to_arg_name(attr_name)
+            argument.add_to_argparse(arg_name, group)
 
     @classmethod
     def extract_from_namespace(
             cls,
             namespace: argparse.Namespace
     ) -> typing.Self:
-        attr_names = [
-            "boss_randomization_type", "midboss_randomization_type",
-            "vanilla_boss_spots", "boss_pool", "midboss_pool"
-        ]
-
+        attr_names = list(cls.get_argument_spec().keys())
         return aty.extract_from_namespace(cls, arg_names=attr_names, namespace=namespace)
