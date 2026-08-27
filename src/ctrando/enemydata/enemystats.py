@@ -99,6 +99,99 @@ class EnemySpriteData:
         self._data[4] &= 0xFC
         self._data[4] |= val
 
+    @property
+    def is_primary_enemy(self) -> bool:
+        return bool(self._data[4] & 0x08)
+
+    @is_primary_enemy.setter
+    def is_primary_enemy(self, val: bool):
+        self._data[4] &= 0xFF-0x08
+        if val:
+            self._data[4] |= 0x08
+
+    @property
+    def unk_04_10(self) -> bool:
+        return bool(self._data[4] & 0x10)
+
+    @unk_04_10.setter
+    def unk_04_10(self, val: bool):
+        self._data[4] &= 0xFF - 0x10
+        if val:
+            self._data[4] |= 0x10
+
+    @property
+    def unk_04_20(self) -> bool:
+        return bool(self._data[4] & 0x20)
+
+    @unk_04_20.setter
+    def unk_04_20(self, val: bool):
+        self._data[4] &= 0xFF - 0x20
+        if val:
+            self._data[4] |= 0x20
+
+    @property
+    def unk_04_40(self) -> bool:
+        return bool(self._data[4] & 0x40)
+
+    @unk_04_40.setter
+    def unk_04_40(self, val: bool):
+        mask = 0x40
+        self._data[4] &= 0xFF - mask
+        if val:
+            self._data[4] |= mask
+
+    @property
+    def unk_04_80(self) -> bool:
+        return bool(self._data[4] & 0x80)
+
+    @unk_04_80.setter
+    def unk_04_80(self, val: bool):
+        mask = 0x80
+        self._data[4] &= 0xFF - mask
+        if val:
+            self._data[4] |= mask
+
+    @property
+    def hand_x_coord(self) -> int:
+        return self._data[5]
+
+    @hand_x_coord.setter
+    def hand_x_coord(self, val: int):
+        self._data[5] = val
+
+    @property
+    def hand_y_coord(self) -> int:
+        return self._data[6]
+
+    @hand_y_coord.setter
+    def hand_y_coord(self, val: int):
+        self._data[6] = val
+
+    @property
+    def unk_07(self) -> int:
+        return self._data[7]
+
+    @unk_07.setter
+    def unk_07(self, val: int):
+        self._data[7] = val
+
+    @property
+    def unk_08(self) -> int:
+        return self._data[8]
+
+    @unk_08.setter
+    def unk_08(self, val: int):
+        self._data[8] = val
+
+    @property
+    def unk_09(self) -> int:
+        return self._data[9]
+
+    @unk_09.setter
+    def unk_09(self, val: int):
+        self._data[9] = val
+
+
     def set_affect_layer_1(self, affects_layer_1: bool):
         """Will effects on this sprite also affect layer1 tiles."""
         if affects_layer_1:
