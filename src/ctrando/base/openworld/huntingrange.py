@@ -35,6 +35,7 @@ class EventMod(locationevent.LocEventMod):
 
             new_block = (
                 EF()
+                .add(EC.set_flag(memory.Flags.HUNTING_RANGE_NU_REWARD))
                 .add(EC.assign_val_to_mem(ctenums.ItemID.THIRD_EYE, 0x7F0200, 1))
                 .add(EC.add_item_memory(0x7F0200))
                 .add(EC.auto_text_box(
@@ -49,4 +50,4 @@ class EventMod(locationevent.LocEventMod):
             )
 
             pos += len(new_block)
-            script.delete_commands(pos, 2)
+            script.delete_commands(pos, 3)
