@@ -179,6 +179,7 @@ class EventMod(locationevent.LocEventMod):
         # item memory, add item, display text.
         script.insert_commands(
             EF()
+            .add(EC.set_flag(memory.Flags.OBTAINED_DENADORO_KEY))
             .add(EC.assign_val_to_mem(ctenums.ItemID.BENT_SWORD, 0x7F0200, 1))
             .add(EC.add_item(ctenums.ItemID.BENT_SWORD))
             .get_bytearray(),
