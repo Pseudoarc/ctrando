@@ -247,7 +247,7 @@ def modify_boss_midboss_xp_tp(
 
 
 def apply_drop_charm_group(
-        vanilla_enemy_dict: dict[ctenums.EnemyID, enemystats.StatList],
+        vanilla_enemy_dict: dict[ctenums.EnemyID, enemystats.EnemyStats],
         current_enemy_dict: dict[ctenums.EnemyID, enemystats.EnemyStats],
         group: battlerewards.RewardGroup,
         allowed_ds_items: Sequence[gearrandooptions.DSItem],
@@ -351,12 +351,6 @@ def apply_reward_rando(
     mark_charm_and_drop(enemy_dict, reward_options.charm_options.mark_charmable_enemies,
                         reward_options.drop_options.mark_dropping_enemies)
 
-    # for enemy_id, stats in enemy_dict.items():
-    #     has_charm = stats.charm_item != ctenums.ItemID.NONE
-    #     has_drop = stats.drop_item != ctenums.ItemID.NONE
-    #
-    #     if has_charm or has_drop:
-    #         print(f"{stats.name}\t{stats.charm_item}\t{stats.drop_item}")
 
 
 

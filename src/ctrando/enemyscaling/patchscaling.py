@@ -461,16 +461,6 @@ def patch_enemy_stat_loads(
     ct_rom.seek(is_scaled_addr)
     ct_rom.write(is_scaled_b, ctrom.freespace.FSWriteType.MARK_USED)
 
-    # scale_part = [
-    #     # ignore scaling for some enemies
-    #     inst.LDA(index_offset, AM.ABS_Y),
-    # ]
-    #
-    # for enemy_id in scaling_exclusion_list:
-    #     scale_part += [
-    #         inst.CMP(enemy_id, AM.IMM8),
-    #         inst.BEQ("skip_scaling")
-    #     ]
     scale_part = [
         inst.TDC(),
         inst.LDA(index_offset, AM.ABS_Y),

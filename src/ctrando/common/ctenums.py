@@ -509,7 +509,7 @@ class LocID(StrIntEnum):
     JUNK_1C6 = 0x1C6
     JUNK_1C7 = 0x1C7
     GAUNTLET_REPTITE_LAIR = 0x1C8
-    GAUTNLET_MAGUS_INNER_SANCTUM = 0x1C9
+    GAUNTLET_MAGUS_INNER_SANCTUM = 0x1C9
     GAUNTLET_TYRANO_LAIR = 0x1CA
     GAUNTLET_MT_WOE_SUMMIT = 0x1CB
     ETO_CREDITS = 0x1CC
@@ -1289,9 +1289,9 @@ class EnemyID(StrIntEnum):
     GNASHER = 0x1C
     GNAWER = 0x1D
     NAGA_ETTE = 0x1E
-    LAVOS_SUPPORT_UNK_1F = 0x1F
+    LAVOS_SUPPORT_UNK_1F = 0x1F  # Ruminator ai, stats don't match others
     RUMINATOR = 0x20
-    LAVOS_SUPPORT_UNK_21 = 0x21
+    LAVOS_SUPPORT_UNK_21 = 0x21  # Ocotpod ai, stats don't match otehrs
     OCTOPOD = 0x22
     OCTOBLUSH = 0x23
     OCTOBINO = 0x24
@@ -1317,7 +1317,7 @@ class EnemyID(StrIntEnum):
     #  = 0x38
     JUGGLER = 0x39
     MAGE = 0x3B
-    UNKNOWN_3C = 0x3C
+    UNKNOWN_3C = 0x3C  # Junk stats, purple reptite ai
     REPTITE_PURPLE = 0x3D
     BLUE_SHIELD = 0x3E
     YODU_DE = 0x3F
@@ -1361,7 +1361,7 @@ class EnemyID(StrIntEnum):
     SAVE_POINT_ENEMY = 0x64
     MOHAVOR = 0x65
     SHADOW = 0x66
-    LAVOS_SUPPORT_UNK_67 = 0x67
+    LAVOS_SUPPORT_UNK_67 = 0x67  # Base ai, rust tyrano-ish stats
     BASE = 0x68
     ACID = 0x69
     ALKALINE = 0x6A
@@ -1377,8 +1377,8 @@ class EnemyID(StrIntEnum):
     OGAN = 0x74
     FLUNKY = 0x75
     GROUPIE = 0x76
-    LAVOS_SUPPORT_UNK_77 = 0x77
-    LAVOS_SUPPORT_UNK_78 = 0x78
+    LAVOS_SUPPORT_UNK_77 = 0x77  # display-ish stats, winged ape ai
+    LAVOS_SUPPORT_UNK_78 = 0x78  # display-ish stats, winged ape ai
     WINGED_APE = 0x79
     CAVE_APE = 0x7A
     MEGASAUR = 0x7B
@@ -1491,8 +1491,8 @@ class EnemyID(StrIntEnum):
     LAVOS_TYRANO = 0xE6
     LAVOS_GIGA_GAIA_HEAD = 0xE7
     LAVOS_UNK_E8 = 0xE8
-    LAVOS_UNK_E9 = 0xE9
-    LAVOS_UNK_EA = 0xEA
+    LAVOS_UNK_E9 = 0xE9  # Mother Brain stats, junk script
+    LAVOS_UNK_EA = 0xEA  # Rust Tyrano stats, junk script
     LAVOS_OCEAN_PALACE = 0xEB
     LAVOS_1 = 0xEC
     LAVOS_3_LEFT = 0xED

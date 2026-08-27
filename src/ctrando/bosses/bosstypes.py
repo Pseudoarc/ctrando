@@ -430,8 +430,8 @@ _default_schemes: dict[BossID, BossScheme] = {
     BossID.GATO: _BS(_BP(_EID.GATO, 6)),
     BossID.GAUNTLET_DRAGON_TANK: _BS(
         _BP(_EID.LAVOS_DRAGON_TANK, 3),
-        _BP(_EID.LAVOS_TANK_LEFT_HEAD, 9),
-        _BP(_EID.LAVOS_TANK_RIGHT_GRINDER, 0xA)
+        _BP(_EID.LAVOS_TANK_LEFT_HEAD, 7, (-0x4F, 0x01 )),
+        _BP(_EID.LAVOS_TANK_RIGHT_GRINDER, 0x9, (0x41, 0x01))
     ),
     BossID.GAUNTLET_GIGA_GAIA: _BS(
         _BP(_EID.LAVOS_GIGA_GAIA_HEAD, 6),
@@ -550,8 +550,8 @@ _default_schemes: dict[BossID, BossScheme] = {
     BossID.ZEAL: BossScheme(BossPart(_EID.ZEAL, 9)),
     BossID.ZEAL_2: BossScheme(
         BossPart(_EID.ZEAL_2_CENTER, 3),
-        BossPart(_EID.ZEAL_2_LEFT, 6),  # Fake Coords
-        BossPart(_EID.ZEAL_2_RIGHT, 9),  # Fake Coords
+        BossPart(_EID.ZEAL_2_LEFT, 9, (-0x38, 0x1E)),  # Fake Coords
+        BossPart(_EID.ZEAL_2_RIGHT, 7, (0x38, 0x1E)),  # Fake Coords
     ),
     BossID.ZOMBOR: BossScheme(
         BossPart(_EID.ZOMBOR_TOP, 9),

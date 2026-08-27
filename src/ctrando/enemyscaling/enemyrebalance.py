@@ -33,17 +33,6 @@ def _adjust_stat(
     setattr(enemy_stats, stat_name, stat)
 
 
-def _update_usage(
-        ai_script: aity.EnemyAIScript,
-        replacement_dict: dict[int, int]
-):
-    for block in ai_script.action_script + ai_script.reaction_script:
-        for action in block.action_list:
-            tech_id: int = getattr(action, "tech_id", -1)
-            if tech_id in replacement_dict:
-                setattr(action, "tech_id", replacement_dict[tech_id])
-
-
 def normalize_bosses(
         stat_dict: dict[ctenums.EnemyID, enemystats.EnemyStats],
         ai_manager: enemyaimanager.EnemyAIManager,

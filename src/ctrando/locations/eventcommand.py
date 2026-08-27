@@ -868,7 +868,7 @@ class EventCommand:
         # Make sure that num_bytes is 1 or 2.  Otherwise try to guess it from
         # the value.
         if num_bytes not in (1, 2):
-            print(f'Warning: num_bytes ({num_bytes}) must be 1 or 2.')
+            raise ValueError(f'num_bytes ({num_bytes}) must be 1 or 2.')
             if val < (1 << 8):
                 print('Setting num_bytes to 1')
                 num_bytes = 1
@@ -883,9 +883,7 @@ class EventCommand:
 
         max_val = (1 << num_bytes*8) - 1
         if val > max_val:
-            print(f"Warning: Value ({val}) exceeds maximum ({max_val}). "
-                  f"Truncating to {max_val}")
-            val = max_val
+            raise ValueError(f"Value ({val}) exceeds maximum ({max_val}). ")
 
         # Make sure that the target address is in RAM - [0x7E0000, 0x7FFFFF]
         if not (0x7E0000 <= address <= 0x7FFFFF) and address >= 0x2000:

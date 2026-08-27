@@ -173,7 +173,7 @@ def assign_boss_to_one_spot_location_script(
         last_coord_finder: typing.Optional[HookLocator] = None,
         battle_x_px: typing.Optional[int] = None,
         battle_y_px: typing.Optional[int] = None,
-):
+) -> list[int]:
     """
     Assign any boss to a location which originally has a one spot boss.
     - script: LocationEvent -- The script in which the assignment is made
@@ -187,6 +187,7 @@ def assign_boss_to_one_spot_location_script(
             Used to set the positions of additional parts.
     - battle_x_px, battle_y_px: (int, int) -- If last_coord_finder is None, gives hardcoded
             values for the position of the boss
+    Returns list of added object ids.
     """
 
     # replace the main part with
@@ -224,11 +225,13 @@ def assign_boss_to_one_spot_location_script(
 
     is_shown = True if show_pos_finder is None else False
 
+    ret_ids: list[int] = []
     show_cmds = EF()
     for part in boss_scheme.parts[1:]:
         obj_id = append_boss_object(
             script, part, battle_x_px, battle_y_px, force_px, is_shown
         )
+        ret_ids.append(obj_id)
 
         if not is_shown:
             show_cmds.add(EC.set_object_drawing_status(obj_id, True))
@@ -236,6 +239,8 @@ def assign_boss_to_one_spot_location_script(
     if not is_shown:
         pos = show_pos_finder(script)
         script.insert_commands(show_cmds.get_bytearray(), pos)
+
+    return ret_ids
 
 
 @dataclass
