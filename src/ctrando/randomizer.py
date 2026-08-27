@@ -18,11 +18,10 @@ from ctrando.logic import logictweaks, logictypes
 from ctrando.shops import shoptypes, shoprando, shopchars
 
 from ctrando.attacks import (
-    pctechrandomizer, techdescriptions, pctech, animationscript, scriptreassign,
-    techmenu, techrebalance
+    pctechrandomizer, techdescriptions, techmenu, techrebalance
 )
 from ctrando.base import basepatch, xptpmod, modifymaps, chesttext
-from ctrando.bosses import staticbossscaling, bossrando, bosstypes
+from ctrando.bosses import staticbossscaling, bossrando, bosstypes, lavosgauntlettypes, lavosgauntlet
 from ctrando.characters import characterwriter, charactermods
 from ctrando.common import ctrom, ctenums, randostate
 from ctrando.common.random import RNGType
@@ -57,6 +56,7 @@ def apply_dynamic_scaling(
         region_map: regionmap.RegionMap,
         treasure_assignment: dict[ctenums.TreasureID, ttypes.RewardType],
         recruit_assignment: dict[ctenums.RecruitID, ctenums.CharID | None],
+        gauntlet_manager: lavosgauntlettypes.GauntletManager,
         settings: arguments.Settings,
 ):
     scaling_opts = settings.scaling_options
@@ -95,6 +95,7 @@ def apply_dynamic_scaling(
         starting_rewards=settings.logic_options.starter_rewards,
         enemy_stat_dict=enemy_data_dict,
         boss_scaling_settings=settings.boss_scaling_options.boss_level_dict,
+        gauntlet_manager=gauntlet_manager
     )
 
 
@@ -498,12 +499,17 @@ def get_ctrom_from_config(
                                 post_config.enemy_sprite_dict)
     enemyrando.nerf_phys_immune(config.enemy_data_dict)
 
+    gauntlet_manager = lavosgauntlettypes.GauntletManager(
+        settings.boss_rando_options.lavos_gauntlet_bosses
+    )
+
     apply_dynamic_scaling(ct_rom,
                           post_config.script_manager,
                           config.enemy_data_dict,
                           config.region_map,
                           config.treasure_assignment,
                           config.recruit_dict,
+                          gauntlet_manager,
                           settings)
 
     bossrando.fix_boss_sprites_given_assignment(config.boss_assignment_dict,
@@ -542,6 +548,11 @@ def get_ctrom_from_config(
             post_config.enemy_ai_manager,
             post_config.enemy_attack_manager
         )
+
+    lavosgauntlet.apply_lavos_gaunltet_full(gauntlet_manager, ct_rom, post_config.script_manager,
+                                            post_config.loc_data_dict, config.enemy_data_dict,
+                                            post_config.enemy_sprite_dict, post_config.enemy_ai_manager,
+                                            post_config.enemy_attack_manager, True)
 
     enemystats.set_enemy_sightscope_settings(
         ct_rom, config.enemy_data_dict,

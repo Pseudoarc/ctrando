@@ -5,7 +5,7 @@ from typing import Optional
 
 from ctrando.arguments import enemyscaling
 from ctrando.characters.ctpcstats import HPGrowth
-from ctrando.bosses import bosstypes as bty
+from ctrando.bosses import bosstypes as bty, lavosgauntlettypes as lgt
 from ctrando.enemyai.enemyaitypes import StatOffset
 from ctrando.locations import scriptmanager
 from ctrando.locations.locationevent import FunctionID as FID
@@ -1243,6 +1243,7 @@ def patch_ai_scripts(
 def get_true_levels_bytes(
         enemy_dict: dict[ctenums.EnemyID, EnemyStats],
         boss_scaling_settings: dict[bty.BossID, int | None],
+        gauntlet_manager: lgt.GauntletManager | None = None
 ):
     true_levels: bytearray = bytearray(
         [enemy_dict.get(ctenums.EnemyID(ind), EnemyStats()).level
@@ -1314,10 +1315,17 @@ def get_true_levels_bytes(
     true_levels[ctenums.EnemyID.LAVOS_OCEAN_PALACE] = 50
 
     for boss_id, level in boss_scaling_settings.items():
+        if level is None:
+            continue
+
         scheme = bty.get_default_scheme(boss_id)
         enemy_ids = [part.enemy_id for part in scheme.parts]
         for enemy_id in enemy_ids:
             true_levels[enemy_id] = level
+
+    if gauntlet_manager is not None:
+        for lavos_id, base_id in gauntlet_manager.gauntlet_enemy_to_base_dict.items():
+            true_levels[lavos_id] = true_levels[base_id]
 
     return true_levels
 
@@ -1335,6 +1343,7 @@ def apply_full_scaling_patch(
         recruit_assignment: dict[ctenums.RecruitID, ctenums.CharID | None],
         starting_rewards: list[typing.Any],
         boss_scaling_settings: dict[bty.BossID, int| None],
+        gauntlet_manager: lgt.GauntletManager
 ):
     if scaling_scheme_type == enemyscaling.DynamicScalingScheme.NONE:
         return
@@ -1465,7 +1474,9 @@ def apply_full_scaling_patch(
         scaling_scheme + [inst.RTL()], ct_rom
     )
 
-    true_levels = get_true_levels_bytes(enemy_stat_dict, boss_scaling_settings)
+    true_levels = get_true_levels_bytes(
+        enemy_stat_dict, boss_scaling_settings, gauntlet_manager
+    )
     true_level_addr = ct_rom.space_manager.get_free_addr(
         len(true_levels), 0x410000
     )
