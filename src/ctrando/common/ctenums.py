@@ -2104,3 +2104,23 @@ class BoostID(StrIntEnum):
     SPD_POW_3 = 0x18
     POWER_5 = 0x19
     MAGIC_5 = 0x1A
+
+# Vanilla unused tech ids
+# [
+#     04, 1C, 26, 28, 2D, 3B,
+#     4B, 52, 53, 59, 5E, 5F, 61, 65, 70, 71, 78, 7B, 7C, 7D, 87, 8C,
+#     8D, 93, AA, AB, AC, AE, AF, B2, B3, B6, BC, BD, BE, BF, C0, C2, C3, C4,
+#     C5, C6, C7, C8, C9, CA, CB, CC, CD, CE, CF, D0, D1, D2, D3, D4, D5, D6,
+#     D7, D8, D9, DA, DB, DC, DD, DE, DF, E0, E1, E2, E3, E4, E5, E6, E7, EA,
+#     EB, EC, F5, FA, FD
+# ]
+class EnemyTechID(StrIntEnum):
+    YAKRA_BUFFED_DROO = 0x04
+    GOLEM_BUFFED_BURP = 0x1C
+    YAKRA_XIII_BUFFED_NEEDLE = 0x26
+    YAKRA_XIII_BUFFED_NEEDLE_ALL = 0x28
+    LAVOS_BAD_IMPULSE = 0x2D
+    LAVOS_HARTFIRE_SWORD = 0x3B
+
+    BAD_IMPULSE = 0x96
+    HARTFIRE_SWORD = 0x97

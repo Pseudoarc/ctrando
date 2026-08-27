@@ -40,10 +40,6 @@ def normalize_bosses(
 ):
     """Modify boss stats and behaviors for a more uniform difficulty"""
 
-    tech_usage_dict = build_tech_usage(ai_manager)
-    free_tech_ids = [tech_id for tech_id, usage in tech_usage_dict.items()
-                     if not usage and tech_id < 0xFE]
-
     # Yakra
     # Boost Attack a bit, stronger counterattack, lower hp a bit
     stats = stat_dict[ctenums.EnemyID.YAKRA]
@@ -52,7 +48,7 @@ def normalize_bosses(
 
     counter_tech = attack_manager.get_tech(0x4E)
     counter_tech.effect.power = 0x10
-    new_tech_id = free_tech_ids.pop()
+    new_tech_id = ctenums.EnemyTechID.YAKRA_BUFFED_DROO
     attack_manager.set_tech(counter_tech, new_tech_id)
 
     script = ai_manager.script_dict[ctenums.EnemyID.YAKRA]
@@ -121,7 +117,7 @@ def normalize_bosses(
     # Golem more burp
     burp_tech = attack_manager.get_tech(0x5D)
     burp_tech.effect.power = 0x06
-    new_tech_id = free_tech_ids.pop()
+    new_tech_id = ctenums.EnemyTechID.GOLEM_BUFFED_BURP
     attack_manager.set_tech(burp_tech, new_tech_id)
 
     script = ai_manager.script_dict[ctenums.EnemyID.GOLEM]
@@ -132,8 +128,8 @@ def normalize_bosses(
     _adjust_stat(stats, "hp", 0.75)
 
     yakra_13_replacements = {
-        0x0E: free_tech_ids.pop(),
-        0xA8: free_tech_ids.pop()
+        0x0E: ctenums.EnemyTechID.YAKRA_XIII_BUFFED_NEEDLE,
+        0xA8: ctenums.EnemyTechID.YAKRA_XIII_BUFFED_NEEDLE_ALL
     }
 
     for tech_id, replacement_id in yakra_13_replacements.items():
