@@ -799,8 +799,8 @@ def split_charged_chests(
     elem_charge_spot_flags = (
         # memory.Flags.GUARDIA_CASTLE_SEALED_1000_OBTAINED,
         memory.Flags.TRUCE_INN_SEALED_1000_OBTAINED,
-        memory.Flags.PORRE_ELDER_SEALED_1_OBTAINED,
-        memory.Flags.PORRE_ELDER_SEALED_2_OBTAINED,
+        memory.Flags.PORRE_MAYOR_SEALED_1_OBTAINED,
+        memory.Flags.PORRE_MAYOR_SEALED_2_OBTAINED,
     )
 
     elem_is_charged_flags = (
