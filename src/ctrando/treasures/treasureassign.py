@@ -785,8 +785,7 @@ def split_charged_chests(
             spot.base_loc_spot.object_id,
             spot.base_loc_spot.function_id,
             spot.base_loc_spot.reward,
-            spot.base_loc_spot.item_num,
-            spot.base_loc_spot.num_reward_strings-1,
+            spot.base_loc_spot.item_num, 1,
         ), spot.charge_loc_base_spot, spot.reward
     )
 
@@ -853,8 +852,7 @@ def split_charged_chests(
                 spot.base_loc_spot.object_id,
                 spot.base_loc_spot.function_id,
                 spot.base_loc_spot.reward,
-                spot.base_loc_spot.item_num,
-                spot.base_loc_spot.num_reward_strings-1,
+                spot.base_loc_spot.item_num, 1,
             ),
             spot.charge_loc_base_spot, spot.reward
         )
