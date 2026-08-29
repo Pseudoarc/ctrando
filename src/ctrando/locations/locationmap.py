@@ -249,6 +249,8 @@ class LocationMap:
 
             if map_data[cur_pos] & 0x80:
                 num_reps = map_data[cur_pos+3]
+                if num_reps == 0:
+                    num_reps = 256
                 cur_pos += 4
             else:
                 num_reps = 1
@@ -261,6 +263,14 @@ class LocationMap:
             num_props += num_reps
 
         return cls(header, l1_tiles, l2_tiles, l3_tiles, tile_props)
+
+    @classmethod
+    def get_location_map_bytes(cls, ct_rom: ctrom.CTRom, loc_id: int) -> bytes:
+        loc_data = locationtypes.LocationData.read_from_ctrom(ct_rom, loc_id)
+        map_id = loc_data.map_id
+        map_ptr = get_map_ptr(ct_rom.getbuffer(), map_id)
+        map_b = ctcompression.decompress(ct_rom.getbuffer(), map_ptr)
+        return map_b
 
     @classmethod
     def read_from_ctrom(cls, ct_rom: ctrom.CTRom, map_id: int) -> 'LocationMap':
@@ -277,7 +287,8 @@ class LocationMap:
 
         return cls.read_from_ctrom(ct_rom, map_id)
 
-    def _collect_tile_props(self) -> bytearray:
+    @staticmethod
+    def _collect_tile_props(tile_props: list[LocationTileProperties]) -> bytearray:
         """
         Convert self.tile_props to a bytearray as it would appear in map data
         on the rom.
@@ -285,13 +296,14 @@ class LocationMap:
         cur_pos = 0
 
         ret = bytearray()
-        while cur_pos < len(self.tile_props):
-            cur_props = self.tile_props[cur_pos]
+        while cur_pos < len(tile_props):
+            cur_props = tile_props[cur_pos]
             end_pos = cur_pos + 1
 
             while (
-                    end_pos < len(self.tile_props) and
-                    self.tile_props[end_pos] == self.tile_props[cur_pos]
+                    end_pos < len(tile_props) and
+                    end_pos - cur_pos < 0x100 and
+                    tile_props[end_pos] == tile_props[cur_pos]
             ):
                 end_pos += 1
 
@@ -303,6 +315,8 @@ class LocationMap:
                 next_entry = bytearray(4)
                 next_entry[0:3] = cur_props
                 next_entry[0] |= 0x80
+                if num_reps == 0x100:
+                    num_reps = 0
                 next_entry[3] = num_reps
                 ret.extend(next_entry)
 
@@ -319,7 +333,7 @@ class LocationMap:
         ret_b.extend(self.l1_tiles)
         ret_b.extend(self.l2_tiles)
         ret_b.extend(self.l3_tiles)
-        ret_b.extend(self._collect_tile_props())
+        ret_b.extend(self._collect_tile_props(self.tile_props))
 
         return ret_b
 

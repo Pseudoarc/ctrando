@@ -113,7 +113,7 @@ def make_gauntlet_map_alt(
     ct_map.header.enable_layer_3_subscreen_addsub = True
     ct_map.header.enable_sprite_subscreen_addsub = False
     ct_map.header.half_color = False
-
+    ct_map.header.layer_3_scrolling = 0
 
     return ct_map
 
