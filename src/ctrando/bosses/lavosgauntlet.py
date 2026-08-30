@@ -457,6 +457,10 @@ _boss_gauntlet_data_dict: dict[bty.BossID, GauntletData] = {
         ctenums.LocID.SUNKEN_DESERT_DEVOURER, 0x12, 0xA,
         0x118, 0xA8
     ),
+    bty.BossID.R_SERIES: GauntletData(
+        ctenums.LocID.FACTORY_RUINS_SECURITY_CENTER, 0x9, 0x23,
+        0x99, 0x22F
+    ),
     bty.BossID.RUST_TYRANO: GauntletData(
         ctenums.LocID.GIANTS_CLAW_TYRANO, 0x8, 0x27,
         0x80, 0x27F

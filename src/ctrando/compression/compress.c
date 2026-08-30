@@ -139,7 +139,7 @@ static PyObject* compress(PyObject* self, PyObject* args)
   int src_pos = 0;
   int out_pos = 0;
   bool done = false;
-  int best_size = 0x1000;
+  int best_size = 0x10000;
   int compr_stream = 0;
   char compressed_data[2][0x10000];
   int compressed_lengths[2];
