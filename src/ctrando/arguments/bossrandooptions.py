@@ -95,6 +95,8 @@ class BossRandoOptions:
         self.vanilla_boss_spots = tuple(vanilla_boss_spots)
         self.boss_pool = tuple(boss_pool)
         self.midboss_pool = tuple(midboss_pool)
+        if len(lavos_gauntlet_bosses) not in range(1, 10):
+            raise ValueError("Lavos gauntlet must have between 1 and 9 bosses")
         self.lavos_gauntlet_bosses = lavos_gauntlet_bosses
         self.lavos_gauntlet_rewards = lavos_gauntlet_rewards
 
