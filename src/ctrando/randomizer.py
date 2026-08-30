@@ -187,6 +187,7 @@ def get_random_config(
     working_rom = ctrom.CTRom(input_rom.getvalue())
     basepatch.mark_initial_free_space(working_rom)
     basepatch.apply_mauron_player_tech_patch(working_rom)
+    basepatch.apply_mauron_enemy_tech_patch(working_rom)
 
     if settings.tech_options.normalize_techs:
         techrebalance.rebalance_vanilla_tech_man(config.pctech_manager)

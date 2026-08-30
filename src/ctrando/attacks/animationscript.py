@@ -334,17 +334,10 @@ class EnemyTechAnimationScript(PCTechAnimationScript):
     FINDER = BankOffsetFinder(0x0146F8, 0x0146F1)
 
 
-# TODO: Fold this into EnemyTechAnimationScript
 def read_enemy_tech_script_from_ctrom(ct_rom: ctrom.CTRom, index: int) -> EnemyTechAnimationScript:
     """
-    Read an enemy script.  May need to change if a Mauron-style patch is applied.
+    Read an enemy script.
     """
-    # ptr_table_st = 0x0D61F0
-    # ct_rom.seek(ptr_table_st + 2*index)
-    # ptr = int.from_bytes(ct_rom.read(2), "little")
-    #
-    # script_addr = 0x0D0000 + ptr
-    # return PCTechAnimationScript.read_from_ctrom_addr(ct_rom, script_addr)
     return EnemyTechAnimationScript.read_from_ctrom(ct_rom, index)
 
 
@@ -469,24 +462,24 @@ def make_arrow_rain_script(ct_rom: ctrom.CTRom) -> PCTechAnimationScript:
     basic_script.main_script.effect_objects[0] = make_effect(
         angle_offset=5, init_delay=0, final_x1=0x68, final_y1=0x90, final_x2=0x98, final_y2=0x80
     )
-    basic_script.main_script.effect_objects.append(make_effect(
+    basic_script.main_script.effect_objects[1] = make_effect(
         angle_offset=-3, init_delay=3, final_x1=0x88, final_y1=0x78, final_x2=0x80, final_y2=0xA0
-    ))
-    basic_script.main_script.effect_objects.append(make_effect(
+    )
+    basic_script.main_script.effect_objects[2] = make_effect(
         angle_offset=-1, init_delay=2, final_x1=0xD0, final_y1=0x78, final_x2=0x78, final_y2=0x68
-    ))
-    basic_script.main_script.effect_objects.append(make_effect(
+    )
+    basic_script.main_script.effect_objects[3] = make_effect(
         angle_offset=2, init_delay=0, final_x1=0x60, final_y1=0x68, final_x2=0x50, final_y2=0x88
-    ))
-    basic_script.main_script.effect_objects.append(make_effect(
+    )
+    basic_script.main_script.effect_objects[4] = make_effect(
         angle_offset=-4, init_delay=1, final_x1=0x38, final_y1=0x88, final_x2=0x80, final_y2=0x68
-    ))
-    basic_script.main_script.effect_objects.append(make_effect(
+    )
+    basic_script.main_script.effect_objects[5] = make_effect(
         angle_offset=-6, init_delay=2, final_x1=0x90, final_y1=0x98, final_x2=0xA8, final_y2=0x78
-    ))
-    basic_script.main_script.effect_objects.append(make_effect(
+    )
+    basic_script.main_script.effect_objects[6] = make_effect(
         angle_offset=2, init_delay=2, final_x1=0xA8, final_y1=0x78, final_x2=0x50, final_y2=0x70
-    ))
+    )
     return basic_script
 
 
@@ -953,8 +946,7 @@ def make_gale_slash_script(ct_rom: ctrom.CTRom) -> PCTechAnimationScript:
     script = read_enemy_tech_script_from_ctrom(ct_rom, 0x74)
     # print_object_script(script.main_script.target_objects[0])
     # input()
-    script.main_script.target_objects.append(
-        [
+    script.main_script.target_objects[1] = [
             ac.WaitForCounter1DValue(value=2),
             ac.SetObjectPalette(palette=0),
             ac.Pause(duration=4),
@@ -964,9 +956,11 @@ def make_gale_slash_script(ct_rom: ctrom.CTRom) -> PCTechAnimationScript:
             ac.Pause(duration=8),
             ac.PlayAnimationFirstFrame06(animation_id=3),
             ac.ReturnCommand()
-        ]
+    ]
+
+    return PCTechAnimationScript(
+        script.main_script, script.miss_script
     )
-    return script
 
 
 def make_iron_orb_script(ct_rom: ctrom.CTRom) -> PCTechAnimationScript:
@@ -976,7 +970,9 @@ def make_iron_orb_script(ct_rom: ctrom.CTRom) -> PCTechAnimationScript:
     target_obj = script.main_script.target_objects[0]
     target_obj[1] = ac.PlayAnimationFirstFrame06(animation_id=3)
     target_obj[4]  =ac.PlayAnimationFirstFrame06(animation_id=5)
-    return script
+    return PCTechAnimationScript(
+        script.main_script, script.miss_script
+    )
 
 
 def make_double_tap_script(ct_rom: ctrom.CTRom):

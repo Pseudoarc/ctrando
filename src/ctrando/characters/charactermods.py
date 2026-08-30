@@ -180,7 +180,9 @@ def make_blurp(
 
     blurp_script = animationscript.read_enemy_tech_script_from_ctrom(base_rom, 0x5D)
     blurp_script.main_script.caster_objects[0][1] = animationscript.ac.PlayAnimationOnce(animation_id=0x5)
-    anim_script_man.script_dict[orig_anim_id] = blurp_script
+    anim_script_man.script_dict[orig_anim_id] = animationscript.PCTechAnimationScript(
+        blurp_script.main_script, blurp_script.miss_script
+    )
 
     tech_man.set_tech_by_id(base_tech, replace_id)
 
@@ -238,7 +240,9 @@ def make_burst_ball(
 
     burst_ball_script = animationscript.read_enemy_tech_script_from_ctrom(base_rom, 0x88)
     burst_ball_script.main_script.caster_objects[0][4] = animationscript.ac.PlayAnimationOnce(animation_id=0x22)
-    anim_script_man.script_dict[orig_anim_id] = burst_ball_script
+    anim_script_man.script_dict[orig_anim_id] = animationscript.PCTechAnimationScript(
+        burst_ball_script.main_script, burst_ball_script.miss_script
+    )
 
     tech_man.set_tech_by_id(base_tech, replace_id)
 
