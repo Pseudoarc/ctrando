@@ -74,7 +74,9 @@ class BossRandoOptions:
         "lavos_gauntlet_bosses": aty.arg_multiple_from_enum(
             bosstypes.BossID, _default_lavos_gauntlet_bosses,
             "Bosses to fight in the Lavos gauntlet (max 9)",
-            available_pool=_default_boss_pool + (bosstypes.BossID.ZEAL_2, bosstypes.BossID.MAMMON_M),
+            available_pool=_default_boss_pool + (
+                bosstypes.BossID.BLACK_TYRANO, bosstypes.BossID.MAGUS,
+                bosstypes.BossID.ZEAL_2, bosstypes.BossID.MAMMON_M),
         ),
         "lavos_gauntlet_rewards": aty.FlagArg(
             "Lavos Gauntlet bosses have the same rewards as the base bosses."
