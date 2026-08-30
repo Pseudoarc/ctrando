@@ -289,6 +289,16 @@ def add_lavos_scheme(
             obj_id, FID.ACTIVATE,
             EF().add(EC.set_byte(0x7F0214)).add(EC.return_cmd()))
 
+        # Hide the final boss's lavos head
+        if ind == 0 and gauntlet_id == 8:
+            pos, _ = script.find_command(
+                [0xEE],
+                script.get_function_start(8, FID.ARBITRARY_2)
+            )
+            script.insert_commands(
+                EC.set_object_drawing_status(obj_id, False).to_bytearray(), pos
+            )
+
 
 def get_lavos_changeloc_cmd(
         boss_id: bty.BossID,

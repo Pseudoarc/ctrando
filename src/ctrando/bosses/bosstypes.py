@@ -434,9 +434,9 @@ _default_schemes: dict[BossID, BossScheme] = {
         _BP(_EID.LAVOS_TANK_RIGHT_GRINDER, 0x9, (0x41, 0x01))
     ),
     BossID.GAUNTLET_GIGA_GAIA: _BS(
-        _BP(_EID.LAVOS_GIGA_GAIA_HEAD, 6),
-        _BP(_EID.LAVOS_GIGA_GAIA_LEFT, 7, (0x30, 0x20)),
-        _BP(_EID.LAVOS_GIGA_GAIA_RIGHT, 9, (-0x30, 0x20))
+        _BP(_EID.LAVOS_GIGA_GAIA_HEAD, 3),
+        _BP(_EID.LAVOS_GIGA_GAIA_LEFT, 7, (-0x3F, 0x01)),
+        _BP(_EID.LAVOS_GIGA_GAIA_RIGHT, 9, (0x41, 0x01))
     ),
     BossID.GAUNTLET_GUARDIAN: BossScheme(
         BossPart(_EID.LAVOS_GUARDIAN, 3),
