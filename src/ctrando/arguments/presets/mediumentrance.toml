@@ -310,17 +310,3 @@ plando_recruit_death_peak = "..."
 plando_recruit_north_cape = "..."
 plando_recruit_yakra_box = "none"
 input_file = "./ct.sfc"
-seed = "1785077989.415972"
-
-default_fast_loc_movement=false
-default_fast_ow_movement=false
-default_fast_epoch_movement=false
-magus_palette= "#281820#E4DAA4#DCA264#B09058#DCA264#9C6A34#72897B#C6641E#3F626A#D47A34#34220C#302028"
-battle_speed=2
-message_speed=1
-battle_memory_cursor=true
-menu_memory_cursor=false
-window_background=1
-use_l_select_warp=false
-use_msu1=true
-alt_lightning2="nizbel_release"
