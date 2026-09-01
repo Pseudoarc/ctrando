@@ -242,26 +242,31 @@ def get_sphere_dict(
 
     total_regions = set(region_map.name_connector_dict.keys())
     ret_dict = {name: 0 for name in total_regions}
+
+    while True:
+       traverser.step(treasure_dict, recruit_dict)
+       regions = traverser.reached_regions
+       regions.intersection_update(total_regions)
+
+       if not regions:
+           # If multiworld games, not everything is reachable using local
+           # items.  Just assign the remaining regions to the next sphere.
+           # If we ever learn how to use AP's logic, this can be amended.
+           ret_dict.update(
+               {region:sphere for region in total_regions}
+           )
+           break
+
+       for region in regions:
+           ret_dict[region] = sphere
+
+       total_regions.difference_update(regions)
+       if not total_regions:
+           break
+
+       sphere += 1
+
     return ret_dict
-
-    #while True:
-    #    traverser.step(treasure_dict, recruit_dict)
-    #    regions = traverser.reached_regions
-    #    regions.intersection_update(total_regions)
-
-    #    if not regions:
-    #        raise ValueError
-
-    #    for region in regions:
-    #        ret_dict[region] = sphere
-
-    #    total_regions.difference_update(regions)
-    #    if not total_regions:
-    #        break
-
-    #    sphere += 1
-
-    #return ret_dict
 
 
 def main():
