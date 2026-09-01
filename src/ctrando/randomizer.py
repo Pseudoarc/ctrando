@@ -55,7 +55,7 @@ def apply_dynamic_scaling(
         enemy_data_dict: dict[ctenums.EnemyID, enemystats.EnemyStats],
         region_map: regionmap.RegionMap,
         treasure_assignment: dict[ctenums.TreasureID, ttypes.RewardType],
-        recruit_assignment: dict[ctenums.RecruitID, ctenums.CharID | None],
+        recruit_assignment: dict[ctenums.RecruitID, list[ctenums.CharID]],
         gauntlet_manager: lavosgauntlettypes.GauntletManager,
         settings: arguments.Settings,
 ):

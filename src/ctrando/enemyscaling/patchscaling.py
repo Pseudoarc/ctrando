@@ -1340,7 +1340,7 @@ def apply_full_scaling_patch(
         enemy_stat_dict: dict[ctenums.EnemyID, EnemyStats],
         region_map: regionmap.RegionMap,
         treasure_assignment: dict[ctenums.TreasureID, ttypes.RewardType],
-        recruit_assignment: dict[ctenums.RecruitID, ctenums.CharID | None],
+        recruit_assignment: dict[ctenums.RecruitID, list[ctenums.CharID]],
         starting_rewards: list[typing.Any],
         boss_scaling_settings: dict[bty.BossID, int| None],
         gauntlet_manager: lgt.GauntletManager
