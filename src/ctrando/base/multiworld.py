@@ -138,5 +138,6 @@ def apply_multiworld_patches(ct_rom: ctrom.CTRom, script_manager: ScriptManager)
 
     ct_rom.space_manager.mark_block(block, freespace.FSWriteType.MARK_USED)
 
-    _patch_remote_items(ct_rom, 0x7F003B, 0x7F0039)
+    _patch_remote_items(
+        ct_rom, memory.Memory.AP_ITEM_COUNTER_LO, memory.Memory.AP_ITEM_DELIVERY_LO)
     _add_victory_flag(ct_rom, script_manager)

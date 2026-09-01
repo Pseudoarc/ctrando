@@ -249,7 +249,7 @@ def get_sphere_dict(
        regions.intersection_update(total_regions)
 
        if not regions:
-           # If multiworld games, not everything is reachable using local
+           # In multiworld games, not everything is reachable using local
            # items.  Just assign the remaining regions to the next sphere.
            # If we ever learn how to use AP's logic, this can be amended.
            ret_dict.update(
