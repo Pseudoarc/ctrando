@@ -177,7 +177,7 @@ class LocationTileProperties(cttypes.BinaryData):
 
     l1_use_second_tileset_graphic = cttypes.byte_prop(0, 0x01, ret_type=bool)
     l2_use_second_tileset_graphic = cttypes.byte_prop(0, 0x02, ret_type=bool)
-    solidity = cttypes.byte_prop(0, 0x7C)
+    solidity = cttypes.byte_prop(0, 0xFC)
 
     movement_direction = cttypes.byte_prop(1, 0x3,
                                            ret_type=MovementDirection)
@@ -377,6 +377,20 @@ class LocationMap:
 
         return ret_props
 
+    def set_tile_properties(
+            self, top: int, left: int, bottom: int, right: int,
+            tile_props: list[LocationTileProperties]
+    ):
+
+        xmax, ymax, _ = self._validate_tile_input(top, left, bottom, right, 1)
+        data_width = right - left
+
+        for row in range(top, bottom):
+            in_st = (row-top) * data_width
+            start = row * xmax + left
+            self.tile_props[start:start + data_width] = tile_props[in_st:in_st + data_width]
+
+
     def get_tiles(self, top: int, left: int, bottom: int, right: int, layer: int) -> bytearray:
         xmin, ymin = 0, 0
         xmax, ymax, tile_arr = self._validate_tile_input(top, left, bottom, right, layer)
@@ -392,15 +406,13 @@ class LocationMap:
 
     def set_tiles(self, top: int, left: int, bottom: int, right: int, layer: int,
                   tile_arr: bytearray | memoryview):
-        xmin, ymin = 0, 0
-        xmax, ymax, tile_arr = self._validate_tile_input(top, left, bottom, right, layer)
+        xmax, ymax, dest_tile_arr = self._validate_tile_input(top, left, bottom, right, layer)
         data_width = right - left
 
         for row in range(top, bottom):
-            in_st = row*data_width
+            in_st = (row-top)*data_width
             start = row*xmax + left
-            end = start + data_width
-            tile_arr[start:start+data_width] = tile_arr[in_st:in_st+data_width]
+            dest_tile_arr[start:start+data_width] = tile_arr[in_st:in_st+data_width]
 
     def write_to_ctrom(self,
                        ct_rom: ctrom.CTRom, map_id: int,
@@ -431,6 +443,13 @@ class LocationMap:
         free_addr_rom = byteops.to_rom_ptr(free_addr)
         rom.seek(cur_ptr_addr)
         rom.write(free_addr_rom.to_bytes(3, 'little'))
+
+    def write_to_ctrom_location(self, ct_rom: ctrom.CTRom,
+                                loc_id: ctenums.LocID):
+        loc_data = locationtypes.LocationData.read_from_ctrom(ct_rom, loc_id)
+        map_id = loc_data.map_id
+
+        self.write_to_ctrom(ct_rom, map_id)
 
 
 def main():
