@@ -20,7 +20,6 @@ from ctrando.locations.eventcommand import EventCommand as EC, Operation as OP, 
 from ctrando.locations.eventfunction import EventFunction as EF
 
 
-# TODO: Make a uniform way to handle rewards
 class RewardBase(typing.Protocol):
 
     def assign_to_chest_data(self, chest_data: "ChestTreasureData"):
@@ -554,20 +553,6 @@ class ChestTreasureData(ctt.BinaryData):
             val = ItemReward(val)
 
         val.assign_to_chest_data(self)
-        # if isinstance(val, ctenums.ItemID):
-        #     self.chest_mode = ChestMode.ITEM
-        #     self.held_item = val
-        # elif isinstance(val, TechLevelReward):
-        #     self.chest_mode = ChestMode.TECH_LEVEL
-        #     self.has_techlevel = True
-        #     self.techlevel_char = val.char_id
-        # elif isinstance(val, APReward):
-        #     self.chest_mode = ChestMode.AP_ITEM
-        #     self.ap_item_string_index = val.local_string_index
-        # else:
-        #     self.chest_mode = ChestMode.GOLD
-        #     self.has_gold = True
-        #     self.gold = val
 
     @property
     def copy_location(self) -> ctenums.LocID:
@@ -774,19 +759,6 @@ class ScriptTreasure:
             string = script.strings[str_ind]
             py_string = ctstrings.CTString.ct_bytes_to_ascii(string)
 
-            # orig_str = None
-            # if "{item}!{line break}{itemdesc}" in py_string:
-            #     orig_str = "{item}!{line break}{itemdesc}"
-            # elif "{item}!" in py_string:
-            #     orig_str = "{item}!"
-            # elif "{item}" in py_string:
-            #     orig_str = "{item}"
-            #     repl_str = repl_str.replace("!{line break}{itemdesc}", "")
-            # elif f"{orig_gold_amt}G" in py_string:
-            #     orig_str = f"{orig_gold_amt}G!"
-            # elif f"{orig_gold_amt} G" in py_string:
-            #     orig_str = f"{orig_gold_amt} G!"
-
             orig_str = ScriptTreasure._treasure_str_part(py_string, orig_gold_amt)
             if orig_str is not None:
                 if isinstance(reward, ctenums.ItemID):
@@ -862,7 +834,6 @@ class ScriptTreasure:
             pos += len(cmd)
 
         return _ScriptRewardData(add_rwd_pos, mem_set_pos)
-
 
     def write_to_ct_rom(self, ct_rom: ctrom.CTRom,
                         script_manager: typing.Optional[ScriptManager] = None):

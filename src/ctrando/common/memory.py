@@ -48,10 +48,6 @@ class Memory(enum.IntEnum):
     TO_SCALE_TEMP = 0x7E2884
     TEMP_SCALED_XP_LO = 0x7E2885
     TEMP_SCALED_XP_HI = 0x7E2886
-    AP_ITEM_DELIVERY_LO = 0x7E2887
-    AP_ITEM_DELIVERY_HI = 0x7E2888
-    AP_ITEM_COUNTER_LO = 0x7E2889
-    AP_ITEM_COUNTER_HI = 0x7E288A
     AP_TEMP_LO = 0x7E288B
     AP_TEMP_HI = 0x7E288C
     # End old time gauge memory
@@ -72,6 +68,10 @@ class Memory(enum.IntEnum):
     # Bytes 0x7F0001 through 0x7F004F are reserved for treasure chests.
     # There are only 0xF6 chests which use 0x1F bytes.  So we're free from
     # [0x7F0021, 0x7F0050)
+    AP_ITEM_DELIVERY_LO = 0x7F0039
+    AP_ITEM_DELIVERY_HI = 0x7F003A
+    AP_ITEM_COUNTER_LO = 0x7F003B
+    AP_ITEM_COUNTER_HI = 0x7F003C
     OBJECTIVE_1_STATUS = 0x7F003D
     OBJECTIVE_2_STATUS = 0x7F003E
     OBJECTIVE_3_STATUS = 0x7F003F

@@ -97,7 +97,6 @@ class ConfigState:
             ctenums.ItemID.JETSOFTIME: (" JetsOfTime",
                                         " Use at Blackbird 12000BC"),
             ctenums.ItemID.SCALING_LEVEL: (" ScalingLvl", "Current level of enemies"),
-            ctenums.ItemID.APITEM: (" APItem", "Archipelago item")
         }
 
         for item_id, (name_str, desc_str) in data_dict.items():
