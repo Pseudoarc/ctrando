@@ -231,7 +231,7 @@ def is_map_traversable(
 def get_sphere_dict(
         region_map: regionmap.RegionMap,
         treasure_dict: dict[ctenums.TreasureID, ttypes.RewardType],
-        recruit_dict: dict[ctenums.RecruitID, ctenums.CharID],
+        recruit_dict: dict[ctenums.RecruitID, list[ctenums.CharID]],
         starting_rewards: list[typing.Any] = None
 ) -> dict[str, int]:
     """
