@@ -1271,7 +1271,10 @@ class HuntingRangeNuTreasure(ScriptTreasure):
             )
             cmd = locationevent.get_command(script.data, pos)
             skip_len = cmd.args[-1]
-            pos += len(cmd) + skip_len - 1
+            pos += skip_len
+            pos, cmd = script.find_command([0x4F], pos)
+            if cmd.args[1] != 0:  # Looking for assignment to 0x7F0200
+                raise ValueError
 
             if isinstance(self.reward, ctenums.ItemID):
                 script.data[pos+1] = self.reward
