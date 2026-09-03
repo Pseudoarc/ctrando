@@ -144,6 +144,33 @@ def make_zenan_boss_map(
     )
     zenan_boss_script.delete_jump_block(pos)
 
+    # Put the boss cutscene in its own function
+    pos = zenan_boss_script.get_function_start(1, FID.STARTUP)
+    pos = zenan_boss_script.find_exact_command(
+        EC.generic_command(0xE7, 0, 1), pos
+    )
+    end = zenan_boss_script.find_exact_command(
+        EC.call_obj_function(0xA, FID.ARBITRARY_5, 6, FS.HALT)
+    )
+    func = EF.from_bytearray(zenan_boss_script.data[pos:end])
+    func.add(EC.return_cmd())
+    jump_len = end-pos
+
+    obj_id = zenan_boss_script.append_empty_object()
+    zenan_boss_script.set_function(obj_id, FID.STARTUP,
+                                   EF().add(EC.return_cmd()).add(EC.end_cmd()))
+    zenan_boss_script.set_function(obj_id, FID.ACTIVATE,
+                                   EF().add(EC.return_cmd()))
+    zenan_boss_script.set_function(obj_id, FID.ARBITRARY_0,
+                                   func)
+
+    pos += 0x20  # new obj pointers
+    new_cmd = EC.call_obj_function(obj_id, FID.ARBITRARY_0, 1, FS.HALT)
+
+    zenan_boss_script.insert_commands(new_cmd.to_bytearray(), pos)
+    pos += len(new_cmd)
+    zenan_boss_script.delete_commands_range(pos, pos + jump_len)
+
 
 def make_dream_devourer_map(
         script_manager: sm.ScriptManager,
