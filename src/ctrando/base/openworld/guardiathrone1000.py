@@ -577,6 +577,9 @@ class EventMod(locationevent.LocEventMod):
                 script.get_object_start(obj_id)
             )
             script.delete_jump_block(pos)
+            pos = script.get_function_start(obj_id, FID.ACTIVATE)
+            script.delete_jump_block(pos)
+            script.delete_jump_block(pos)
 
         # These are guards who are only spawned during the trial.
         blocker_guard_objs = (0x1D, 0x1E)
