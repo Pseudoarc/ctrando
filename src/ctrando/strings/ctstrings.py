@@ -2,6 +2,10 @@
 # https://bisqwit.iki.fi/jutut/ctcset.html
 
 from __future__ import annotations
+
+import enum
+import math
+
 from importlib.resources import files
 import pickle
 import typing
@@ -154,6 +158,42 @@ def get_pixel_width(ct_bytes: typing.ByteString | int | str) -> int:
     return width
 
 
+class CTStringSymbol(enum.IntEnum):
+    NULL = 0
+    ITEMDESC = 1
+    UNUSED_02 = 2
+    DELAY = 3
+    UNUSED_04 = 4
+    LINEBREAK_NOINDENT = 5
+    LINEBREAK_INDENT = 6
+    PAUSE_LINEBREAK_NOINDENT = 7
+    PAUSE_LINEBREAK_INDENT = 8
+    INSTANT_FULL_BREAK = 9
+    PAGEBREAK_INDENT = 0xA
+    FULL_BREAK = 0xB
+    PAGEBREAK_NOINDENT = 0xC
+    VALUE_8 = 0xD
+    VALUE_16 = 0xE
+    VALUE_32 = 0xF
+    UNUSED_10 = 0x10
+    PREV_SUBSTR = 0x11
+    TECH_NAME = 0x12
+    CRONO_NAME = 0x13
+    MARLE_NAME = 0x14
+    LUCCA_NAME = 0x15
+    ROBO_NAME = 0x16
+    FROG_NAME = 0x17
+    AYLA_NAME = 0x18
+    MAGUS_NAME = 0x19
+    CRONO_NICK = 0x1A
+    PC1_NAME = 0x1B
+    PC2_NAME = 0x1C
+    PC3_NAME = 0x1D
+    NADIA_NAME = 0x1E
+    ITEM_NAME = 0x1F
+    EPOCH_NAME = 0x2F
+
+
 # CTString extends bytearray because it is just a bytearray with a few extra
 # methods for converting to python string and compression.
 class CTString(bytearray):
@@ -299,6 +339,24 @@ class CTString(bytearray):
 
         return ret_str
 
+    @staticmethod
+    def get_decompressed_ct_bytes(ct_bytes:typing.ByteString ) -> bytearray:
+        parts: list[bytearray] = []
+        for char in ct_bytes:
+            if char == 0:
+                break
+            elif char in range(0x21, 0xA0):
+                parts.append(CTString.huffman_table[char - 0x21])
+            else:
+                parts.append(bytearray([char]))
+            # elif char in _byte_pixel_width:
+            #     parts.append(bytearray([char]))
+            # else:
+            #     raise ValueError
+
+        decompressed_str = b''.join(parts)
+        return bytearray(decompressed_str)
+
     def get_compressed(self):
         return CTString(CTString.huffman_tree.compress(self))
 
@@ -366,23 +424,154 @@ class CTString(bytearray):
 
         return ret_str
 
+def get_width_adjusted_ct_string(
+        ct_bytes: typing.ByteString,
+        max_width: int = _line_width_pixels, *,
+        compress: bool = True,
+        null_terminate: bool = True,
+        indent_new_lines: bool = True,
+        indent_new_pages: bool = True,
+):
+    if indent_new_lines:
+        line_break_char = CTStringSymbol.LINEBREAK_INDENT
+        next_line_pad = 3*4
+    else:
+        line_break_char = CTStringSymbol.LINEBREAK_NOINDENT
+        next_line_pad = 0
+
+    if indent_new_pages:
+        page_break_char = CTStringSymbol.PAGEBREAK_INDENT
+        page_break_pad = 3*4
+    else:
+        page_break_char = CTStringSymbol.FULL_BREAK
+        page_break_pad = 0
+
+    decompressed_str = CTString.get_decompressed_ct_bytes(ct_bytes)
+    cur_line_width = 0
+    cur_line_num = 0
+    last_space_pos = -1
+    last_word_width = 0
+
+    out_b: bytearray = bytearray()
+
+    for ind, char in enumerate(decompressed_str):
+        char_width = -1
+        if char < len(CTString.keywords):
+            if char == CTStringSymbol.NULL:
+                out_b.append(char)
+                break
+            elif char == CTStringSymbol.ITEMDESC:  # itemdesc
+                char_width = max_width - 1210
+            elif char == CTStringSymbol.LINEBREAK_NOINDENT:
+                if (cur_line_num + 1) % 4 == 0:
+                    out_b.append(CTStringSymbol.PAGEBREAK_NOINDENT)
+                else:
+                    out_b.append(char)
+                cur_line_num += 1
+                cur_line_width = 0
+                last_space_pos = len(out_b) - 1
+                last_word_width = 0
+                continue
+            elif char == CTStringSymbol.LINEBREAK_INDENT:
+                if (cur_line_num + 1) % 4 == 0:
+                    out_b.append(CTStringSymbol.PAGEBREAK_INDENT)
+                else:
+                    out_b.append(char)
+                cur_line_num += 1
+                cur_line_width = 12
+                last_space_pos = len(out_b) - 1
+                last_word_width = 0
+                continue
+            elif char in (
+                    CTStringSymbol.VALUE_8, CTStringSymbol.VALUE_16, CTStringSymbol.VALUE_32
+            ):
+                base = char - CTStringSymbol.VALUE_8
+                num_digits = math.ceil(base*math.log10(2))
+                char_width = num_digits*7
+            elif char in range(CTStringSymbol.TECH_NAME, CTStringSymbol.EPOCH_NAME+1):
+                if char == CTStringSymbol.TECH_NAME:
+                    num_chars = 0xB
+                elif char == CTStringSymbol.ITEM_NAME:
+                    num_chars = 0xA
+                else:
+                    num_chars = 5
+                char_width = num_chars * 11
+            elif char == CTStringSymbol.FULL_BREAK:
+                out_b.append(char)
+                cur_line_num += 4 - (cur_line_num % 4)
+                cur_line_width = 0
+                last_space_pos = len(out_b) - 1
+                last_word_width = 0
+                continue
+            elif char == CTStringSymbol.PAGEBREAK_NOINDENT:
+                out_b.append(char)
+                cur_line_num += 4 - (cur_line_num % 4)
+                cur_line_width = 0
+                last_space_pos = len(out_b) - 1
+                last_word_width = 0
+                continue
+        elif char in _byte_pixel_width:
+            char_width = _byte_pixel_width[char]
+
+        if char == 0xEF:  # space
+            last_space_pos = len(out_b)
+            last_word_width = 0
+        if char_width < 0:
+            raise ValueError(f"Unhandled byte: {char:02X}")
+
+        if cur_line_width + char_width > max_width:
+            break_word = False
+            if last_space_pos in (0, len(out_b)):
+                break_word = True
+            elif out_b[last_space_pos] != 0xEF:
+                break_word = True
+
+            if break_word:
+                if (cur_line_num + 1) % 4 == 0:
+                    out_b.append(page_break_char)
+                    cur_line_width = page_break_pad
+                else:
+                    out_b.append(line_break_char)
+                    cur_line_width = next_line_pad
+
+                if char != 0xEF:
+                    out_b.append(char)
+                    cur_line_width += char_width
+
+                cur_line_num += 1
+            else:
+                if (cur_line_num + 1) % 4 == 0:
+                    out_b[last_space_pos] = page_break_char
+                    cur_line_width = page_break_pad + last_word_width
+                else:
+                    out_b[last_space_pos] = line_break_char
+                    cur_line_width = next_line_pad + last_word_width
+
+                out_b.append(char)
+                cur_line_num += 1
+        else:
+            out_b.append(char)
+            cur_line_width += char_width
+            if char != 0xEF:
+                last_word_width += char_width
+
+    # End big loop
+    if null_terminate and out_b[-1] != 0:
+        out_b.append(0)
+
+    out_str = CTString(out_b)
+    if compress:
+        out_str.compress()
+
+    return out_str
+
 
 def get_truncated_ct_bytes(ct_bytes: typing.ByteString,
                       max_width: int, *,
                       compress: bool = True,
                       null_terminate: bool = True) -> CTString:
-    parts: list[bytearray] = []
-    for char in ct_bytes:
-        if char == 0:
-            break
-        elif char in range(0x21, 0xA0):
-            parts.append(CTString.huffman_table[char-0x21])
-        elif char in _byte_pixel_width:
-            parts.append(bytearray([char]))
-        else:
-            raise ValueError
 
-    decompressed_str = b''.join(parts)
+    decompressed_str = CTString.get_decompressed_ct_bytes(ct_bytes)
     total_width = 0
     for ind, char in enumerate(decompressed_str):
         total_width += _byte_pixel_width[char]
@@ -570,8 +759,9 @@ def pre_process_string(in_str: str) -> str:
 def main():
 
     ct_string = CTString.from_str(
-        "as;lkdjf^^p{~ok", compress=True, ignore_undisplayable=True
+        "This is a long sentence.  It has a few breaks in it but overall it just{line break} goes on and on."
     )
+    ct_string = get_width_adjusted_ct_string(ct_string, _line_width_pixels)
     print(ct_string)
 
 
