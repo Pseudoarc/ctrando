@@ -250,7 +250,7 @@ def get_abbrev_name(boss_id: BossID) -> tuple[str, str]:
     return _abbrev_name_dict.get(boss_id)
 
 
-_arris_categories: dict[str: list[BossID]] = {
+_arris_categories: dict[str, list[BossID]] = {
     "freaky mutants": [BossID.MEGA_MUTANT, BossID.GIGA_MUTANT, BossID.TERRA_MUTANT],
     "robot guards": [BossID.R_SERIES, BossID.MOTHER_BRAIN, BossID.GUARDIAN, BossID.DRAGON_TANK],
     "fancy folks": [BossID.ZEAL, BossID.DALTON, BossID.MAGUS_NORTH_CAPE, BossID.FLEA,

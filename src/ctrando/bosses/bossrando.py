@@ -9,6 +9,7 @@ from ctrando.common import ctenums, random
 from ctrando.locations.scriptmanager import ScriptManager
 from ctrando.arguments import bossrandooptions as bro
 from ctrando.enemydata import enemystats
+from ctrando.items import itemdata
 from ctrando.strings import ctstrings
 from ctrando.overworlds import owmanager
 
@@ -424,7 +425,7 @@ def fix_boss_sprites_given_assignment(
 def fix_atropos_ribbon_buff(
         boss_dict: dict[bty.BossSpotID, bty.BossID],
         script_manager: ScriptManager,
-        mdef_levelup_cap,
+        mdef_levelup_cap: int,
 ):
     spots = [
         spot for spot, entry in boss_dict.items()
@@ -499,10 +500,219 @@ def determine_trio_scheme(
     return scheme
 
 
+_dragon_tank_manuals: dict[bty.BossID, str] = {
+    bty.BossID.DALTON_PLUS:
+    "Stunning good looks, aside, "
+    "Dalton counters lightning or physical attacks with Iron Orb. " 
+    "All other elements will be countered with a spell of the opposite element.{full break}"
+    "Even if Dalton is defeated, he can summon the mighty Golem Boss to finish his foes!",
+    bty.BossID.ELDER_SPAWN:
+    "The Elder Lavos Spawn attacks with a mix of powerful physical attacks as well as shadow and water magic. "
+    "Any attack on the Shell will be met with a devastating needle counterattack on the attacker.",
+    bty.BossID.FLEA:
+    "Flea specializes in status effects, being capable of inflicting chaos, sleep, poison, and blindness on the enemy. "
+    "In addition to high magic defense, Flea has a natural resistance to all elements except fire."
+    "{full break}"
+    "When below half health, Flea may counterattack with The Stare."
+    "The counterattack seems to fail unless there are exactly three enemies, "
+    "but we are confident this can be fixed with more testing.",
+    bty.BossID.GIGA_GAIA:
+    "Unfortunately, we were unable to reconstruct Giga Gaia's body, and instead have "
+    "installed state of the art levitation devices in its head and hands. "
+    "Together, the hands perform powerful fire and shadow attacks. "
+    "Separately, the left hand can heal the head and do water attacks while "
+    "the right hand does fire attacks. "
+    "The head alone can do nothing except revive the arms. ",
+    bty.BossID.GIGA_MUTANT:
+    "Giga Mutant comes equipped with powerful fire and lightning attacks as well as "
+    "the ability to inflect sleep and poison. "
+    "The Giga Mutant is nigh impervious to physical attacks, has naturally high magic defense, "
+    "but no specific elemental resistances. {full break}"
+    "The top half counters any attack with an MP draining attack."
+    "The bottom half has the additional ability to reduce a target's life to 1 HP."
+    "If the top is defeated the bottom will add HP-down effects on top of its 1 HP attacks.",
+    bty.BossID.GOLEM:
+    "The Golem adapts its attack to whatever element it is attacked with. "
+    "Its physical, fire, and water modes take time to ramp up to their strongest attacks." 
+    "The Golem is also vulnerable to all status effects except chaos. {full break}"
+    "So long as the enemy does not exploit its status weaknesses and does not juggle the Golem between "
+    "its weaker modes, it is unbeatable!",
+    bty.BossID.GOLEM_BOSS:
+    "The Golem Boss is a being of immense power.  In testing, no armor could withstand its might. {full break}"
+    "Unfortunately, in the field the Golem Boss displays extreme cowardice, failing to use "
+    "any of its incredible attacks and running away after some time. "
+    "We will continue to iterate on its design.",
+    bty.BossID.GUARDIAN:
+    "We have managed to incorporate the Guardian technology into a Nu's body. "
+    "The main body will counterattack while the Bits live. "
+    "If the Bits fall, the main body can revive the bits after a brief charging period.",
+    bty.BossID.HECKRAN:
+    "Heckran is nigh impervious to all physical attacks but has no specific strength against magic attacks. "
+    "Heckran possesses strong water magic including a devastating water counter to any foolish enough "
+    "to attack while its claw is raised.{full break}"
+    "We are working with Heckran to stop announcing its counter attack state. "
+    "Once we do, we are certain it will be unstoppable!",
+    bty.BossID.LAVOS_SPAWN:
+    "The Lavos Spawn is the pinnacle of evolved live on this planet. "
+    "Most of its threats come from devastating party-wide needle attacks. "
+    "It has some weaker fire, sleep, and chaos attacks to supplement this. "
+    "{full break}"
+    "Any foe foolish enough attack the shell (or enticed to so so by chaos) will trigger more"
+    "a party-wide needle attacks. "
+    "Those without single-target attacks will surely perish against the mighty Lavos Spawn!",
+    bty.BossID.MAGUS_NORTH_CAPE:
+    "Based on a powerful wizard from 600 AD, Magus will attack with his scythe or do a powerful "
+    "area magic spell. "
+    "When below half health, Magus will also counterattack with one of these attacks. [full break}"
+    "Unlike his namesake, this Magus has no form of elemental barriers. "
+    "We are confident that with further research, we can harness this power and make "
+    "Magus unstoppable!",
+    bty.BossID.MASA_MUNE:
+    "When he isn't waddling around, MasaMune can deliver powerful physical damage on a single target. "
+    "His attack doubles at less than 50% HP. "
+    "MasaMune can also charge up tornado energy which can only be dispelled by a wind Slash. "
+    "{full break}"
+    "Despite his great potential and high HP pool, MasaMune tends to die before doing anything meaningful. "
+    "Certainly this is a target for future research. ",
+    bty.BossID.MEGA_MUTANT:
+    "Mega Mutant does not have the physical defenses of its mutant siblings. "
+    "To make up for this it has powerful status attacks. "
+    "The top half can use sleep and poison while the bottom uses Obstacle to inflict "
+    "party-wide chaos.",
+    bty.BossID.MOTHER_BRAIN:
+    "The Mother Brain uses chaos attacks and shadow lasers, but the true threat lies in "
+    "the support Displays. "
+    "These show the pinnacle of our regeneration technologies. "
+    "Each is capable of restoring a significant portion of the Mother Brain's health. "
+    "It is unlikely that an enemy will be able to defeat the Mother Brain while the Displays live. "
+    "Should the displays all fall, the Mother Brain will frenzy and grow more powerful."
+    "{full break}"
+    "Unless the enemy is able to sleep or stop the displays, this gives them an "
+    "impossible dilemma!",
+    bty.BossID.MUD_IMP:
+    "The Mud Imp is one of our most obnoxious creations to date. "
+    "Despite having low HP, the Mud Imp has amazing defensive capabilities while its beasts live. "
+    "Additionally, the Mud Imp has some healing ability and is capable of inflicting sleep on its enemies. "
+    "It will counter every attack with one of these abilities."
+    "{full break}"
+    "The only weakness of the Mud Imp is it's standard magic defense. "
+    "In addition, the beasts are weak to the opposing element and status abilities. "
+    "Opponents who do not find these weaknesses are doomed!",
+    bty.BossID.NIZBEL:
+    "Nizbel has nearly impenetrable defenses, both magic and physical, and is "
+    "capable of doing strong physical attacks. "
+    "If hit by lightning, however, it becomes stunned for some time and loses its defensive qualities. "
+    "When it recovers from the stun, it releases the stored lightning energy back on its enemies. "
+    "The lightning is even more powerful than its normal attacks. "
+    "{full break}"
+    "Surely the kingdom will be unassailable with this weapon!",
+    bty.BossID.NIZBEL_2:
+    "Nizbel 2 has strong physical defenses but no special resistance to magic. "
+    "It attacks with strong physical attacks and has tremendous speed. "
+    "Lightning attacks will lower its defense. After three lightning attacks it will "
+    "unleash the stored energy in a savage electric attack. "
+    "{full break}"
+    "Foes foolish enough to continue attacking after the third lightning attack will "
+    "get a special surprise.",
+    bty.BossID.OZZIE_TRIO:
+    "Ozzie, Flea, and Slash make an unstoppable trio. "
+    "While Flea lives, attacking Flea or Slash will trigger a powerful fire counter attack. "
+    "Attacking Ozzie directly will result in a shadow counter. "
+    "The only weakness is that Flea is vulnerable to status ailments. "
+    "Also, if Slash is defeated, Flea will flee. "
+    "And also Ozzie can't do anything once a single member of the trio falls."
+    "{full break}"
+    "Otherwise, the Ozzie trio is unstoppable!",
+    bty.BossID.RETINITE:
+    "The Retinite has impenetrable physical defense and is highly evasive. "
+    "Enemies who use elemental attacks will find that the magic does no damage "
+    "or will even heal the core! "
+    "Water-based attacks will remove the Retinite's physical defense and evasion.{full break}"
+    "The top and bottom can heal themselves by drawing energy from the core. "
+    "Should the core be destroyed, the remaining parts will frenzy and be near unstoppable. "
+    "We are investigating developing a version of Retinite without a core so that it can begin "
+    "in its frenzied state.",
+    bty.BossID.R_SERIES:
+    "The R-Series are six humanoid robots with powerful physical attacks. "
+    "If the robots are not defeated simultaneously, they will begin to do powerful "
+    "counter attacks as their numbers decrease. "
+    "{full break}"
+    "P.S. Whoever keeps throwing bricks through our windows which say {\"1}Buff R-Series{\"2} "
+    "really needs to stop.",
+    bty.BossID.RUST_TYRANO:
+    "The Rust Tyrano is a refurbished relic found in a cave off the "
+    "coast of Choras. Unfortunately, we were only able to salvage the head. "
+    "After charging up, the head will unleash a powerful fire attack. "
+    "Each subsequent fire attack faster to charge and more powerful as well."
+    "{full break}"
+    "Those without sufficient DPS are no match for the mighty Rust Tyrano!",
+    bty.BossID.SLASH_SWORD:
+    "Slash has naturally high magic defense.  In addition. Slash takes 50% from"
+    "fire, lightning, and shadow elements and no damage from water. "
+    "When first entering battle Slash will only perform wind slashes. "
+    "{full break}"
+    "As its health depletes it begins to do powerful physical attacks. "
+    "At critically low health, it even possesses auto-counter capabilities.",
+    bty.BossID.SON_OF_SUN:
+    "Son of Sun's Eye is impervious to all attacks and will counter any attack "
+    "with a Flare. "
+    "The surrounding flames can only be defeated by instant death attacks. "
+    "Only by hitting the appropriate flame can the eye be damaged. "
+    "Meanwhile, Son of Son will unleash devastating fire and shadow attacks. ",
+    bty.BossID.TERRA_MUTANT:
+    "The Terra Mutant uses Chaotic Zone to confuse its foes while striking with "
+    "powerful fire, drain, and physical attacks. "
+    "The bottom half is nearly indestructible and can be used as an HP reservoir for the top. "
+    "Should either part be defeated, the other will fall as well. ",
+    bty.BossID.YAKRA:
+    "Yakra attacks with powerful physical attacks and has a large HP pool. "
+    "In addition, Yakra can counter any attack with party-wide physical damage."
+    "{full break}"
+    "However, the counters tend to fail about half the time. "
+    "Additionally, the counters will fail if the attacker is too close or if "
+    "Yakra is not facing exactly three foes. "
+    "We will continue to iterate on this design. ",
+    bty.BossID.YAKRA_XIII:
+    "Yakra XIII has mild chaos-inducing attacks and powerful needles. "
+    "As its health is depleted, it will greatly increase its attack power. {full break}"
+    "Should it fall in battle, it will release one final party-wide needle attack.",
+    bty.BossID.ZEAL:
+    "Zeal has tremendous attacks which reduce the enemy's HP to one so that any other "
+    "attack will instantly defeat them.{full break}"
+    "Unfortunately, we are currently experiencing difficulties making Zeal perform any "
+    "other damaging attack. She seems to only perform one for every third attack. "
+    "Once we solve this, Zeal will be unstoppable!",
+    bty.BossID.ZOMBOR:
+    "The top half of Zombor absorbs lightning and fire while the bottom half has "
+    "strong physical defense and absorbs water and shadow. "
+    "As their HP is depleted, Zombor will attack more frequently. "
+    "If one half falls, the other will become more powerful. ",
+}
+def make_boss_manual_string(boss_id: bty.BossID) -> ctstrings.CTString:
+    manual_body = _dragon_tank_manuals[boss_id]
+    boss_name = bty.get_boss_dialogue_name(boss_id)
+    intro_ct_str = ctstrings.CTString.from_str(
+        "To the Prison Supervisor{linebreak+0}{line break}"
+        "   {\"1}" + boss_name + "{\"2} Owner's Manual{full break}"
+    )
+    end_ct_str = ctstrings.CTString.from_str(
+        "{line break}                     Guardia R & D{null}"
+    )
+    manual_ct_str = ctstrings.CTString.from_str(manual_body, compress=False)
+    manual_ct_str = ctstrings.get_width_adjusted_ct_string(
+        manual_ct_str, compress=False, indent_new_lines=False, indent_new_pages=False,
+        null_terminate=False
+    )
+
+    out_str = ctstrings.CTString(intro_ct_str + manual_ct_str + end_ct_str)
+    return out_str
+
+
 def update_boss_names(
         boss_assign_dict: dict[bty.BossSpotID, bty.BossID],
         script_manager: ScriptManager,
         enemy_dict: dict[ctenums.EnemyID, enemystats.EnemyStats],
+        item_man: itemdata.ItemDB,
         ow_manager: owmanager.OWManager,
 ):
     """Add Peeks for various bosses."""
@@ -536,6 +746,18 @@ def update_boss_names(
     #     print(f"{ind}: {ctstrings.CTString.ct_bytes_to_ascii(ct_str)}")
     # input()
 
+    script = script_manager[ctenums.LocID.PRISON_SUPERVISORS_OFFICE]
+    pos, _ = script.find_command([0xC1], script.get_function_start(0x11, 1))
+    str_id = script.data[pos+1]
+    ct_str = make_boss_manual_string(boss_id)
+    script.strings[str_id] = ct_str
+
+    script = script_manager[ctenums.LocID.PRISON_CATWALKS]
+    for ind, ct_str in enumerate(script.strings):
+        string = str(ctstrings.CTString(ct_str))
+        if "Dragon Tank" in string:
+            string = string.replace("Dragon Tank", boss_name)
+            script.strings[ind] = ctstrings.CTString.from_str(string)
 
     # Heckran Cave
     spot_id = bty.BossSpotID.HECKRAN_CAVE
@@ -613,11 +835,99 @@ def update_boss_names(
         "Mother Brain", bty.get_boss_dialogue_name(boss_id)
     )
     script.strings[9] = ctstrings.CTString.from_str(string, True)
-    # for ind, ct_string in enumerate(script.strings):
-    #     string = ctstrings.CTString.ct_bytes_to_ascii(ct_string)
-    #     print(f"{ind:02X}: {string}")
-    #
-    # input()
+
+
+    # Reptite Lair
+    spot_id = bty.BossSpotID.REPTITE_LAIR
+    boss_id = boss_assign_dict[spot_id]
+    boss_name = bty.get_boss_dialogue_name(boss_id)
+
+    script = script_manager[ctenums.LocID.REPTITE_LAIR_AZALA_ROOM]
+    for str_id in (6, 7):
+        string = ctstrings.CTString.ct_bytes_to_ascii(script.strings[str_id])
+        string = string.replace("Nizbel", boss_name)
+        script.strings[str_id] = ctstrings.CTString.from_str(string)
+
+    # Ozzie's Fort
+    spot_id = bty.BossSpotID.OZZIES_FORT_TRIO
+    boss_id = boss_assign_dict[spot_id]
+    ozzie_id = bty.get_default_scheme(boss_id).parts[0].enemy_id
+    ozzie_charm = enemy_dict[ozzie_id].charm_item
+    if ozzie_charm == ctenums.ItemID.NONE:
+        ozzie_charm_name = "Nothing"
+    else:
+        ozzie_charm_name = str(ctstrings.CTString(item_man[ozzie_charm].name[1:]))
+
+    slash_bid = boss_assign_dict[bty.BossSpotID.OZZIES_FORT_SUPER_SLASH]
+    slash_id = bty.get_default_scheme(slash_bid).parts[0].enemy_id
+    slash_name = bty.get_boss_dialogue_name(slash_bid)
+    slash_charm = enemy_dict[slash_id].charm_item
+    if slash_charm == ctenums.ItemID.NONE:
+        slash_charm_name = "Nothing"
+    else:
+        slash_charm_name = str(ctstrings.CTString(item_man[slash_charm].name[1:]))
+    flea_bid = boss_assign_dict[bty.BossSpotID.OZZIES_FORT_FLEA_PLUS]
+    flea_id = bty.get_default_scheme(flea_bid).parts[0].enemy_id
+    flea_name = bty.get_boss_dialogue_name(flea_bid)
+
+    flea_charm = enemy_dict[flea_id].charm_item
+    if flea_charm == ctenums.ItemID.NONE:
+        flea_charm_name = "Nothing"
+    else:
+        flea_charm_name = str(ctstrings.CTString(item_man[flea_charm].name[1:]))
+    ozzie_name = bty.get_boss_dialogue_name(boss_id)
+
+    script = script_manager[ctenums.LocID.OZZIES_FORT_LAST_STAND]
+    for ind, ct_str in enumerate(script.strings):
+        string = ctstrings.CTString.ct_bytes_to_ascii(ct_str)
+        if "OZZIE" in string:
+            string = string.replace("OZZIE", ozzie_name.upper())
+        if "Ozzie Pants" in string:
+            string = string.replace("Ozzie Pants", ozzie_charm_name)
+        if "FLEA" in string:
+            string = string.replace("FLEA", flea_name.upper())
+        if "Flea Vest" in string:
+            string = string.replace("Flea Vest", flea_charm_name)
+        if "SLASH" in string:
+            string = string.replace("SLASH", slash_name.upper())
+        if "Slasher 2" in string:
+            string = string.replace("Slasher 2", slash_charm_name)
+
+        new_ct_str = ctstrings.CTString.from_str(string)
+        if new_ct_str != ct_str:
+            new_ct_str = new_ct_str.translate(
+                bytes.maketrans(b'\x05\x06', b'\xEF\xEF')
+            )
+            new_ct_str = ctstrings.get_width_adjusted_ct_string(new_ct_str, indent_new_lines=True)
+        script.strings[ind] = new_ct_str
+
+    loc_ids = (ctenums.LocID.OZZIES_FORT_FLEA_PLUS, ctenums.LocID.OZZIES_FORT_SUPER_SLASH)
+    names = ("Flea", "Slash")
+    repl_names = (flea_name, slash_name)
+
+    for loc_id, name in zip(loc_ids, names):
+        script = script_manager[loc_id]
+        for ind, ct_str in enumerate(script.strings):
+            string = ctstrings.CTString.ct_bytes_to_ascii(ct_str)
+            if "FLEA" in string:
+                string = string.replace("FLEA", flea_name.upper())
+            if "Flea" in string:
+                string = string.replace("Flea", flea_name)
+            if "SLASH" in string:
+                string = string.replace("SLASH", slash_name.upper())
+            if "Slash" in string:
+                string = string.replace("Slash", slash_name)
+            new_ct_str = ctstrings.CTString.from_str(string)
+            if new_ct_str != ct_str:
+                new_ct_str = new_ct_str.translate(
+                    bytes.maketrans(b'\x05\x06', b'\xEF\xEF')
+                )
+                new_ct_str = ctstrings.get_width_adjusted_ct_string(new_ct_str, indent_new_lines=True)
+                script.strings[ind] = new_ct_str
+            #     print(f"{ind:02X}:{ctstrings.CTString.ct_bytes_to_ascii(ct_str)}")
+            #
+            # input()
+
 
 
 def write_bosses_to_ct_rom(

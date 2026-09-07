@@ -528,6 +528,7 @@ def get_ctrom_from_config(
     bossrando.update_boss_names(config.boss_assignment_dict,
                                 post_config.script_manager,
                                 config.enemy_data_dict,
+                                config.item_db,
                                 post_config.overworld_manager)
     bossrando.fix_atropos_ribbon_buff(config.boss_assignment_dict,
                                       post_config.script_manager,
