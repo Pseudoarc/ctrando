@@ -572,7 +572,9 @@ def make_gauntlet_locations(
     ret_dict: dict[bty.BossID, ctenums.LocID] = dict()
     for boss_id in gauntlet_bosses:
         if boss_id in _vanilla_gauntlet_correspondence:
-            ret_dict[boss_id] = _vanilla_gauntlet_correspondence[boss_id]
+            gauntlet_loc_id = _vanilla_gauntlet_correspondence[boss_id]
+            ret_dict[boss_id] = gauntlet_loc_id
+            gauntlet_loc_pool.remove(gauntlet_loc_id)
         else:
             remaining_gauntlet_bosses.append(boss_id)
 
@@ -720,9 +722,6 @@ def copy_gaunlet_boss_data(
 ):
 
     for boss_id in gauntlet_manager.gauntlet_bosses:
-        if lgt.is_vanilla_gauntlet_boss(boss_id):
-            continue  # Vanilla gauntlet bosses are already ok
-
         scheme = gauntlet_manager.get_lavos_scheme(boss_id)
         repl_dict = {
             gauntlet_manager.gauntlet_enemy_to_base_dict[part.enemy_id]: part.enemy_id
@@ -732,39 +731,40 @@ def copy_gaunlet_boss_data(
             lavos_enemy_id = part.enemy_id
             base_enemy_id = gauntlet_manager.gauntlet_enemy_to_base_dict[lavos_enemy_id]
 
-            # Sprite Data
-            base_sprite_data = enemy_sprite_dict[base_enemy_id]
-            if ind == 0:
-                base_lavos_sprite_data = get_lavos_base_sprite_data()
-            else:
-                base_lavos_sprite_data = get_lavos_support_sprite_data(
-                    base_sprite_data.sprite_size
+            if not lgt.is_vanilla_gauntlet_boss(boss_id):
+                # Sprite Data
+                base_sprite_data = enemy_sprite_dict[base_enemy_id]
+                if ind == 0:
+                    base_lavos_sprite_data = get_lavos_base_sprite_data()
+                else:
+                    base_lavos_sprite_data = get_lavos_support_sprite_data(
+                        base_sprite_data.sprite_size
+                    )
+                base_lavos_sprite_data.is_primary_enemy = base_sprite_data.is_primary_enemy
+                base_lavos_sprite_data.unk_04_10 = base_lavos_sprite_data.unk_04_10
+                base_lavos_sprite_data.unk_04_20 = base_lavos_sprite_data.unk_04_20
+                base_lavos_sprite_data.unk_04_40 = base_lavos_sprite_data.unk_04_40
+                base_lavos_sprite_data.unk_04_80 = base_lavos_sprite_data.unk_04_80
+                enemy_sprite_dict[lavos_enemy_id] = base_lavos_sprite_data
+
+                # AI script
+                base_enemy_ai_script = copy.deepcopy(
+                    enemy_ai_manager.script_dict[base_enemy_id])
+                replace_ai_script_ids(base_enemy_ai_script, repl_dict)
+                remove_move_commands(base_enemy_ai_script)
+                base_enemy_ai_script.update_usage({
+                    ctenums.EnemyTechID.BAD_IMPULSE: ctenums.EnemyTechID.LAVOS_BAD_IMPULSE,
+                    ctenums.EnemyTechID.HARTFIRE_SWORD: ctenums.EnemyTechID.LAVOS_HARTFIRE_SWORD
+                })
+                enemy_ai_manager.script_dict[lavos_enemy_id] = base_enemy_ai_script
+
+                # Attack Data
+                enemy_attack_manager.main_attack_graphics[lavos_enemy_id] = (
+                    enemy_attack_manager.main_attack_graphics[base_enemy_id].get_copy()
                 )
-            base_lavos_sprite_data.is_primary_enemy = base_sprite_data.is_primary_enemy
-            base_lavos_sprite_data.unk_04_10 = base_lavos_sprite_data.unk_04_10
-            base_lavos_sprite_data.unk_04_20 = base_lavos_sprite_data.unk_04_20
-            base_lavos_sprite_data.unk_04_40 = base_lavos_sprite_data.unk_04_40
-            base_lavos_sprite_data.unk_04_80 = base_lavos_sprite_data.unk_04_80
-            enemy_sprite_dict[lavos_enemy_id] = base_lavos_sprite_data
-
-            # AI script
-            base_enemy_ai_script = copy.deepcopy(
-                enemy_ai_manager.script_dict[base_enemy_id])
-            replace_ai_script_ids(base_enemy_ai_script, repl_dict)
-            remove_move_commands(base_enemy_ai_script)
-            base_enemy_ai_script.update_usage({
-                ctenums.EnemyTechID.BAD_IMPULSE: ctenums.EnemyTechID.LAVOS_BAD_IMPULSE,
-                ctenums.EnemyTechID.HARTFIRE_SWORD: ctenums.EnemyTechID.LAVOS_HARTFIRE_SWORD
-            })
-            enemy_ai_manager.script_dict[lavos_enemy_id] = base_enemy_ai_script
-
-            # Attack Data
-            enemy_attack_manager.main_attack_graphics[lavos_enemy_id] = (
-                enemy_attack_manager.main_attack_graphics[base_enemy_id].get_copy()
-            )
-            enemy_attack_manager.alt_attack_graphics[lavos_enemy_id] = (
-                enemy_attack_manager.alt_attack_graphics[base_enemy_id].get_copy()
-            )
+                enemy_attack_manager.alt_attack_graphics[lavos_enemy_id] = (
+                    enemy_attack_manager.alt_attack_graphics[base_enemy_id].get_copy()
+                )
 
             # Stats
             base_enemy_data = enemy_data_dict[base_enemy_id].get_copy()
