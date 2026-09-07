@@ -448,8 +448,8 @@ _default_schemes: dict[BossID, BossScheme] = {
     BossID.GAUNTLET_MAGUS: BossScheme(BossPart(_EID.LAVOS_MAGUS, 3)),
     BossID.GAUNTLET_NIZBEL: BossScheme(BossPart(_EID.LAVOS_NIZBEL, 3)),
     BossID.GAUNTLET_TYRANO: _BS(
-        _BP(_EID.LAVOS_TYRANO_AZALA, 7),
-        _BP(_EID.LAVOS_TYRANO, 3)  # Not real disp b/c not randomizing
+        _BP(_EID.LAVOS_TYRANO, 3),
+        _BP(_EID.LAVOS_TYRANO_AZALA, 7, (-0x27, -0xF)),
     ),
     BossID.GAUNTLET_ZOMBOR: BossScheme(
         BossPart(_EID.LAVOS_ZOMBOR_UPPER, 9),
