@@ -387,40 +387,6 @@ def fix_boss_sprites_given_assignment(
     if change_tyrano:
         enemy_sprite_dict[ctenums.EnemyID.RUST_TYRANO].set_affect_layer_1(False)
 
-    bad_mud_imp_spots = (
-        bty.BossSpotID.KINGS_TRIAL, bty.BossSpotID.MAGUS_CASTLE_SLASH
-    )
-
-    bad_spots_assigned_bosses = [
-        boss_dict[spot] for spot in bad_mud_imp_spots
-    ]
-
-    # In theory, all of these other changes are obsolute with decompressed gfx
-    # if bty.BossID.MUD_IMP in bad_spots_assigned_bosses:
-    #     change_enemy_sprite(ctenums.EnemyID.RED_BEAST, ctenums.EnemyID.NU)
-    #     change_enemy_sprite(ctenums.EnemyID.BLUE_BEAST, ctenums.EnemyID.NU)
-    #
-    # ozzie_spots = [
-    #     spot for spot, entry in boss_dict.items()
-    #     if entry == bty.BossID.OZZIE_TRIO
-    # ]
-    # if ozzie_spots != [bty.BossSpotID.OZZIES_FORT_TRIO]:
-    #     change_enemy_sprite(ctenums.EnemyID.FLEA_PLUS_TRIO, ctenums.EnemyID.R_SERIES, False)
-    #     enemy_sprite_dict[ctenums.EnemyID.FLEA_PLUS_TRIO].palette = enemy_sprite_dict[ctenums.EnemyID.ATROPOS_XR].palette
-    #     change_enemy_sprite(ctenums.EnemyID.SUPER_SLASH_TRIO, ctenums.EnemyID.R_SERIES, False)
-    #
-    # if bty.BossSpotID.OZZIES_FORT_TRIO not in ozzie_spots:
-    #     ozzie_assign = boss_dict[bty.BossSpotID.OZZIES_FORT_TRIO]
-    #     ozzie_assign_id = bty.get_default_scheme(ozzie_assign).parts[0].enemy_id
-    #
-    #     # Ozzie can't do Slash's spincut (freezes)
-    #     # Really, this is OK for any small sprite.  Perhaps only force Ozzie for
-    #     # Nizbel, Golem, ???
-    #     if ozzie_assign_id not in (
-    #         ctenums.EnemyID.SLASH_SWORD, ctenums.EnemyID.FLEA, ctenums.EnemyID.DALTON_PLUS
-    #     ):
-    #         change_enemy_sprite(ozzie_assign_id, ctenums.EnemyID.GREAT_OZZIE, False)
-
 
 def fix_atropos_ribbon_buff(
         boss_dict: dict[bty.BossSpotID, bty.BossID],
@@ -502,7 +468,6 @@ def determine_trio_scheme(
 
 _dragon_tank_manuals: dict[bty.BossID, str] = {
     bty.BossID.DALTON_PLUS:
-    "Stunning good looks, aside, "
     "Dalton counters lightning or physical attacks with Iron Orb. " 
     "All other elements will be countered with a spell of the opposite element.{full break}"
     "Even if Dalton is defeated, he can summon the mighty Golem Boss to finish his foes!",
@@ -618,8 +583,8 @@ _dragon_tank_manuals: dict[bty.BossID, str] = {
     "Ozzie, Flea, and Slash make an unstoppable trio. "
     "While Flea lives, attacking Flea or Slash will trigger a powerful fire counter attack. "
     "Attacking Ozzie directly will result in a shadow counter. "
-    "The only weakness is that Flea is vulnerable to status ailments. "
-    "Also, if Slash is defeated, Flea will flee. "
+    "The only weakness is that Flea is vulnerable to status ailments... "
+    "Also, if Slash is defeated, Flea will flee..."
     "And also Ozzie can't do anything once a single member of the trio falls."
     "{full break}"
     "Otherwise, the Ozzie trio is unstoppable!",
@@ -643,7 +608,7 @@ _dragon_tank_manuals: dict[bty.BossID, str] = {
     "The Rust Tyrano is a refurbished relic found in a cave off the "
     "coast of Choras. Unfortunately, we were only able to salvage the head. "
     "After charging up, the head will unleash a powerful fire attack. "
-    "Each subsequent fire attack faster to charge and more powerful as well."
+    "Each subsequent fire attack is faster to charge and more powerful as well."
     "{full break}"
     "Those without sufficient DPS are no match for the mighty Rust Tyrano!",
     bty.BossID.SLASH_SWORD:
