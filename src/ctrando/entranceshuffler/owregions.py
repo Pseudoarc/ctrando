@@ -80,7 +80,7 @@ def get_ow_regions() -> list[OWRegion]:
             OWExit.DORINO_BROMIDE_RESIDENCE, OWExit.DORINO_INN, OWExit.DORINO_MARKET,
             OWExit.TATAS_HOUSE, OWExit.PORRE_ELDER_600, OWExit.PORRE_CAFE_600,
             OWExit.PORRE_INN_600, OWExit.PORRE_MARKET_600, OWExit.CURSED_WOODS,
-            OWExit.DENADORO_MTS, OWExit.FIONAS_VILLA
+            OWExit.DENADORO_MTS, OWExit.FIONAS_VILLA, OWExit.DORINO_ELDER
         }
     )
     sunken_desert_600_ow = OWRegion(

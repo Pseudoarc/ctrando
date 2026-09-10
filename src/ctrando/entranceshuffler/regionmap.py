@@ -945,6 +945,13 @@ def get_default_region_connectors(
             reversible=False
         ),
         RegionConnector(
+            "porre_1000_overworld", "truce_1000_overworld",
+            "flight_1000",
+            rule=logictypes.LogicRule([logictypes.ScriptReward.EPOCH,
+                                       logictypes.ScriptReward.FLIGHT]),
+            reversible=False
+        ),
+        RegionConnector(
             "porre_1000_overworld", "medina_1000_overworld",
             "flight_1000",
             rule=logictypes.LogicRule([logictypes.ScriptReward.EPOCH,
@@ -985,6 +992,13 @@ def get_default_region_connectors(
         ),
         RegionConnector(
             "porre_1000_overworld", "porre_600_overworld",
+            "flight_600",
+            rule=logictypes.LogicRule([logictypes.ScriptReward.EPOCH,
+                                       logictypes.ScriptReward.FLIGHT]),
+            reversible=False,
+        ),
+        RegionConnector(
+            "porre_1000_overworld", "truce_600_overworld",
             "flight_600",
             rule=logictypes.LogicRule([logictypes.ScriptReward.EPOCH,
                                        logictypes.ScriptReward.FLIGHT]),
@@ -1067,6 +1081,14 @@ def get_default_region_connectors(
         ),
         RegionConnector(
             "porre_1000_overworld", "sun_palace_overworld",
+            "flight_2300",
+            rule=logictypes.LogicRule([logictypes.ScriptReward.EPOCH,
+                                       logictypes.ScriptReward.FLIGHT,
+                                       memory.Flags.HAS_FUTURE_TIMEGAUGE_ACCESS]),
+            reversible=False,
+        ),
+        RegionConnector(
+            "porre_1000_overworld", "keepers_overworld",
             "flight_2300",
             rule=logictypes.LogicRule([logictypes.ScriptReward.EPOCH,
                                        logictypes.ScriptReward.FLIGHT,
@@ -1187,6 +1209,15 @@ def get_default_region_connectors(
             rule=logictypes.LogicRule([logictypes.ScriptReward.EPOCH,
                                        logictypes.ScriptReward.FLIGHT,
                                        memory.Flags.HAS_DARK_AGES_TIMEGAUGE_ACCESS]),
+            reversible=False
+        ),
+        RegionConnector(
+            "porre_1000_overworld", "last_village_overworld",
+            "flight_last_village",
+            rule=logictypes.LogicRule([logictypes.ScriptReward.EPOCH,
+                                       logictypes.ScriptReward.FLIGHT,
+                                       memory.Flags.HAS_DARK_AGES_TIMEGAUGE_ACCESS,
+                                       memory.Flags.HAS_ALGETTY_PORTAL]),
             reversible=False
         ),
         RegionConnector(
