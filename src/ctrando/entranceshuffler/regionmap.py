@@ -402,7 +402,7 @@ def get_default_region_connectors(
     ) & logictypes.LogicRule([ItemID.GATE_KEY])
 
     bb_rule = logictypes.LogicRule([memory.Flags.HAS_ALGETTY_PORTAL])
-    if logic_options.force_early_flight:
+    if logic_options.force_early_flight and logic_options.jets_of_time:
         bb_rule = bb_rule & logictypes.LogicRule([ctenums.ItemID.JETSOFTIME])
 
     extra_connectors = []
@@ -1293,11 +1293,6 @@ def get_default_region_connectors(
             "place_moon_stone_prehistory",
             rule=logictypes.LogicRule([ItemID.MOON_STONE])
         ),
-        # RegionConnector(
-        #     "sun_keep_2300", "luccas_house_sunstone",
-        #     "lucca_refines_sunstone",
-        #     rule=logictypes.LogicRule([memory.Flags.MOONSTONE_PLACED_PREHISTORY, CharID.LUCCA])
-        # ),
         RegionConnector(
             "porre_1000_overworld", "black_omen",
             "fly_to_black_omen",
