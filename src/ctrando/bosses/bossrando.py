@@ -711,18 +711,20 @@ def update_boss_names(
     #     print(f"{ind}: {ctstrings.CTString.ct_bytes_to_ascii(ct_str)}")
     # input()
 
-    script = script_manager[ctenums.LocID.PRISON_SUPERVISORS_OFFICE]
-    pos, _ = script.find_command([0xC1], script.get_function_start(0x11, 1))
-    str_id = script.data[pos+1]
-    ct_str = make_boss_manual_string(boss_id)
-    script.strings[str_id] = ct_str
+    if boss_id != bty.BossID.DRAGON_TANK:
+        if boss_id in _dragon_tank_manuals:
+            script = script_manager[ctenums.LocID.PRISON_SUPERVISORS_OFFICE]
+            pos, _ = script.find_command([0xC1], script.get_function_start(0x11, 1))
+            str_id = script.data[pos+1]
+            ct_str = make_boss_manual_string(boss_id)
+            script.strings[str_id] = ct_str
 
-    script = script_manager[ctenums.LocID.PRISON_CATWALKS]
-    for ind, ct_str in enumerate(script.strings):
-        string = str(ctstrings.CTString(ct_str))
-        if "Dragon Tank" in string:
-            string = string.replace("Dragon Tank", boss_name)
-            script.strings[ind] = ctstrings.CTString.from_str(string)
+        script = script_manager[ctenums.LocID.PRISON_CATWALKS]
+        for ind, ct_str in enumerate(script.strings):
+            string = str(ctstrings.CTString(ct_str))
+            if "Dragon Tank" in string:
+                string = string.replace("Dragon Tank", boss_name)
+                script.strings[ind] = ctstrings.CTString.from_str(string)
 
     # Heckran Cave
     spot_id = bty.BossSpotID.HECKRAN_CAVE
