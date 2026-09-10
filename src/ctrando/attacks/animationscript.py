@@ -1127,6 +1127,40 @@ def make_double_tap_script(ct_rom: ctrom.CTRom):
     return script
 
 
+def get_fixed_r_series_beast_toss_script(
+        ct_rom: ctrom.CTRom
+):
+    script = EnemyTechAnimationScript.read_from_ctrom(ct_rom, 0x4F)
+
+    # Without a little explanation, this fix will be copmletely opaque.
+    # The target 0 object (the bouncing character) increments the 1d
+    # counter with each bounce.  The casters respond to the bounces with
+    # punching animations.
+
+    # The problem is that when the bounce distance is very short (this
+    # happens when caster 2 is right next to the target) it is possible
+    # for the bounces to happen so quickly that the counter increments too
+    # fast.  Caster 0 waits for a value of 4, but with fast bounces, it gets
+    # past 4 by the time Caster 0 waits.
+
+    # The fix is to use the other main counter, 1C to force a break at
+    # one of the bounces.
+
+    # 1) Have caster 0 increment the 1c counter after it waits for 1d == 4
+    script.main_script.caster_objects[0].insert(
+        13, ac.IncrementCounter1C(),
+    )
+
+    # 2) When target 0 would be incrementing 1d to 5, wait for 1c == 1 first
+    script.main_script.target_objects[0].insert(
+        17, ac.WaitForCounter1CValue(value=1)
+    )
+
+    # So now, the 1d counter can't shoot past the number caster 0 waits for.
+    # The other bounces seem to be properly gated.
+    return script
+
+
 class AnimationScriptManager:
     """Class for reading/writing pc tech animation scripts"""
 

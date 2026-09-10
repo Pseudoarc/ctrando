@@ -10,6 +10,7 @@ import tomllib
 import typing
 from typing import TextIO
 
+from ctrando.attacks import animationscript
 from ctrando.arguments import (
     arguments, enemyscaling, techoptions, tomloptions, gearrandooptions
 )
@@ -962,6 +963,9 @@ def apply_settings_free_patches(vanilla_rom: ctrom.CTRom):
     """
     basepatch.base_patch_ct_rom(vanilla_rom)
     basepatch.apply_ow_warp_patch(vanilla_rom)
+
+    script = animationscript.get_fixed_r_series_beast_toss_script(vanilla_rom)
+    script.write_to_ctrom(vanilla_rom, 0x4F)
 
 
 def dump_prepatched_ctrom(
