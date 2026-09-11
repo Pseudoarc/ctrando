@@ -468,6 +468,17 @@ def get_default_region_connectors(
             )
         )
 
+    zeal_throne_rule = charge_rule(2)
+    if logic_options.magus_logical_ocean_palace:
+        zeal_throne_rule |= logictypes.LogicRule([CharID.MAGUS])
+
+    extra_connectors.append(
+        RegionConnector(
+            "zeal_palace", "ocean_palace",
+            "zeal_palace_throne_door",
+            rule=zeal_throne_rule
+        )
+    )
 
     portal_connectors = [
         RegionConnector(
@@ -1298,11 +1309,6 @@ def get_default_region_connectors(
             "zeal_palace", "zeal_mammon_m",
             "mammon_m_give_pendant",
             rule=charge_rule(1)
-        ),
-        RegionConnector(
-            "zeal_palace", "ocean_palace",
-            "zeal_palace_pendant_charge",
-            rule=charge_rule(2) | logictypes.LogicRule([CharID.MAGUS])
         ),
         RegionConnector(
             "ocean_palace", "ocean_palace_mammon_m",
