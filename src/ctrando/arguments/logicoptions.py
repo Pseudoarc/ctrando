@@ -123,15 +123,6 @@ class LogicOptions:
     _default_out_of_logic_starter_rewards: typing.ClassVar[tuple[RewardType, ...]] = tuple()
     _default_min_flight_depth = 0
 
-    attr_names: typing.ClassVar[tuple[str, ...]] = (
-        "additional_key_items", "forced_spots", "loose_key_items", "incentive_spots",
-        "incentive_factor", "excluded_spots", "decay_factor",
-        "hard_lavos_end_boss", "starter_rewards", "out_of_logic_starter_rewards",
-        "force_early_flight", "boats_of_time", "jets_of_time", "min_flight_depth",
-        "lock_gates", "disable_element_locks", "block_zenan_600", "block_zenan_1000",
-        "magus_castle_logical_connection"
-
-    )
     name: typing.ClassVar[str] = "Logic Options"
     description: typing.ClassVar[str] = "Options for the distribution of key items"
     def __init__(
@@ -155,6 +146,8 @@ class LogicOptions:
             block_zenan_600: bool = False,
             block_zenan_1000: bool = False,
             magus_castle_logical_connection: bool = False,
+            magus_logical_ocean_palace: bool = False,
+            magus_logical_magus_castle: bool = False
     ):
         self.additional_key_items = sorted(additional_key_items)
         self.forced_spots = forced_spots
@@ -175,6 +168,8 @@ class LogicOptions:
         self.block_zenan_600 = block_zenan_600
         self.block_zenan_1000 = block_zenan_1000
         self.magus_castle_logical_connection = magus_castle_logical_connection
+        self.magus_logical_ocean_palace = magus_logical_ocean_palace
+        self.magus_logical_magus_castle = magus_logical_magus_castle
 
 
     @classmethod
@@ -268,6 +263,15 @@ class LogicOptions:
             ),
             "magus_castle_logical_connection": argumenttypes.FlagArg(
                 "Magus's castle is a logical connection to the dark ages cave."
+            ),
+            "force_early_flight": argumenttypes.FlagArg(
+                "If jets_of_time is on, the jets will be logically available before blackbird"
+            ),
+            "magus_logical_ocean_palace": argumenttypes.FlagArg(
+                "Magus opening the Zeal throneroom door is in logic."
+            ),
+            "magus_logical_magus_castle": argumenttypes.FlagArg(
+                "Magus is logically required for Magus's castle."
             )
         }
 
@@ -277,107 +281,9 @@ class LogicOptions:
 
         group = parser.add_argument_group(cls.name, cls.description)
 
-        group.add_argument(
-            "--additional-key-items",
-            nargs="*",
-            type=argumenttypes.str_to_enum_fn_maker(enum_type=ctenums.ItemID),
-            help="Extra (non-progression) items to add to the key item pool.",
-            default=argparse.SUPPRESS
-        )
-
-        group.add_argument(
-            "--forced-spots",
-            nargs="*",
-            type=argumenttypes.str_to_enum_fn_maker(ctenums.TreasureID),
-            help="Spots forced to have key items.",
-            default=argparse.SUPPRESS
-        )
-
-        group.add_argument(
-            "--loose-key-items",
-            nargs="*",
-            type=argumenttypes.str_to_enum_fn_maker(enum_type=ctenums.ItemID),
-            help="Key items to place randomly instead of in forced spots (when more items then spots)",
-            default=argparse.SUPPRESS
-        )
-
-        group.add_argument(
-            "--incentive-spots",
-            nargs="*",
-            type=argumenttypes.str_to_enum_fn_maker(enum_type=ctenums.TreasureID),
-            help="Spots with increased probability to have key items.",
-            default=argparse.SUPPRESS
-        )
-
-        group.add_argument(
-            "--incentive-factor",
-            type=float,
-            default=argparse.SUPPRESS,
-            help="Factor by which to increase the weight of incentive spots."
-        )
-
-        group.add_argument(
-            "--excluded-spots",
-            nargs="*",
-            type=argumenttypes.str_to_enum_fn_maker(enum_type=ctenums.TreasureID),
-            help="Spots which are forbidden to have key items.",
-            default=argparse.SUPPRESS
-        )
-
-        group.add_argument(
-            "--decay-factor",
-            type=float,
-            help=("Factor by which to decrease the weight of regions which "
-                  "have already received items (1.0 = no change)."),
-            default=argparse.SUPPRESS
-        )
-
-        group.add_argument(
-            "--starter-rewards",
-            nargs="*",
-            type=str_to_reward,
-            help="Rewards to grant at game start.",
-            default=argparse.SUPPRESS
-        )
-
-        group.add_argument(
-            "--out-of-logic-starter-rewards",
-            nargs="*",
-            type=str_to_reward,
-            help="Rewards to grant at game start.",
-            default=argparse.SUPPRESS
-        )
-
-        group.add_argument(
-            "--force-early-flight", action="store_true",
-            help="The JetsOfTime will be guaranteed in a pre-flight locataion.",
-            default=argparse.SUPPRESS
-        )
-
-        group.add_argument(
-            "--hard-lavos-end-boss",
-            action="store_true",
-            help="The game will end if Ocean Palace Lavos is defeated.",
-            default=argparse.SUPPRESS
-        )
-
-        group.add_argument(
-            "--boats-of-time", action="store_true",
-            help="Additional Ferry locations",
-            default=argparse.SUPPRESS
-        )
-
-        group.add_argument(
-            "--jets-of-time", action="store_true",
-            help="Add JetsOfTime item and turn-in on Blackbird scaffolding",
-            default=argparse.SUPPRESS
-        )
-
-        for arg in ["min_flight_depth", "lock_gates", "disable_element_locks",
-                    "block_zenan_600", "block_zenan_1000", "magus_castle_logical_connection"]:
-            cls.get_argument_spec()[arg].add_to_argparse(
-                argumenttypes.attr_name_to_arg_name(arg), group
-            )
+        for attr_name, arg in cls.get_argument_spec().items():
+            arg_name = argumenttypes.attr_name_to_arg_name(attr_name)
+            arg.add_to_argparse(arg_name, group)
 
 
     @ classmethod
@@ -385,7 +291,7 @@ class LogicOptions:
 
         init_dict: dict[str, typing.Any] = dict()
 
-        for attr_name in cls.attr_names:
+        for attr_name in cls.get_argument_spec().keys():
             if hasattr(namespace, attr_name):
                 init_dict[attr_name] = getattr(namespace, attr_name)
 
