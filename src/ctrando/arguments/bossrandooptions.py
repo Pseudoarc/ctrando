@@ -25,11 +25,11 @@ class BossRandoOptions:
     _default_midboss_rando_scheme: typing.ClassVar[MidBossRandoType] = MidBossRandoType.VANILLA
     _default_vanilla_spots: typing.ClassVar[tuple[bosstypes.BossSpotID, ...]] = tuple()
     _default_boss_pool: typing.ClassVar[tuple[bosstypes.BossID, ...]] = (
-        bosstypes.BossID.DALTON_PLUS, bosstypes.BossID.FLEA, bosstypes.BossID.FLEA_PLUS,
+        bosstypes.BossID.DALTON_PLUS, bosstypes.BossID.FLEA,
         bosstypes.BossID.GOLEM, bosstypes.BossID.GOLEM_BOSS, bosstypes.BossID.HECKRAN,
         bosstypes.BossID.MASA_MUNE, bosstypes.BossID.NIZBEL,
         bosstypes.BossID.NIZBEL_2, bosstypes.BossID.RUST_TYRANO, bosstypes.BossID.SLASH_SWORD,
-        bosstypes.BossID.SUPER_SLASH, bosstypes.BossID.YAKRA, bosstypes.BossID.YAKRA_XIII,
+        bosstypes.BossID.YAKRA, bosstypes.BossID.YAKRA_XIII,
         bosstypes.BossID.ZOMBOR, bosstypes.BossID.LAVOS_SPAWN, bosstypes.BossID.ELDER_SPAWN,
         bosstypes.BossID.MEGA_MUTANT, bosstypes.BossID.GIGA_MUTANT, bosstypes.BossID.TERRA_MUTANT,
         bosstypes.BossID.RETINITE, bosstypes.BossID.SON_OF_SUN, bosstypes.BossID.MOTHER_BRAIN,
@@ -101,8 +101,6 @@ class BossRandoOptions:
             x for x in boss_pool if x not in self._default_midboss_pool
         )
         self.midboss_pool = tuple(midboss_pool)
-        if len(lavos_gauntlet_bosses) not in range(1, 10):
-            raise ValueError("Lavos gauntlet must have between 1 and 9 bosses")
         self.lavos_gauntlet_bosses = lavos_gauntlet_bosses
         self.lavos_gauntlet_rewards = lavos_gauntlet_rewards
 
