@@ -95,7 +95,11 @@ class BossRandoOptions:
         self.midboss_randomization_type = midboss_randomization_type
         self.boss_randomization_type = boss_randomization_type
         self.vanilla_boss_spots = tuple(vanilla_boss_spots)
-        self.boss_pool = tuple(boss_pool)
+        self.boss_pool = tuple(
+            # The _default_boss_pool includes some minibosses, but I don't want to
+            # accidentally brick settings files.
+            x for x in boss_pool if x not in self._default_midboss_pool
+        )
         self.midboss_pool = tuple(midboss_pool)
         if len(lavos_gauntlet_bosses) not in range(1, 10):
             raise ValueError("Lavos gauntlet must have between 1 and 9 bosses")
