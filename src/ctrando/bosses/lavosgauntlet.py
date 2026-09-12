@@ -17,6 +17,7 @@ from ctrando.locations.eventfunction import EventFunction as EF
 from ctrando.locations.locationevent import LocationEvent, FunctionID as FID
 
 
+_map_pool = [10, 30, 141, 172, 201, 202, 203, 204, 205]
 
 # Obj 08 - Control Object
 # - Goes away when gauntlet counter > 0
@@ -580,16 +581,19 @@ def make_gauntlet_locations(
 
     lavos_l3_tiles = get_lavos_l3_tiles(ct_rom)
 
+    map_pool = list(_map_pool)
     for boss_id in remaining_gauntlet_bosses:
         gauntlet_loc = gauntlet_loc_pool.pop()
+        map_id = map_pool.pop()
+
         orig_gauntlet_data = _boss_gauntlet_data_dict[boss_id]
         orig_loc_data = copy.copy(loc_data_dict[orig_gauntlet_data.loc_id])
         gauntlet_loc_data = loc_data_dict[gauntlet_loc]
 
         # The gauntlet location gets all of the original map's data except
-        # 1) The map id of the gauntlet location is kept (the map is overwritten)
+        # 1) The map id of the gauntlet location is from the pool
         # 2) The script id of the gauntlet location is kept (the script is overwritten)
-        orig_loc_data.map_id = gauntlet_loc_data.map_id
+        orig_loc_data.map_id = map_id
         orig_loc_data.event_id = gauntlet_loc_data.event_id
         orig_loc_data.layer_3_tilechunks = 0x12
 
@@ -609,9 +613,7 @@ def make_gauntlet_locations(
             ct_rom, orig_gauntlet_data.loc_id, lavos_l3_tiles,
             x_shift, y_shift
         )
-        gauntlet_map.write_to_ctrom(
-            ct_rom, gauntlet_loc_data.map_id
-        )
+        gauntlet_map.write_to_ctrom(ct_rom, map_id)
 
     return ret_dict
 

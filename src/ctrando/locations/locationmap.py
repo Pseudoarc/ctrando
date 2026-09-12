@@ -21,8 +21,10 @@ def get_map_ptr(rom: typing.ByteString, map_id: int):
     """
     ptr_addr = _MAP_PTR_TABLE_START + 3*map_id
     rom_ptr = int.from_bytes(rom[ptr_addr:ptr_addr+3], 'little')
-    file_ptr = byteops.to_file_ptr(rom_ptr)
+    if rom_ptr == 0:  # Unused maps in invalid 0 pointer
+        return rom_ptr
 
+    file_ptr = byteops.to_file_ptr(rom_ptr)
     return file_ptr
 
 
@@ -425,7 +427,7 @@ class LocationMap:
         cur_ptr_addr = get_map_ptr_address(rom.getbuffer(), map_id)
         cur_ptr = get_map_ptr(rom.getbuffer(), map_id)
 
-        if free_existing:
+        if free_existing and cur_ptr != 0:
             compr_len = ctcompression.get_compressed_length(
                 rom.getbuffer(), cur_ptr)
 
