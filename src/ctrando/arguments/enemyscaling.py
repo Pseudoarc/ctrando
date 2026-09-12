@@ -35,7 +35,7 @@ _combat_zone_name_dict: dict[str, tuple[str,...]] = {
     "northern_ruins": ("northern_ruins_600", "northern_ruins_600_repaired"),
     "giants_claw": ("giants_claw",),
     "ozzies_fort": ("ozzies_fort",),
-    "magus_castle": ("magus_castle",),
+    "magus_castle": ("magus_castle_front", "magus_castle_back"),
     "magic_cave": ("magic_cave", ),
     "sunken_desert": ("sunken_desert",),
     "sun_palace": ("sun_palace", ),

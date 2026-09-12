@@ -462,11 +462,22 @@ def get_default_region_connectors(
     if logic_options.magus_castle_logical_connection:
         extra_connectors.append(
             RegionConnector(
-                "magus_castle", "dark_ages_portal",
+                "magus_castle_back", "dark_ages_portal",
                 "defeat_magus_warp",
                 reversible=False
             )
         )
+
+    magus_back_rule = logictypes.LogicRule()
+    if logic_options.magus_logical_magus_castle:
+        magus_back_rule = logictypes.LogicRule([CharID.MAGUS])
+    extra_connectors.append(
+        RegionConnector(
+            "magus_castle_front", "magus_castle_back",
+            "access_magus_castle_back",
+            rule = magus_back_rule,
+        )
+    )
 
     zeal_throne_rule = charge_rule(2)
     if logic_options.magus_logical_ocean_palace:

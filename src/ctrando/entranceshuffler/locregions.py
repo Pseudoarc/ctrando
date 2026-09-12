@@ -1121,38 +1121,79 @@ def get_all_loc_regions() -> list[LocRegion]:
     )
     ret_list.append(ozzies_fort)
 
-    magus_castle = LocRegion(
-        "magus_castle",
+    magus_castle_front = LocRegion(
+        "magus_castle_front",
         loc_exits={LocExit.MAGUS_LAIR},
         reward_spots={
             TID.MAGUS_CASTLE_RIGHT_HALL,
-            TID.MAGUS_CASTLE_GUILLOTINE_1, TID.MAGUS_CASTLE_GUILLOTINE_2,
+            # TID.MAGUS_CASTLE_GUILLOTINE_1, TID.MAGUS_CASTLE_GUILLOTINE_2,
             TID.MAGUS_CASTLE_SLASH_ROOM_1, TID.MAGUS_CASTLE_SLASH_ROOM_2,
             TID.MAGUS_CASTLE_SLASH_SWORD_FLOOR,
-            TID.MAGUS_CASTLE_STATUE_HALL, TID.MAGUS_CASTLE_FOUR_KIDS,
+            # TID.MAGUS_CASTLE_STATUE_HALL,
+            TID.MAGUS_CASTLE_FOUR_KIDS,
+            # TID.MAGUS_CASTLE_OZZIE_1, TID.MAGUS_CASTLE_OZZIE_2,
+            # TID.MAGUS_CASTLE_ENEMY_ELEVATOR,
+            TID.MAGUS_CASTLE_LEFT_HALL,
+            # TID.MAGUS_CASTLE_UNSKIPPABLES, TID.MAGUS_CASTLE_PIT_E,
+            # TID.MAGUS_CASTLE_PIT_NE, TID.MAGUS_CASTLE_PIT_NW,
+            # TID.MAGUS_CASTLE_PIT_W,
+            TID.MAGUS_CASTLE_FLEA_MAGIC_TAB,
+            # TID.MAGUS_CASTLE_DUNGEONS_MAGIC_TAB,
+            BSID.MAGUS_CASTLE_FLEA, BSID.MAGUS_CASTLE_SLASH
+        },
+        region_loc_ids={# LocID.MAGUS_CASTLE_OZZIE, LocID.MAGUS_CASTLE_PITS,
+                        LocID.MAGUS_CASTLE_ENTRANCE,
+                        # LocID.MAGIC_CAVE_EXTERIOR, LocID.MAGIC_CAVE_EXTERIOR_OPEN,
+                        # LocID.MAGUS_CASTLE_GUILLOTINES, LocID.MAGUS_CASTLE_DUNGEON,
+                        LocID.MAGUS_CASTLE_HALL_DECEIT,
+                        # LocID.MAGUS_CASTLE_HALL_AGGRESSION,
+                        # LocID.MAGUS_CASTLE_INNER_SANCTUM, LocID.MAGUS_CASTLE_GRAND_STAIRWAY,
+                        # LocID.MAGUS_CASTLE_HALL_APPREHENSION, LocID.MAGUS_CASTLE_HALL_OF_AMBUSH,
+                        # LocID.MAGUS_CASTLE_LOWER_BATTLEMENTS,
+                        LocID.MAGUS_CASTLE_FLEA,
+                        LocID.MAGUS_CASTLE_DOPPLEGANGER_CORRIDOR,
+                        LocID.MAGUS_CASTLE_SLASH, # LocID.MAGUS_CASTLE_CORRIDOR_OF_COMBAT,
+                        # LocID.MAGUS_CASTLE_PITS,
+                        },
+        is_combat_region=True
+    )
+
+    magus_castle_back = LocRegion(
+        "magus_castle_back",
+        reward_spots={
+            # TID.MAGUS_CASTLE_RIGHT_HALL,
+            TID.MAGUS_CASTLE_GUILLOTINE_1, TID.MAGUS_CASTLE_GUILLOTINE_2,
+            # TID.MAGUS_CASTLE_SLASH_ROOM_1, TID.MAGUS_CASTLE_SLASH_ROOM_2,
+            # TID.MAGUS_CASTLE_SLASH_SWORD_FLOOR,
+            TID.MAGUS_CASTLE_STATUE_HALL,
+            # TID.MAGUS_qCASTLE_FOUR_KIDS,
             TID.MAGUS_CASTLE_OZZIE_1, TID.MAGUS_CASTLE_OZZIE_2,
-            TID.MAGUS_CASTLE_ENEMY_ELEVATOR, TID.MAGUS_CASTLE_LEFT_HALL,
+            TID.MAGUS_CASTLE_ENEMY_ELEVATOR, # TID.MAGUS_CASTLE_LEFT_HALL,
             TID.MAGUS_CASTLE_UNSKIPPABLES, TID.MAGUS_CASTLE_PIT_E,
             TID.MAGUS_CASTLE_PIT_NE, TID.MAGUS_CASTLE_PIT_NW,
             TID.MAGUS_CASTLE_PIT_W,
-            TID.MAGUS_CASTLE_FLEA_MAGIC_TAB, TID.MAGUS_CASTLE_DUNGEONS_MAGIC_TAB,
-            BSID.MAGUS_CASTLE_FLEA, BSID.MAGUS_CASTLE_SLASH
+            # TID.MAGUS_CASTLE_FLEA_MAGIC_TAB,
+            TID.MAGUS_CASTLE_DUNGEONS_MAGIC_TAB,
+            # BSID.MAGUS_CASTLE_FLEA, BSID.MAGUS_CASTLE_SLASH
         },
         region_rewards=[memory.Flags.HAS_DARK_AGES_TIMEGAUGE_ACCESS,
                         QuestID.MAGUS_CASTLE],
         region_loc_ids={LocID.MAGUS_CASTLE_OZZIE, LocID.MAGUS_CASTLE_PITS,
-                        LocID.MAGUS_CASTLE_ENTRANCE,
-                        LocID.MAGIC_CAVE_EXTERIOR, LocID.MAGIC_CAVE_EXTERIOR_OPEN,
+                        # LocID.MAGUS_CASTLE_ENTRANCE,
+                        # LocID.MAGIC_CAVE_EXTERIOR, LocID.MAGIC_CAVE_EXTERIOR_OPEN,
                         LocID.MAGUS_CASTLE_GUILLOTINES, LocID.MAGUS_CASTLE_DUNGEON,
-                        LocID.MAGUS_CASTLE_HALL_DECEIT, LocID.MAGUS_CASTLE_HALL_AGGRESSION,
+                        #LocID.MAGUS_CASTLE_HALL_DECEIT,
+                        LocID.MAGUS_CASTLE_HALL_AGGRESSION,
                         LocID.MAGUS_CASTLE_INNER_SANCTUM, LocID.MAGUS_CASTLE_GRAND_STAIRWAY,
                         LocID.MAGUS_CASTLE_HALL_APPREHENSION, LocID.MAGUS_CASTLE_HALL_OF_AMBUSH,
-                        LocID.MAGUS_CASTLE_LOWER_BATTLEMENTS, LocID.MAGUS_CASTLE_FLEA,
-                        LocID.MAGUS_CASTLE_SLASH, LocID.MAGUS_CASTLE_CORRIDOR_OF_COMBAT,
-                        LocID.MAGUS_CASTLE_PITS, LocID.MAGUS_CASTLE_OZZIE},
+                        LocID.MAGUS_CASTLE_LOWER_BATTLEMENTS,
+                        # LocID.MAGUS_CASTLE_FLEA,
+                        # LocID.MAGUS_CASTLE_SLASH,
+                        # LocID.MAGUS_CASTLE_CORRIDOR_OF_COMBAT,
+                        LocID.MAGUS_CASTLE_PITS,},
         is_combat_region=True
     )
-    ret_list.append(magus_castle)
+    ret_list.extend([magus_castle_front, magus_castle_back])
 
     magic_cave = LocRegion(
         "magic_cave",
