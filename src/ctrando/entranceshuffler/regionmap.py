@@ -480,7 +480,7 @@ def get_default_region_connectors(
     )
 
     zeal_throne_rule = charge_rule(2)
-    if logic_options.magus_logical_ocean_palace:
+    if not logic_options.magus_sequence_break_ocean_palace:
         zeal_throne_rule |= logictypes.LogicRule([CharID.MAGUS])
 
     extra_connectors.append(

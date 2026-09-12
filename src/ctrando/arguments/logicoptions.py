@@ -147,7 +147,7 @@ class LogicOptions:
             block_zenan_600: bool = False,
             block_zenan_1000: bool = False,
             magus_castle_logical_connection: bool = False,
-            magus_logical_ocean_palace: bool = False,
+            magus_sequence_break_ocean_palace: bool = False,
             magus_logical_magus_castle: bool = False
     ):
         self.additional_key_items = sorted(additional_key_items)
@@ -169,7 +169,7 @@ class LogicOptions:
         self.block_zenan_600 = block_zenan_600
         self.block_zenan_1000 = block_zenan_1000
         self.magus_castle_logical_connection = magus_castle_logical_connection
-        self.magus_logical_ocean_palace = magus_logical_ocean_palace
+        self.magus_sequence_break_ocean_palace = magus_sequence_break_ocean_palace
         self.magus_logical_magus_castle = magus_logical_magus_castle
 
 
@@ -268,7 +268,7 @@ class LogicOptions:
             "force_early_flight": argumenttypes.FlagArg(
                 "If jets_of_time is on, the jets will be logically available before blackbird"
             ),
-            "magus_logical_ocean_palace": argumenttypes.FlagArg(
+            "magus_sequence_break_ocean_palace": argumenttypes.FlagArg(
                 "Magus opening the Zeal throneroom door is in logic."
             ),
             "magus_logical_magus_castle": argumenttypes.FlagArg(
