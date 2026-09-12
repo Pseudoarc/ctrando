@@ -444,7 +444,7 @@ _default_schemes: dict[BossID, BossScheme] = {
         BossPart(_EID.LAVOS_GUARDIAN_RIGHT, 8, (0x40, -0x08))
     ),
     BossID.GAUNTLET_HECKRAN: BossScheme(BossPart(_EID.LAVOS_HECKRAN, 3),),
-    BossID.GAUNTLET_MASA_MUNE: BossScheme(BossPart(_EID.LAVOS_MASA_MUNE, 6)),
+    BossID.GAUNTLET_MASA_MUNE: BossScheme(BossPart(_EID.LAVOS_MASA_MUNE, 3)),
     BossID.GAUNTLET_MAGUS: BossScheme(BossPart(_EID.LAVOS_MAGUS, 3)),
     BossID.GAUNTLET_NIZBEL: BossScheme(BossPart(_EID.LAVOS_NIZBEL, 3)),
     BossID.GAUNTLET_TYRANO: _BS(

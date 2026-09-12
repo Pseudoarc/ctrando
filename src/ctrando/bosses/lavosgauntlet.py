@@ -429,8 +429,8 @@ _boss_gauntlet_data_dict: dict[bty.BossID, GauntletData] = {
         0x280, 0x1B0
     ),
     bty.BossID.GOLEM: GauntletData(
-        ctenums.LocID.ZEAL_PALACE_THRONE, 0x17, 0x13,
-        0x170, 0x130
+        ctenums.LocID.ZEAL_PALACE_THRONE, 0x17, 0x5,
+        0x180, 0x78
     ),
     bty.BossID.GOLEM_BOSS: GauntletData(
         ctenums.LocID.BLACKBIRD_LEFT_WING, 0x14, 0x14,
