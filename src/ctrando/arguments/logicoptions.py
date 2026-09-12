@@ -29,6 +29,7 @@ _reward_dict: dict[str, RewardType] = {
     "bangor_pillar": memory.Flags.HAS_BANGOR_PORTAL,
     "truce_pillar": memory.Flags.HAS_TRUCE_PORTAL,
     "desert": memory.Flags.PLANT_LADY_SAVES_SEED,
+    "proto_door": memory.Flags.PROTO_DOME_DOOR_UNLOCKED,
     "pacifist": ctenums.ItemID.PACIFIST,
 }
 
