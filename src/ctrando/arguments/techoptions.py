@@ -114,7 +114,7 @@ class TechOptions:
                 "Ensure every character has at least one strong tech."
             ),
             "custom_damage_mps": argumenttypes.MultipleDiscreteSelection(
-                [x for x in range(25)], cls._default_custom_damage_mps,
+                [x for x in range(1,25)], cls._default_custom_damage_mps,
                 "Custom pool of mps for damage techs",
                 int, str, True
             ),
