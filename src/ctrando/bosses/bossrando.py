@@ -673,6 +673,22 @@ def make_boss_manual_string(boss_id: bty.BossID) -> ctstrings.CTString:
     return out_str
 
 
+def get_replacement_str(
+        in_str: str,
+        in_parts: list[str],
+        out_parts: list[str]
+):
+    temp_parts = list(reversed(["|"*(ind+1) for ind, _ in enumerate(in_parts)]))
+    for in_part, temp_part in zip(in_parts, temp_parts):
+        if in_part in in_str:
+            in_str = in_str.replace(in_part, temp_part)
+
+    for temp_part, out_part in zip(temp_parts, out_parts):
+        if temp_part in in_str:
+            in_str = in_str.replace(temp_part, out_part)
+
+    return in_str
+
 def update_boss_names(
         boss_assign_dict: dict[bty.BossSpotID, bty.BossID],
         script_manager: ScriptManager,
@@ -847,19 +863,12 @@ def update_boss_names(
     script = script_manager[ctenums.LocID.OZZIES_FORT_LAST_STAND]
     for ind, ct_str in enumerate(script.strings):
         string = ctstrings.CTString.ct_bytes_to_ascii(ct_str)
-        if "OZZIE" in string:
-            string = string.replace("OZZIE", ozzie_name.upper())
-        if "Ozzie Pants" in string:
-            string = string.replace("Ozzie Pants", ozzie_charm_name)
-        if "FLEA" in string:
-            string = string.replace("FLEA", flea_name.upper())
-        if "Flea Vest" in string:
-            string = string.replace("Flea Vest", flea_charm_name)
-        if "SLASH" in string:
-            string = string.replace("SLASH", slash_name.upper())
-        if "Slasher 2" in string:
-            string = string.replace("Slasher 2", slash_charm_name)
-
+        string = get_replacement_str(
+            string,
+            ["OZZIE", "Ozzie Pants", "FLEA", "Flea Vest", "SLASH", "Slasher 2"],
+            [ozzie_name.upper(), ozzie_charm_name, flea_name.upper(), flea_charm_name,
+             slash_name.upper(), slash_charm_name]
+        )
         new_ct_str = ctstrings.CTString.from_str(string)
         if new_ct_str != ct_str:
             new_ct_str = new_ct_str.translate(
@@ -876,14 +885,11 @@ def update_boss_names(
         script = script_manager[loc_id]
         for ind, ct_str in enumerate(script.strings):
             string = ctstrings.CTString.ct_bytes_to_ascii(ct_str)
-            if "FLEA" in string:
-                string = string.replace("FLEA", flea_name.upper())
-            if "Flea" in string:
-                string = string.replace("Flea", flea_name)
-            if "SLASH" in string:
-                string = string.replace("SLASH", slash_name.upper())
-            if "Slash" in string:
-                string = string.replace("Slash", slash_name)
+            string =  get_replacement_str(
+                string,
+                ["FLEA", "Flea", "SLASH", "Slash"],
+                out_parts=[flea_name.upper(), flea_name, slash_name.upper(), slash_name]
+            )
             new_ct_str = ctstrings.CTString.from_str(string)
             if new_ct_str != ct_str:
                 new_ct_str = new_ct_str.translate(
