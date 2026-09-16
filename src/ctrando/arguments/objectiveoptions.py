@@ -102,7 +102,7 @@ class ObjectiveOptions:
             ),
             "num_timegauge_objectives": argumenttypes.DiscreteNumericalArg(
                 0, 8, 1, 6,
-                "Number of objectives needed to unlock the bucket in the End of Time",
+                "Number of objectives needed to unlock 1999 on the Epoch's time gauge",
                 type_fn=int
             ),
             "no_omen_gauntlet": argumenttypes.FlagArg(
