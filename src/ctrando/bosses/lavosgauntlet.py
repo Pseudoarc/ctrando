@@ -613,7 +613,9 @@ def make_gauntlet_locations(
             ct_rom, orig_gauntlet_data.loc_id, lavos_l3_tiles,
             x_shift, y_shift
         )
-        gauntlet_map.write_to_ctrom(ct_rom, map_id)
+        # Gauntlet maps come from unused map ids.  Some have garbage pointers
+        # So do not ever attempt to free them!
+        gauntlet_map.write_to_ctrom(ct_rom, map_id, free_existing=False)
 
     return ret_dict
 
