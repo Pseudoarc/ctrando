@@ -470,6 +470,9 @@ class WeaponStats(ItemData):
     @effect_id.setter
     def effect_id(self, val: WeaponEffects):
         # validate?
+        has_effect = (val != WeaponEffects.NONE)
+        if has_effect != self.has_effect:
+            self.has_effect = not self.has_effect
         self._data[3] = int(val)
 
     @property
@@ -479,8 +482,6 @@ class WeaponStats(ItemData):
 
     @has_effect.setter
     def has_effect(self, val: bool):
-        if not val:
-            self.effect_id = WeaponEffects.NONE
         self._data[4] = int(val)
 
     def get_effect_string(self):

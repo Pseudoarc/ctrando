@@ -1170,8 +1170,8 @@ class AnimationScriptManager:
 
         self.script_dict = init_script_dict
 
-    def load_from_ctrom(self, index: int):
-        script = PCTechAnimationScript.read_from_ctrom(index)
+    def load_from_ctrom(self, ct_rom: ctrom.CTRom, index: int):
+        script = PCTechAnimationScript.read_from_ctrom(ct_rom, index)
         self.script_dict[index] = script
 
     def write_to_ctrom(self, ct_rom: ctrom.CTRom):

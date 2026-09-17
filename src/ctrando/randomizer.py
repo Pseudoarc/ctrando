@@ -167,7 +167,7 @@ def extract_settings(*in_args: str) -> arguments.Settings:
     args = parser.parse_args(list(in_args) + additional_args)
 
     settings = arguments.Settings.extract_from_namespace(args)
-    # print(f"Seed: {settings.general_options.seed}")
+    print(f"Seed: {settings.general_options.seed}")
 
     if settings.general_options.multiworld:
         settings.treasure_options.split_linked_chests = True
@@ -891,7 +891,7 @@ def main():
 
     # import time
     # x = time.time()
-    out_rom = get_ctrom_from_config(ct_rom, settings, config, make_tf_friendly=False)
+    out_rom = get_ctrom_from_config(ct_rom, settings, config, make_tf_friendly=True)
     # y = time.time()
     # print(y-x)
 

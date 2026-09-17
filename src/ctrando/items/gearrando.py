@@ -268,11 +268,11 @@ def make_ds_replacement_weapons(
         doomsickle = item_db[ctenums.ItemID.DOOMSICKLE]
         replacement = rng.choice(doomsickle_targets)
         if replacement == DSItem.JUDGEMENT_SCYTHE:
-            doomsickle.stats.has_effect = WeaponEffects.STOP_60
+            doomsickle.stats.effect_id = WeaponEffects.STOP_60
             doomsickle.stats.attack = 155
             doomsickle.set_name_from_str("{scythe}JudgeScyth")
         elif replacement == DSItem.DREAMREAPER:
-            doomsickle.stats.has_effect = WeaponEffects.CRIT_4X
+            doomsickle.stats.effect_id = WeaponEffects.CRIT_4X
             doomsickle.stats.attack = 180
             doomsickle.set_name_from_str("{scythe}Dreamreapr")
         else:

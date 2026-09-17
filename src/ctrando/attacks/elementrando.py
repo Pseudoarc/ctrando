@@ -140,6 +140,9 @@ def replace_animations(
         caster_id: int = 0
 ):
     """Reassign animation commands in a script from one pc to another"""
+    if from_pc == to_pc:
+        return
+
     caster_obj = anim_script.main_script.caster_objects[caster_id]
 
     for cmd in caster_obj:
@@ -155,7 +158,7 @@ class _TechData:
     script: animationscript.PCTechAnimationScript
 
 
-def _make_hex_mist_data(
+def make_hex_mist_data(
         tech_man: pctech.PCTechManager,
         ct_rom: ctrom.CTRom,
         element: TechElement
@@ -168,25 +171,6 @@ def _make_hex_mist_data(
     else:
         raise ValueError
 
-    hex_cast: animationscript.ObjectScript = [
-        ac.SetObjectFacing(facing=0xD),
-        ac.PlayAnimationOnce(animation_id=7),
-        ac.PlaySound(sound=0xC3),
-        ac.IncrementCounter(counter=0x1B),
-        ac.Pause(duration=0x78),
-        ac.PlaySound(sound=0xC4),
-        ac.IncrementCounter(counter=0x1A),
-        ac.PlaySound(sound=0xC5),
-        ac.IncrementCounter(counter=0x19),
-        ac.WaitForCounterValue(counter=0x1B, value=0),
-        ac.IncrementCounter1D(),
-        ac.PlayAnimationFirstFrame(animation_id=0x03),
-        ac.Pause(duration=0x0F),
-        ac.ShowDamage(),
-        ac.Unknown2E(),
-        ac.EndTech(),
-        ac.ReturnCommand()
-    ]
     script_id = base_tech.graphics_header.script_id
     base_animation = animationscript.PCTechAnimationScript.read_from_ctrom(ct_rom, script_id)
     if element == TechElement.WATER:
@@ -312,7 +296,7 @@ def reassign_elemental_single_techs(
         TechElement.ICE: (
             get_tech_data(ctenums.TechID.ICE),
             get_tech_data(ctenums.TechID.ICE_2),
-            _make_hex_mist_data(tech_man, ct_rom, TechElement.ICE)
+            make_hex_mist_data(tech_man, ct_rom, TechElement.ICE)
         ),
         TechElement.FIRE: (
             get_tech_data(ctenums.TechID.FIRE),
@@ -322,7 +306,7 @@ def reassign_elemental_single_techs(
         TechElement.WATER: (
             get_tech_data(ctenums.TechID.WATER),
             get_tech_data(ctenums.TechID.WATER_2),
-            _make_hex_mist_data(tech_man, ct_rom, TechElement.WATER)
+            make_hex_mist_data(tech_man, ct_rom, TechElement.WATER)
         ),
         TechElement.SHADOW: (
             get_tech_data(ctenums.TechID.DARK_BOMB),

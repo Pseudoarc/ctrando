@@ -72,7 +72,10 @@ def to_rom_ptr(ptr):
 # Function used when repointing rom data.  Update a list of pointers to point
 # relative to a new start.
 # ptr_list is a list of addresses (write locations) in the rom file/bytearray
-def update_ptrs(rom, ptr_list, old_start, new_start):
+def update_ptrs(rom: typing.ByteString,
+                ptr_list: list[int],
+                old_start: int,
+                new_start: int):
     for ptr in ptr_list:
         addr = int.from_bytes(rom[ptr:ptr+3], "little")
 
