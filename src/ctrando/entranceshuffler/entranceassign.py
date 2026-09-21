@@ -256,13 +256,6 @@ def assign_entrances(
 
         assign_ow_exit_target(source_class, target_exit_data, ow_manager)
 
-        # For now:
-        # - Do NOT treat the ends of Zenan 600 as a separate exit class.  In the future
-        #   this might change.
-        # - Manually assign Zenan 600 South with the same data as North
-        if source_class == OWExit.ZENAN_BRIDGE_600_NORTH:
-            assign_ow_exit_target(OWExit.ZENAN_BRIDGE_600_SOUTH, target_exit_data, ow_manager)
-
     vanilla_exit_connectors = regionmap.get_default_exit_connectors()
     vanilla_exit_dict = {
         connector.from_exit: connector.to_exit
