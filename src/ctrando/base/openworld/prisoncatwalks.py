@@ -5,7 +5,6 @@ from ctrando.locations.eventcommand import EventCommand as EC, Operation as OP, 
     FuncSync as FS
 from ctrando.locations.eventfunction import EventFunction as EF
 from ctrando.locations.locationevent import FunctionID as FID
-from ctrando.strings import ctstrings
 
 
 # The Trial Storyline values
@@ -191,6 +190,26 @@ class EventMod(locationevent.LocEventMod):
         script.delete_commands(pos, 1)  # Old change loc
 
     @classmethod
+    def make_tank_kill_func(
+            cls, animated_pc_ids: list[ctenums.CharID]
+    ):
+        ret_fn = EF()
+
+        for char_id in animated_pc_ids:
+            ret_fn.add_if(
+                EC.if_mem_op_value(memory.Memory.CRONO_TRIAL_PC1, OP.EQUALS, char_id, 1),
+                EF().add(EC.call_obj_function(
+                    cls.crono_obj, FID.ARBITRARY_1, 6, FS.HALT)
+                )
+            )
+
+        ret_fn.add(EC.call_obj_function(cls.crono_obj, FID.ARBITRARY_2, 6, FS.HALT))\
+        .add(EC.party_follow()).add(EC.set_explore_mode(True))\
+        .add(EC.return_cmd())
+
+        return ret_fn
+
+    @classmethod
     def modify_tank_kill(cls, script: locationevent.LocationEvent):
         """
         Give an alternate tank killing animation for non-Crono prisoners.
@@ -246,20 +265,20 @@ class EventMod(locationevent.LocEventMod):
             EC.call_obj_function(0, FID.ARBITRARY_0, 4, FS.CONT)
         )
 
-        new_calls = (
-            EF()
-            .add_if_else(
-                EC.if_mem_op_value(memory.Memory.CRONO_TRIAL_PC1,
-                                   OP.EQUALS, 0, 1),
-                EF().add(EC.call_obj_function(
-                    cls.crono_obj, FID.ARBITRARY_1, 6, FS.HALT)),
-                EF().add(EC.call_obj_function(
-                    cls.crono_obj, FID.ARBITRARY_2, 6, FS.HALT))
-            ).add(EC.party_follow())
-            .add(EC.set_explore_mode(True))
-            .add(EC.return_cmd())
-        )
-        script.set_function(0, FID.ARBITRARY_0, new_calls)
+        # new_calls = (
+        #     EF()
+        #     .add_if_else(
+        #         EC.if_mem_op_value(memory.Memory.CRONO_TRIAL_PC1,
+        #                            OP.EQUALS, 0, 1),
+        #         EF().add(EC.call_obj_function(
+        #             cls.crono_obj, FID.ARBITRARY_1, 6, FS.HALT)),
+        #         EF().add(EC.call_obj_function(
+        #             cls.crono_obj, FID.ARBITRARY_2, 6, FS.HALT))
+        #     ).add(EC.party_follow())
+        #     .add(EC.set_explore_mode(True))
+        #     .add(EC.return_cmd())
+        # )
+        script.set_function(0, FID.ARBITRARY_0, cls.make_tank_kill_func([ctenums.CharID.CRONO]))
 
 
     @classmethod

@@ -13,6 +13,7 @@ from ctrando.base.openworld import dactylsummit
 
 def assign_pc_to_spot(
         char_id: ctenums.CharID,
+        reassign_id: ctenums.CharID,
         script_man: ScriptManager,
         min_level: int = 1,
         min_techlevel: int = 0,
@@ -61,7 +62,7 @@ def assign_pc_to_spot(
     script.insert_commands(repl_block.get_bytearray(), pos)
 
     scale_block = owu.get_level_techlevel_set_function(
-        char_id, scale_level_to_lead, scale_techlevel_to_lead, scale_gear,
+        char_id, reassign_id, scale_level_to_lead, scale_techlevel_to_lead, scale_gear,
         min_level, min_techlevel
     )
 

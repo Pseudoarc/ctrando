@@ -143,6 +143,7 @@ _dynamic_gear_specs: dict[ctenums.CharID, dict[int, GearSpec]] = {
 
 def get_dynamic_gear_function(
         char_id: ctenums.CharID,
+        reassign_id: ctenums.CharID,
         temp_addr: int = 0x7F0308
 ) -> EF:
     label=f"{char_id}_end"
@@ -161,7 +162,7 @@ def get_dynamic_gear_function(
                                   temp_addr, 1))
     )
 
-    progression = _dynamic_gear_specs[char_id]
+    progression = _dynamic_gear_specs[reassign_id]
     num_entries = len(progression.keys())
     progression = {
         key: progression[key] for key in sorted(progression.keys())

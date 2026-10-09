@@ -208,7 +208,7 @@ class TreasureOptions:
             tech_level_forced_spots =_default_tech_level_spots,
             guaranteed_loot = _default_guaranteed_loot,
             guaranteed_loot_exact = _default_guaranteed_loot_exact,
-            split_linked_chests: bool = True,
+            split_linked_chests: bool = False,
             **kwargs
     ):
         self.loot_pool = loot_pool

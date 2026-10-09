@@ -1,12 +1,15 @@
 """Write Post-Randomization options to rom data"""
+import copy
 from collections.abc import Callable
 from importlib.resources import files
 import io
 import random
+from logging import config
 
 from ctrando.arguments import postrandooptions
 from ctrando.base.basepatch import apply_fast_ow_movement
 from ctrando.common import byteops, ctenums, ctrom, memory, cttypes as cty
+from ctrando.graphics import convert
 from ctrando.overworlds.owmanager import OWManager
 from ctrando.locations.scriptmanager import ScriptManager
 from ctrando.locations.locationevent import LocationEvent, FunctionID as FID
@@ -14,6 +17,7 @@ from ctrando.locations.eventcommand import EventCommand as EC, Operation as OP
 from ctrando.locations.eventfunction import EventFunction as EF
 from ctrando.postrando import gameoptions, palettes, flashreduce
 from ctrando.strings import ctstrings
+from ctrando.treasures.treasureassign import default_assignment
 
 
 class OWSprite(cty.BinaryData):
@@ -116,7 +120,8 @@ def use_alt_house_warp(ct_rom: ctrom.CTRom,
 
 def write_palettes(
         ct_rom: ctrom.CTRom,
-        post_rando_options: postrandooptions.PostRandoOptions
+        reassign_dict: dict[ctenums.CharID, ctenums.CharID],
+        post_rando_options: postrandooptions.PostRandoOptions,
 ):
     char_palettes = [
         post_rando_options.crono_palette, post_rando_options.marle_palette,
@@ -124,6 +129,40 @@ def write_palettes(
         post_rando_options.frog_palette, post_rando_options.ayla_palette,
         post_rando_options.magus_palette
     ]
+
+    char_palettes_copy = copy.deepcopy(char_palettes)
+
+    for ind, char_palette in enumerate(char_palettes):
+        char_id = ctenums.CharID(ind)
+        # replace with dict dispatch
+        if reassign_dict[char_id] == ctenums.CharID.CRONO:
+            char_palettes[ind] = palettes.build_crono_loc_palette(
+                char_palette, char_id, char_palettes_copy[reassign_dict[char_id]]
+            )
+        elif reassign_dict[char_id] == ctenums.CharID.MARLE:
+            char_palettes[ind] = palettes.build_marle_loc_palette(
+                char_palette, char_id, char_palettes_copy[reassign_dict[char_id]]
+            )
+        elif reassign_dict[char_id] == ctenums.CharID.LUCCA:
+            char_palettes[ind] = palettes.build_lucca_loc_palette(
+                char_palette, char_id, char_palettes_copy[reassign_dict[char_id]]
+            )
+        elif reassign_dict[char_id] == ctenums.CharID.ROBO:
+            char_palettes[ind] = palettes.build_robo_loc_palette(
+                char_palette, char_id, char_palettes_copy[reassign_dict[char_id]]
+            )
+        elif reassign_dict[char_id] == ctenums.CharID.FROG:
+            char_palettes[ind] = palettes.build_frog_loc_palette(
+                char_palette, char_id, char_palettes_copy[reassign_dict[char_id]]
+            )
+        elif reassign_dict[char_id] == ctenums.CharID.AYLA:
+            char_palettes[ind] = palettes.build_ayla_loc_palette(
+                char_palette, char_id, char_palettes_copy[reassign_dict[char_id]]
+            )
+        elif reassign_dict[char_id] == ctenums.CharID.MAGUS:
+            char_palettes[ind] = palettes.build_magus_loc_palette(
+                char_palette, char_id, char_palettes_copy[reassign_dict[char_id]]
+            )
 
     for ind, palette in enumerate(char_palettes):
         palette.write_to_ctrom(ct_rom, ind)
@@ -148,6 +187,18 @@ def write_palettes(
         palettes.build_magus_ow_palette,
     ]
 
+    portrait_palette_builder_dict: dict[
+        ctenums.CharID, Callable[[palettes.SNESPalette], palettes.PortraitPallete]
+    ] = {
+        ctenums.CharID.CRONO: palettes.build_crono_portrait_palette,
+        ctenums.CharID.MARLE: palettes.build_marle_portrait_palette,
+        ctenums.CharID.LUCCA: palettes.build_lucca_portrait_palette,
+        ctenums.CharID.ROBO: palettes.build_robo_portrait_palette,
+        ctenums.CharID.FROG: palettes.build_frog_portrait_palette,
+        ctenums.CharID.AYLA: palettes.build_ayla_portrait_palette,
+        ctenums.CharID.MAGUS: palettes.build_magus_portrait_palette,
+    }
+
     portrait_palette_builders: list[Callable[[palettes.SNESPalette], palettes.PortraitPallete]] = [
         palettes.build_crono_portrait_palette, palettes.build_marle_portrait_palette,
         palettes.build_lucca_portrait_palette, palettes.build_robo_portrait_palette,
@@ -157,18 +208,32 @@ def write_palettes(
 
     portait_ids = [3, 6, 5, 1, 2, 4, 0]
 
-    for ind, (
-            new_palette, default_palette, ow_palette_builder,
-            portrait_palette_builder, portrait_id
-    ) in \
-            enumerate(zip(char_palettes, default_palettes, ow_palette_builders,
-                    portrait_palette_builders, portait_ids)):
+    for char_id in ctenums.CharID:
+        new_palette = char_palettes[char_id]
+        default_palette = default_palettes[char_id]
+        portrait_palette_builder = portrait_palette_builder_dict[reassign_dict[char_id]]
+        portrait_id = portait_ids[char_id]
+
         if new_palette != default_palette:
-            ow_palette = ow_palette_builder(new_palette)
-            ow_pc_palettes.set_pc_palette(ind, ow_palette)
+            ow_palette = ow_palette_builders[reassign_dict[char_id]](new_palette)
+            ow_pc_palettes.set_pc_palette(char_id, ow_palette)
 
             portait_palette = portrait_palette_builder(new_palette)
             portait_palette.write_to_ctrom(ct_rom, portrait_id)
+
+
+    # for ind, (
+    #         new_palette, default_palette, ow_palette_builder,
+    #         portrait_palette_builder, portrait_id
+    # ) in \
+    #         enumerate(zip(char_palettes, default_palettes, ow_palette_builders,
+    #                 portrait_palette_builders, portait_ids)):
+    #     if new_palette != default_palette:
+    #         ow_palette = ow_palette_builder(new_palette)
+    #         ow_pc_palettes.set_pc_palette(ind, ow_palette)
+    #
+    #         portait_palette = portrait_palette_builder(new_palette)
+    #         portait_palette.write_to_ctrom(ct_rom, portrait_id)
 
     ow_pc_palettes.write_to_ctrom(ct_rom, 0)
 
@@ -250,6 +315,7 @@ def write_post_rando_options(
         post_rando_options: postrandooptions.PostRandoOptions,
         script_man: ScriptManager,
         ow_manager: OWManager,
+        char_assign_dict: dict[ctenums.CharID, ctenums.CharID]
 ):
     """Implement settings from PostRandoOptions object."""
 
@@ -274,7 +340,7 @@ def write_post_rando_options(
     default_opts.menu_style = post_rando_options.window_background - 1
 
     default_opts.write_to_ctrom(ct_rom)
-    write_palettes(ct_rom, post_rando_options)
+    write_palettes(ct_rom, char_assign_dict, post_rando_options)
     write_ending_selection(post_rando_options.ending, script_man)
 
     if post_rando_options.remove_flashes:

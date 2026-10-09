@@ -402,6 +402,17 @@ class PCTech:
         learn_ind = sorted(self.battle_group).index(pc_id)
         self.learn_reqs[learn_ind] = learn_req
 
+    def is_damage_tech(self) -> bool:
+        num_pcs = self.num_pcs
+        for ind in range(num_pcs):
+            if self.control_header.get_effect_mp_only(ind):
+                continue
+            if self.effect_headers[ind].effect_type not in (
+                ctt.EffectType.DAMAGE, ctt.EffectType.MULTIHIT
+            ):
+                return False
+        return True
+
     @classmethod
     def read_from_ctrom(
             cls, ct_rom: ctrom.CTRom, tech_id: int,
@@ -941,7 +952,7 @@ class PCTechManager:
 
         return copy.deepcopy(tech)
 
-    def get_all_techs(self) -> dict[int, Optional[PCTech]]:
+    def get_all_techs(self, make_copies: bool = True) -> dict[int, Optional[PCTech]]:
         """
         Returns a dictionary of copies of the currently assigned techs indexed
         by their tech index (CT 1-index)
@@ -953,7 +964,10 @@ class PCTechManager:
         for bitmask in self._bitmasks:
             for tech in self._bitmask_group_dict[bitmask].get_all_techs():
                 if tech is not None:
-                    ret_dict[tech_id] = copy.deepcopy(tech)
+                    if make_copies:
+                        ret_dict[tech_id] = copy.deepcopy(tech)
+                    else:
+                        ret_dict[tech_id] = tech
                 tech_id += 1
 
         return ret_dict
@@ -1531,6 +1545,7 @@ class PCTechManager:
 
         ct_rom.seek(learn_req_start)
         learn_req_b = learn_req_buf.getvalue()
+
         ct_rom.write(learn_req_b, ctrom.freespace.FSWriteType.MARK_USED)
         ct_rom.write(learn_ref_buf.getvalue(), ctrom.freespace.FSWriteType.MARK_USED)
 
@@ -1578,15 +1593,29 @@ class PCTechManager:
         # $FF/F863 A2 24       LDX #$24
         # This is a hardcoded number of menu groups.  The value should be an
         # index to the last menu group.
-        ct_rom.getbuffer()[0x3ff864] = len(self._bitmasks) - 1
+        ct_rom.getbuffer()[0x3ff864] = len(group_starts) - 1
 
         # $FF/F910 C9 0F       CMP #$0F
         # A count of the dual groups.  Needs to be updated.
         ct_rom.getbuffer()[0x3FF911] = num_dual_groups
+        if num_dual_groups == 0:
+            ct_rom.seek(0x3FF8CB)  # FFF8CB  C2 30          REP #$30
+            ct_rom.write(
+                inst.JMP(0xF914, AM.ABS)  # FFF914  64 04          STZ $04
+                .to_bytearray()
+            )
+
 
         # $FF/F936 C9 0F       CMP #$0F
         # This is the same but for triple techs.
-        ct_rom.getbuffer()[0x3FF937] = self.num_triple_techs + self.num_rock_techs
+        total_triple_techs = self.num_triple_techs + self.num_rock_techs
+        ct_rom.getbuffer()[0x3FF937] = total_triple_techs
+        if total_triple_techs == 0:
+            ct_rom.seek(0x3FF918)  # FFF918  A6 06          LDX $06
+            ct_rom.write(
+                inst.JMP(0xF93A, AM.ABS)  # FFF93A  28             PLP
+                .to_bytearray()
+            )
 
         # These two need more care since the relative location of trip/rock
         # will vary depending on the reassignment
@@ -1611,6 +1640,9 @@ class PCTechManager:
         # The format is sing start, #sing, dual_start, #dual, trip start, #trip
         num_dual_groups = self.num_dual_techs // 3
         first_trip_group = 7 + num_dual_groups
+
+        # The menu will bug if the number of dual groups is 0.
+        num_dual_groups = max(num_dual_groups, 1)
         ct_rom.getbuffer()[0x02BD68] = num_dual_groups
         ct_rom.getbuffer()[0x02BD69] = first_trip_group
 
@@ -1686,7 +1718,7 @@ class PCTechManager:
             new_rt: assemble.ASMList = []
             for tech_id in menu_usable_ids:
                 new_rt.append(inst.TSB(0x7700+tech_id, AM.ABS))
-            new_rt.append(inst.JSL())
+            new_rt.append(inst.RTL())
 
             rt_addr = asmpatcher.add_jsl_routine(new_rt, ct_rom, hint)
             rt_rom_addr = byteops.to_rom_ptr(rt_addr)
@@ -1806,7 +1838,7 @@ class PCTechManager:
 
             new_rt.extend([
                 "return",
-                inst.JMP(byteops.to_rom_ptr(return_addr))
+                inst.JMP(byteops.to_rom_ptr(return_addr), AM.LNG)
             ])
             asmpatcher.apply_jmp_patch(new_rt, hook_addr, ct_rom, return_addr)
 

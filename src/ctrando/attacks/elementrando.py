@@ -222,6 +222,44 @@ def make_hex_mist_data(
     return _TechData(base_tech, base_animation)
 
 
+def get_char_rando_elem_assignment(
+        rando_scheme: TechRandoScheme,
+        reassign_dict: dict[ctenums.CharID, ctenums.CharID],
+        rng: RNGType
+) -> dict[ctenums.CharID, TechElement]:
+
+    char_id_pool = [ctenums.CharID.CRONO, ctenums.CharID.MARLE,
+                    ctenums.CharID.LUCCA, ctenums.CharID.FROG,
+                    ctenums.CharID.MAGUS]
+    elem_pool = [TechElement.LIGHTNING, TechElement.ICE,
+                 TechElement.FIRE, TechElement.WATER,
+                 TechElement.SHADOW]
+
+    base_elem_dict = {
+        k: v for k,v in zip(char_id_pool, elem_pool)
+    }
+    vanilla_elem_dict = {
+        char_id: base_elem_dict[reassign_dict[char_id]]
+        for char_id in ctenums.CharID
+        if reassign_dict[char_id] in base_elem_dict
+    }
+
+    if rando_scheme == TechRandoScheme.VANILLA:
+        return vanilla_elem_dict
+
+    if rando_scheme == TechRandoScheme.SHUFFLE_ELEMENT:
+        existing_elems = list(vanilla_elem_dict.values())
+        rng.shuffle(existing_elems)
+        return dict(zip(vanilla_elem_dict.keys(), existing_elems,
+                        strict=True))
+
+    if rando_scheme == TechRandoScheme.RANDOM_ELEMENT:
+        return {
+            char_id: rng.choice(elem_pool) for char_id in vanilla_elem_dict
+        }
+
+    raise ValueError
+
 def get_elem_assignment(
         rando_scheme: TechRandoScheme,
         rng: RNGType
@@ -741,11 +779,12 @@ def write_elem_resistances(
 
 def write_menu_element_graphics(
         ct_rom: ctrom.CTRom,
+        reassign_dict: dict[ctenums.CharID, ctenums.CharID],
         tech_man: pctech.PCTechManager,
         tech_rando_scheme: TechRandoScheme
 ):
     """Update the element graphics in the menu."""
-    elem_assignment = read_elem_assignment(tech_man, tech_rando_scheme)
+    elem_assignment = read_elem_assignment(reassign_dict, tech_man, tech_rando_scheme)
 
     orig_indices: dict[ctenums.Element, int] = {
         ctenums.Element.LIGHTNING: 0,
@@ -757,12 +796,13 @@ def write_menu_element_graphics(
 
     reassign: list[int] = []
     for pc_id in ctenums.CharID:
-        if pc_id not in elem_assignment:
-            elem = ctenums.Element.NONELEMENTAL
+        elem = elem_assignment[pc_id]
+        if elem is None:
+            new_elem = ctenums.Element.NONELEMENTAL
         else:
-            elem = _techelem_to_elem_dict[elem_assignment[pc_id]]
+            new_elem = _techelem_to_elem_dict[elem]
 
-        reassign.append(orig_indices[elem])
+        reassign.append(orig_indices[new_elem])
 
     reassign_b = bytes(reassign)
     reassign_addr = ct_rom.space_manager.get_free_addr(len(reassign_b))
@@ -779,32 +819,45 @@ def write_menu_element_graphics(
 
 
 def read_elem_assignment(
+        reassign_dict: dict[ctenums.CharID, ctenums.CharID],
         tech_man: pctech.PCTechManager,
         tech_rando_scheme: TechRandoScheme
-) -> dict[ctenums.CharID, TechElement]:  # Maybe should be ctenums.Element instead
+) -> dict[ctenums.CharID, TechElement | None]:  # Maybe should be ctenums.Element instead
     """
     Determine an elemental assignment given tech_man.  This is necessary because we do
     not store elemental assignment directly (duplicate data given tech_man).
     """
     char_id_pool = [ctenums.CharID.CRONO, ctenums.CharID.MARLE,
-                    ctenums.CharID.LUCCA, ctenums.CharID.FROG,
+                    ctenums.CharID.LUCCA,
+                    ctenums.CharID.ROBO,
+                    ctenums.CharID.FROG,
+                    ctenums.CharID.AYLA,
                     ctenums.CharID.MAGUS]
     elem_pool = [TechElement.LIGHTNING, TechElement.ICE,
-                 TechElement.FIRE, TechElement.WATER,
+                 TechElement.FIRE,
+                 None,
+                 TechElement.WATER,
+                 None,
                  TechElement.SHADOW]
 
     vanilla_dict = dict(zip(char_id_pool, elem_pool))
 
     if tech_rando_scheme in (TechRandoScheme.VANILLA, TechRandoScheme.CHAOS_ELEMENT):
+        # We really should handle this better.  Maybe top MP spell gives element?
         return vanilla_dict
 
-    ret_dict: dict[ctenums.CharID, TechElement] = {}
-    for char_id, vanilla_elem in vanilla_dict.items():
+    ret_dict: dict[ctenums.CharID, TechElement | None] = {}
+    for char_id, reassign_id in reassign_dict.items():
+        vanilla_elem = vanilla_dict[reassign_dict[char_id]]
+        if vanilla_elem is None:
+            ret_dict[char_id] = None
+            continue
+
         start = 1 + char_id*8
         end = start+8
 
         names = set(tech_man.get_tech(tech_id).name for tech_id in range(start, end))
-        if char_id == ctenums.CharID.MAGUS:
+        if reassign_id == ctenums.CharID.MAGUS:
             if "*Flare" in names:
                 ret_dict[char_id] = TechElement.FIRE
             elif "*Luminaire" in names:

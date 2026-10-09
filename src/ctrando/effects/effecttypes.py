@@ -1,13 +1,12 @@
 """Module for working with Weapon/Armor Effects"""
-from collections.abc import Sequence
-from io import BytesIO
-
+from ctrando.arguments import techoptions
 from ctrando.asm import assemble, instructions as inst
 from ctrando.asm.instructions import AddressingMode as AM
-from ctrando.common import asmpatcher, byteops, cttypes as cty, ctrom
+from ctrando.common import asmpatcher, byteops, ctenums, cttypes as cty, ctrom
 from ctrando.common.freespace import FSWriteType
 
 from ctrando.attacks import pctech
+from ctrando.items import itemdata
 
 
 class EffectMod(cty.SizedBinaryData):
@@ -61,8 +60,42 @@ def gather_vanilla_effects(ct_rom: ctrom.CTRom) -> list[EffectMod]:
 
     return effects
 
+# With multiple Maguses in play, we have to be more careful with effects.
+# Each black hole/iron orb will have its own EffectMod
+def gather_extra_tech_effects(
+        tech_man: pctech.PCTechManager,
+        cur_max_eff_id: int,
+        bh_min: float, bh_factor: float
+) -> list[EffectMod]:
+    bh_rt_id = 0x12
+    iron_orb_rt_id = _max_vanilla_routine_index + 4
 
-def gather_new_effects_and_rts(orb_percent: int) -> tuple[list[EffectMod], list[assemble.ASMList]]:
+    new_mods: list[EffectMod] = []
+    tech_dict = tech_man.get_all_techs(make_copies=False)
+    cur_eff_id = cur_max_eff_id + 1
+
+    for tech_id, tech in tech_dict.items():
+        if tech is None:
+            continue
+
+        if tech_id >= 0x39:  # relying on tech dict being in tech_id order
+            break
+
+        if tech.control_header.get_effect_mod(0) == ctenums.WeaponEffects.DEATH_40:
+            bh_percent = pctech.get_black_hole_percent(tech.effect_mps[0], bh_min, bh_factor)
+            new_mods.append(EffectMod(bytes([bh_rt_id, bh_percent, 0])))
+            tech.control_header.set_effect_mod(0, cur_eff_id)
+            cur_eff_id += 1
+        elif tech.control_header.get_effect_mod(0) == ctenums.WeaponEffects.IRON_ORB:
+            io_percent = pctech.get_iron_orb_percent(tech.effect_mps[0])
+            new_mods.append(EffectMod(bytes([iron_orb_rt_id, io_percent//10, 0])))
+            tech.control_header.set_effect_mod(0, cur_eff_id)
+
+    return new_mods
+
+
+def gather_new_effects_and_rts()\
+        -> tuple[list[EffectMod], list[assemble.ASMList]]:
     routines = [
         get_venus_bow_rt(),
         get_spellslinger_rt(),
@@ -86,7 +119,7 @@ def gather_new_effects_and_rts(orb_percent: int) -> tuple[list[EffectMod], list[
         EffectMod(bytes([_max_vanilla_routine_index + 3, 0x40, 0])),  # Add shadow
         EffectMod(bytes([_max_vanilla_routine_index + 3, 0x20, 0])),  # Add water
         EffectMod(bytes([_max_vanilla_routine_index + 3, 0x10, 0])),  # Add fire
-        EffectMod(bytes([_max_vanilla_routine_index + 4, orb_percent//10, 0])),  # ORB
+        EffectMod(bytes([_max_vanilla_routine_index + 4, 0, 0])),  # ORB unused placeholder
         EffectMod(bytes([_max_vanilla_routine_index + 5, 0, 0])),  # Valiant
         EffectMod(bytes([_max_vanilla_routine_index + 6, 5, 0])),  # MP crit
         EffectMod(bytes([_max_vanilla_routine_index + 6, 20, 1])),  # MP crit4x
@@ -275,6 +308,7 @@ def patch_additional_armor_effects(ct_rom: ctrom.CTRom,
 def expand_effect_mods(
         ct_rom: ctrom.CTRom,
         tech_man: pctech.PCTechManager,
+        tech_opts: techoptions.TechOptions,
 ):
     """
     Allow more effects.
@@ -287,16 +321,23 @@ def expand_effect_mods(
     """
 
     effects = gather_vanilla_effects(ct_rom)
-    orb_mp = 8
-    for tech_id in range(1+6*8, 1+7*8):
-        tech = tech_man.get_tech(tech_id)
-        if tech.name == "Iron Orb":
-            orb_mp = tech.effect_mps[0]
-            break
-    orb_percent = pctech.get_iron_orb_percent(orb_mp)
-    additional_effects, additional_effect_routines = gather_new_effects_and_rts(orb_percent)
+    # orb_mp = 8
+    # for tech_id in range(1+6*8, 1+7*8):
+    #     tech = tech_man.get_tech(tech_id)
+    #     if tech.name == "Iron Orb":
+    #         orb_mp = tech.effect_mps[0]
+    #         break
+    #
+    # orb_percent = pctech.get_iron_orb_percent(orb_mp)
+    additional_effects, additional_effect_routines = gather_new_effects_and_rts()
 
     effects += additional_effects
+    eff_max_id = len(effects)  -1
+    extra_tech_effects = gather_extra_tech_effects(
+        tech_man, eff_max_id, tech_opts.black_hole_min, tech_opts.black_hole_factor
+    )
+
+    effects += extra_tech_effects
 
     # Write out new effects.
     new_size = len(effects)*EffectMod.SIZE

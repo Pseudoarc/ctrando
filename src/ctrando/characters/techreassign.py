@@ -6,7 +6,16 @@ import itertools
 from typing import Sequence
 
 from ctrando.arguments import characteroptions, techoptions
-from ctrando.attacks import pctech, cttechtypes as ctty, animationscript, elementrando
+from ctrando.attacks import (
+    pctech,
+    cttechtypes as ctty,
+    animationcommands as ac,
+    animationscript,
+    elementrando,
+    pctechrandomizer,
+    techrebalance
+)
+from ctrando.attacks.elementrando import TechElement
 from ctrando.characters import charactermods
 from ctrando.common import ctenums, ctrom, random
 
@@ -42,10 +51,12 @@ class AltTechID(enum.Enum):
 class BaseTechData:
     vanilla_tech_pairs: dict[int, TechScriptPair]
     alt_tech_pairs: dict[AltTechID, TechScriptPair]
+    attacks: dict[ctenums.CharID, pctech.PCAttack]
 
 
 def collect_vanilla_tech_data(
-        base_rom: ctrom.CTRom
+        base_rom: ctrom.CTRom,
+        tech_opts: techoptions.TechOptions,
 ) -> BaseTechData:
     """
     Collects tech data and tech scripts from a mostly vanilla rom.
@@ -55,6 +66,8 @@ def collect_vanilla_tech_data(
 
     base_tech_man = pctech.PCTechManager.read_from_ctrom(base_rom)
     pctech.fix_vanilla_techs(base_tech_man)
+    if tech_opts.normalize_techs:
+        techrebalance.rebalance_vanilla_tech_man(base_tech_man)
 
     tech_data_dict = base_tech_man.get_all_techs()
 
@@ -108,7 +121,43 @@ def collect_vanilla_tech_data(
     alt_tech_dict[AltTechID.HEXAGON_MIST_ICE] = TechScriptPair(
         hex_mist_ice_data.tech, hex_mist_ice_data.script
     )
-    return BaseTechData(vanilla_tech_dict, alt_tech_dict)
+    alt_tech_dict[AltTechID.PROTECT_ALL] = TechScriptPair(
+        charactermods.get_prot_all_tech(base_tech_man),
+        animationscript.make_single_lucca_prot_all_script(base_rom)
+    )
+
+    attack_dict: dict[ctenums.CharID, pctech.PCAttack] = {
+        char_id: base_tech_man.get_attack(char_id)
+        for char_id in ctenums.CharID
+    }
+
+    fix_lightning_script(vanilla_tech_dict[ctenums.TechID.LIGHTNING].script)
+
+    return BaseTechData(vanilla_tech_dict, alt_tech_dict, attack_dict)
+
+
+def fix_lightning_script(
+        script: animationscript.PCTechAnimationScript
+):
+    """Lightning's script relies on animation duration.  Add counter checks."""
+    cast_scr: animationscript.ObjectScript = script.main_script.caster_objects[0]
+    # cast_scr.insert()
+    cast_scr.insert(9, ac.IncrementCounter1D())
+    for ind, cmd in enumerate(cast_scr[9:]):
+        if isinstance(cmd, ac.WaitForCounter1DValue) and cmd.value >= 3:
+            cmd.value += 1
+
+    for obj_group in (
+            script.main_script.effect_objects,
+            script.main_script.target_objects
+    ):
+        for obj_script in obj_group:
+            if obj_script is None:
+                continue
+
+            for ind, cmd in enumerate(obj_script):
+                if isinstance(cmd, ac.WaitForCounter1DValue) and cmd.value >= 3:
+                    cmd.value += 1
 
 
 def _get_single_tech_range(
@@ -269,7 +318,7 @@ def get_reassigned_combo_tech(
         if tech.rock_used is None:
             tech.set_learn_requirement(pc_id, tech_level)
 
-        new_mmps.append(tech_index)
+        new_mmps.append(tech_id)
 
     if tech.num_pcs == 3:
         new_mmps = sorted(new_mmps)
@@ -301,7 +350,7 @@ def make_new_combo_techs(
         reassign_dict: dict[ctenums.CharID, ctenums.CharID],
         single_tech_assign_dict: dict[ctenums.CharID, list[TechScriptPair]],
         char_options: characteroptions.CharacterOptions
-):
+) -> dict[frozenset[ctenums.CharID], list[TechScriptPair]]:
     """
     Make new combo techs given single tech assignment.
     :param base_tech_data: All vanilla techs and scripts
@@ -370,16 +419,15 @@ def make_new_combo_techs(
 
             tech_group_dict[group].append(TechScriptPair(tech, script))
 
+    return tech_group_dict
 
-    pass
 
-
-class TechElement(enum.Enum):
-    LIGHTNING = enum.auto()
-    FIRE = enum.auto()
-    ICE = enum.auto()
-    WATER = enum.auto()
-    SHADOW = enum.auto()
+# class TechElement(enum.Enum):
+#     LIGHTNING = enum.auto()
+#     FIRE = enum.auto()
+#     ICE = enum.auto()
+#     WATER = enum.auto()
+#     SHADOW = enum.auto()
 
 
 _elem_progression: dict[TechElement, tuple[ctenums.TechID, ...]] = {
@@ -536,10 +584,10 @@ def reassign_elemental_single_techs(
 
     for char_id in ctenums.CharID:
         reassign_id = char_reassign_dict[char_id]
-        element = vanilla_pc_elem_dict[reassign_id]
+        element = vanilla_pc_elem_dict.get(reassign_id, None)
         new_element = elem_reassignment.get(char_id, None)
 
-        if element == new_element or new_element is None:
+        if element == new_element or None in (element, new_element):
             continue
 
         names_to_replace = element_name_progression[element]
@@ -559,17 +607,145 @@ def reassign_elemental_single_techs(
                     if "2" in new_tech.name:
                         new_tech.effect_headers[0].power = magus_x2_power
 
-                new_script = get_reassigned_tech_script(
-                    replacement_pair.script, [orig_char_id], [char_id],
-                    make_copy=True
-                )
+                # new_script = get_reassigned_tech_script(
+                #     replacement_pair.script, [orig_char_id], [reassign_id],
+                #     make_copy=True
+                # )
+                new_script = copy.deepcopy(replacement_pair.script)
 
                 single_tech_assignment[char_id][ind] = TechScriptPair(new_tech, new_script)
+
+
+
+def sort_tech_pair_list(
+        tech_pair_list: list[TechScriptPair],
+        rng: random.RNGType
+) -> list[TechScriptPair]:
+    def key(_pair:TechScriptPair) -> tuple[bool, bool, float]:
+        return _pair.tech.rock_used is not None, not _pair.tech.is_damage_tech(), rng.random()
+
+    tech_pair_list = sorted(tech_pair_list, key=key)
+    return tech_pair_list
+
+
+def do_element_sigle_tech_assignment(
+        base_data: BaseTechData,
+        single_tech_assignment: dict[ctenums.CharID, list[TechScriptPair]],
+        char_reassign_dict: dict[ctenums.CharID, ctenums.CharID],
+        char_opts: characteroptions.CharacterOptions,
+        tech_opts: techoptions.TechOptions,
+        rng: random.RNGType
+):
+    if char_opts.tech_rando_scheme != characteroptions.TechRandoScheme.VANILLA:
+        if char_opts.tech_rando_scheme in (
+            characteroptions.TechRandoScheme.RANDOM_ELEMENT,
+            characteroptions.TechRandoScheme.SHUFFLE_ELEMENT
+        ):
+            element_assignment = elementrando.get_char_rando_elem_assignment(
+                char_opts.tech_rando_scheme,
+                char_reassign_dict, rng
+            )
+            reassign_elemental_single_techs(
+                base_data, char_reassign_dict, single_tech_assignment,
+                element_assignment, tech_opts, rng
+            )
+        elif char_opts.tech_rando_scheme == characteroptions.TechRandoScheme.CHAOS_ELEMENT:
+            chaos_reassign_elemental_single_techs(
+                base_data, char_reassign_dict, single_tech_assignment, rng
+            )
+        else:
+            raise ValueError
+
+
+def get_reassign_techs_scripts(
+        base_rom: ctrom.CTRom,
+        char_reassign_dict: dict[ctenums.CharID, ctenums.CharID],
+        char_opts: characteroptions.CharacterOptions,
+        tech_opts: techoptions.TechOptions,
+        rng: random.RNGType  # For choosing when too many techs
+) -> tuple[pctech.PCTechManager, animationscript.AnimationScriptManager]:
+
+    base_data = collect_vanilla_tech_data(
+        base_rom, tech_opts
+    )
+
+    single_tech_assignment: dict[ctenums.CharID, list[TechScriptPair]] = dict()
+    for char_id, reassign_id in char_reassign_dict.items():
+        single_tech_assignment[char_id] = collect_single_techs(
+            base_data, char_id, reassign_id, char_opts
+        )
+
+    do_element_sigle_tech_assignment(
+        base_data, single_tech_assignment, char_reassign_dict, char_opts,
+        tech_opts, rng
+    )
+
+    new_tech_man = pctech.PCTechManager()
+    orig_attacks: dict[ctenums.CharID, pctech.PCAttack] = dict()
+    for char_id in ctenums.CharID:
+        orig_attacks[char_id] = new_tech_man.get_attack(char_id)
+
+    for char_id, reassign_id in char_reassign_dict.items():
+        attack = copy.deepcopy(base_data.attacks[reassign_id])
+        attack.control_header.battle_group_id = char_id
+        new_tech_man.set_attack(char_id, attack)
+
+    new_script_man = animationscript.AnimationScriptManager()
+
+    for char_id in ctenums.CharID:
+        for ind, pair in enumerate(single_tech_assignment[char_id]):
+            tech_id = 1 + char_id*8 + ind
+            pair.tech.graphics_header.script_id = tech_id
+            new_script_man.script_dict[tech_id] = pair.script
+
+    for char_id, tech_pairs in single_tech_assignment.items():
+        for pair in tech_pairs:
+            new_tech_man.add_tech(pair.tech)
+
+    pctechrandomizer.modify_single_tech_powers_only(
+        new_tech_man, tech_opts, tech_opts.custom_damage_mps, rng
+    )
+
+    single_tech_dict: dict[int, pctech.PCTech] = {
+        key: val for key, val in new_tech_man.get_all_techs().items()
+        if val is not None  # Just for static type checking
+    }
+
+    combo_tech_pairs = make_new_combo_techs(
+        base_data, char_reassign_dict, single_tech_assignment, char_opts
+    )
+
+    for group, tech_pairs in combo_tech_pairs.items():
+        for pair in tech_pairs:
+            pctechrandomizer.update_dual_tech_power(pair.tech, single_tech_dict)
+
+    current_tech_id = 0x39
+    for group, tech_pairs in combo_tech_pairs.items():
+        if len(group) == 2:
+            num_techs = 3
+        elif len(group) == 3:
+            num_techs = 1
+        else:
+            raise ValueError
+
+        tech_pairs = sort_tech_pair_list(tech_pairs, rng)[:num_techs]
+        for pair in tech_pairs:
+            pair.tech.graphics_header.script_id = current_tech_id
+            new_script_man.script_dict[current_tech_id] = pair.script
+            current_tech_id += 1
+            new_tech_man.add_tech(pair.tech)
+
+    pctechrandomizer.randomize_tech_order(
+        new_tech_man, tech_opts.tech_order, tech_opts.preserve_magic, rng
+    )
+
+    return new_tech_man, new_script_man
 
 
 def main():
     base_rom = ctrom.CTRom.from_file("/home/ross/Documents/ct.sfc")
     from ctrando.base import basepatch
+    from ctrando.attacks import pctechrandomizer
     import random
 
     rng = random.Random("SAFSFSAFFVWAFSDF")
@@ -606,14 +782,45 @@ def main():
         ctenums.CharID.MAGUS: TechElement.ICE,
     }
 
+    tech_opts = techoptions.TechOptions()
     reassign_elemental_single_techs(
         base_data, reassign_dict, reassign_techs, elem_assignment,
-        techoptions.TechOptions(), rng
+        tech_opts, rng
     )
 
-    make_new_combo_techs(
+    new_tech_man = pctech.PCTechManager()
+    for char_id, tech_pairs in reassign_techs.items():
+        for pair in tech_pairs:
+            new_tech_man.add_tech(pair.tech)
+
+    pctechrandomizer.modify_single_tech_powers_only(
+        new_tech_man, tech_opts, tech_opts.custom_damage_mps, rng
+    )
+
+    single_tech_dict: dict[int, pctech.PCTech] = {
+        key: val for key, val in new_tech_man.get_all_techs().items()
+        if val is not None  # Just for static type checking
+    }
+
+    combo_tech_pairs = make_new_combo_techs(
         base_data, reassign_dict, reassign_techs, char_opts
     )
+
+    for group, tech_pairs in combo_tech_pairs.items():
+        for pair in tech_pairs:
+            pctechrandomizer.update_dual_tech_power(pair.tech, single_tech_dict)
+
+    for group, tech_pairs in combo_tech_pairs.items():
+        if len(group) == 2:
+            num_techs = 3
+        elif len(group) == 3:
+            num_techs = 1
+        else:
+            raise ValueError
+
+        tech_pairs = sort_tech_pair_list(tech_pairs, rng)[:num_techs]
+        for pair in tech_pairs:
+            new_tech_man.add_tech(pair.tech)
 
     pass
 

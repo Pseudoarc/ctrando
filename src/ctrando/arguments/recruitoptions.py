@@ -10,15 +10,10 @@ from ctrando.common import ctenums
 
 @dataclasses.dataclass
 class RecruitData:
-    min_level: int | None
-    min_tech_level: int | None
+    min_level: int = 1
+    min_tech_level: int = 0
 
     def __post_init__(self):
-        if self.min_level is None:
-            self.min_level = 1
-        if self.min_tech_level is None:
-            self.min_tech_level = 0
-
         self.min_level = sorted([1, self.min_level, 99])[1]
         self.min_tech_level = sorted([0, self.min_tech_level, 8])[1]
 

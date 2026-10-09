@@ -9,6 +9,7 @@ from ctrando.common.randostate import ScriptManager
 import ctrando.recruits.recruitassign as ra
 
 def assign_pc_to_spot(char_id: ctenums.CharID,
+                      reassign_id: ctenums.CharID,
                       script_man: ScriptManager,
                       min_level: int = 1,
                       min_techlevel: int = 0,
@@ -48,12 +49,13 @@ def assign_pc_to_spot(char_id: ctenums.CharID,
     # )
 
     # script.insert_commands(new_block.get_bytearray(), pos)
-    modify_reunion_scene(char_id, script_man, min_level, min_techlevel,
+    modify_reunion_scene(char_id, reassign_id, script_man, min_level, min_techlevel,
                          scale_level_to_lead, scale_techlevel_to_lead,
                          scale_gear)
 
 
 def modify_reunion_scene(char_id: ctenums.CharID,
+                         reassign_id: ctenums.CharID,
                          script_man: ScriptManager,
                          min_level: int,
                          min_techlevel: int,
@@ -93,7 +95,7 @@ def modify_reunion_scene(char_id: ctenums.CharID,
 
     scale_to_lead = scale_level_to_lead or scale_techlevel_to_lead
     scale_block = owu.get_level_techlevel_set_function(
-        char_id, scale_level_to_lead, scale_techlevel_to_lead, scale_gear,
+        char_id, reassign_id, scale_level_to_lead, scale_techlevel_to_lead, scale_gear,
         min_level, min_techlevel
     )
 

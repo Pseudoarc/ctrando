@@ -11,6 +11,7 @@ import ctrando.recruits.recruitassign as ra
 
 def assign_pc_to_spot(
         char_id: ctenums.CharID,
+        reassign_id: ctenums.CharID,
         script_man: ScriptManager,
         min_level: int = 1,
         min_techlevel: int = 0,

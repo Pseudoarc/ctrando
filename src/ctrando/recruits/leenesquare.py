@@ -86,6 +86,7 @@ def change_recruit_item(item: ctenums.ItemID,
 
 def assign_pc_to_spot(
         char_id: ctenums.CharID,
+        reassign_id: ctenums.CharID,
         script_man: ScriptManager,
         min_level: int = 1,
         min_techlevel: int = 0,
@@ -129,11 +130,11 @@ def assign_pc_to_spot(
         .add(EC.return_cmd())
     )
 
-    if char_id in (ctenums.CharID.MARLE, ctenums.CharID.LUCCA, ctenums.CharID.AYLA):
+    if reassign_id in (ctenums.CharID.MARLE, ctenums.CharID.LUCCA, ctenums.CharID.AYLA):
         name_part = "GIRL: "
-    elif char_id in(ctenums.CharID.CRONO, ctenums.CharID.MAGUS):
+    elif reassign_id in(ctenums.CharID.CRONO, ctenums.CharID.MAGUS):
         name_part = "BOY: "
-    elif char_id == ctenums.CharID.FROG:
+    elif reassign_id == ctenums.CharID.FROG:
         name_part = "FROG: "
     else:
         name_part = "ROBOT: "
@@ -148,7 +149,7 @@ def assign_pc_to_spot(
     )
 
     scale_block = owu.get_level_techlevel_set_function(
-        char_id, scale_level_to_lead, scale_techlevel_to_lead, scale_gear,
+        char_id, reassign_id,  scale_level_to_lead, scale_techlevel_to_lead, scale_gear,
         min_level, min_techlevel
     )
     scale_block.add(EC.return_cmd())

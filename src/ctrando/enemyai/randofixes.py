@@ -1,10 +1,12 @@
 """AI changes that arise from randomization."""
+import copy
 from importlib.resources import files
 
+from ctrando import enemyai
 from ctrando.common.ctenums import EnemyID, ItemID
 from ctrando.enemyai.enemyaimanager import EnemyAIManager
 import ctrando.enemyai.enemyaitypes as aitypes
-from ctrando.enemyai import battlemessages
+from ctrando.enemyai import battlemessages, enemyaitypes
 
 
 def fix_movement_locks(
@@ -28,7 +30,7 @@ def fix_movement_locks(
 
 def fix_dino_slash_scripts(
         ai_manager: EnemyAIManager,
-        new_slash_id: int
+        new_slash_ids: list[int]
 ):
     slash_weak_ids = [
         EnemyID.REPTITE_GREEN, EnemyID.TERRASAUR, EnemyID.REPTITE_PURPLE,
@@ -42,19 +44,30 @@ def fix_dino_slash_scripts(
         tech_id=2,  # Slash Vanilla ID
         is_not_equal=False
     )
-    repl_condition = target_condition.get_copy()
-    repl_condition.tech_id = new_slash_id
+
+
+    # repl_condition = target_condition.get_copy()
+    # repl_condition.tech_id = new_slash_id
 
     for enemy_id in slash_weak_ids:
         script = ai_manager.script_dict[enemy_id]
 
-        for block in script.reaction_script:
+        for ind, block in enumerate(script.reaction_script):
             if block.condition_list[0] == target_condition:
-                block.condition_list[0] = repl_condition
+                new_block = copy.deepcopy(block)
+                ins_ind = ind
                 break
-
         else:
             raise IndexError
+
+        new_blocks: list[enemyaitypes.EnemyAIScriptBlock] = []
+        for slash_id in new_slash_ids:
+            repl_condition = target_condition.get_copy()
+            repl_condition.tech_id = slash_id
+            block = copy.deepcopy(new_block)
+            new_blocks.append(block)
+
+        script.reaction_script[ind:ind+1] = new_blocks
 
 
 def add_dream_devourer_ai(ai_manager: EnemyAIManager):

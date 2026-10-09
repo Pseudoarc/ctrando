@@ -14,6 +14,7 @@ from ctrando.recruits import recruitassign as ra
 
 def assign_pc_to_spot(
         char_id: ctenums.CharID,
+        reassign_id: ctenums.CharID,
         script_man: ScriptManager,
         min_level: int = 1,
         min_techlevel: int = 0,
@@ -45,7 +46,7 @@ def assign_pc_to_spot(
     script.set_function(pc_obj_id, FID.STARTUP,
                         get_recruit_startup(char_id))
     script.set_function(pc_obj_id, FID.ARBITRARY_0,
-                        make_frog_entry_function(char_id, char_id, min_level,
+                        make_frog_entry_function(char_id, reassign_id, min_level,
                                                  min_techlevel, scale_level_to_lead,
                                                  scale_techlevel_to_lead, scale_gear))
 
@@ -59,25 +60,27 @@ def assign_pc_to_spot(
     script.delete_commands(pos, 1)
 
     # Comment Below here to remove anim checker
-    # obj_id = script.append_copy_object(pc_obj_id)
-    # pos, _ = script.find_command([0x8B], script.get_object_start(obj_id))
-    # script.data[pos+1:pos+3] = [0xA, 0x1B]
-    #
-    # pos = script.find_exact_command(EC.set_own_drawing_status(False), pos)
-    # script.delete_commands(pos, 1)
-    #
-    # act_fn = EF()
-    #
-    # new_str = script.add_py_string("Anim: {value 8}{null}")
-    #
-    # for ind in range(0x40, 0x80):
-    #     act_fn.add(EC.assign_val_to_mem(ind, 0x7E0200, 1))
-    #     act_fn.add(EC.static_animation(ind))
-    #     act_fn.add(EC.auto_text_box(new_str))
-    #
-    # act_fn.add(EC.return_cmd())
-    #
-    # script.set_function(obj_id, FID.ACTIVATE, act_fn)
+    obj_id = script.append_copy_object(pc_obj_id)
+    pos, _ = script.find_command([0x8B], script.get_object_start(obj_id))
+    script.data[pos+1:pos+3] = [0xA, 0x1B]
+
+    pos = script.find_exact_command(EC.set_own_drawing_status(False), pos)
+    script.delete_commands(pos, 1)
+
+    act_fn = EF()
+    act_fn.add(EC.set_own_facing("down"))
+
+    new_str = script.add_py_string("Anim: {value 8}{null}")
+
+    for ind in range(0x00, 0x40):
+        act_fn.add(EC.assign_val_to_mem(ind, 0x7E0200, 1))
+        act_fn.add(EC.static_animation(ind))
+        # act_fn.add(EC.play_animation(ind))
+        act_fn.add(EC.auto_text_box(new_str))
+
+    act_fn.add(EC.return_cmd())
+
+    script.set_function(obj_id, FID.ACTIVATE, act_fn)
 
 
 def get_post_battle_scene() -> EF:
@@ -134,6 +137,7 @@ def get_recruit_startup(recruit_identity: ctenums.CharID) -> EF:
 
 def get_recruit_block(
         char_identity: ctenums.CharID,
+        reassign_id: ctenums.CharID,
         min_level: int,
         min_techlevel: int,
         scale_level_to_lead: bool = False,
@@ -177,7 +181,7 @@ def get_recruit_block(
     )
 
     scale_block = owu.get_level_techlevel_set_function(
-        char_identity, scale_level_to_lead, scale_techlevel_to_lead, scale_gear,
+        char_identity, reassign_id, scale_level_to_lead, scale_techlevel_to_lead, scale_gear,
         min_level, min_techlevel
     )
 
@@ -307,7 +311,7 @@ def make_frog_entry_function(
         .add(EC.play_animation(1))
         .add(EC.move_sprite(0xA, 0xE))
         .add(EC.play_animation(0))
-        .append(get_recruit_block(char_identity, min_level, min_techlevel,
+        .append(get_recruit_block(char_identity, char_graphics, min_level, min_techlevel,
                                   scale_level_to_lead, scale_techlevel_to_lead, scale_gear))
         .add(EC.return_cmd())
     )

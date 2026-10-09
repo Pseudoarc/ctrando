@@ -274,7 +274,6 @@ class PCTechAnimationScript:
         data_start = cls.FINDER.get_data_start(ct_rom, index)
         return cls.read_from_ctrom_addr(ct_rom, data_start)
 
-
     def write_to_ctrom(self, ct_rom: ctrom.CTRom, index: int):
         main_header = self.main_script.get_header()
         miss_header = self.miss_script.get_header()
@@ -1168,7 +1167,7 @@ class AnimationScriptManager:
         if init_script_dict is None:
             init_script_dict: dict[int, PCTechAnimationScript] = dict()
 
-        self.script_dict = init_script_dict
+        self.script_dict: dict[int, PCTechAnimationScript] = init_script_dict
 
     def load_from_ctrom(self, ct_rom: ctrom.CTRom, index: int):
         script = PCTechAnimationScript.read_from_ctrom(ct_rom, index)
