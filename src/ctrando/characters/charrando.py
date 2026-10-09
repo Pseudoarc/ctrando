@@ -482,9 +482,6 @@ def fix_eot_pc_npcs(
                 script.data[pos+1] = anim_id
 
 
-
-
-
 def fix_guardian_drop(
         script_manager: scriptmanager.ScriptManager,
         reassign_dict: dict[ctenums.CharID, ctenums.CharID]

@@ -4,6 +4,8 @@ Module for working with custom palettes.
 import enum
 import typing
 from collections.abc import Sequence
+from dataclasses import dataclass
+import math
 
 from ctrando.common import cttypes as cty, ctrom, ctenums
 
@@ -636,6 +638,126 @@ def build_magus_portrait_palette(
     return PortraitPallete(colors)
 
 
+@dataclass
+class HSVColor:
+    hue: float
+    saturation: float
+    value: float
+
+
+@dataclass()
+class RGB255Color:
+    red: int
+    green: int
+    blue: int
+
+
+# https://stackoverflow.com/questions/3018313/algorithm-to-convert-rgb-to-hsv-and-hsv-to-rgb-in-range-0-255-for-both
+# https://mattlockyer.github.io/iat455/documents/rgb-hsv.pdf
+
+def rgb255_to_hsv(
+        red: int, green: int, blue: int
+) -> HSVColor:
+
+    red_f, green_f, blue_f = red/255, green/255, blue/255
+    eps = 1e-16
+
+    min_val = min(red_f, green_f, blue_f)
+    max_val = max(red_f, green_f, blue_f)
+    delta = max_val - min_val
+
+    if abs(delta) < eps:
+        hue = float("nan")
+    elif math.isclose(max_val, red_f, abs_tol=eps):
+        hue = (green_f - blue_f) / delta
+    elif math.isclose(max_val, green_f, abs_tol=eps):
+        hue = (blue_f - red_f) / delta + 2.0
+    elif math.isclose(max_val, blue_f, abs_tol=eps):
+        hue = (red_f - green_f) / delta + 4.0
+    else:
+        raise ValueError
+
+    value = max_val
+
+    if abs(value) < eps:
+        saturation = 0
+    else:
+        saturation = delta/value
+
+    return HSVColor(hue, saturation, value)
+
+
+def hsv_to_rgb255(
+        hsv_color: HSVColor
+) -> tuple[int, int, int]:
+
+    if math.isnan(hsv_color.hue):
+        hue = hsv_color.hue
+    elif hsv_color.hue < 0:
+        hue = math.fmod(hsv_color.hue, 6.0) + 6.0
+    else:
+        hue = math.fmod(hsv_color.hue, 6.0)
+
+    saturation = hsv_color.saturation
+    value = hsv_color.value
+
+    alpha = value * (1-saturation)
+
+    if math.isnan(hue):
+        beta = float("nan")
+        gamma = float("nan")
+    else:
+        beta = value *  (1 - (hue - math.floor(hue)) * saturation)
+        gamma = value * (1 - (1 - (hue - math.floor(hue))) * saturation)
+
+    rgb_tuple: tuple[float, float, float] = (0,0,0)
+    if math.isnan(hue):
+        rgb_tuple = (value, value, value)
+    elif 0 <= hue <= 1:
+        rgb_tuple = (value, gamma, alpha)
+    elif 1 <= hue <= 2:
+        rgb_tuple = (beta, value, alpha)
+    elif 2 <= hue <= 3:
+        rgb_tuple = (alpha, value, gamma)
+    elif 3 <= hue <= 4:
+        rgb_tuple = (alpha, beta, value)
+    elif 4 <= hue <= 5:
+        rgb_tuple = (gamma, alpha, value)
+    elif 5 <= hue <= 6:
+        rgb_tuple = (value, alpha, beta)
+    else:
+        raise ValueError
+
+    def clamp255(val: float) -> int:
+        return sorted([0, int(val*255), 255])[1]
+
+    return (
+        clamp255(rgb_tuple[0]), clamp255(rgb_tuple[1]),  clamp255(rgb_tuple[2]),
+    )
+
+
+def get_value_sat_match(
+        in_color: RGB255Color,
+        match_color: RGB255Color
+) -> RGB255Color:
+    in_hsv = rgb255_to_hsv(in_color.red, in_color.green, in_color.blue)
+    match_hsv = rgb255_to_hsv(match_color.red, match_color.green, match_color.blue)
+
+    in_hsv.value = match_hsv.value
+    in_hsv.saturation = match_hsv.saturation
+    return RGB255Color(*hsv_to_rgb255(in_hsv))
+
+
+def get_value_match_snes(
+        in_snes_color: SNESColor,
+        match_snes_color: SNESColor
+) -> SNESColor:
+    match_rgb = get_value_sat_match(RGB255Color(*in_snes_color.to_rgb()), RGB255Color(*match_snes_color.to_rgb()))
+    return SNESColor.from_rgb_255(
+        match_rgb.red, match_rgb.green, match_rgb.blue
+    )
+
+
 # Formulas from https://www.easyrgb.com/en/math.php
 # Mentioned on https://stackoverflow.com/questions/15408522/rgb-to-xyz-and-lab-colours-conversion
 def rgb255_to_xyz(red: int, green: int, blue: int) -> tuple[float, float, float]:
@@ -729,20 +851,42 @@ def build_crono_loc_palette(
 
         new_palette[CronoPaletteIndex.PANTS] = orig_loc_palette[MarlePaletteIndex.HAIR_LIGHTER]
     elif orig_pc_id == ctenums.CharID.LUCCA:
-        new_palette[CronoPaletteIndex.HAIR_LIGHTER] = darken(
-            orig_loc_palette[LuccaPaletteIndex.HAIR_LIGHT], 0.25
+        # new_palette[CronoPaletteIndex.HAIR_LIGHTER] = darken(
+        #     orig_loc_palette[LuccaPaletteIndex.HAIR_LIGHT], 0.25
+        # )
+        # new_palette[CronoPaletteIndex.HAIR_DARKER] = blend(
+        #     orig_loc_palette[LuccaPaletteIndex.HAIR_DARK],
+        #     orig_loc_palette[LuccaPaletteIndex.HAIR_LIGHT], 0.25
+        # )
+        # new_palette[CronoPaletteIndex.HAIR_DARKEST] = darken(
+        #     orig_loc_palette[LuccaPaletteIndex.HAIR_DARK], 0.1
+        # )
+        new_palette[CronoPaletteIndex.HAIR_LIGHTER] = get_value_match_snes(
+            orig_loc_palette[LuccaPaletteIndex.HAIR_LIGHT],
+            reassign_pc_palette[CronoPaletteIndex.HAIR_LIGHTER]
         )
-        new_palette[CronoPaletteIndex.HAIR_DARKER] = blend(
+        new_palette[CronoPaletteIndex.HAIR_DARKER] = get_value_match_snes(
+            blend(
+                orig_loc_palette[LuccaPaletteIndex.HAIR_DARK],
+                orig_loc_palette[LuccaPaletteIndex.HAIR_LIGHT], 0.5
+            ),
+            reassign_pc_palette[CronoPaletteIndex.HAIR_DARKER]
+        )
+        new_palette[CronoPaletteIndex.HAIR_DARKEST] = get_value_match_snes(
             orig_loc_palette[LuccaPaletteIndex.HAIR_DARK],
-            orig_loc_palette[LuccaPaletteIndex.HAIR_LIGHT], 0.25
-        )
-        new_palette[CronoPaletteIndex.HAIR_DARKEST] = darken(
-            orig_loc_palette[LuccaPaletteIndex.HAIR_DARK], 0.1
+            reassign_pc_palette[CronoPaletteIndex.HAIR_DARKEST]
         )
         new_palette[CronoPaletteIndex.PANTS] = orig_loc_palette[LuccaPaletteIndex.HAT_LIGHTER]
-        new_palette[CronoPaletteIndex.GI_LIGHT] = orig_loc_palette[LuccaPaletteIndex.TUNIC_LIGHT]
-        new_palette[CronoPaletteIndex.GI_MID] = orig_loc_palette[LuccaPaletteIndex.TUNIC_MID]
-        new_palette[CronoPaletteIndex.GI_DARK] = orig_loc_palette[LuccaPaletteIndex.TUNIC_DARKER]
+        new_palette[CronoPaletteIndex.GI_LIGHT] = get_value_match_snes(
+            orig_loc_palette[LuccaPaletteIndex.TUNIC_LIGHT],
+            reassign_pc_palette[CronoPaletteIndex.GI_LIGHT])
+        new_palette[CronoPaletteIndex.GI_MID] = get_value_match_snes(
+            orig_loc_palette[LuccaPaletteIndex.TUNIC_MID],
+            reassign_pc_palette[CronoPaletteIndex.GI_MID])
+        new_palette[CronoPaletteIndex.GI_DARK] = get_value_match_snes(
+            orig_loc_palette[LuccaPaletteIndex.TUNIC_DARKER],
+            reassign_pc_palette[CronoPaletteIndex.GI_DARK]
+        )
     elif orig_pc_id == ctenums.CharID.ROBO:
         new_palette[CronoPaletteIndex.HAIR_DARKEST] = darken(
             orig_loc_palette[RoboPaletteIndex.EYE_DARK], 0.5
@@ -1351,3 +1495,22 @@ def build_magus_loc_palette(
         raise ValueError
 
     return new_palette
+
+
+
+def main():
+    import random
+
+    r = random.randint(0, 255)
+    g = random.randint(0, 255)
+    b = random.randint(0, 255)
+
+    hsv = rgb255_to_hsv(r, g, b)
+
+    r1, g1, b1 = hsv_to_rgb255(hsv)
+    pass
+
+
+
+if __name__ == "__main__":
+    main()
