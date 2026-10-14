@@ -45,6 +45,10 @@ class AltTechID(enum.Enum):
     # Extra Elementals
     HEXAGON_MIST_WATER = enum.auto()
     HEXAGON_MIST_ICE = enum.auto()
+    # Duals
+    CRONO_CROSS = enum.auto()
+    AMPLIFIRE = enum.auto()
+    ROBO_TOSS = enum.auto()
 
 
 @dataclasses.dataclass()
@@ -125,6 +129,9 @@ def collect_vanilla_tech_data(
         charactermods.get_prot_all_tech(base_tech_man),
         animationscript.make_single_lucca_prot_all_script(base_rom)
     )
+    alt_tech_dict[AltTechID.CRONO_CROSS] = make_crono_cross_data(base_tech_man, base_rom)
+    alt_tech_dict[AltTechID.ROBO_TOSS] = make_robo_toss_data(base_tech_man, base_rom)
+    alt_tech_dict[AltTechID.AMPLIFIRE] = make_amplifire_data(base_tech_man, base_rom)
 
     attack_dict: dict[ctenums.CharID, pctech.PCAttack] = {
         char_id: base_tech_man.get_attack(char_id)
@@ -134,6 +141,103 @@ def collect_vanilla_tech_data(
     fix_lightning_script(vanilla_tech_dict[ctenums.TechID.LIGHTNING].script)
 
     return BaseTechData(vanilla_tech_dict, alt_tech_dict, attack_dict)
+
+
+def make_amplifire_data(
+        base_tech_man: pctech.PCTechManager,
+        base_rom: ctrom.CTRom
+) -> TechScriptPair:
+    pc_script = animationscript.make_rr_amplifire_script(base_rom)
+
+    base_tech = base_tech_man.get_tech(ctenums.TechID.ANTIPODE_2)
+    base_tech.name = "Amplifire"
+    base_tech.target_data = ctty.PCTechTargetData(b'\x07\x00')
+    base_tech.battle_group = ctty.PCTechBattleGroup.from_charids(
+        [ctenums.CharID.ROBO, ctenums.CharID.ROBO])
+    base_tech.menu_mp_reqs = ctty.PCTechMenuMPReq(
+        bytes([ctenums.TechID.LASER_SPIN, ctenums.TechID.LASER_SPIN]))
+    base_tech.control_header.set_effect_index(0, ctenums.TechID.LASER_SPIN)
+    base_tech.control_header.set_effect_index(1, ctenums.TechID.LASER_SPIN)
+
+    f1 = base_tech_man.get_tech(ctenums.TechID.CURE_BEAM)
+    base_tech.graphics_header = f1.graphics_header
+    base_tech.graphics_header.layer3_packet_id = 0x5A
+    # base_tech.graphics_header.assembly_packet_1 = 0x23
+    # base_tech.graphics_header.assembly_packet_2 = 0x13
+    # base_tech.graphics_header.sprite_packet_1 = 0xeb
+    # base_tech.graphics_header.sprite_packet_2 = 0x0
+    # base_tech.graphics_header.palette = 0x11
+
+    return TechScriptPair(base_tech, pc_script)
+
+
+def make_robo_toss_data(
+        base_tech_man: pctech.PCTechManager,
+        base_rom: ctrom.CTRom,
+) -> TechScriptPair:
+    # script = animationscript.get_fixed_r_series_beast_toss_script(base_rom)
+    dod_script = animationscript.EnemyTechAnimationScript.read_from_ctrom(
+         base_rom, 0x43)
+    sv_script = animationscript.PCTechAnimationScript.read_from_ctrom(
+        base_rom, 0x41)
+
+    script = animationscript.EnemyTechAnimationScript.read_from_ctrom(
+        base_rom, 0x43
+    )
+    pc_script = animationscript.PCTechAnimationScript(
+        script.main_script, script.miss_script
+    )
+
+    pc_script = animationscript.make_rr_doors_of_doom_script()
+
+    # pc_script = animationscript.PCTechAnimationScript.read_from_ctrom(
+    #     base_rom, 0x5F
+    # )
+
+    base_tech = base_tech_man.get_tech(ctenums.TechID.BEAST_TOSS)
+    base_tech.battle_group = ctty.PCTechBattleGroup.from_charids(
+        [ctenums.CharID.ROBO, ctenums.CharID.ROBO]
+    )
+
+    # base_tech.graphics_header.layer3_packet_id = 0x3F
+    base_tech.graphics_header.assembly_packet_1 = 0x08
+    base_tech.graphics_header.assembly_packet_2 = 0x00
+    base_tech.graphics_header.sprite_packet_1 = 0xC0
+    base_tech.graphics_header.sprite_packet_2 = 0xC4
+    base_tech.graphics_header.palette = 0x04
+    base_tech.graphics_header.layer3_packet_id = 0x62
+
+    base_tech.target_data = ctty.TargetData(b'\x08\x00')
+    base_tech.name = "Robo Toss"
+
+    # base_tech.control_header.set_effect_index(0, ctenums.TechID.ROBO_TACKLE)
+    base_tech.menu_mp_reqs = ctty.PCTechMenuMPReq(
+        bytes([ctenums.TechID.ROBO_TACKLE, ctenums.TechID.ROBO_TACKLE])
+    )
+
+    return TechScriptPair(base_tech, pc_script)
+
+
+def make_crono_cross_data(
+        tech_man: pctech.PCTechManager,
+        ct_rom: ctrom.CTRom
+) -> TechScriptPair:
+    base_tech = tech_man.get_tech(ctenums.TechID.X_STRIKE)
+    base_tech.battle_group = ctty.PCTechBattleGroup.from_charids(
+        [ctenums.CharID.CRONO, ctenums.CharID.CRONO]
+    )
+    base_tech.control_header.set_effect_index(1, ctenums.TechID.CYCLONE)
+    base_tech.effect_headers[1] = base_tech.effect_headers[0].get_copy()
+    base_tech.menu_mp_reqs = ctty.PCTechMenuMPReq(
+        bytes([ctenums.TechID.CYCLONE, ctenums.TechID.CYCLONE]))
+    base_tech.name = "Crono Cross"
+
+    script = animationscript.PCTechAnimationScript.read_from_ctrom(
+        ct_rom, base_tech.graphics_header.script_id
+    )
+
+    return TechScriptPair(base_tech, script)
+
 
 
 def fix_lightning_script(
@@ -285,6 +389,10 @@ def build_combo_tech_profiles(
         val = tech_pair
         ret_dict[key] = val
 
+    ret_dict[("Cyclone", "Cyclone")] = base_data.alt_tech_pairs[AltTechID.CRONO_CROSS]
+    ret_dict[("Robo Tackle", "Robo Tackle")] = base_data.alt_tech_pairs[AltTechID.ROBO_TOSS]
+    ret_dict[("Laser Spin", "Laser Spin")] = base_data.alt_tech_pairs[AltTechID.AMPLIFIRE]
+
     return ret_dict
 
 
@@ -311,8 +419,15 @@ def get_reassigned_combo_tech(
         single_tech = single_tech_assign_dict[pc_id][tech_index].tech
         orig_index = tech.control_header.get_effect_index(ind)
         if orig_index <= 1 + 7*8:
+            slurp_flag = tech.effect_headers[ind].has_slurpcut_restriction
+            throw_flag = tech.effect_headers[ind].has_rockthrow_restriction
+            x = tech.effect_headers[ind][10:]
+
             tech.control_header.set_effect_index(ind, tech_id)
-            tech.effect_headers[ind] = single_tech.effect_headers[0]
+            tech.effect_headers[ind] = single_tech.effect_headers[0].get_copy()
+            tech.effect_headers[ind].has_slurpcut_restriction = slurp_flag
+            tech.effect_headers[ind].has_rockthrow_restriction = throw_flag
+            tech.effect_headers[ind][10:] = x
         tech.effect_mps[ind] = single_tech.effect_mps[0]
 
         if tech.rock_used is None:
@@ -387,6 +502,9 @@ def make_new_combo_techs(
         if tech_id < 0x39:
             continue
 
+    no_repeat_names = {
+        "Amplifire", "Robo Toss", "Double Cure", "Crono Cross"
+    }
     learn_data = build_combo_tech_profiles(base_tech_data)
     for learn_list, tech_pair in learn_data.items():
         char_choices: list[list[ctenums.CharID]] = []
@@ -407,6 +525,13 @@ def make_new_combo_techs(
                 num_pcs == 3 or not char_options.use_magus_dual_techs
             ):
                 continue
+
+            if tech_pair.tech.name in no_repeat_names:
+                group_names = {
+                    pair.tech.name for pair in tech_group_dict[group]
+                }
+                if tech_pair.tech.name in group_names:
+                    continue
 
             # Reassign animations, etc now because we don't want to lose the
             # order of the assignment.
@@ -607,11 +732,11 @@ def reassign_elemental_single_techs(
                     if "2" in new_tech.name:
                         new_tech.effect_headers[0].power = magus_x2_power
 
-                # new_script = get_reassigned_tech_script(
-                #     replacement_pair.script, [orig_char_id], [reassign_id],
-                #     make_copy=True
-                # )
-                new_script = copy.deepcopy(replacement_pair.script)
+                new_script = get_reassigned_tech_script(
+                    replacement_pair.script, [orig_char_id], [reassign_id],
+                    make_copy=True
+                )
+                # new_script = copy.deepcopy(replacement_pair.script)
 
                 single_tech_assignment[char_id][ind] = TechScriptPair(new_tech, new_script)
 

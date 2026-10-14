@@ -819,7 +819,7 @@ def make_marle_reraise_script(ct_rom: ctrom.CTRom):
     reraise_scr = PCTechAnimationScript.read_from_ctrom(ct_rom, ctenums.TechID.LIFE)
 
     caster_0: ObjectScript = [
-        ac.SetObjectFacing(facing=ac.EnumTarget.TARGET_0),
+        ac.SetObjectFacing(facing=ac.EnumTarget.TARGET_0_CURSOR),
         ac.PlayAnimationLoop(animation_id=0x36),
         ac.Pause(duration=0x78),
         ac.PlayAnimationLoop(animation_id=0x35),
@@ -1131,7 +1131,7 @@ def get_fixed_r_series_beast_toss_script(
 ):
     script = EnemyTechAnimationScript.read_from_ctrom(ct_rom, 0x4F)
 
-    # Without a little explanation, this fix will be copmletely opaque.
+    # Without a little explanation, this fix will be completely opaque.
     # The target 0 object (the bouncing character) increments the 1d
     # counter with each bounce.  The casters respond to the bounces with
     # punching animations.
@@ -1158,6 +1158,218 @@ def get_fixed_r_series_beast_toss_script(
     # So now, the 1d counter can't shoot past the number caster 0 waits for.
     # The other bounces seem to be properly gated.
     return script
+
+
+def make_rr_doors_of_doom_script(
+
+) -> PCTechAnimationScript:
+
+    cast1 = [
+        ac.SetObjectFacing(facing=0x15),
+        ac.SetCounterToValue(counter=0x2, value=0x90),
+        ac.SetCounterToValue(counter=0x3, value=0x70),
+        ac.SetSpeedFastest(),
+        ac.PlayAnimationOnce(animation_id=0x13),
+        ac.PlayAnimationOnce(animation_id=0x3E),
+        ac.PlayAnimationOnce(animation_id=0x44),
+        # Probably increment a counter/check counter
+        # ac.Unknown27(),  # Copying without knowing
+        ac.MoveToTarget(target=0x2B, unknown=0),
+        ac.TeleportToTarget(target=0x2B),
+        # Probably increment a counter/check counter
+        # ac.SetObjectFacing(facing=0x15),
+        ac.SetObjectFacing(facing=0x1),
+        ac.PlayAnimationOnce(animation_id=16),
+        # Probably counter stuff.  Ready to go.
+        # ac.LoadSpriteAtTarget(target=0x0A),
+        # ac.LoadSpriteAtTarget3E(target=0x0A),
+        # ac.LoadSpriteAtTarget3F(target=0x0A),
+        # ac.LoadSpriteAtTarget40(target=0x0A),
+        # ac.LoadSpriteAtTarget45(target=0x0A),
+        # ac.LoadSpriteAtTarget46(target=0x0A),
+        ac.IncrementCounter(counter=0x1B),
+        ac.Pause(duration=48),
+        ac.Pause(duration=48),
+        ac.PlaySound(sound=0x7E),
+        ac.WaitForCounterValue(counter=0x1B, value=0),
+        ac.ShowDamage(),
+        ac.Unknown2E(),
+        ac.EndTech(),
+        ac.ReturnCommand()
+    ]
+    cast2 = [
+        ac.ReturnCommand()
+    ]
+
+    targ1 = [ac.ReturnCommand()]
+    targ2 = [ac.ReturnCommand()]
+
+    main_script = SingleAnimationScript(
+        [cast1, cast2, None],
+        [targ1, targ2],
+        []
+    )
+
+    return PCTechAnimationScript(
+        main_script, main_script
+    )
+
+
+def make_rr_amplifire_script(
+        base_rom: ctrom.CTRom
+) -> PCTechAnimationScript:
+    """Make a Robo-Robo Amplifire script."""
+
+    # Get the base amplifire script used by guardian/bits
+    en_script = EnemyTechAnimationScript.read_from_ctrom(
+        base_rom, 0x19
+    )
+
+    cast_0 = en_script.main_script.caster_objects[0]
+
+    # For future people foolish enough to delve into animations
+    # The LoadSpriteAtTarget commands set some positions for use by L3 packets.
+    #   - For the Cure Beam effect, 0x3F and 0x40 appear to give two points
+    #     in the direction of the beam.  The end of the beam will be perpendicular
+    #     to this vector.
+    #   - In this case, the initial beam is so narrow that it doesn't matter
+    # cast_0[3] = ac.LoadSpriteAtTarget3F(target=ac.EnumTarget.CASTER_1_CURSOR)
+    # cast_0[4] = ac.LoadSpriteAtTarget40(target=ac.EnumTarget.CASTER_1_CURSOR)
+
+    # The StoreTargetTo7EXXXX are similar, but in this case they are specifying
+    # the start/end of the beam for drawing purposes.
+    #   - In this case they are set to match the position of effect objects
+    #   - This is feels like top/left corner?  And if an effect is animated,
+    #     the position may jump around as the animation plays.
+    # cast_0[5] = ac.StoreTargetTo7E4AE8(target=ac.EnumTarget.EFFECT_1)
+    # cast_0[6] = ac.StoreTargetTo7E4AE9(target=ac.EnumTarget.EFFECT_0)
+
+    # We're working backwards so that I can reference vanilla script indices
+    # when inserting new blocks
+
+
+    del cast_0[13]  # Moving show damage to target object
+
+    # Do a celebration after the laser finishes
+    cast_0[12:13] = [
+        ac.PlayAnimationOnce(animation_id=10),
+        ac.Pause(duration=10),
+        ac.PlayAnimationFirstFrame(animation_id=3),
+        ac.Pause(duration=20)
+    ]
+
+    # Stop the laser animation after it gets to the other caster
+    anim_block = [
+        ac.WaitForCounter1DValue(value=2),
+        ac.PlayAnimationFirstFrame(animation_id=3),
+    ]
+    cast_0[9:9] = anim_block
+
+    # Intro animation
+    anim_block = [
+        ac.WaitForCounter1CValue(value=3),
+        ac.SetObjectFacing(facing=0xB),
+        ac.PlaySound(sound=0x41),
+        ac.PlayAnimationOnce(animation_id=0x44),
+        ac.Pause(duration=5)
+    ]
+    cast_0[7:7] = anim_block
+
+    init_anim = [
+        ac.SetObjectFacing(facing=0x0B),
+        ac.PlayAnimationLoop(animation_id=0x3)
+    ]
+    cast_0[0:0] = init_anim
+
+    # Other caster opens to receive the laser and then celebrates after
+    cast_1 = [
+        ac.WaitForCounter1CValue(value=2),
+        ac.PlayAnimationOnce(animation_id=0x13),
+        ac.Pause(duration=5),
+        ac.PlayAnimationOnce(animation_id=0x39),
+        ac.IncrementCounter1C(),
+        ac.WaitForCounter1DValue(value=3),
+        ac.PlayAnimationOnce(animation_id=10),
+        ac.Pause(duration=10),
+        ac.PlayAnimationFirstFrame(animation_id=3),
+        ac.ReturnCommand()
+    ]
+
+    # cast_0.insert(0, ac.WaitForCounter1CValue(value=2))
+    #
+    eff_0 = en_script.main_script.effect_objects[0]
+    eff_1 = en_script.main_script.effect_objects[1]
+
+    tar_0 = en_script.main_script.target_objects[0]
+
+    # Showing damage in the target object so that it can happen during caster anims
+    tar_0[4:4] = [
+        ac.Pause(duration=0xF),
+        ac.ShowDamage()
+    ]
+
+    # Same with sound effects that play along with caster animations
+    tar_0[0:0] = [
+        ac.WaitForCounter1CValue(value=2),
+        ac.PlaySound(sound=0x51),
+        ac.Pause(duration=10),
+        ac.PlaySound(sound=0x51),
+        ac.Pause(duration=10),
+        ac.PlaySound(sound=0x51),
+        ac.Pause(duration=10)
+    ]
+
+    # Have to anchor eff_0 and eff_1 to our new dummy effect objects
+    eff_0[1] = ac.TeleportToTarget(target=ac.EnumTarget.EFFECT_2)
+    eff_0[4] = ac.SetSpeedFast()
+    eff_0[5] = ac.SlideSpriteToTarget(target=ac.EnumTarget.EFFECT_3)
+    eff_0[6] = ac.TeleportToTarget(target=ac.EnumTarget.EFFECT_3)
+    eff_0.insert(
+        0, ac.WaitForCounter1CValue(value=2)
+    )
+
+    eff_1[1] = ac.TeleportToTarget(target=0x1F)
+    eff_1[3] = ac.Pause(duration=50)
+    eff_1[4] = ac.SetSpeedFast()
+    eff_1[5] = ac.SlideSpriteToTarget(target=0x1F)
+    eff_1[6] = ac.TeleportToTarget(target=0x1F)
+    eff_1.insert(
+        0, ac.WaitForCounter1CValue(value=2)
+    )
+
+    # Default targets will not align with robo's center.
+    # We create dummy objects to do coordinates and then lock the real effects to the dummies
+    new_eff_2 = [
+        ac.StoreTargetCoordinates(target=ac.EnumTarget.CASTER_0_CURSOR),
+        ac.IncreaseCounterByValue(counter=0x1F, value=0x8),
+        ac.IncreaseCounterByValue(counter=0x1E, value=0x8),
+        ac.TeleportToStoredCoordinates(),
+        ac.IncrementCounter1C(),
+        ac.WaitForCounter1DValue(value=2),  # Whenever we're sure the other effect has moved
+        ac.StoreTargetCoordinates(target=ac.EnumTarget.TARGET_0_CURSOR),
+        ac.TeleportToStoredCoordinates(),
+        ac.IncrementCounter1C(),
+        ac.ReturnCommand()
+    ]
+
+    new_eff_3 = [
+        ac.WaitForCounter1CValue(value=1),
+        ac.StoreTargetCoordinates(target=ac.EnumTarget.CASTER_1_CURSOR),
+        ac.IncreaseCounterByValue(counter=0x1F, value=0x8),
+        ac.IncreaseCounterByValue(counter=0x1E, value=0x8),
+        ac.TeleportToStoredCoordinates(),
+        ac.IncrementCounter1C(),
+        ac.ReturnCommand()
+    ]
+
+    en_script.main_script.caster_objects[1] = cast_1
+    en_script.main_script.effect_objects[2] = new_eff_2
+    en_script.main_script.effect_objects[3] = new_eff_3
+
+    pc_script = PCTechAnimationScript(
+        en_script.main_script, en_script.miss_script
+    )
+    return pc_script
 
 
 class AnimationScriptManager:

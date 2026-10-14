@@ -508,7 +508,13 @@ def update_dual_tech_power(
 
         pc_effect_id = tech.control_header.get_effect_index(ind)
         if (pc_effect_id - 1) // 8 == pc_id:  # This is a normal effect reference.
+            slurp_flag = tech.effect_headers[ind].has_slurpcut_restriction
+            throw_flag = tech.effect_headers[ind].has_rockthrow_restriction
+            x = tech.effect_headers[ind][10:]
             tech.effect_headers[ind] = tech_dict[pc_effect_id].effect_headers[0].get_copy()
+            tech.effect_headers[ind].has_slurpcut_restriction = slurp_flag
+            tech.effect_headers[ind].has_rockthrow_restriction = throw_flag
+            tech.effect_headers[ind][10:] = x
             tech.effect_mps[ind] = tech_dict[pc_effect_id].effect_mps[0]
         else:  # We have to deduce what special effect is in use.
             # Use the menu MP req to look up the

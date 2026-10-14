@@ -713,17 +713,17 @@ def hsv_to_rgb255(
     rgb_tuple: tuple[float, float, float] = (0,0,0)
     if math.isnan(hue):
         rgb_tuple = (value, value, value)
-    elif 0 <= hue <= 1:
+    elif 0 <= hue < 1:
         rgb_tuple = (value, gamma, alpha)
-    elif 1 <= hue <= 2:
+    elif 1 <= hue < 2:
         rgb_tuple = (beta, value, alpha)
-    elif 2 <= hue <= 3:
+    elif 2 <= hue < 3:
         rgb_tuple = (alpha, value, gamma)
-    elif 3 <= hue <= 4:
+    elif 3 <= hue < 4:
         rgb_tuple = (alpha, beta, value)
-    elif 4 <= hue <= 5:
+    elif 4 <= hue < 5:
         rgb_tuple = (gamma, alpha, value)
-    elif 5 <= hue <= 6:
+    elif 5 <= hue < 6:
         rgb_tuple = (value, alpha, beta)
     else:
         raise ValueError
@@ -738,23 +738,41 @@ def hsv_to_rgb255(
 
 def get_value_sat_match(
         in_color: RGB255Color,
-        match_color: RGB255Color
+        match_color: RGB255Color,
+        match_hue: bool = False,
+        match_value: bool = True,
+        match_saturation: bool = True,
 ) -> RGB255Color:
     in_hsv = rgb255_to_hsv(in_color.red, in_color.green, in_color.blue)
     match_hsv = rgb255_to_hsv(match_color.red, match_color.green, match_color.blue)
 
-    in_hsv.value = match_hsv.value
-    in_hsv.saturation = match_hsv.saturation
+    if match_hue:
+        in_hsv.hue = match_hsv.hue
+
+    if match_value:
+        in_hsv.value = match_hsv.value
+
+    if match_saturation:
+        in_hsv.saturation = match_hsv.saturation
+
     return RGB255Color(*hsv_to_rgb255(in_hsv))
 
 
 def get_value_match_snes(
         in_snes_color: SNESColor,
-        match_snes_color: SNESColor
+        match_snes_color: SNESColor,
+        match_hue: bool = False,
+        match_value: bool = True,
+        match_saturation: bool = True,
 ) -> SNESColor:
-    match_rgb = get_value_sat_match(RGB255Color(*in_snes_color.to_rgb()), RGB255Color(*match_snes_color.to_rgb()))
+    match_rgb = get_value_sat_match(
+        RGB255Color(*in_snes_color.to_rgb()),
+        RGB255Color(*match_snes_color.to_rgb()),
+        match_hue=match_hue, match_value=match_value,
+        match_saturation=match_saturation
+    )
     return SNESColor.from_rgb_255(
-        match_rgb.red, match_rgb.green, match_rgb.blue
+        match_rgb.red, match_rgb.green, match_rgb.blue,
     )
 
 
@@ -828,6 +846,98 @@ def color_diff_rgb255(
     l2, a2, b2 = xyz_to_cielab(*rgb255_to_xyz(red_2, green_2, blue_2))
 
     return ((l1-l2)**2 + (a1-a2)**2 + (b1-b2)**2) ** 0.5
+
+
+# Try to do hue-matching
+def build_crono_loc_palette_alt(
+        orig_loc_palette: SNESPalette,
+        orig_pc_id: ctenums.CharID,
+        reassign_pc_palette: SNESPalette
+) -> SNESPalette:
+    new_palette = SNESPalette(orig_loc_palette.colors)
+    if orig_pc_id == ctenums.CharID.CRONO:
+        return new_palette
+
+    repl_hue_dict: dict[CronoPaletteIndex, SNESColor | None] = {
+        index: None for index in CronoPaletteIndex
+    }
+
+    if orig_pc_id == ctenums.CharID.MARLE:
+        repl_hue_dict[CronoPaletteIndex.HAIR_LIGHTER] = orig_loc_palette[MarlePaletteIndex.HAIR_MID]
+        repl_hue_dict[CronoPaletteIndex.HAIR_DARKER] = orig_loc_palette[MarlePaletteIndex.HAIR_DARKER]
+        repl_hue_dict[CronoPaletteIndex.HAIR_DARKEST] = orig_loc_palette[MarlePaletteIndex.HAIR_DARKEST]
+
+        repl_hue_dict[CronoPaletteIndex.GI_LIGHT] = orig_loc_palette[MarlePaletteIndex.TUNIC_SHADOW_LIGHT]
+        repl_hue_dict[CronoPaletteIndex.GI_MID] = orig_loc_palette[MarlePaletteIndex.TUNIC_SHADOW_MID]
+        repl_hue_dict[CronoPaletteIndex.GI_DARK] = orig_loc_palette[MarlePaletteIndex.TUNIC_SHADOW_DARK]
+
+        new_palette[CronoPaletteIndex.PANTS] = orig_loc_palette[MarlePaletteIndex.HAIR_LIGHTER]
+    elif orig_pc_id == ctenums.CharID.LUCCA:
+        repl_hue_dict[CronoPaletteIndex.HAIR_LIGHTER] = orig_loc_palette[LuccaPaletteIndex.HAIR_LIGHT]
+        repl_hue_dict[CronoPaletteIndex.HAIR_DARKER] = blend(
+            orig_loc_palette[LuccaPaletteIndex.HAIR_DARK],
+            orig_loc_palette[LuccaPaletteIndex.HAIR_LIGHT], 0.5
+        )
+        repl_hue_dict[CronoPaletteIndex.HAIR_DARKEST] = orig_loc_palette[LuccaPaletteIndex.HAIR_DARK]
+        repl_hue_dict[CronoPaletteIndex.GI_LIGHT] = orig_loc_palette[LuccaPaletteIndex.TUNIC_LIGHT]
+        repl_hue_dict[CronoPaletteIndex.GI_MID] = orig_loc_palette[LuccaPaletteIndex.TUNIC_MID]
+        repl_hue_dict[CronoPaletteIndex.GI_DARK] = orig_loc_palette[LuccaPaletteIndex.TUNIC_DARKER]
+        repl_hue_dict[CronoPaletteIndex.PANTS] = orig_loc_palette[LuccaPaletteIndex.HAT_LIGHTER]
+    elif orig_pc_id == ctenums.CharID.ROBO:
+        repl_hue_dict[CronoPaletteIndex.HAIR_DARKEST] = orig_loc_palette[RoboPaletteIndex.EYE_DARK]
+        repl_hue_dict[CronoPaletteIndex.GI_MID] = orig_loc_palette[RoboPaletteIndex.JOINTS_MID]
+        repl_hue_dict[CronoPaletteIndex.GI_DARK] = orig_loc_palette[RoboPaletteIndex.INTERNAL_DARK]
+    elif orig_pc_id == ctenums.CharID.FROG:
+        new_palette[CronoPaletteIndex.SKIN_LIGHTER] = reassign_pc_palette[2]
+        new_palette[CronoPaletteIndex.SKIN_DARKER] = reassign_pc_palette[3]
+
+        repl_hue_dict[CronoPaletteIndex.HAIR_LIGHTER] = orig_loc_palette[FrogPaletteIndex.SKIN_LIGHTER]
+        repl_hue_dict[CronoPaletteIndex.HAIR_DARKER] = orig_loc_palette[FrogPaletteIndex.SKIN_MID]
+        repl_hue_dict[CronoPaletteIndex.HAIR_DARKEST] = darken(
+            orig_loc_palette[FrogPaletteIndex.SKIN_MID], 0.5
+        )
+        repl_hue_dict[CronoPaletteIndex.PANTS] = orig_loc_palette[FrogPaletteIndex.GLOVE_BOOT]
+        repl_hue_dict[CronoPaletteIndex.GI_LIGHT] = orig_loc_palette[FrogPaletteIndex.ARMOR_LIGHT]
+        repl_hue_dict[CronoPaletteIndex.GI_MID] = orig_loc_palette[FrogPaletteIndex.ARMOR_DARK]
+        repl_hue_dict[CronoPaletteIndex.GI_DARK] = orig_loc_palette[FrogPaletteIndex.CAPE_DARK]
+    elif orig_pc_id == ctenums.CharID.AYLA:
+        repl_hue_dict[CronoPaletteIndex.HAIR_LIGHTER] = orig_loc_palette[AylaPaletteIndex.HAIR_LIGHT]
+        repl_hue_dict[CronoPaletteIndex.HAIR_DARKER] = orig_loc_palette[AylaPaletteIndex.HAIR_MID]
+        repl_hue_dict[CronoPaletteIndex.HAIR_DARKEST] = orig_loc_palette[AylaPaletteIndex.HAIR_DARK]
+        new_palette[CronoPaletteIndex.GI_LIGHT] = get_value_match_snes(
+            orig_loc_palette[AylaPaletteIndex.CLOTHES_LIGHT],
+            reassign_pc_palette[CronoPaletteIndex.GI_LIGHT],
+            # match_saturation=False,
+            # match_value=False
+        )
+        new_palette[CronoPaletteIndex.GI_MID] = get_value_match_snes(
+            orig_loc_palette[AylaPaletteIndex.CLOTHES_MID],
+            reassign_pc_palette[CronoPaletteIndex.GI_MID],
+            # match_saturation=False,
+            # match_value=False
+        )
+        new_palette[CronoPaletteIndex.GI_DARK] = get_value_match_snes(
+            orig_loc_palette[AylaPaletteIndex.CLOTHES_DARK],
+            reassign_pc_palette[CronoPaletteIndex.GI_DARK],
+            # match_saturation=False,
+            # match_value=False
+        )
+        # new_palette[CronoPaletteIndex.GI_LIGHT] = orig_loc_palette[AylaPaletteIndex.CLOTHES_LIGHT]
+        # new_palette[CronoPaletteIndex.GI_MID] = orig_loc_palette[AylaPaletteIndex.CLOTHES_MID]
+        # new_palette[CronoPaletteIndex.GI_DARK] = orig_loc_palette[AylaPaletteIndex.CLOTHES_DARK]
+
+        repl_hue_dict[CronoPaletteIndex.PANTS] = orig_loc_palette[AylaPaletteIndex.CLOTHES_LIGHT]
+
+    for index, new_color in repl_hue_dict.items():
+        if repl_hue_dict[index] is not None:
+            repl_hue_dict[index] = get_value_match_snes(
+                repl_hue_dict[index], reassign_pc_palette[index]
+            )
+            new_palette[index] = repl_hue_dict[index]
+
+    return new_palette
+
+
 
 
 def build_crono_loc_palette(
