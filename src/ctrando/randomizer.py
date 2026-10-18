@@ -271,7 +271,7 @@ def get_random_config(
     config.recruit_dict = recruitwriter.get_random_recruit_assignment_dict(
         settings.plando_options.recruit_assignment, rng)
 
-    # config.recruit_dict[ctenums.RecruitID.CATHEDRAL] = [ctenums.CharID.MARLE]
+    config.recruit_dict[ctenums.RecruitID.CATHEDRAL] = [ctenums.CharID.CRONO]
 
     ### Boss/Midboss
     config.boss_assignment_dict = bossrando.get_random_boss_assignment(settings.boss_rando_options, rng)

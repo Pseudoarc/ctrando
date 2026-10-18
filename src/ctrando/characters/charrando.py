@@ -317,6 +317,9 @@ def get_char_reassign_dict(
 ) -> dict[ctenums.CharID, ctenums.CharID]:
     char_list = list(ctenums.CharID)
 
+    x = { char_id: ctenums.CharID.AYLA for char_id in ctenums.CharID}
+    # x[ctenums.CharID.MARLE] = ctenums.CharID.AYLA
+    return x
     return {
         char_id: rng.choice(char_list) for char_id in ctenums.CharID
     }

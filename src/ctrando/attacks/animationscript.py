@@ -1372,6 +1372,250 @@ def make_rr_amplifire_script(
     return pc_script
 
 
+def make_rr_giga_bomb_script(
+        base_rom: ctrom.CTRom
+) -> PCTechAnimationScript:
+
+    # sv_scr = PCTechAnimationScript.read_from_ctrom(base_rom, 0x41)
+    en_script = EnemyTechAnimationScript.read_from_ctrom(base_rom, 0x3F)
+
+    cast_0 = en_script.main_script.caster_objects[0]
+    # cast_0[3] = ac.Pause(duration=50)
+    cast_0[13] = ac.PerformSuperCommand(super_command=0x2A)
+    # del cast_0[10:12]
+    # del cast_0[2]
+    cast_0[0:3] = [
+        ac.SetObjectFacing(facing=0x15),
+        ac.SetCounterToValue(counter=0x2, value=0xB8),
+        ac.SetCounterToValue(counter=0x3, value=0x78),
+        ac.SetSpeedFastest(),
+        # ac.PlayAnimationOnce(animation_id=0x13),
+        # ac.PlayAnimationOnce(animation_id=0x3E),
+        # ac.PlayAnimationOnce(animation_id=0x44),
+        ac.MoveToTarget(target=ac.EnumTarget.COUNTER_2_3, unknown=0),
+        ac.TeleportToTarget(target=0x2B),
+        ac.IncrementCounter1C(),
+        ac.WaitForCounter1CValue(value=2),
+        ac.PlayAnimationOnce(animation_id=0x24),
+        ac.Pause(duration=10),
+        ac.PlayAnimationOnce(animation_id=0x39),
+        # ac.WaitForCounter1CValue(value=1),
+    ]
+
+    cast_1 = en_script.main_script.caster_objects[1]
+    cast_1[2] = ac.PerformSuperCommand(super_command=0x2E)
+    cast_1[0:1] = [
+        ac.SetObjectFacing(facing=0x15),
+        ac.SetCounterToValue(counter=0x4, value=0x48),
+        ac.SetCounterToValue(counter=0x5, value=0x78),
+        ac.SetSpeedFastest(),
+        # ac.PlayAnimationOnce(animation_id=0x13),
+        # ac.PlayAnimationOnce(animation_id=0x3E),
+        # ac.PlayAnimationOnce(animation_id=0x44),
+        ac.MoveToTarget(target=ac.EnumTarget.COUNTER_4_5, unknown=0),
+        ac.TeleportToTarget(target=ac.EnumTarget.COUNTER_4_5),
+        ac.IncrementCounter1C(),
+        ac.WaitForCounter1CValue(value=2),
+        ac.PlayAnimationOnce(animation_id=0x24),
+        ac.Pause(duration=10),
+        ac.PlayAnimationOnce(animation_id=0x39),
+    ]
+
+    return PCTechAnimationScript(
+        en_script.main_script, en_script.miss_script
+    )
+
+
+def make_aa_twister_script(
+        base_rom: ctrom.CTRom
+) -> PCTechAnimationScript:
+    tw_script = PCTechAnimationScript.read_from_ctrom(base_rom, 0x6B)
+    en_script = EnemyTechAnimationScript.read_from_ctrom(
+        base_rom, 0x67
+    )
+    cast_0 = en_script.main_script.caster_objects[0]
+    cast_0[8] = ac.PlayAnimationLoop(animation_id=0x44)
+    # cast_0[22] = ac.PlayAnimationLoop(animation_id=0x44)
+
+    cast_1 = en_script.main_script.caster_objects[1]
+    cast_1[9] = ac.PlayAnimationLoop(animation_id=0x44)
+
+    cast_1[3:6] = [
+        ac.PerformSuperCommand(super_command=0x38),
+        ac.SetSpeedFastest(),
+        ac.MoveToTarget(unknown=1, target=EnumTarget.UNKNOWN_2A),
+        ac.TeleportToTarget(target=EnumTarget.UNKNOWN_2A),
+        ac.SetSpeedFast()
+    ]
+    # cast_1[25] = ac.PlayAnimationLoop(animation_id=0x44)
+
+    return PCTechAnimationScript(
+        en_script.main_script, en_script.miss_script
+    )
+
+
+def make_aa_double_kiss_script(
+        base_rom: ctrom.CTRom
+) -> PCTechAnimationScript:
+    slurp_kiss_script = PCTechAnimationScript.read_from_ctrom(
+        base_rom, 0x60
+    )
+
+    cast_delay = 0x10
+    cast_0 = slurp_kiss_script.main_script.caster_objects[0]
+    del cast_0[5]
+    cast_0[0:1] = [
+        ac.SetObjectFacing(facing=0xC),
+        ac.Pause(duration=cast_delay),
+        ac.PlayAnimationOnce(animation_id=0x24),
+        ac.PlayAnimationOnce(animation_id=0x16),
+        ac.PlaySound(sound=0x45),
+        ac.PlayAnimationOnce(animation_id=0x15)
+    ]
+
+    cast_1 = slurp_kiss_script.main_script.caster_objects[1]
+    cast_1[0:1] = [ac.WaitForCounter1CValue(value=1)]
+
+    block  = [
+        ac.StoreTargetCoordinates(target=EnumTarget.BETWEEN_CASTER_0_CASTER_1),
+        # ac.IncreaseCounterByValue(counter=0x1F, value=0xF0),
+        ac.CopyCounterToCounter(source=0x1E, destination=0x2),
+        ac.CopyCounterToCounter(source=0x1F, destination=0x3),
+        ac.CopyCounterToCounter(source=0x1E, destination=0x4),
+        ac.CopyCounterToCounter(source=0x1F, destination=0x5),
+        ac.CopyCounterToCounter(source=0x1E, destination=0x6),
+        ac.CopyCounterToCounter(source=0x1F, destination=0x7),
+        ac.CopyCounterToCounter(source=0x1E, destination=0x8),
+        ac.CopyCounterToCounter(source=0x1F, destination=0x9),
+        # ac.IncreaseCounterByValue(counter=0x2, value=0x10),
+        # ac.IncreaseCounterByValue(counter=0x5, value=0xF0),
+        # ac.IncreaseCounterByValue(counter=0x6, value=0xF0),
+        # ac.IncreaseCounterByValue(counter=0x9, value=0x10),
+        ac.IncreaseCounterByValue(counter=0x1F, value=0xF0),
+        ac.TeleportToStoredCoordinates(),
+        ac.LoadSpriteAtTarget(target=EnumTarget.EFFECT_0),
+        ac.IncrementCounter1C(),
+        ac.SetObjectFacing(facing=0xD),
+        ac.SetPriority(priority=1),
+        ac.SetSpeedMedium(),
+        ac.SetAngle(angle=192),
+    ]
+
+    eff_0 = slurp_kiss_script.main_script.effect_objects[0]
+    eff_0[4] = ac.SetAngle(angle=0)
+    # eff_0[14] = ac.SpiralSpriteToTarget(target=EnumTarget.COUNTER_2_3, direction=1)
+    eff_0[14] = ac.MoveToTarget9C(target=EnumTarget.COUNTER_2_3, unknown=2)
+    eff_0[15] = ac.TeleportToTarget(target=EnumTarget.COUNTER_2_3)
+
+    eff_0[17:22] = [
+        ac.IncrementCounter1D(),
+        ac.HideEffect(),
+        ac.IncrementCounter1C(),
+        ac.WaitForCounter1CValue(value=5)
+    ]
+
+    # eff_0[13:13] = [ac.Pause(duration=30)]
+    eff_0[0:9] = block  # Old coordinate setting replaced
+
+
+    eff_1 = slurp_kiss_script.main_script.effect_objects[1]
+    eff_1[0] = ac.SetSpeedMedium()
+    # eff_1[7] = ac.SpiralSpriteToTarget(target=EnumTarget.COUNTER_4_5, direction=0x80)
+    eff_1[8] = ac.TeleportToTarget(target=EnumTarget.COUNTER_4_5)
+    eff_1[9:9] = [
+        ac.HideEffect(),
+        ac.IncrementCounter1C(),
+        ac.WaitForCounter1CValue(value=5)
+    ]
+
+    eff_1[13:28] = [
+        ac.IncrementCounter1D(),
+    ]
+
+    eff_1[7:8] = [
+        ac.Pause(duration=5),
+        ac.MoveToTarget9C(target=EnumTarget.COUNTER_4_5, unknown=2),
+    ]
+
+    eff_2 = [
+        ac.TeleportToTarget(target=EnumTarget.CASTER_0),
+        ac.SetObjectFacing(facing=0xD),
+        ac.SetPriority(priority=1),
+        # ac.SetSpeedFastest(),
+        ac.SetSpeedMedium(),
+        ac.PlayAnimationLoop(animation_id=0x4),
+        ac.SwitchToPalette(palette=10),
+        ac.WaitForCounter1DValue(value=1),
+        ac.Pause(duration=cast_delay),
+        ac.Pause(duration=5),
+        ac.DrawEffect(),
+        # ac.SpiralSpriteToTarget(target=EnumTarget.COUNTER_6_7, direction=1),
+        ac.MoveToTarget9C(target=EnumTarget.COUNTER_6_7, unknown=2),
+        ac.TeleportToTarget(target=EnumTarget.COUNTER_6_7),
+        # ac.HideEffect(),
+        ac.IncrementCounter1C(),
+        ac.WaitForCounter1DValue(value=6),
+        ac.HideEffect(),
+        ac.WaitForCounter1DValue(value=7),
+        ac.ReturnIfTargetAbsent(target=1),
+        ac.TeleportToTarget(target=EnumTarget.TARGET_2_CURSOR),
+        ac.PlayAnimationOnce(animation_id=1),
+        ac.ReturnCommand()
+    ]
+
+    eff_3 = [
+        ac.TeleportToTarget(target=EnumTarget.CASTER_0),
+        ac.SetObjectFacing(facing=0xD),
+        ac.SetPriority(priority=1),
+        # ac.SetSpeedFastest(),
+        ac.SetSpeedMedium(),
+        # ac.SetAngle(angle=0xC0),
+        ac.PlayAnimationLoop(animation_id=0x4),
+        ac.SwitchToPalette(palette=10),
+        ac.WaitForCounter1DValue(value=1),
+        ac.Pause(duration=cast_delay),
+        ac.DrawEffect(),
+        # ac.SpiralSpriteToTarget(target=EnumTarget.COUNTER_8_9, direction=0x80),
+        ac.MoveToTarget9C(target=EnumTarget.COUNTER_8_9, unknown=2),
+        ac.MoveToTarget9C(target=EnumTarget.COUNTER_8_9),
+        ac.TeleportToTarget(target=EnumTarget.COUNTER_8_9),
+        ac.IncrementCounter1C(),
+        ac.HideEffect(),
+        # ac.WaitForCounter1CValue(value=5),
+        # ac.WaitForCounter1DValue(value=5),
+        # ac.HideEffect(),
+        ac.ReturnCommand()
+    ]
+    eff_4 = [
+        ac.WaitForCounter1CValue(value=1),
+        ac.TeleportToTarget(target=EnumTarget.BETWEEN_CASTER_0_CASTER_1),
+        ac.SetObjectFacing(facing=0xD),
+        ac.SetPriority(priority=0),
+        ac.SetSpeedMedium(),
+        ac.PlayAnimationLoop(animation_id=0x4),
+        ac.SwitchToPalette(palette=10),
+        # ac.DrawEffect(),
+        ac.WaitForCounter1CValue(value=2),
+        ac.DrawEffect(),
+        ac.WaitForCounter1DValue(value=6),
+        ac.Pause(duration=10),
+        ac.HideEffect(),
+        ac.ReturnCommand()
+    ]
+    slurp_kiss_script.main_script.effect_objects[2] = eff_2
+    slurp_kiss_script.main_script.effect_objects[3] = eff_3
+    slurp_kiss_script.main_script.effect_objects[4] = eff_4
+
+    # eff_0[20] = ac.MoveToTarget(target=EnumTarget.CENTER_OF_SCREEN)
+    # eff_1[24] = ac.MoveToTarget(target=EnumTarget.CENTER_OF_SCREEN)
+    # eff_2[11] = ac.MoveToTarget(target=EnumTarget.CENTER_OF_SCREEN)
+
+    del slurp_kiss_script.main_script.effect_objects[5:]
+
+    scr = PCTechAnimationScript.read_from_ctrom(base_rom, 0x4e)
+    return slurp_kiss_script
+   #
+
 class AnimationScriptManager:
     """Class for reading/writing pc tech animation scripts"""
 

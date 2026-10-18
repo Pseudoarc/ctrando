@@ -31,7 +31,7 @@ class EnumTarget(enum.IntEnum):
     TARGET_5_CURSOR = 0x11
     NOTHING = 0x12
     BETWEEN_CASTER_0_TARGET_0 = 0x13
-    BETWEEN_CASTER_0_TARGET_1 = 0x14
+    BETWEEN_CASTER_0_CASTER_1 = 0x14
     BETWEEN_CASTER_0_TARGET_2 = 0x15
     UNKNOWN_16 = 0x16
     UNKNOWN_17 = 0x17
@@ -53,11 +53,13 @@ class EnumTarget(enum.IntEnum):
     UNKNOWN_27 = 0x27
     UNKNOWN_28 = 0x28
     UNKNOWN_29 = 0x29
+    # 0x2A seems to use counters as coordinates
+    # 0x2A - 0x31 are all the same type according to TF
     UNKNOWN_2A = 0x2A
-    UNKNOWN_2B = 0x2B
-    UNKNOWN_2C = 0x2C
-    UNKNOWN_2D = 0x2D
-    UNKNOWN_2E = 0x2E
+    COUNTER_2_3 = 0x2B
+    COUNTER_4_5 = 0x2C
+    COUNTER_6_7 = 0x2D  # Sorry
+    COUNTER_8_9 = 0x2E
     UNKNOWN_2F = 0x2F
     UNKNOWN_30 = 0x20
     UNKNOWN_31 = 0x21
@@ -232,11 +234,21 @@ class SpiralSpriteToStoredCoordinates(AnimationCommand):
 
 # 15 cc tt Spiral Sprite to Target - cc = 1 for clockwise
 class SpiralSpriteToTarget(AnimationCommand):
-    SIZE = 2
+    SIZE = 3
     CMD_ID = 0x15
 
-    is_clockwise = cty.byte_prop(1, ret_type=bool)
+    direction = cty.byte_prop(1, ret_type=int)  # Seems to be 0x80 or 0x00
     target = cty.byte_prop(2, ret_type=EnumTarget)
+
+    def __init__(self, *args,
+                 target: int | None = None,
+                 direction: int | None = None,
+                 **kwargs):
+        AnimationCommand.__init__(self, *args, **kwargs)
+        self._set_properties(
+            ("target", target),
+            ("direction", direction)
+        )
 
 
 # 16 xx yy Move X, then Y to coordinates
@@ -402,7 +414,7 @@ class ReturnIfTargetAbsent(AnimationCommand):
     SIZE = 2
     CMD_ID = 0x25
 
-    target = cty.byte_prop(1, ret_type=EnumTarget)
+    target = cty.byte_prop(1, ret_type=int)
 
     def __init__(self, *args, target: int = None, **kwargs):
         AnimationCommand.__init__(self, *args, **kwargs)

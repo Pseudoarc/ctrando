@@ -49,6 +49,10 @@ class AltTechID(enum.Enum):
     CRONO_CROSS = enum.auto()
     AMPLIFIRE = enum.auto()
     ROBO_TOSS = enum.auto()
+    GIGA_BOMB = enum.auto()
+    MULTI_TWIST = enum.auto()
+    TWINS_CHARM = enum.auto()
+    DOUBLE_KISS = enum.auto()
 
 
 @dataclasses.dataclass()
@@ -132,6 +136,10 @@ def collect_vanilla_tech_data(
     alt_tech_dict[AltTechID.CRONO_CROSS] = make_crono_cross_data(base_tech_man, base_rom)
     alt_tech_dict[AltTechID.ROBO_TOSS] = make_robo_toss_data(base_tech_man, base_rom)
     alt_tech_dict[AltTechID.AMPLIFIRE] = make_amplifire_data(base_tech_man, base_rom)
+    alt_tech_dict[AltTechID.GIGA_BOMB] = make_giga_bomb_data(base_tech_man, base_rom)
+    alt_tech_dict[AltTechID.MULTI_TWIST] = make_aa_twister_data(base_tech_man, base_rom)
+    alt_tech_dict[AltTechID.TWINS_CHARM] = make_aa_twins_charm(base_tech_man, base_rom)
+    alt_tech_dict[AltTechID.DOUBLE_KISS] = make_aa_kiss_data(base_tech_man, base_rom)
 
     attack_dict: dict[ctenums.CharID, pctech.PCAttack] = {
         char_id: base_tech_man.get_attack(char_id)
@@ -141,6 +149,78 @@ def collect_vanilla_tech_data(
     fix_lightning_script(vanilla_tech_dict[ctenums.TechID.LIGHTNING].script)
 
     return BaseTechData(vanilla_tech_dict, alt_tech_dict, attack_dict)
+
+
+def make_aa_twins_charm(
+        base_tech_man: pctech.PCTechManager,
+        base_rom: ctrom.CTRom
+) -> TechScriptPair:
+    base_tech = base_tech_man.get_tech(ctenums.TechID.TWIN_CHARM)
+
+    base_tech.effect_headers[0].steal_chance = 100
+    base_tech.name = "Twins Charm"
+    script = animationscript.PCTechAnimationScript.read_from_ctrom(
+        base_rom, 0x51
+    )
+    cast_1 = script.main_script.caster_objects[1]
+    cast_1[1] = ac.PlayAnimationLoop(animation_id=21)
+    cast_1[5] = ac.PlayAnimationLoop(animation_id=26)
+    # marle arms in and out
+    # 16, 19, 21
+
+    # marle giggle
+    # 26, 81 (beer)
+
+    # 75 is what the ayla does normally, or maybe 105
+
+
+    return TechScriptPair(base_tech, script)
+
+
+def make_aa_twister_data(
+        base_tech_man: pctech.PCTechManager,
+        base_rom: ctrom.CTRom
+) -> TechScriptPair:
+    script = animationscript.make_aa_twister_script(base_rom)
+
+    base_tech = base_tech_man.get_tech(ctenums.TechID.ANTIPODE_3)
+    base_tech.name = "MultiTwist"
+    base_tech.target_data = ctty.PCTechTargetData(b'\x08\x00')
+    base_tech.battle_group = ctty.PCTechBattleGroup.from_charids(
+        [ctenums.CharID.AYLA, ctenums.CharID.AYLA])
+    base_tech.menu_mp_reqs = ctty.PCTechMenuMPReq(
+        bytes([ctenums.TechID.TAIL_SPIN, ctenums.TechID.TAIL_SPIN]))
+    base_tech.control_header.element = ctenums.Element.NONELEMENTAL
+    base_tech.control_header.set_effect_index(0, ctenums.TechID.TAIL_SPIN)
+    base_tech.control_header.set_effect_index(1, ctenums.TechID.TAIL_SPIN)
+
+    base_tech.graphics_header.layer3_packet_id = 0x3C
+    # base_tech.graphics_header.layer3_packet_id = 0x5A
+    # base_tech.graphics_header.assembly_packet_1 = 0x23
+    # base_tech.graphics_header.assembly_packet_2 = 0x13
+    # base_tech.graphics_header.sprite_packet_1 = 0xeb
+    # base_tech.graphics_header.sprite_packet_2 = 0x0
+    # base_tech.graphics_header.palette = 0x11
+
+    return TechScriptPair(base_tech, script)
+
+
+def make_aa_kiss_data(
+        base_tech_man: pctech.PCTechManager,
+        base_rom: ctrom.CTRom
+) -> TechScriptPair:
+    kiss = base_tech_man.get_tech(ctenums.TechID.KISS)
+
+    base_tech = base_tech_man.get_tech(ctenums.TechID.SLURP_KISS)
+    base_tech.control_header.set_effect_index(0, ctenums.TechID.KISS)
+    base_tech.control_header.set_effect_mp_only(0, False)
+    base_tech.name = "Double Kiss"
+
+    base_tech.effect_headers[0] = kiss.effect_headers[0].get_copy()
+    base_tech.effect_headers[1] = kiss.effect_headers[0].get_copy()
+    script = animationscript.make_aa_double_kiss_script(base_rom)
+
+    return TechScriptPair(base_tech, script)
 
 
 def make_amplifire_data(
@@ -159,14 +239,8 @@ def make_amplifire_data(
     base_tech.control_header.set_effect_index(0, ctenums.TechID.LASER_SPIN)
     base_tech.control_header.set_effect_index(1, ctenums.TechID.LASER_SPIN)
 
-    f1 = base_tech_man.get_tech(ctenums.TechID.CURE_BEAM)
-    base_tech.graphics_header = f1.graphics_header
-    base_tech.graphics_header.layer3_packet_id = 0x5A
-    # base_tech.graphics_header.assembly_packet_1 = 0x23
-    # base_tech.graphics_header.assembly_packet_2 = 0x13
-    # base_tech.graphics_header.sprite_packet_1 = 0xeb
-    # base_tech.graphics_header.sprite_packet_2 = 0x0
-    # base_tech.graphics_header.palette = 0x11
+    cure_beam = base_tech_man.get_tech(ctenums.TechID.CURE_BEAM)
+    base_tech.graphics_header = cure_beam.graphics_header
 
     return TechScriptPair(base_tech, pc_script)
 
@@ -175,20 +249,33 @@ def make_robo_toss_data(
         base_tech_man: pctech.PCTechManager,
         base_rom: ctrom.CTRom,
 ) -> TechScriptPair:
-    # script = animationscript.get_fixed_r_series_beast_toss_script(base_rom)
+    script = animationscript.get_fixed_r_series_beast_toss_script(base_rom)
+    tar_0 = script.main_script.target_objects[0]
+    tar_0[21] = ac.MoveToTarget(target=ac.EnumTarget.UNKNOWN_2A)
+    tar_0[22] = ac.TeleportToTarget(target=ac.EnumTarget.UNKNOWN_2A)
+
+    tar_0[27:31] = [
+        ac.PlaySound(sound=0x67),
+        ac.PerformSuperCommand(super_command=0x44)
+    ]
+
+    # tar_0[]
+
     dod_script = animationscript.EnemyTechAnimationScript.read_from_ctrom(
          base_rom, 0x43)
     sv_script = animationscript.PCTechAnimationScript.read_from_ctrom(
         base_rom, 0x41)
 
-    script = animationscript.EnemyTechAnimationScript.read_from_ctrom(
-        base_rom, 0x43
-    )
+
+    # script.main_script.target_objects[1] = None
+    # script = animationscript.EnemyTechAnimationScript.read_from_ctrom(
+    #     base_rom, 0x43
+    # )
     pc_script = animationscript.PCTechAnimationScript(
         script.main_script, script.miss_script
     )
 
-    pc_script = animationscript.make_rr_doors_of_doom_script()
+    # pc_script = animationscript.make_rr_doors_of_doom_script()
 
     # pc_script = animationscript.PCTechAnimationScript.read_from_ctrom(
     #     base_rom, 0x5F
@@ -200,14 +287,14 @@ def make_robo_toss_data(
     )
 
     # base_tech.graphics_header.layer3_packet_id = 0x3F
-    base_tech.graphics_header.assembly_packet_1 = 0x08
-    base_tech.graphics_header.assembly_packet_2 = 0x00
-    base_tech.graphics_header.sprite_packet_1 = 0xC0
-    base_tech.graphics_header.sprite_packet_2 = 0xC4
-    base_tech.graphics_header.palette = 0x04
-    base_tech.graphics_header.layer3_packet_id = 0x62
+    # base_tech.graphics_header.assembly_packet_1 = 0x08
+    # base_tech.graphics_header.assembly_packet_2 = 0x00
+    # base_tech.graphics_header.sprite_packet_1 = 0xC0
+    # base_tech.graphics_header.sprite_packet_2 = 0xC4
+    # base_tech.graphics_header.palette = 0x04
+    # base_tech.graphics_header.layer3_packet_id = 0x62
 
-    base_tech.target_data = ctty.TargetData(b'\x08\x00')
+    base_tech.target_data = ctty.TargetData(b'\x07\x00')
     base_tech.name = "Robo Toss"
 
     # base_tech.control_header.set_effect_index(0, ctenums.TechID.ROBO_TACKLE)
@@ -216,6 +303,27 @@ def make_robo_toss_data(
     )
 
     return TechScriptPair(base_tech, pc_script)
+
+
+def make_giga_bomb_data(
+        tech_man: pctech.PCTechManager,
+        ct_rom: ctrom.CTRom
+) -> TechScriptPair:
+    script = animationscript.make_rr_giga_bomb_script(ct_rom)
+    base_tech = tech_man.get_tech(ctenums.TechID.DOUBLE_BOMB)
+    base_tech.target_data = ctty.PCTechTargetData(b'\x08\x00')
+    base_tech.battle_group = ctty.PCTechBattleGroup.from_charids(
+        [ctenums.CharID.ROBO, ctenums.CharID.ROBO]
+    )
+    base_tech.control_header.set_effect_mod(0, ctenums.WeaponEffects.DMG_MAG_125)
+    base_tech.control_header.set_effect_mod(1, ctenums.WeaponEffects.DMG_MAG_125)
+    base_tech.control_header.set_effect_index(0, ctenums.TechID.AREA_BOMB)
+    base_tech.effect_headers[0] = base_tech.effect_headers[1].get_copy()
+    base_tech.name = "Gigavbomb"
+
+    base_tech.graphics_header.layer3_packet_id = 0x62
+
+    return TechScriptPair(base_tech, script)
 
 
 def make_crono_cross_data(
@@ -392,6 +500,10 @@ def build_combo_tech_profiles(
     ret_dict[("Cyclone", "Cyclone")] = base_data.alt_tech_pairs[AltTechID.CRONO_CROSS]
     ret_dict[("Robo Tackle", "Robo Tackle")] = base_data.alt_tech_pairs[AltTechID.ROBO_TOSS]
     ret_dict[("Laser Spin", "Laser Spin")] = base_data.alt_tech_pairs[AltTechID.AMPLIFIRE]
+    ret_dict[("Area Bomb", "Area Bomb")] = base_data.alt_tech_pairs[AltTechID.GIGA_BOMB]
+    ret_dict[("Tail Spin", "Tail Spin")] = base_data.alt_tech_pairs[AltTechID.MULTI_TWIST]
+    ret_dict[("Charm", "Charm")] = base_data.alt_tech_pairs[AltTechID.TWINS_CHARM]
+    ret_dict[("Kiss", "Kiss")] = base_data.alt_tech_pairs[AltTechID.DOUBLE_KISS]
 
     return ret_dict
 
@@ -503,7 +615,8 @@ def make_new_combo_techs(
             continue
 
     no_repeat_names = {
-        "Amplifire", "Robo Toss", "Double Cure", "Crono Cross"
+        "Amplifire", "Robo Toss", "Double Cure", "Crono Cross",
+        "Gigavbomb", "MultiTwist", "Twins Charm", "Double Kiss"
     }
     learn_data = build_combo_tech_profiles(base_tech_data)
     for learn_list, tech_pair in learn_data.items():
