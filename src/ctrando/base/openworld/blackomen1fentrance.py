@@ -103,4 +103,21 @@ class EventMod(locationevent.LocEventMod):
         script.set_function(obj_id, FID.STARTUP, startup)
         script.set_function(obj_id, FID.ACTIVATE, EF().add(EC.return_cmd()))
 
+        pos, cmd = script.find_command([0xD8])
+        script.data[pos+2] |= 0x80
+        script.insert_commands(EC.set_explore_mode(False).to_bytearray(), pos)
+
+        pos = script.find_exact_command(EC.set_flag(memory.Flags.BLACK_OMEN_MEGA_MUTANT_BATTLE))
+        block = (
+            EF().add(EC.set_flag(memory.Flags.BLACK_OMEN_MEGA_MUTANT_BATTLE))
+            .add(EC.set_explore_mode(True))
+        )
+        script.insert_commands(block.get_bytearray(), pos)
+        pos += len(block)
+        script.delete_commands(pos, 1)
+
+
+        for obj_id in (0x9, 0xA):
+            pos = script.get_object_start(obj_id)
+            script.delete_commands(pos, 1)
 
