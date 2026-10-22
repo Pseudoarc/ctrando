@@ -196,56 +196,26 @@ def get_random_config(
     basepatch.apply_mauron_player_tech_patch(working_rom)
     basepatch.apply_mauron_enemy_tech_patch(working_rom)
 
-    # if settings.tech_options.normalize_techs:
-    #     techrebalance.rebalance_vanilla_tech_man(config.pctech_manager)
-    #
-    # if settings.character_options.use_phys_marle:
-    #     charactermods.make_phys_marle(
-    #         config.pcstat_manager, config.pctech_manager,
-    #         config.animation_script_manager, working_rom
-    #     )
-    # if settings.character_options.use_haste_all:
-    #     charactermods.make_haste_all(config.pctech_manager,
-    #                                  config.animation_script_manager, working_rom)
-    # if settings.character_options.use_phys_lucca:
-    #     charactermods.make_phys_lucca(config.pcstat_manager, config.pctech_manager,
-    #                                   config.animation_script_manager, working_rom)
-    # if settings.character_options.use_protect_all:
-    #     charactermods.make_prot_all(config.pctech_manager,
-    #                                 config.animation_script_manager, working_rom)
-    # if settings.character_options.use_reraise:
-    #     charactermods.make_reraise(config.pctech_manager,
-    #                                config.animation_script_manager, working_rom)
-    # if settings.character_options.use_daltonized_magus:
-    #     charactermods.add_daltonized_magus_techs(config.pctech_manager,
-    #                                              config.animation_script_manager,
-    #                                              working_rom)
     staticbossscaling.modify_poison_immunity(config.enemy_data_dict)
 
+    individual_char_opt_dict: dict[ctenums.CharID, arguments.characteroptions.CharacterOptions] = {}
+    for char_id in ctenums.CharID:
+        individual_char_opt_dict[char_id] = settings.character_options.get_definite_version(rng)
+
     ### Techs
-    # elementrando.apply_full_tech_rando(
-    #     config.pctech_manager, config.animation_script_manager,
-    #     config.item_db,
-    #     working_rom, settings.character_options,
-    #     config.pcstat_manager, rng
-    # )
-    # pctechrandomizer.modify_all_single_tech_powers(
-    #     config.pctech_manager, settings.tech_options,
-    #     settings.tech_options.custom_damage_mps, rng
-    # )
-    config.char_reassignment_dict = charrando.get_char_reassign_dict(rng)
+    config.char_reassignment_dict = charrando.get_char_reassign_dict(settings.character_options, rng)
     # config.char_reassignment_dict[ctenums.CharID.MARLE] = ctenums.CharID.MAGUS
     charrando.modify_base_equipability(config.item_db, config.char_reassignment_dict)
 
     new_tech_man, new_script_man = techreassign.get_reassign_techs_scripts(
         working_rom, config.char_reassignment_dict,
-        settings.character_options, settings.tech_options,
+        individual_char_opt_dict, settings.tech_options,
         rng
     )
     charrando.reassign_characters_config(
         config.char_reassignment_dict,
         config.pcstat_manager,
-        settings.character_options
+        individual_char_opt_dict,
     )
 
     config.pctech_manager = new_tech_man
@@ -271,7 +241,7 @@ def get_random_config(
     config.recruit_dict = recruitwriter.get_random_recruit_assignment_dict(
         settings.plando_options.recruit_assignment, rng)
 
-    config.recruit_dict[ctenums.RecruitID.CATHEDRAL] = [ctenums.CharID.CRONO]
+    # config.recruit_dict[ctenums.RecruitID.CATHEDRAL] = [ctenums.CharID.CRONO]
 
     ### Boss/Midboss
     config.boss_assignment_dict = bossrando.get_random_boss_assignment(settings.boss_rando_options, rng)
@@ -890,8 +860,6 @@ def main():
     except ValueError as exc:
         print(exc, file=sys.stderr)
         sys.exit(-2)
-
-    x = settings.get_argument_spec()
 
     list_type = settings.general_options.list_keys
 

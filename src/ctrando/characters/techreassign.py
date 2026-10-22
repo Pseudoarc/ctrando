@@ -172,8 +172,6 @@ def make_aa_twins_charm(
     # 26, 81 (beer)
 
     # 75 is what the ayla does normally, or maybe 105
-
-
     return TechScriptPair(base_tech, script)
 
 
@@ -195,12 +193,6 @@ def make_aa_twister_data(
     base_tech.control_header.set_effect_index(1, ctenums.TechID.TAIL_SPIN)
 
     base_tech.graphics_header.layer3_packet_id = 0x3C
-    # base_tech.graphics_header.layer3_packet_id = 0x5A
-    # base_tech.graphics_header.assembly_packet_1 = 0x23
-    # base_tech.graphics_header.assembly_packet_2 = 0x13
-    # base_tech.graphics_header.sprite_packet_1 = 0xeb
-    # base_tech.graphics_header.sprite_packet_2 = 0x0
-    # base_tech.graphics_header.palette = 0x11
 
     return TechScriptPair(base_tech, script)
 
@@ -214,6 +206,7 @@ def make_aa_kiss_data(
     base_tech = base_tech_man.get_tech(ctenums.TechID.SLURP_KISS)
     base_tech.control_header.set_effect_index(0, ctenums.TechID.KISS)
     base_tech.control_header.set_effect_mp_only(0, False)
+    base_tech.control_header.set_effect_index(1, ctenums.TechID.KISS)
     base_tech.name = "Double Kiss"
 
     base_tech.effect_headers[0] = kiss.effect_headers[0].get_copy()
@@ -259,45 +252,18 @@ def make_robo_toss_data(
         ac.PerformSuperCommand(super_command=0x44)
     ]
 
-    # tar_0[]
-
-    dod_script = animationscript.EnemyTechAnimationScript.read_from_ctrom(
-         base_rom, 0x43)
-    sv_script = animationscript.PCTechAnimationScript.read_from_ctrom(
-        base_rom, 0x41)
-
-
-    # script.main_script.target_objects[1] = None
-    # script = animationscript.EnemyTechAnimationScript.read_from_ctrom(
-    #     base_rom, 0x43
-    # )
     pc_script = animationscript.PCTechAnimationScript(
         script.main_script, script.miss_script
     )
-
-    # pc_script = animationscript.make_rr_doors_of_doom_script()
-
-    # pc_script = animationscript.PCTechAnimationScript.read_from_ctrom(
-    #     base_rom, 0x5F
-    # )
 
     base_tech = base_tech_man.get_tech(ctenums.TechID.BEAST_TOSS)
     base_tech.battle_group = ctty.PCTechBattleGroup.from_charids(
         [ctenums.CharID.ROBO, ctenums.CharID.ROBO]
     )
 
-    # base_tech.graphics_header.layer3_packet_id = 0x3F
-    # base_tech.graphics_header.assembly_packet_1 = 0x08
-    # base_tech.graphics_header.assembly_packet_2 = 0x00
-    # base_tech.graphics_header.sprite_packet_1 = 0xC0
-    # base_tech.graphics_header.sprite_packet_2 = 0xC4
-    # base_tech.graphics_header.palette = 0x04
-    # base_tech.graphics_header.layer3_packet_id = 0x62
-
     base_tech.target_data = ctty.TargetData(b'\x07\x00')
     base_tech.name = "Robo Toss"
 
-    # base_tech.control_header.set_effect_index(0, ctenums.TechID.ROBO_TACKLE)
     base_tech.menu_mp_reqs = ctty.PCTechMenuMPReq(
         bytes([ctenums.TechID.ROBO_TACKLE, ctenums.TechID.ROBO_TACKLE])
     )
@@ -576,14 +542,14 @@ def make_new_combo_techs(
         base_tech_data: BaseTechData,
         reassign_dict: dict[ctenums.CharID, ctenums.CharID],
         single_tech_assign_dict: dict[ctenums.CharID, list[TechScriptPair]],
-        char_options: characteroptions.CharacterOptions
+        char_opt_dict: dict[ctenums.CharID, characteroptions.CharacterOptions],
 ) -> dict[frozenset[ctenums.CharID], list[TechScriptPair]]:
     """
     Make new combo techs given single tech assignment.
     :param base_tech_data: All vanilla techs and scripts
     :param reassign_dict: Assignment of char_id to new identity
     :param single_tech_assign_dict: Current assignment of character single techs
-    :param char_options: CharacterOptions (mods like Magus duals)
+    :param char_opt_dict: CharacterOptions (mods like Magus duals) per character
     :return:
     """
 
@@ -633,10 +599,17 @@ def make_new_combo_techs(
             if len(group) != num_pcs:
                 continue
 
-            reassign_list = [reassign_dict[x] for x in char_selection]
-            if ctenums.CharID.MAGUS in reassign_list and (
-                num_pcs == 3 or not char_options.use_magus_dual_techs
-            ):
+            skip_selection: bool = False
+            reassign_list = [reassign_dict[char_id] for char_id in char_selection ]
+            for char_id, reassign_id in zip(char_selection, reassign_list):
+                reassign_id = reassign_dict[char_id]
+
+                if reassign_id == ctenums.CharID.MAGUS:
+                    if len(char_selection) == 3 or not char_opt_dict[char_id].use_daltonized_magus:
+                        skip_selection = True
+                        break
+
+            if skip_selection:
                 continue
 
             if tech_pair.tech.name in no_repeat_names:
@@ -711,7 +684,7 @@ def chaos_reassign_elemental_single_techs(
     num_replacements = sum(num_replacement_dict.values())
     num_base_copies, num_overflow = divmod(num_replacements, len(base_tech_ids))
     overflow_ids = rng.sample(base_tech_ids, k=num_overflow)
-    replacements = num_replacements*base_tech_ids + overflow_ids
+    replacements = num_base_copies*base_tech_ids + overflow_ids
 
     unique_replacement_dict: dict[ctenums.TechID, int] = dict()
     for tech_id in replacements:
@@ -744,12 +717,13 @@ def chaos_reassign_elemental_single_techs(
             tech_assignments[char_id].append(tech_id)
             num_replacement_dict[char_id] -= 1
 
-
-
     for char_id, tech_assignment_list in tech_assignments.items():
+        reassign_id = char_reassign_dict[char_id]
         for ind, tech_pair in enumerate(single_tech_assignment[char_id]):
             if tech_pair.tech.name in base_element_names:
                 new_id = tech_assignment_list.pop()
+                if reassign_id == ctenums.CharID.MAGUS:
+                    new_id = magus_replacements.get(new_id, new_id)
                 orig_pc = ctenums.CharID(tech_pair.tech.battle_group[0])
                 new_pair = base_data.vanilla_tech_pairs[new_id]
                 tech = reassign_single_tech(new_pair.tech, char_id)
@@ -898,7 +872,7 @@ def do_element_sigle_tech_assignment(
 def get_reassign_techs_scripts(
         base_rom: ctrom.CTRom,
         char_reassign_dict: dict[ctenums.CharID, ctenums.CharID],
-        char_opts: characteroptions.CharacterOptions,
+        char_opt_dict: dict[ctenums.CharID, characteroptions.CharacterOptions],
         tech_opts: techoptions.TechOptions,
         rng: random.RNGType  # For choosing when too many techs
 ) -> tuple[pctech.PCTechManager, animationscript.AnimationScriptManager]:
@@ -910,11 +884,11 @@ def get_reassign_techs_scripts(
     single_tech_assignment: dict[ctenums.CharID, list[TechScriptPair]] = dict()
     for char_id, reassign_id in char_reassign_dict.items():
         single_tech_assignment[char_id] = collect_single_techs(
-            base_data, char_id, reassign_id, char_opts
+            base_data, char_id, reassign_id, char_opt_dict[char_id]
         )
 
     do_element_sigle_tech_assignment(
-        base_data, single_tech_assignment, char_reassign_dict, char_opts,
+        base_data, single_tech_assignment, char_reassign_dict, char_opt_dict[ctenums.CharID.CRONO],
         tech_opts, rng
     )
 
@@ -950,7 +924,8 @@ def get_reassign_techs_scripts(
     }
 
     combo_tech_pairs = make_new_combo_techs(
-        base_data, char_reassign_dict, single_tech_assignment, char_opts
+        base_data, char_reassign_dict, single_tech_assignment,
+        char_opt_dict
     )
 
     for group, tech_pairs in combo_tech_pairs.items():

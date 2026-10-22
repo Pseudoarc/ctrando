@@ -60,27 +60,27 @@ def assign_pc_to_spot(
     script.delete_commands(pos, 1)
 
     # Comment Below here to remove anim checker
-    obj_id = script.append_copy_object(pc_obj_id)
-    pos, _ = script.find_command([0x8B], script.get_object_start(obj_id))
-    script.data[pos+1:pos+3] = [0xA, 0x1B]
-
-    pos = script.find_exact_command(EC.set_own_drawing_status(False), pos)
-    script.delete_commands(pos, 1)
-
-    act_fn = EF()
-    act_fn.add(EC.set_own_facing("down"))
-
-    new_str = script.add_py_string("Anim: {value 8}{null}")
-
-    for ind in range(0xC0, 0x100):
-        act_fn.add(EC.assign_val_to_mem(ind, 0x7E0200, 1))
-        # act_fn.add(EC.static_animation(ind))
-        act_fn.add(EC.play_animation(ind))
-        act_fn.add(EC.auto_text_box(new_str))
-
-    act_fn.add(EC.return_cmd())
-
-    script.set_function(obj_id, FID.ACTIVATE, act_fn)
+    # obj_id = script.append_copy_object(pc_obj_id)
+    # pos, _ = script.find_command([0x8B], script.get_object_start(obj_id))
+    # script.data[pos+1:pos+3] = [0xA, 0x1B]
+    #
+    # pos = script.find_exact_command(EC.set_own_drawing_status(False), pos)
+    # script.delete_commands(pos, 1)
+    #
+    # act_fn = EF()
+    # act_fn.add(EC.set_own_facing("down"))
+    #
+    # new_str = script.add_py_string("Anim: {value 8}{null}")
+    #
+    # for ind in range(0xC0, 0x100):
+    #     act_fn.add(EC.assign_val_to_mem(ind, 0x7E0200, 1))
+    #     # act_fn.add(EC.static_animation(ind))
+    #     act_fn.add(EC.play_animation(ind))
+    #     act_fn.add(EC.auto_text_box(new_str))
+    #
+    # act_fn.add(EC.return_cmd())
+    #
+    # script.set_function(obj_id, FID.ACTIVATE, act_fn)
 
 
 def get_post_battle_scene() -> EF:

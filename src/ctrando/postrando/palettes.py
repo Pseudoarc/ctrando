@@ -1558,6 +1558,7 @@ def build_magus_loc_palette(
             orig_loc_palette[MarlePaletteIndex.HAIR_DARKEST], 0.5)
 
     elif orig_pc_id == ctenums.CharID.LUCCA:
+        new_palette[MagusPaletteIndex.HAIR_LIGHT] = orig_loc_palette[LuccaPaletteIndex.HAIR_LIGHT]
         new_palette[MagusPaletteIndex.HAIR_MID] = blend(
             orig_loc_palette[LuccaPaletteIndex.HAIR_LIGHT],
             orig_loc_palette[LuccaPaletteIndex.HAIR_DARK], 0.5

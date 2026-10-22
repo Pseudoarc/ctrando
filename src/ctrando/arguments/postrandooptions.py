@@ -34,6 +34,13 @@ class Lightning2Replacement(enum.StrEnum):
     MUTE = "mute"  # 0x0E
     NIZBEL_RELEASE = "nizbel_release"  #0xCC
 
+
+class ReassignPaletteScheme(enum.StrEnum):
+    USE_BASE = "use_base"
+    USE_REASSIGN = "use_reassign"
+    TRANSFER_BASE = "transfer_base"
+
+
 _effect_id_dict: dict[Lightning2Replacement, int] = {
     Lightning2Replacement.NO_CHANGE: -1,
     Lightning2Replacement.MUTE: 0x0E,
@@ -55,7 +62,7 @@ class PostRandoOptions:
         "crono_palette", "marle_palette", "lucca_palette", "robo_palette",
         "frog_palette", "ayla_palette", "magus_palette",
         "ending", "remove_flashes", "use_l_select_warp", "use_msu1",
-        "alt_lightning2"
+        "alt_lightning2", "character_palette_reassign_scheme"
     )
     _default_fast_loc_movement: typing.ClassVar[bool] = False
     _default_fast_ow_movement: typing.ClassVar[bool] = False
@@ -130,6 +137,7 @@ class PostRandoOptions:
     use_l_select_warp: bool = False
     use_msu1: bool = False
     alt_lightning2: Lightning2Replacement = _default_lightning2_replacement
+    character_palette_reassign_scheme: ReassignPaletteScheme = ReassignPaletteScheme.TRANSFER_BASE
 
     def __post_init__(self):
         self.battle_speed = sorted([1, int(self.battle_speed), 8])[1]
@@ -189,6 +197,10 @@ class PostRandoOptions:
         ret_dict["alt_lightning2"] = argumenttypes.arg_from_enum(
             Lightning2Replacement, Lightning2Replacement.NO_CHANGE,
             "Alternate sound effect for lightning 2"
+        )
+        ret_dict["character_palette_reassign_scheme"] = argumenttypes.arg_from_enum(
+            ReassignPaletteScheme, ReassignPaletteScheme.TRANSFER_BASE,
+            "How to modify palettes when character identities are randomized"
         )
 
         return ret_dict
@@ -284,7 +296,7 @@ class PostRandoOptions:
         )
 
         spec = cls.get_argument_spec()
-        args = ["use_l_select_warp", "use_msu1", "alt_lightning2"]
+        args = ["use_l_select_warp", "use_msu1", "alt_lightning2", "character_palette_reassign_scheme"]
         for arg in args:
             spec[arg].add_to_argparse(argumenttypes.attr_name_to_arg_name(arg),
                                       group)

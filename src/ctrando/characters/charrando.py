@@ -4,6 +4,7 @@ import dataclasses
 import functools
 import typing
 
+import itertools
 from ctrando.arguments import characteroptions
 from ctrando.asm import assemble, instructions as inst
 from ctrando.asm.instructions import AddressingMode as AM
@@ -190,26 +191,29 @@ def reassign_graphics(
 def reassign_characters_config(
         char_reassign_dict: dict[ctenums.CharID, ctenums.CharID],
         pc_stats: ctpcstats.PCStatsManager,
-        char_opts: characteroptions.CharacterOptions
+        char_opt_dict: dict[ctenums.CharID, characteroptions.CharacterOptions]
 ):
-
-    if char_opts.use_phys_lucca:
-        pc_stats.set_stat_growth(ctenums.CharID.LUCCA, ctpcstats.PCStat.HIT, 140)
-    if char_opts.use_phys_marle:
-        pc_stats.set_stat_growth(ctenums.CharID.MARLE, ctpcstats.PCStat.HIT, 140)
-
 
     orig_stats: dict[ctenums.CharID, ctpcstats.PCStatData] = {}
     for char_id in ctenums.CharID:
         orig_stats[char_id] = copy.deepcopy(pc_stats.pc_stat_dict[char_id])
 
     for char_id, reassign_id in char_reassign_dict.items():
-        new_stats = copy.deepcopy(orig_stats[reassign_id])
+        char_opts = char_opt_dict[char_id]
+        if char_opts.character_reassign_keep_stats:
+            target_id = char_id
+        else:
+            target_id = reassign_id
+
+        new_stats = copy.deepcopy(orig_stats[target_id])
+        if target_id == ctenums.CharID.LUCCA and char_opts.use_phys_lucca:
+            new_stats.stat_growth.set_stat_growth(ctpcstats.PCStat.HIT, 140)
+        if target_id == ctenums.CharID.MARLE and char_opts.use_phys_marle:
+            new_stats.stat_growth.set_stat_growth(ctpcstats.PCStat.HIT, 140)
         new_stats.stat_block.char_id = char_id
 
         pc_stats.pc_stat_dict[char_id] = new_stats
         pc_stats.set_character_assignment(char_id, reassign_id)
-
 
 
 def reassign_characters(
@@ -313,16 +317,36 @@ def fix_pc_tech_targets(
     asmpatcher.apply_jmp_patch(magus_bh_rt, hook_addr, ct_rom, None, 0x410000)
 
 def get_char_reassign_dict(
+        char_opts: characteroptions.CharacterOptions,
         rng: RNGType
 ) -> dict[ctenums.CharID, ctenums.CharID]:
-    char_list = list(ctenums.CharID)
+    # return { char_id: ctenums.CharID.MAGUS for char_id in ctenums.CharID}
 
-    x = { char_id: ctenums.CharID.AYLA for char_id in ctenums.CharID}
-    # x[ctenums.CharID.MARLE] = ctenums.CharID.AYLA
-    return x
-    return {
-        char_id: rng.choice(char_list) for char_id in ctenums.CharID
-    }
+    char_rando_scheme = char_opts.character_identity_randomization
+    if char_rando_scheme == characteroptions.CharacterIdentityRandoScheme.VANILLA:
+        return {x:x for x in ctenums.CharID}
+
+    choice_dict = char_opts.get_choice_dict()
+
+    if char_rando_scheme == characteroptions.CharacterIdentityRandoScheme.SHUFFLE:
+        choices = [choice_dict[x] for x in ctenums.CharID]
+        choice_tuples = [
+            x for x in itertools.product(*choices)
+            if len(set(x)) == len(ctenums.CharID)
+        ]
+        if not choice_tuples:
+            raise ValueError("No valid character assignment")
+        choice = rng.choice(choice_tuples)
+        return dict(zip(ctenums.CharID, choice))
+
+    if char_rando_scheme == characteroptions.CharacterIdentityRandoScheme.RANDOM:
+        ret_dict: dict[ctenums.CharID, ctenums.CharID] = dict()
+        for char_id in ctenums.CharID:
+            ret_dict[char_id] = rng.choice(choice_dict[char_id])
+
+        return ret_dict
+
+    raise ValueError
 
 
 def fix_overworld_sprites(
