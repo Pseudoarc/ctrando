@@ -2,7 +2,6 @@
 import copy
 from importlib.resources import files
 
-from ctrando import enemyai
 from ctrando.common.ctenums import EnemyID, ItemID
 from ctrando.enemyai.enemyaimanager import EnemyAIManager
 import ctrando.enemyai.enemyaitypes as aitypes
@@ -44,10 +43,6 @@ def fix_dino_slash_scripts(
         tech_id=2,  # Slash Vanilla ID
         is_not_equal=False
     )
-
-
-    # repl_condition = target_condition.get_copy()
-    # repl_condition.tech_id = new_slash_id
 
     for enemy_id in slash_weak_ids:
         script = ai_manager.script_dict[enemy_id]

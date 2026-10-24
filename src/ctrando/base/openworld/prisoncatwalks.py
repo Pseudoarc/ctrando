@@ -265,19 +265,6 @@ class EventMod(locationevent.LocEventMod):
             EC.call_obj_function(0, FID.ARBITRARY_0, 4, FS.CONT)
         )
 
-        # new_calls = (
-        #     EF()
-        #     .add_if_else(
-        #         EC.if_mem_op_value(memory.Memory.CRONO_TRIAL_PC1,
-        #                            OP.EQUALS, 0, 1),
-        #         EF().add(EC.call_obj_function(
-        #             cls.crono_obj, FID.ARBITRARY_1, 6, FS.HALT)),
-        #         EF().add(EC.call_obj_function(
-        #             cls.crono_obj, FID.ARBITRARY_2, 6, FS.HALT))
-        #     ).add(EC.party_follow())
-        #     .add(EC.set_explore_mode(True))
-        #     .add(EC.return_cmd())
-        # )
         script.set_function(0, FID.ARBITRARY_0, cls.make_tank_kill_func([ctenums.CharID.CRONO]))
 
 

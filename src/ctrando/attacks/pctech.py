@@ -1545,7 +1545,6 @@ class PCTechManager:
 
         ct_rom.seek(learn_req_start)
         learn_req_b = learn_req_buf.getvalue()
-
         ct_rom.write(learn_req_b, ctrom.freespace.FSWriteType.MARK_USED)
         ct_rom.write(learn_ref_buf.getvalue(), ctrom.freespace.FSWriteType.MARK_USED)
 

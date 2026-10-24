@@ -679,9 +679,9 @@ class StoreTargetCoordinatesWithOffset(AnimationCommand):
     y_offset = cty.byte_prop(3)
 
     def __init__(self, *args,
-                 target: int = None,
-                 x_offset: int = None,
-                 y_offset: int = None,
+                 target: int | None = None,
+                 x_offset: int | None = None,
+                 y_offset: int | None = None,
                  **kwargs):
         AnimationCommand.__init__(self,*args, **kwargs)
         self._set_properties(
@@ -709,7 +709,6 @@ class LoadSpriteAtTarget45(LoadSpriteAtTarget):
 class LoadSpriteAtTarget46(LoadSpriteAtTarget):
     SIZE = 2
     CMD_ID = 0x46
-
 
 
 # 47 tt Store Target tt to RAM at $7E:A4EC
@@ -1069,8 +1068,8 @@ class SetAngleBetweenTargets(AnimationCommand):
     destination_target = cty.byte_prop(2, ret_type=EnumTarget)
 
     def __init__(self, *args,
-                 source_target: int = None,
-                 destination_target: int = None,
+                 source_target: int | None = None,
+                 destination_target: int | None = None,
                  **kwargs):
         AnimationCommand.__init__(self, *args, **kwargs)
         self._set_properties(
@@ -1189,7 +1188,7 @@ class StoreTargetTo7E4AE8(AnimationCommand):
 
     target = cty.byte_prop(1, ret_type=EnumTarget)
 
-    def __init__(self, *args, target: int = None, **kwargs):
+    def __init__(self, *args, target: int | None = None, **kwargs):
         AnimationCommand.__init__(self, *args, **kwargs)
         self._set_properties(
             ("target", target),
@@ -1203,7 +1202,7 @@ class StoreTargetTo7E4AE9(AnimationCommand):
 
     target = cty.byte_prop(1, ret_type=EnumTarget)
 
-    def __init__(self, *args, target: int = None, **kwargs):
+    def __init__(self, *args, target: int | None = None, **kwargs):
         AnimationCommand.__init__(self, *args, **kwargs)
         self._set_properties(
             ("target", target),
@@ -1232,7 +1231,7 @@ class StoreTargetTo7E4AEB(AnimationCommand):
 
     target = cty.byte_prop(1, ret_type=EnumTarget)
 
-    def __init__(self, *args, target: int = None, **kwargs):
+    def __init__(self, *args, target: int | None = None, **kwargs):
         AnimationCommand.__init__(self, *args, **kwargs)
         self._set_properties(
             ("target", target),
@@ -1246,7 +1245,7 @@ class SetAngle(AnimationCommand):
 
     angle = cty.byte_prop(1)
 
-    def __init__(self, *args, angle: int = None, **kwargs):
+    def __init__(self, *args, angle: int | None = None, **kwargs):
         AnimationCommand.__init__(self,*args, **kwargs)
         self._set_properties(
             ("angle", angle)

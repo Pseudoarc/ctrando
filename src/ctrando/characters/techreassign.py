@@ -840,7 +840,7 @@ def sort_tech_pair_list(
     return tech_pair_list
 
 
-def do_element_sigle_tech_assignment(
+def do_element_single_tech_assignment(
         base_data: BaseTechData,
         single_tech_assignment: dict[ctenums.CharID, list[TechScriptPair]],
         char_reassign_dict: dict[ctenums.CharID, ctenums.CharID],
@@ -887,10 +887,8 @@ def get_reassign_techs_scripts(
             base_data, char_id, reassign_id, char_opt_dict[char_id]
         )
 
-    do_element_sigle_tech_assignment(
-        base_data, single_tech_assignment, char_reassign_dict, char_opt_dict[ctenums.CharID.CRONO],
-        tech_opts, rng
-    )
+    do_element_single_tech_assignment(base_data, single_tech_assignment, char_reassign_dict,
+                                      char_opt_dict[ctenums.CharID.CRONO], tech_opts, rng)
 
     new_tech_man = pctech.PCTechManager()
     orig_attacks: dict[ctenums.CharID, pctech.PCAttack] = dict()

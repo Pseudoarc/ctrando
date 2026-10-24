@@ -4,12 +4,10 @@ from collections.abc import Callable
 from importlib.resources import files
 import io
 import random
-from logging import config
 
 from ctrando.arguments import postrandooptions
 from ctrando.base.basepatch import apply_fast_ow_movement
 from ctrando.common import byteops, ctenums, ctrom, memory, cttypes as cty
-
 from ctrando.overworlds.owmanager import OWManager
 from ctrando.locations.scriptmanager import ScriptManager
 from ctrando.locations.locationevent import LocationEvent, FunctionID as FID
@@ -161,9 +159,6 @@ def write_palettes(
         palette.write_to_ctrom(ct_rom, ind)
 
     ow_pc_palettes = palettes.OWPallete.read_from_ct_rom(ct_rom, 0)
-    # from ctrando.common import byteops
-    # byteops.print_bytes(ow_pc_palettes.to_bytes(), 0x10)
-    # input()
 
     defaults = postrandooptions.PostRandoOptions()
     default_palettes = [
@@ -205,20 +200,6 @@ def write_palettes(
 
             portait_palette = portrait_palette_builder(new_palette)
             portait_palette.write_to_ctrom(ct_rom, portrait_id)
-
-
-    # for ind, (
-    #         new_palette, default_palette, ow_palette_builder,
-    #         portrait_palette_builder, portrait_id
-    # ) in \
-    #         enumerate(zip(char_palettes, default_palettes, ow_palette_builders,
-    #                 portrait_palette_builders, portait_ids)):
-    #     if new_palette != default_palette:
-    #         ow_palette = ow_palette_builder(new_palette)
-    #         ow_pc_palettes.set_pc_palette(ind, ow_palette)
-    #
-    #         portait_palette = portrait_palette_builder(new_palette)
-    #         portait_palette.write_to_ctrom(ct_rom, portrait_id)
 
     ow_pc_palettes.write_to_ctrom(ct_rom, 0)
 

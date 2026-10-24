@@ -1,7 +1,6 @@
 """Module for allowing duplicate characters"""
 import copy
 import dataclasses
-import functools
 import typing
 
 import itertools

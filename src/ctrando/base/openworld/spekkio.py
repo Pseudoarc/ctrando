@@ -1,9 +1,6 @@
 """Openworld Spekkio"""
-from dataclasses import dataclass
-
 from ctrando.base import openworldutils as owu
 from ctrando.common import ctenums, memory
-from ctrando.attacks.elementrando import TechElement
 from ctrando.locations import locationevent
 from ctrando.locations.eventcommand import EventCommand as EC, FuncSync as FS, \
     Operation as OP, Facing, get_command

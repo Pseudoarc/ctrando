@@ -15,6 +15,7 @@ class EventMod(locationevent.LocEventMod):
         """
         Update the Algetty Inn Event.
         - Add partyfollows
+        - Give Magus arbs to sleep properly
         """
 
         owu.add_exploremode_to_partyfollows(script)

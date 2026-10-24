@@ -55,7 +55,7 @@ def assign_pc_to_spot(
     script.set_function(pc_obj_id, FID.ARBITRARY_3, jump_fn)
 
     scale_block =  owu.get_level_techlevel_set_function(
-        char_id, scale_level_to_lead, scale_techlevel_to_lead, scale_gear,
+        char_id, reassign_id, scale_level_to_lead, scale_techlevel_to_lead, scale_gear,
         min_level, min_techlevel
     )
 

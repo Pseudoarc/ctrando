@@ -6,7 +6,6 @@ from ctrando.common import asmpatcher, byteops, ctenums, cttypes as cty, ctrom
 from ctrando.common.freespace import FSWriteType
 
 from ctrando.attacks import pctech
-from ctrando.items import itemdata
 
 
 class EffectMod(cty.SizedBinaryData):
@@ -321,14 +320,6 @@ def expand_effect_mods(
     """
 
     effects = gather_vanilla_effects(ct_rom)
-    # orb_mp = 8
-    # for tech_id in range(1+6*8, 1+7*8):
-    #     tech = tech_man.get_tech(tech_id)
-    #     if tech.name == "Iron Orb":
-    #         orb_mp = tech.effect_mps[0]
-    #         break
-    #
-    # orb_percent = pctech.get_iron_orb_percent(orb_mp)
     additional_effects, additional_effect_routines = gather_new_effects_and_rts()
 
     effects += additional_effects

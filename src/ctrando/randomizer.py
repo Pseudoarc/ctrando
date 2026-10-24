@@ -19,11 +19,11 @@ from ctrando.logic import logictweaks, logictypes
 from ctrando.shops import shoptypes, shoprando, shopchars
 
 from ctrando.attacks import (
-    pctechrandomizer, techdescriptions, techmenu, techrebalance,
+    pctechrandomizer, techdescriptions, techmenu,
 )
 from ctrando.bosses import staticbossscaling, bossrando, bosstypes, lavosgauntlettypes, lavosgauntlet
 from ctrando.base import basepatch, xptpmod, modifymaps, chesttext, multiworld
-from ctrando.characters import characterwriter, charactermods, techreassign, charrando
+from ctrando.characters import characterwriter, techreassign, charrando
 from ctrando.common import ctrom, ctenums, randostate
 from ctrando.common.random import RNGType
 
@@ -212,11 +212,17 @@ def get_random_config(
         individual_char_opt_dict, settings.tech_options,
         rng
     )
+    elem_assignment = elementrando.read_elem_assignment(
+        config.char_reassignment_dict, new_tech_man,
+        settings.character_options.tech_rando_scheme
+    )
     charrando.reassign_characters_config(
         config.char_reassignment_dict,
         config.pcstat_manager,
         individual_char_opt_dict,
     )
+    elementrando.write_elem_resistances(config.pcstat_manager, elem_assignment)
+    elementrando.update_rock_usability(new_tech_man, config.item_db)
 
     config.pctech_manager = new_tech_man
     config.animation_script_manager = new_script_man
@@ -543,6 +549,8 @@ def get_ctrom_from_config(
         settings.scaling_options.static_scaling_options.static_boss_hp_scale,
         settings.scaling_options.static_scaling_options.static_hp_scale_lavos
     )
+    staticbossscaling.set_element_safety_level(post_config.enemy_ai_manager,
+                                               settings.scaling_options.static_scaling_options.element_safety_level)
 
     if settings.enemy_options.normalize_enemies:
         enemyrebalance.normalize_bosses(
