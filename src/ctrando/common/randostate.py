@@ -81,6 +81,7 @@ class ConfigState:
     enemy_assign_dict: dict[ctenums.EnemyID, ctenums.EnemyID]
     animation_script_manager: animationscript.AnimationScriptManager
     omen_elevator_data: encountertypes.OmenElevatorData
+    char_reassignment_dict: dict[ctenums.CharID, ctenums.CharID]
 
     @classmethod
     def get_default_config_from_ctrom(cls, ct_rom: ctrom.CTRom):
@@ -156,12 +157,14 @@ class ConfigState:
             True, True, True, True, True, True
         )
 
+        char_reassignment_dict = {x:x for x in ctenums.CharID}
+
         return cls(
             item_db, treasure_assignment, pcstat_manager,
             pctech_manager, enemy_data_dict, boss_assignment_dict,
             shop_manager, recruit_dict, ow_exit_assignment_dict, region_map,
             starting_rewards, objectives, enemy_assign_dict,
-            animation_script_manager, omen_elevators
+            animation_script_manager, omen_elevators, char_reassignment_dict
         )
 
 

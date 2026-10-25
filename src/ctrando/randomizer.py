@@ -19,11 +19,11 @@ from ctrando.logic import logictweaks, logictypes
 from ctrando.shops import shoptypes, shoprando, shopchars
 
 from ctrando.attacks import (
-    pctechrandomizer, techdescriptions, techmenu, techrebalance
+    pctechrandomizer, techdescriptions, techmenu,
 )
 from ctrando.bosses import staticbossscaling, bossrando, bosstypes, lavosgauntlettypes, lavosgauntlet
 from ctrando.base import basepatch, xptpmod, modifymaps, chesttext, multiworld
-from ctrando.characters import characterwriter, charactermods
+from ctrando.characters import characterwriter, techreassign, charrando
 from ctrando.common import ctrom, ctenums, randostate
 from ctrando.common.random import RNGType
 
@@ -167,7 +167,7 @@ def extract_settings(*in_args: str) -> arguments.Settings:
     args = parser.parse_args(list(in_args) + additional_args)
 
     settings = arguments.Settings.extract_from_namespace(args)
-    # print(f"Seed: {settings.general_options.seed}")
+    print(f"Seed: {settings.general_options.seed}")
 
     if settings.general_options.multiworld:
         settings.treasure_options.split_linked_chests = True
@@ -196,43 +196,36 @@ def get_random_config(
     basepatch.apply_mauron_player_tech_patch(working_rom)
     basepatch.apply_mauron_enemy_tech_patch(working_rom)
 
-    if settings.tech_options.normalize_techs:
-        techrebalance.rebalance_vanilla_tech_man(config.pctech_manager)
+    staticbossscaling.modify_poison_immunity(config.enemy_data_dict)
 
-    if settings.character_options.use_phys_marle:
-        charactermods.make_phys_marle(
-            config.pcstat_manager, config.pctech_manager,
-            config.animation_script_manager, working_rom
-        )
-    if settings.character_options.use_haste_all:
-        charactermods.make_haste_all(config.pctech_manager,
-                                     config.animation_script_manager, working_rom)
-    if settings.character_options.use_phys_lucca:
-        charactermods.make_phys_lucca(config.pcstat_manager, config.pctech_manager,
-                                      config.animation_script_manager, working_rom)
-    if settings.character_options.use_protect_all:
-        charactermods.make_prot_all(config.pctech_manager,
-                                    config.animation_script_manager, working_rom)
-    if settings.character_options.use_reraise:
-        charactermods.make_reraise(config.pctech_manager,
-                                   config.animation_script_manager, working_rom)
-    if settings.character_options.use_daltonized_magus:
-        charactermods.add_daltonized_magus_techs(config.pctech_manager,
-                                                 config.animation_script_manager,
-                                                 working_rom)
-        staticbossscaling.modify_poison_immunity(config.enemy_data_dict)
+    individual_char_opt_dict: dict[ctenums.CharID, arguments.characteroptions.CharacterOptions] = {}
+    for char_id in ctenums.CharID:
+        individual_char_opt_dict[char_id] = settings.character_options.get_definite_version(rng)
 
     ### Techs
-    elementrando.apply_full_tech_rando(
-        config.pctech_manager, config.animation_script_manager,
-        config.item_db,
-        working_rom, settings.character_options,
-        config.pcstat_manager, rng
+    config.char_reassignment_dict = charrando.get_char_reassign_dict(settings.character_options, rng)
+    # config.char_reassignment_dict[ctenums.CharID.MARLE] = ctenums.CharID.MAGUS
+    charrando.modify_base_equipability(config.item_db, config.char_reassignment_dict)
+
+    new_tech_man, new_script_man = techreassign.get_reassign_techs_scripts(
+        working_rom, config.char_reassignment_dict,
+        individual_char_opt_dict, settings.tech_options,
+        rng
     )
-    pctechrandomizer.modify_all_single_tech_powers(
-        config.pctech_manager, settings.tech_options,
-        settings.tech_options.custom_damage_mps, rng
+    elem_assignment = elementrando.read_elem_assignment(
+        config.char_reassignment_dict, new_tech_man,
+        settings.character_options.tech_rando_scheme
     )
+    charrando.reassign_characters_config(
+        config.char_reassignment_dict,
+        config.pcstat_manager,
+        individual_char_opt_dict,
+    )
+    elementrando.write_elem_resistances(config.pcstat_manager, elem_assignment)
+    elementrando.update_rock_usability(new_tech_man, config.item_db)
+
+    config.pctech_manager = new_tech_man
+    config.animation_script_manager = new_script_man
 
     techdescriptions.update_all_tech_descs(config.pctech_manager,
                                            settings.tech_options.black_hole_factor,
@@ -253,6 +246,8 @@ def get_random_config(
     ### Recruits
     config.recruit_dict = recruitwriter.get_random_recruit_assignment_dict(
         settings.plando_options.recruit_assignment, rng)
+
+    # config.recruit_dict[ctenums.RecruitID.CATHEDRAL] = [ctenums.CharID.CRONO]
 
     ### Boss/Midboss
     config.boss_assignment_dict = bossrando.get_random_boss_assignment(settings.boss_rando_options, rng)
@@ -455,7 +450,7 @@ def get_ctrom_from_config(
                                  settings.tech_options.black_hole_factor
     )
     effecttypes.expand_effect_mods(
-        ct_rom, config.pctech_manager
+        ct_rom, config.pctech_manager, settings.tech_options
     )
 
     if settings.shop_options.show_all_chars_in_shop:
@@ -474,16 +469,18 @@ def get_ctrom_from_config(
     if settings.general_options.multiworld:
         multiworld.apply_multiworld_patches(ct_rom, post_config.script_manager)
 
-
-    # The lock was probably caused by bad tile copying
-    # randofixes.fix_movement_locks(post_config.enemy_ai_manager)
+    # Do this before the slash fix because there may be no slash block to hook.
+    staticbossscaling.set_element_safety_level(
+        post_config.enemy_ai_manager,
+        settings.scaling_options.static_scaling_options.element_safety_level)
     # Slash AI
-    for tech_id in range(1, 9):
+    slash_ids: list[int] = []
+    for tech_id in range(1, 0x39):
         if config.pctech_manager.get_tech(tech_id).name == "Slash":
-            randofixes.fix_dino_slash_scripts(post_config.enemy_ai_manager, tech_id)
-            break
-    else:
-        raise IndexError
+            slash_ids.append(tech_id)
+
+    randofixes.fix_dino_slash_scripts(post_config.enemy_ai_manager, slash_ids)
+
     randofixes.add_dream_devourer_ai(post_config.enemy_ai_manager)
     ct_rom.seek(0x24F023 +0xCD*5 + 2)  # "Kid" palette for cutscene Schala
     ct_rom.write(b'\x36')
@@ -625,7 +622,7 @@ def get_ctrom_from_config(
     randostate.write_initial_rewards(config.starting_rewards, post_config.script_manager)
 
     recruitwriter.write_recruits_to_ct_rom(
-        config.recruit_dict, post_config.script_manager, settings
+        config.recruit_dict, config.char_reassignment_dict, post_config.script_manager, settings
     )
     bossrando.write_bosses_to_ct_rom(config.boss_assignment_dict,
                                      post_config.script_manager)
@@ -640,7 +637,9 @@ def get_ctrom_from_config(
         techmenu.write_cumulative_tp_in_menu(ct_rom)
         techmenu.show_all_combo_techs_in_menu(ct_rom)  # Needs to be after techs are on rom
 
-    elementrando.write_menu_element_graphics(ct_rom, config.pctech_manager,
+    elementrando.write_menu_element_graphics(ct_rom,
+                                             config.char_reassignment_dict,
+                                             config.pctech_manager,
                                              settings.character_options.tech_rando_scheme)
     config.animation_script_manager.write_to_ctrom(ct_rom)
 
@@ -648,6 +647,8 @@ def get_ctrom_from_config(
         enemy_stats.write_to_ctrom(ct_rom, enemy_id)
 
     config.shop_manager.write_to_ctrom(ct_rom)
+
+    charrando.reassign_characters(ct_rom, config.char_reassignment_dict)
 
     omenelevators.write_omen_elevators(post_config.script_manager, config.omen_elevator_data)
     ### Logic Tweaks
@@ -658,14 +659,20 @@ def get_ctrom_from_config(
 
     print("Writing Post-Randomization Personalizations...", end="")
     a = time.time()
-    postrandowriter.write_post_rando_options(settings.post_random_options, post_config.script_manager,
-                                             post_config.overworld_manager)
+    postrandowriter.write_post_rando_options(
+        settings.post_random_options,
+        post_config.script_manager,
+        post_config.overworld_manager,
+        config.char_reassignment_dict
+    )
     b = time.time()
     print(f"({b-a})")
 
     if settings.treasure_options.split_linked_chests:
         treasureassign.split_charged_chests(post_config.script_manager,
                                             post_config.treasure_data_dict)
+
+    charrando.reassign_scripts(post_config.script_manager, config.char_reassignment_dict)
 
     if make_tf_friendly:
         clean_scripts_for_tf(post_config.script_manager)
@@ -862,8 +869,6 @@ def main():
         print(exc, file=sys.stderr)
         sys.exit(-2)
 
-    x = settings.get_argument_spec()
-
     list_type = settings.general_options.list_keys
 
     if list_type is not None:
@@ -891,7 +896,7 @@ def main():
 
     # import time
     # x = time.time()
-    out_rom = get_ctrom_from_config(ct_rom, settings, config, make_tf_friendly=False)
+    out_rom = get_ctrom_from_config(ct_rom, settings, config, make_tf_friendly=True)
     # y = time.time()
     # print(y-x)
 

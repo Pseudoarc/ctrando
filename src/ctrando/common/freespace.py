@@ -36,12 +36,10 @@ class FreeSpace():
             is_free = (mark_type == FSWriteType.MARK_FREE)
 
         # maybe verify block is valid?
-        if block[1] <= block[0]:
-            print(
-                'Error: Block [%6.6X, %6.6X) has nonpositive size. Returning.'
-                % (block[0], block[1])
-            )
-            raise ValueError
+        if block[1] < block[0]:
+            raise ValueError(f"Block [{block[0]:06X}, {block[1]:06X}) has negative size.")
+        if block[0] == block[1]:
+            return
 
         # If the block to mark goes past the end of the file, extend?
         # This should probably throw an error.

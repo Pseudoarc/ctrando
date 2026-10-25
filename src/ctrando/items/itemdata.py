@@ -469,8 +469,10 @@ class WeaponStats(ItemData):
 
     @effect_id.setter
     def effect_id(self, val: WeaponEffects):
-        # validate?
         self._data[3] = int(val)
+        has_effect = (val != WeaponEffects.NONE)
+        if has_effect != self.has_effect:
+            self.has_effect = not self.has_effect
 
     @property
     def has_effect(self) -> bool:
@@ -479,9 +481,9 @@ class WeaponStats(ItemData):
 
     @has_effect.setter
     def has_effect(self, val: bool):
+        self._data[4] = int(val)
         if not val:
             self.effect_id = WeaponEffects.NONE
-        self._data[4] = int(val)
 
     def get_effect_string(self):
         """Returns a string representation of this weapon's effect."""

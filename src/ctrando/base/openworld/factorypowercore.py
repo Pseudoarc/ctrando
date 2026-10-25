@@ -13,6 +13,29 @@ class EventMod(locationevent.LocEventMod):
     """EventMod for Factory Ruins Power Core"""
     loc_id = ctenums.LocID.FACTORY_RUINS_POWER_CORE
     pc3_addr = 0x7F0220
+
+    # Crono: 110 (surprise), 115, 116 (lumi hands up), 122 (normal  hands up),
+    #        136 (shield pose), 145 (jumping sideways),
+    #        174, 175 (also lumi hands up),
+    # Marle: 90 (surprise), 101 (shield), 193 (aura hands out)
+    # Lucca: 67 (surprise), 73 (hands out twirl), 76 (shield)
+    # Robo: 0x58 is used
+    # Frog: 90 (surprise), 97 (flex), 101 (shield), 126 (hands out cast),
+    #       179 (part of slurp, v. good),
+    # Ayla: 37 (spread out sideways, cat attack?), 44 (arms up), 90 (arms out wide),
+    # Magus: 47 (scythe in front), 93 (shield), 103 (float cape up),
+    #        134 (side attack)
+    #        240 (black hole, back only)
+    wall_hold_frame_dict: dict[ctenums.CharID, int] = {
+        ctenums.CharID.CRONO: 145,  # 136,
+        ctenums.CharID.MARLE: 101,
+        ctenums.CharID.LUCCA: 76,
+        ctenums.CharID.ROBO: 0x58,
+        ctenums.CharID.FROG: 179,
+        ctenums.CharID.AYLA: 90,
+        ctenums.CharID.MAGUS: 134
+    }
+
     @classmethod
     def modify(cls, script: Event):
         """
@@ -52,28 +75,6 @@ class EventMod(locationevent.LocEventMod):
         # TF doesn't seem to like forward links.  So we'll just give Crono the
         # functions and have everyone link to him.
         hold_wall_func = script.get_function(5, FID.ARBITRARY_3)
-        # Crono: 110 (surprise), 115, 116 (lumi hands up), 122 (normal  hands up),
-        #        136 (shield pose), 145 (jumping sideways),
-        #        174, 175 (also lumi hands up),
-        # Marle: 90 (surprise), 101 (shield), 193 (aura hands out)
-        # Lucca: 67 (surprise), 73 (hands out twirl), 76 (shield)
-        # Robo: 0x58 is used
-        # Frog: 90 (surprise), 97 (flex), 101 (shield), 126 (hands out cast),
-        #       179 (part of slurp, v. good),
-        # Ayla: 37 (spread out sideways, cat attack?), 44 (arms up), 90 (arms out wide),
-        # Magus: 47 (scythe in front), 93 (shield), 103 (float cape up),
-        #        134 (side attack)
-        #        240 (black hole, back only)
-
-        wall_hold_frame_dict: dict[ctenums.CharID, int] = {
-            ctenums.CharID.CRONO: 145, # 136,
-            ctenums.CharID.MARLE: 101,
-            ctenums.CharID.LUCCA: 76,
-            ctenums.CharID.ROBO: 0x58,
-            ctenums.CharID.FROG: 179,
-            ctenums.CharID.AYLA: 90,
-            ctenums.CharID.MAGUS: 134
-        }
 
         spin_out_func = script.get_function(5, FID.ARBITRARY_4)
         steam_off_func = script.get_function(5, FID.ARBITRARY_5)
@@ -112,7 +113,7 @@ class EventMod(locationevent.LocEventMod):
                 EC.static_animation(0x58),
                 script.get_function_start(obj_id, FID.ARBITRARY_4)
             )
-            script.data[pos + 1] = wall_hold_frame_dict[char_id]
+            script.data[pos + 1] = cls.wall_hold_frame_dict[char_id]
 
     @classmethod
     def modify_escape(cls, script: Event):

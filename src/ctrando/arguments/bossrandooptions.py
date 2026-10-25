@@ -35,6 +35,7 @@ class BossRandoOptions:
         bosstypes.BossID.RETINITE, bosstypes.BossID.SON_OF_SUN, bosstypes.BossID.MOTHER_BRAIN,
         bosstypes.BossID.GUARDIAN, bosstypes.BossID.GIGA_GAIA, bosstypes.BossID.MUD_IMP, bosstypes.BossID.R_SERIES,
         bosstypes.BossID.DRAGON_TANK, bosstypes.BossID.ZEAL, bosstypes.BossID.MAGUS_NORTH_CAPE,
+        bosstypes.BossID.OZZIE_TRIO
     )
     _default_midboss_pool: typing.ClassVar[tuple[bosstypes.BossID, ...]] = (
         bosstypes.BossID.GATO, bosstypes.BossID.DALTON,

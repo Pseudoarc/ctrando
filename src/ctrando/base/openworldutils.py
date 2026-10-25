@@ -1026,6 +1026,7 @@ _dynamic_gear_specs: dict[ctenums.CharID, dict[int, GearSpec]] = {
 
 def get_dynamic_gear_function(
         char_id: ctenums.CharID,
+        reassign_id: ctenums.CharID,
         temp_addr: int = 0x7F0308
 ) -> EF:
 
@@ -1045,7 +1046,7 @@ def get_dynamic_gear_function(
                                   temp_addr, 1))
     )
 
-    progression = _dynamic_gear_specs[char_id]
+    progression = _dynamic_gear_specs[reassign_id]
     num_entries = len(progression.keys())
     progression = {
         key: progression[key] for key in sorted(progression.keys())
@@ -1085,6 +1086,7 @@ def get_dynamic_gear_function(
 
 def get_level_techlevel_set_function(
         pc_id: ctenums.CharID,
+        reassign_id: ctenums.CharID,
         scale_level: bool,
         scale_techlevel: bool,
         scale_gear: bool,
@@ -1132,7 +1134,7 @@ def get_level_techlevel_set_function(
     func.add(EC.set_level_from_memory(pc_id, temp_level_addr))
 
     if scale_gear:
-        func.append(get_dynamic_gear_function(pc_id, temp_level_addr))
+        func.append(get_dynamic_gear_function(pc_id, reassign_id, temp_level_addr))
 
     func.append(tech_block)  # Once we're done with temp_level_addr
 

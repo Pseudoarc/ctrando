@@ -4,8 +4,10 @@ Module for working with custom palettes.
 import enum
 import typing
 from collections.abc import Sequence
+from dataclasses import dataclass
+import math
 
-from ctrando.common import cttypes as cty, ctrom
+from ctrando.common import cttypes as cty, ctrom, ctenums
 
 
 class SNESColor(cty.SizedBinaryData):
@@ -636,6 +638,144 @@ def build_magus_portrait_palette(
     return PortraitPallete(colors)
 
 
+@dataclass
+class HSVColor:
+    hue: float
+    saturation: float
+    value: float
+
+
+@dataclass()
+class RGB255Color:
+    red: int
+    green: int
+    blue: int
+
+
+# https://stackoverflow.com/questions/3018313/algorithm-to-convert-rgb-to-hsv-and-hsv-to-rgb-in-range-0-255-for-both
+# https://mattlockyer.github.io/iat455/documents/rgb-hsv.pdf
+
+def rgb255_to_hsv(
+        red: int, green: int, blue: int
+) -> HSVColor:
+
+    red_f, green_f, blue_f = red/255, green/255, blue/255
+    eps = 1e-16
+
+    min_val = min(red_f, green_f, blue_f)
+    max_val = max(red_f, green_f, blue_f)
+    delta = max_val - min_val
+
+    if abs(delta) < eps:
+        hue = float("nan")
+    elif math.isclose(max_val, red_f, abs_tol=eps):
+        hue = (green_f - blue_f) / delta
+    elif math.isclose(max_val, green_f, abs_tol=eps):
+        hue = (blue_f - red_f) / delta + 2.0
+    elif math.isclose(max_val, blue_f, abs_tol=eps):
+        hue = (red_f - green_f) / delta + 4.0
+    else:
+        raise ValueError
+
+    value = max_val
+
+    if abs(value) < eps:
+        saturation = 0
+    else:
+        saturation = delta/value
+
+    return HSVColor(hue, saturation, value)
+
+
+def hsv_to_rgb255(
+        hsv_color: HSVColor
+) -> tuple[int, int, int]:
+
+    if math.isnan(hsv_color.hue):
+        hue = hsv_color.hue
+    elif hsv_color.hue < 0:
+        hue = math.fmod(hsv_color.hue, 6.0) + 6.0
+    else:
+        hue = math.fmod(hsv_color.hue, 6.0)
+
+    saturation = hsv_color.saturation
+    value = hsv_color.value
+
+    alpha = value * (1-saturation)
+
+    if math.isnan(hue):
+        beta = float("nan")
+        gamma = float("nan")
+    else:
+        beta = value *  (1 - (hue - math.floor(hue)) * saturation)
+        gamma = value * (1 - (1 - (hue - math.floor(hue))) * saturation)
+
+    rgb_tuple: tuple[float, float, float] = (0,0,0)
+    if math.isnan(hue):
+        rgb_tuple = (value, value, value)
+    elif 0 <= hue < 1:
+        rgb_tuple = (value, gamma, alpha)
+    elif 1 <= hue < 2:
+        rgb_tuple = (beta, value, alpha)
+    elif 2 <= hue < 3:
+        rgb_tuple = (alpha, value, gamma)
+    elif 3 <= hue < 4:
+        rgb_tuple = (alpha, beta, value)
+    elif 4 <= hue < 5:
+        rgb_tuple = (gamma, alpha, value)
+    elif 5 <= hue < 6:
+        rgb_tuple = (value, alpha, beta)
+    else:
+        raise ValueError
+
+    def clamp255(val: float) -> int:
+        return sorted([0, int(val*255), 255])[1]
+
+    return (
+        clamp255(rgb_tuple[0]), clamp255(rgb_tuple[1]),  clamp255(rgb_tuple[2]),
+    )
+
+
+def get_value_sat_match(
+        in_color: RGB255Color,
+        match_color: RGB255Color,
+        match_hue: bool = False,
+        match_value: bool = True,
+        match_saturation: bool = True,
+) -> RGB255Color:
+    in_hsv = rgb255_to_hsv(in_color.red, in_color.green, in_color.blue)
+    match_hsv = rgb255_to_hsv(match_color.red, match_color.green, match_color.blue)
+
+    if match_hue:
+        in_hsv.hue = match_hsv.hue
+
+    if match_value:
+        in_hsv.value = match_hsv.value
+
+    if match_saturation:
+        in_hsv.saturation = match_hsv.saturation
+
+    return RGB255Color(*hsv_to_rgb255(in_hsv))
+
+
+def get_value_match_snes(
+        in_snes_color: SNESColor,
+        match_snes_color: SNESColor,
+        match_hue: bool = False,
+        match_value: bool = True,
+        match_saturation: bool = True,
+) -> SNESColor:
+    match_rgb = get_value_sat_match(
+        RGB255Color(*in_snes_color.to_rgb()),
+        RGB255Color(*match_snes_color.to_rgb()),
+        match_hue=match_hue, match_value=match_value,
+        match_saturation=match_saturation
+    )
+    return SNESColor.from_rgb_255(
+        match_rgb.red, match_rgb.green, match_rgb.blue,
+    )
+
+
 # Formulas from https://www.easyrgb.com/en/math.php
 # Mentioned on https://stackoverflow.com/questions/15408522/rgb-to-xyz-and-lab-colours-conversion
 def rgb255_to_xyz(red: int, green: int, blue: int) -> tuple[float, float, float]:
@@ -706,3 +846,782 @@ def color_diff_rgb255(
     l2, a2, b2 = xyz_to_cielab(*rgb255_to_xyz(red_2, green_2, blue_2))
 
     return ((l1-l2)**2 + (a1-a2)**2 + (b1-b2)**2) ** 0.5
+
+
+# Try to do hue-matching
+def build_crono_loc_palette_alt(
+        orig_loc_palette: SNESPalette,
+        orig_pc_id: ctenums.CharID,
+        reassign_pc_palette: SNESPalette
+) -> SNESPalette:
+    new_palette = SNESPalette(orig_loc_palette.colors)
+    if orig_pc_id == ctenums.CharID.CRONO:
+        return new_palette
+
+    repl_hue_dict: dict[CronoPaletteIndex, SNESColor | None] = {
+        index: None for index in CronoPaletteIndex
+    }
+
+    if orig_pc_id == ctenums.CharID.MARLE:
+        repl_hue_dict[CronoPaletteIndex.HAIR_LIGHTER] = orig_loc_palette[MarlePaletteIndex.HAIR_MID]
+        repl_hue_dict[CronoPaletteIndex.HAIR_DARKER] = orig_loc_palette[MarlePaletteIndex.HAIR_DARKER]
+        repl_hue_dict[CronoPaletteIndex.HAIR_DARKEST] = orig_loc_palette[MarlePaletteIndex.HAIR_DARKEST]
+
+        repl_hue_dict[CronoPaletteIndex.GI_LIGHT] = orig_loc_palette[MarlePaletteIndex.TUNIC_SHADOW_LIGHT]
+        repl_hue_dict[CronoPaletteIndex.GI_MID] = orig_loc_palette[MarlePaletteIndex.TUNIC_SHADOW_MID]
+        repl_hue_dict[CronoPaletteIndex.GI_DARK] = orig_loc_palette[MarlePaletteIndex.TUNIC_SHADOW_DARK]
+
+        new_palette[CronoPaletteIndex.PANTS] = orig_loc_palette[MarlePaletteIndex.HAIR_LIGHTER]
+    elif orig_pc_id == ctenums.CharID.LUCCA:
+        repl_hue_dict[CronoPaletteIndex.HAIR_LIGHTER] = orig_loc_palette[LuccaPaletteIndex.HAIR_LIGHT]
+        repl_hue_dict[CronoPaletteIndex.HAIR_DARKER] = blend(
+            orig_loc_palette[LuccaPaletteIndex.HAIR_DARK],
+            orig_loc_palette[LuccaPaletteIndex.HAIR_LIGHT], 0.5
+        )
+        repl_hue_dict[CronoPaletteIndex.HAIR_DARKEST] = orig_loc_palette[LuccaPaletteIndex.HAIR_DARK]
+        repl_hue_dict[CronoPaletteIndex.GI_LIGHT] = orig_loc_palette[LuccaPaletteIndex.TUNIC_LIGHT]
+        repl_hue_dict[CronoPaletteIndex.GI_MID] = orig_loc_palette[LuccaPaletteIndex.TUNIC_MID]
+        repl_hue_dict[CronoPaletteIndex.GI_DARK] = orig_loc_palette[LuccaPaletteIndex.TUNIC_DARKER]
+        repl_hue_dict[CronoPaletteIndex.PANTS] = orig_loc_palette[LuccaPaletteIndex.HAT_LIGHTER]
+    elif orig_pc_id == ctenums.CharID.ROBO:
+        repl_hue_dict[CronoPaletteIndex.HAIR_DARKEST] = orig_loc_palette[RoboPaletteIndex.EYE_DARK]
+        repl_hue_dict[CronoPaletteIndex.GI_MID] = orig_loc_palette[RoboPaletteIndex.JOINTS_MID]
+        repl_hue_dict[CronoPaletteIndex.GI_DARK] = orig_loc_palette[RoboPaletteIndex.INTERNAL_DARK]
+    elif orig_pc_id == ctenums.CharID.FROG:
+        new_palette[CronoPaletteIndex.SKIN_LIGHTER] = reassign_pc_palette[2]
+        new_palette[CronoPaletteIndex.SKIN_DARKER] = reassign_pc_palette[3]
+
+        repl_hue_dict[CronoPaletteIndex.HAIR_LIGHTER] = orig_loc_palette[FrogPaletteIndex.SKIN_LIGHTER]
+        repl_hue_dict[CronoPaletteIndex.HAIR_DARKER] = orig_loc_palette[FrogPaletteIndex.SKIN_MID]
+        repl_hue_dict[CronoPaletteIndex.HAIR_DARKEST] = darken(
+            orig_loc_palette[FrogPaletteIndex.SKIN_MID], 0.5
+        )
+        repl_hue_dict[CronoPaletteIndex.PANTS] = orig_loc_palette[FrogPaletteIndex.GLOVE_BOOT]
+        repl_hue_dict[CronoPaletteIndex.GI_LIGHT] = orig_loc_palette[FrogPaletteIndex.ARMOR_LIGHT]
+        repl_hue_dict[CronoPaletteIndex.GI_MID] = orig_loc_palette[FrogPaletteIndex.ARMOR_DARK]
+        repl_hue_dict[CronoPaletteIndex.GI_DARK] = orig_loc_palette[FrogPaletteIndex.CAPE_DARK]
+    elif orig_pc_id == ctenums.CharID.AYLA:
+        repl_hue_dict[CronoPaletteIndex.HAIR_LIGHTER] = orig_loc_palette[AylaPaletteIndex.HAIR_LIGHT]
+        repl_hue_dict[CronoPaletteIndex.HAIR_DARKER] = orig_loc_palette[AylaPaletteIndex.HAIR_MID]
+        repl_hue_dict[CronoPaletteIndex.HAIR_DARKEST] = orig_loc_palette[AylaPaletteIndex.HAIR_DARK]
+        new_palette[CronoPaletteIndex.GI_LIGHT] = get_value_match_snes(
+            orig_loc_palette[AylaPaletteIndex.CLOTHES_LIGHT],
+            reassign_pc_palette[CronoPaletteIndex.GI_LIGHT],
+            # match_saturation=False,
+            # match_value=False
+        )
+        new_palette[CronoPaletteIndex.GI_MID] = get_value_match_snes(
+            orig_loc_palette[AylaPaletteIndex.CLOTHES_MID],
+            reassign_pc_palette[CronoPaletteIndex.GI_MID],
+            # match_saturation=False,
+            # match_value=False
+        )
+        new_palette[CronoPaletteIndex.GI_DARK] = get_value_match_snes(
+            orig_loc_palette[AylaPaletteIndex.CLOTHES_DARK],
+            reassign_pc_palette[CronoPaletteIndex.GI_DARK],
+            # match_saturation=False,
+            # match_value=False
+        )
+        # new_palette[CronoPaletteIndex.GI_LIGHT] = orig_loc_palette[AylaPaletteIndex.CLOTHES_LIGHT]
+        # new_palette[CronoPaletteIndex.GI_MID] = orig_loc_palette[AylaPaletteIndex.CLOTHES_MID]
+        # new_palette[CronoPaletteIndex.GI_DARK] = orig_loc_palette[AylaPaletteIndex.CLOTHES_DARK]
+
+        repl_hue_dict[CronoPaletteIndex.PANTS] = orig_loc_palette[AylaPaletteIndex.CLOTHES_LIGHT]
+
+    for index, new_color in repl_hue_dict.items():
+        if repl_hue_dict[index] is not None:
+            repl_hue_dict[index] = get_value_match_snes(
+                repl_hue_dict[index], reassign_pc_palette[index]
+            )
+            new_palette[index] = repl_hue_dict[index]
+
+    return new_palette
+
+
+
+
+def build_crono_loc_palette(
+        orig_loc_palette: SNESPalette,
+        orig_pc_id: ctenums.CharID,
+        reassign_pc_palette: SNESPalette
+) -> SNESPalette:
+    new_palette = SNESPalette(orig_loc_palette.colors)
+
+    if orig_pc_id == ctenums.CharID.CRONO:
+        pass
+    elif orig_pc_id == ctenums.CharID.MARLE:
+        new_palette = SNESPalette(orig_loc_palette.colors)
+        new_palette[CronoPaletteIndex.HAIR_LIGHTER] = orig_loc_palette[MarlePaletteIndex.HAIR_MID]
+        new_palette[CronoPaletteIndex.HAIR_DARKER] = orig_loc_palette[MarlePaletteIndex.HAIR_DARKER]
+        new_palette[CronoPaletteIndex.HAIR_DARKEST] = orig_loc_palette[MarlePaletteIndex.HAIR_DARKEST]
+
+        new_palette[CronoPaletteIndex.GI_LIGHT] = orig_loc_palette[MarlePaletteIndex.TUNIC_SHADOW_LIGHT]
+        new_palette[CronoPaletteIndex.GI_MID] = orig_loc_palette[MarlePaletteIndex.TUNIC_SHADOW_MID]
+        new_palette[CronoPaletteIndex.GI_DARK] = orig_loc_palette[MarlePaletteIndex.TUNIC_SHADOW_DARK]
+
+        new_palette[CronoPaletteIndex.PANTS] = orig_loc_palette[MarlePaletteIndex.HAIR_LIGHTER]
+    elif orig_pc_id == ctenums.CharID.LUCCA:
+        # new_palette[CronoPaletteIndex.HAIR_LIGHTER] = darken(
+        #     orig_loc_palette[LuccaPaletteIndex.HAIR_LIGHT], 0.25
+        # )
+        # new_palette[CronoPaletteIndex.HAIR_DARKER] = blend(
+        #     orig_loc_palette[LuccaPaletteIndex.HAIR_DARK],
+        #     orig_loc_palette[LuccaPaletteIndex.HAIR_LIGHT], 0.25
+        # )
+        # new_palette[CronoPaletteIndex.HAIR_DARKEST] = darken(
+        #     orig_loc_palette[LuccaPaletteIndex.HAIR_DARK], 0.1
+        # )
+        new_palette[CronoPaletteIndex.HAIR_LIGHTER] = get_value_match_snes(
+            orig_loc_palette[LuccaPaletteIndex.HAIR_LIGHT],
+            reassign_pc_palette[CronoPaletteIndex.HAIR_LIGHTER]
+        )
+        new_palette[CronoPaletteIndex.HAIR_DARKER] = get_value_match_snes(
+            blend(
+                orig_loc_palette[LuccaPaletteIndex.HAIR_DARK],
+                orig_loc_palette[LuccaPaletteIndex.HAIR_LIGHT], 0.5
+            ),
+            reassign_pc_palette[CronoPaletteIndex.HAIR_DARKER]
+        )
+        new_palette[CronoPaletteIndex.HAIR_DARKEST] = get_value_match_snes(
+            orig_loc_palette[LuccaPaletteIndex.HAIR_DARK],
+            reassign_pc_palette[CronoPaletteIndex.HAIR_DARKEST]
+        )
+        new_palette[CronoPaletteIndex.PANTS] = orig_loc_palette[LuccaPaletteIndex.HAT_LIGHTER]
+        new_palette[CronoPaletteIndex.GI_LIGHT] = get_value_match_snes(
+            orig_loc_palette[LuccaPaletteIndex.TUNIC_LIGHT],
+            reassign_pc_palette[CronoPaletteIndex.GI_LIGHT])
+        new_palette[CronoPaletteIndex.GI_MID] = get_value_match_snes(
+            orig_loc_palette[LuccaPaletteIndex.TUNIC_MID],
+            reassign_pc_palette[CronoPaletteIndex.GI_MID])
+        new_palette[CronoPaletteIndex.GI_DARK] = get_value_match_snes(
+            orig_loc_palette[LuccaPaletteIndex.TUNIC_DARKER],
+            reassign_pc_palette[CronoPaletteIndex.GI_DARK]
+        )
+    elif orig_pc_id == ctenums.CharID.ROBO:
+        new_palette[CronoPaletteIndex.HAIR_DARKEST] = darken(
+            orig_loc_palette[RoboPaletteIndex.EYE_DARK], 0.5
+        )
+        new_palette[CronoPaletteIndex.GI_MID] = orig_loc_palette[RoboPaletteIndex.JOINTS_MID]
+        new_palette[CronoPaletteIndex.GI_DARK] = orig_loc_palette[RoboPaletteIndex.INTERNAL_DARK]
+
+    elif orig_pc_id == ctenums.CharID.FROG:
+        new_palette[CronoPaletteIndex.SKIN_LIGHTER] = reassign_pc_palette[2]
+        new_palette[CronoPaletteIndex.SKIN_DARKER] = reassign_pc_palette[3]
+        new_palette[CronoPaletteIndex.HAIR_LIGHTER] = orig_loc_palette[FrogPaletteIndex.SKIN_LIGHTER]
+        new_palette[CronoPaletteIndex.HAIR_DARKER] = orig_loc_palette[FrogPaletteIndex.SKIN_MID]
+        new_palette[CronoPaletteIndex.HAIR_DARKEST] = darken(
+            orig_loc_palette[FrogPaletteIndex.SKIN_MID], 0.5
+        )
+        new_palette[CronoPaletteIndex.PANTS] = orig_loc_palette[FrogPaletteIndex.GLOVE_BOOT]
+        new_palette[CronoPaletteIndex.GI_LIGHT] = orig_loc_palette[FrogPaletteIndex.CAPE_LIGHT]
+        new_palette[CronoPaletteIndex.GI_MID] = orig_loc_palette[FrogPaletteIndex.CAPE_MID]
+        new_palette[CronoPaletteIndex.GI_DARK] = orig_loc_palette[FrogPaletteIndex.CAPE_DARK]
+    elif orig_pc_id == ctenums.CharID.AYLA:
+        new_palette[CronoPaletteIndex.HAIR_DARKEST] = orig_loc_palette[AylaPaletteIndex.HAIR_DARK]
+        new_palette.colors[CronoPaletteIndex.GI_LIGHT: CronoPaletteIndex.GI_DARK+1] = (
+            orig_loc_palette.colors[AylaPaletteIndex.CLOTHES_LIGHT: AylaPaletteIndex.CLOTHES_DARK+1]
+        )
+        new_palette[CronoPaletteIndex.PANTS] = orig_loc_palette[AylaPaletteIndex.INTERNAL_DARK]
+    elif orig_pc_id == ctenums.CharID.MAGUS:
+        new_palette[CronoPaletteIndex.HAIR_DARKEST] = darken(
+            orig_loc_palette[MagusPaletteIndex.HAIR_MID], 0.5
+        )
+        new_palette[CronoPaletteIndex.PANTS] = orig_loc_palette[MagusPaletteIndex.PANTS_MAIN]
+        new_palette[CronoPaletteIndex.GI_LIGHT] = lighten(
+            orig_loc_palette[MagusPaletteIndex.CAPE_MAIN], 0.5
+        )
+        new_palette[CronoPaletteIndex.GI_MID] = orig_loc_palette[MagusPaletteIndex.CAPE_MAIN]
+        new_palette[CronoPaletteIndex.GI_DARK] = orig_loc_palette[MagusPaletteIndex.INTERNAL_DARK]
+    else:
+        raise ValueError
+
+    return new_palette
+
+
+def make_four_color_hair(
+        light_color: SNESColor,
+        dark_color: SNESColor,
+        weight1: float = 0.25,
+        weight2: float = 0.5,
+        weight3: float = 0.0,
+        weight4: float = 0.0
+) -> tuple[SNESColor, SNESColor, SNESColor, SNESColor]:
+    return (
+        lighten(light_color, weight1),
+        blend(light_color, dark_color, weight2),
+        blend(light_color, dark_color, weight3),
+        darken(dark_color, weight4)
+    )
+
+
+def build_marle_loc_palette(
+        orig_loc_palette: SNESPalette,
+        orig_pc_id: ctenums.CharID,
+        reassign_pc_palette: SNESPalette
+):
+    new_palette = SNESPalette(orig_loc_palette.colors)
+
+    if orig_pc_id == ctenums.CharID.MARLE:
+        pass
+    elif orig_pc_id == ctenums.CharID.CRONO:
+        new_palette[MarlePaletteIndex.HAIR_DARKEST] = orig_loc_palette[CronoPaletteIndex.HAIR_DARKEST]
+        new_palette[MarlePaletteIndex.HAIR_DARKER] = blend(
+            orig_loc_palette[CronoPaletteIndex.HAIR_DARKER],
+            orig_loc_palette[CronoPaletteIndex.HAIR_DARKEST],
+            0.5
+        )
+        new_palette.colors[MarlePaletteIndex.TUNIC_SHADOW_LIGHT:MarlePaletteIndex.TUNIC_SHADOW_DARK+1] = (
+            orig_loc_palette.colors[CronoPaletteIndex.GI_LIGHT: CronoPaletteIndex.GI_DARK+1]
+        )
+    elif orig_pc_id == ctenums.CharID.LUCCA:
+        new_palette.colors[MarlePaletteIndex.HAIR_LIGHTER:MarlePaletteIndex.HAIR_DARKEST + 1] =(
+            make_four_color_hair(
+                orig_loc_palette[LuccaPaletteIndex.HAIR_LIGHT],
+                orig_loc_palette[LuccaPaletteIndex.HAIR_DARK],
+                0.25, 0.0, 0.5, 0.0
+            )
+        )
+        new_palette[MarlePaletteIndex.TUNIC_SHADOW_LIGHT] = orig_loc_palette[LuccaPaletteIndex.TUNIC_LIGHT]
+        new_palette[MarlePaletteIndex.TUNIC_SHADOW_MID] = orig_loc_palette[LuccaPaletteIndex.TUNIC_MID]
+        new_palette[MarlePaletteIndex.TUNIC_SHADOW_DARK] = orig_loc_palette[LuccaPaletteIndex.TUNIC_DARKER]
+    elif orig_pc_id == ctenums.CharID.ROBO:
+        new_palette.colors[MarlePaletteIndex.HAIR_LIGHTER: MarlePaletteIndex.HAIR_DARKEST + 1] = \
+            make_four_color_hair(
+                orig_loc_palette[RoboPaletteIndex.EYE_LIGHT],
+                orig_loc_palette[RoboPaletteIndex.EYE_DARK],
+                0.25, 0.00, 1.0, 0.5
+            )
+        new_palette[MarlePaletteIndex.TUNIC_SHADOW_LIGHT] = orig_loc_palette[RoboPaletteIndex.JOINTS_LIGHT]
+        new_palette[MarlePaletteIndex.TUNIC_SHADOW_MID] = orig_loc_palette[RoboPaletteIndex.JOINTS_MID]
+        new_palette[MarlePaletteIndex.TUNIC_SHADOW_DARK] = orig_loc_palette[RoboPaletteIndex.INTERNAL_DARK]
+    elif orig_pc_id == ctenums.CharID.FROG:
+        new_palette[MarlePaletteIndex.SKIN_LIGHTER] = reassign_pc_palette[MarlePaletteIndex.SKIN_LIGHTER]
+        new_palette[MarlePaletteIndex.SKIN_DARKER] = reassign_pc_palette[MarlePaletteIndex.SKIN_DARKER]
+        new_palette.colors[MarlePaletteIndex.HAIR_LIGHTER: MarlePaletteIndex.HAIR_DARKEST + 1] = (
+            make_four_color_hair(orig_loc_palette[FrogPaletteIndex.SKIN_LIGHTER],
+                                 orig_loc_palette[FrogPaletteIndex.SKIN_MID],
+                                 0.25, 0.0, 1.0, 0.5
+                                 )
+        )
+    elif orig_pc_id == ctenums.CharID.AYLA:
+        pass
+    elif orig_pc_id == ctenums.CharID.MAGUS:
+        new_palette.colors[MarlePaletteIndex.HAIR_LIGHTER: MarlePaletteIndex.HAIR_DARKEST+1] = \
+            make_four_color_hair(
+                orig_loc_palette[MagusPaletteIndex.HAIR_LIGHT],
+                orig_loc_palette[MagusPaletteIndex.HAIR_MID],
+                0.25, 0.00, 1.0, 0.5
+            )
+        new_palette[MarlePaletteIndex.TUNIC_SHADOW_LIGHT] = lighten(
+            orig_loc_palette[MagusPaletteIndex.CAPE_MAIN], 0.5
+        )
+        new_palette[MarlePaletteIndex.TUNIC_SHADOW_MID] = orig_loc_palette[MagusPaletteIndex.CAPE_MAIN]
+        new_palette[MarlePaletteIndex.TUNIC_SHADOW_DARK] = orig_loc_palette[MagusPaletteIndex.INTERNAL_DARK]
+    else:
+        raise ValueError
+
+    return new_palette
+
+
+def build_lucca_loc_palette(
+        orig_loc_palette: SNESPalette,
+        orig_pc_id: ctenums.CharID,
+        reassign_pc_palette: SNESPalette
+) -> SNESPalette:
+    new_palette = SNESPalette(orig_loc_palette.colors)
+
+    # What I have learned is that the dark hair color must not
+    # clash with the dark hat color.  Blending dark hat and
+    # would-be dark hair color and darkening seems to work well.
+
+    if orig_pc_id == ctenums.CharID.LUCCA:
+        pass
+    elif orig_pc_id == ctenums.CharID.CRONO:
+        new_palette[LuccaPaletteIndex.TUNIC_LIGHT] = orig_loc_palette[CronoPaletteIndex.GI_LIGHT]
+        new_palette[LuccaPaletteIndex.HAT_LIGHTER] = orig_loc_palette[CronoPaletteIndex.PANTS]
+        new_palette[LuccaPaletteIndex.HAT_DARKER] = darken(
+            orig_loc_palette[CronoPaletteIndex.PANTS], 0.5)
+        new_palette[LuccaPaletteIndex.TUNIC_MID] = orig_loc_palette[CronoPaletteIndex.GI_MID]
+        new_palette[LuccaPaletteIndex.TUNIC_DARKER] = orig_loc_palette[CronoPaletteIndex.GI_DARK]
+        new_palette[LuccaPaletteIndex.HAIR_LIGHT] = blend(
+            orig_loc_palette[CronoPaletteIndex.HAIR_DARKEST],
+            orig_loc_palette[CronoPaletteIndex.HAIR_DARKER], 0.5
+        )
+        new_palette[LuccaPaletteIndex.HAIR_DARK] = darken(
+            blend(
+                new_palette[LuccaPaletteIndex.HAT_DARKER],
+                orig_loc_palette[CronoPaletteIndex.HAIR_DARKER], 0.5
+            ), 0.5
+        )
+    elif orig_pc_id == ctenums.CharID.MARLE:
+        new_palette[LuccaPaletteIndex.HAIR_LIGHT] = orig_loc_palette[MarlePaletteIndex.HAIR_LIGHTER]
+
+        new_palette[LuccaPaletteIndex.TUNIC_LIGHT] = orig_loc_palette[MarlePaletteIndex.TUNIC_SHADOW_LIGHT]
+        new_palette[LuccaPaletteIndex.TUNIC_MID] = orig_loc_palette[MarlePaletteIndex.TUNIC_SHADOW_MID]
+        new_palette[LuccaPaletteIndex.TUNIC_DARKER] = orig_loc_palette[MarlePaletteIndex.TUNIC_SHADOW_DARK]
+
+        new_palette[LuccaPaletteIndex.HAT_LIGHTER] = orig_loc_palette[MarlePaletteIndex.HAIR_LIGHTER]
+        new_palette[LuccaPaletteIndex.HAT_DARKER] = orig_loc_palette[MarlePaletteIndex.HAIR_MID]
+
+        new_palette[LuccaPaletteIndex.HAIR_LIGHT] = orig_loc_palette[MarlePaletteIndex.HAIR_DARKER]
+        new_palette[LuccaPaletteIndex.HAIR_DARK] = darken(
+            blend(
+                new_palette[LuccaPaletteIndex.HAT_DARKER],
+                orig_loc_palette[MarlePaletteIndex.HAIR_DARKEST], 0.5
+            ), 0.5
+        )
+
+    elif orig_pc_id == ctenums.CharID.ROBO:
+        new_palette[LuccaPaletteIndex.HAIR_LIGHT] = orig_loc_palette[RoboPaletteIndex.EYE_LIGHT]
+        # new_palette[LuccaPaletteIndex.HAIR_DARK] = orig_loc_palette[RoboPaletteIndex.EYE_DARK]
+
+        new_palette[LuccaPaletteIndex.TUNIC_LIGHT] = orig_loc_palette[RoboPaletteIndex.SKIN_DARK]
+        new_palette[LuccaPaletteIndex.TUNIC_MID] = blend(
+            orig_loc_palette[RoboPaletteIndex.SKIN_DARK],
+            orig_loc_palette[RoboPaletteIndex.SKIN_DARKEST], 0.5)
+        new_palette[LuccaPaletteIndex.TUNIC_DARKER] = orig_loc_palette[RoboPaletteIndex.SKIN_DARKEST]
+
+        new_palette[LuccaPaletteIndex.HAT_LIGHTER] = orig_loc_palette[RoboPaletteIndex.JOINTS_LIGHT]
+        new_palette[LuccaPaletteIndex.HAT_DARKER] = orig_loc_palette[RoboPaletteIndex.JOINTS_MID]
+
+        new_palette[LuccaPaletteIndex.HAIR_DARK] = darken(
+            blend(
+                new_palette[LuccaPaletteIndex.HAT_DARKER],
+                orig_loc_palette[RoboPaletteIndex.EYE_DARK], 0.5
+            ), 0.5
+        )
+
+    elif orig_pc_id == ctenums.CharID.FROG:
+        new_palette[LuccaPaletteIndex.SKIN_LIGHTER] = reassign_pc_palette[LuccaPaletteIndex.SKIN_LIGHTER]
+        new_palette[LuccaPaletteIndex.SKIN_DARKER] = reassign_pc_palette[LuccaPaletteIndex.SKIN_DARKER]
+        new_palette[LuccaPaletteIndex.HAIR_LIGHT] = orig_loc_palette[FrogPaletteIndex.SKIN_LIGHTER]
+        # new_palette[LuccaPaletteIndex.HAIR_DARK] = orig_loc_palette[FrogPaletteIndex.SKIN_MID]
+        new_palette[LuccaPaletteIndex.TUNIC_LIGHT] = orig_loc_palette[FrogPaletteIndex.CAPE_LIGHT]
+        new_palette[LuccaPaletteIndex.TUNIC_MID] = orig_loc_palette[FrogPaletteIndex.CAPE_MID]
+        new_palette[LuccaPaletteIndex.TUNIC_DARKER] = orig_loc_palette[FrogPaletteIndex.CAPE_DARK]
+        new_palette[LuccaPaletteIndex.HAT_LIGHTER] = lighten(
+            orig_loc_palette[FrogPaletteIndex.GLOVE_BOOT], 0.25)
+        new_palette[LuccaPaletteIndex.HAT_DARKER] = darken(
+            orig_loc_palette[FrogPaletteIndex.GLOVE_BOOT], 0.25)
+
+        new_palette[LuccaPaletteIndex.HAIR_DARK] = darken(
+            blend(
+                new_palette[LuccaPaletteIndex.HAT_DARKER],
+                orig_loc_palette[FrogPaletteIndex.SKIN_MID], 0.5
+            ), 0.5
+        )
+    elif orig_pc_id == ctenums.CharID.AYLA:
+        new_palette[LuccaPaletteIndex.TUNIC_LIGHT] = orig_loc_palette[AylaPaletteIndex.CLOTHES_LIGHT]
+        new_palette[LuccaPaletteIndex.TUNIC_MID] = orig_loc_palette[AylaPaletteIndex.CLOTHES_MID]
+        new_palette[LuccaPaletteIndex.TUNIC_DARKER] = orig_loc_palette[AylaPaletteIndex.CLOTHES_DARK]
+
+        new_palette[LuccaPaletteIndex.HAT_LIGHTER] = orig_loc_palette[AylaPaletteIndex.HAIR_DARK]
+        new_palette[LuccaPaletteIndex.HAT_DARKER] = orig_loc_palette[AylaPaletteIndex.INTERNAL_DARK]
+
+        new_palette[LuccaPaletteIndex.HAIR_LIGHT] = orig_loc_palette[AylaPaletteIndex.HAIR_LIGHT]
+        new_palette[LuccaPaletteIndex.HAIR_DARK] = darken(
+            blend(
+                new_palette[LuccaPaletteIndex.HAT_DARKER],
+                orig_loc_palette[AylaPaletteIndex.HAIR_MID], 0.5
+            ), 0.5
+        )
+    elif orig_pc_id == ctenums.CharID.MAGUS:
+        new_palette[LuccaPaletteIndex.TUNIC_LIGHT] = orig_loc_palette[MagusPaletteIndex.ARMOR_GLOVE_LIGHT]
+        new_palette[LuccaPaletteIndex.TUNIC_MID] = blend(
+            orig_loc_palette[MagusPaletteIndex.ARMOR_GLOVE_LIGHT],
+            orig_loc_palette[MagusPaletteIndex.ARMOR_GLOVE_DARK], 0.5)
+        new_palette[LuccaPaletteIndex.TUNIC_DARKER] = orig_loc_palette[MagusPaletteIndex.ARMOR_GLOVE_DARK]
+
+        new_palette[LuccaPaletteIndex.HAIR_LIGHT] = orig_loc_palette[MagusPaletteIndex.HAIR_LIGHT]
+
+        new_palette[LuccaPaletteIndex.HAT_LIGHTER] = orig_loc_palette[MagusPaletteIndex.CAPE_MAIN]
+        new_palette[LuccaPaletteIndex.HAT_DARKER] = orig_loc_palette[MagusPaletteIndex.INTERNAL_DARK]
+        new_palette[LuccaPaletteIndex.HAIR_DARK] = darken(
+            blend(
+                new_palette[LuccaPaletteIndex.HAT_DARKER],
+                orig_loc_palette[MagusPaletteIndex.HAIR_MID], 0.5
+            ), 0.5
+        )
+
+    else:
+        raise ValueError
+
+    return new_palette
+
+
+def build_robo_loc_palette(
+        orig_loc_palette: SNESPalette,
+        orig_pc_id: ctenums.CharID,
+        reassign_pc_palette: SNESPalette
+) -> SNESPalette:
+    new_palette = SNESPalette(orig_loc_palette.colors)
+
+
+    if orig_pc_id == ctenums.CharID.ROBO:
+        pass
+    elif orig_pc_id == ctenums.CharID.CRONO:
+        new_palette[RoboPaletteIndex.SKIN_DARK] = orig_loc_palette[CronoPaletteIndex.HAIR_DARKER]
+        new_palette[RoboPaletteIndex.SKIN_DARKEST] = orig_loc_palette[CronoPaletteIndex.HAIR_DARKEST]
+        new_palette[RoboPaletteIndex.JOINTS_LIGHT] = orig_loc_palette[CronoPaletteIndex.GI_LIGHT]
+        new_palette[RoboPaletteIndex.JOINTS_MID] = blend(
+            orig_loc_palette[CronoPaletteIndex.PANTS],
+            orig_loc_palette[CronoPaletteIndex.GI_MID], 1.0
+        )
+        new_palette[RoboPaletteIndex.INTERNAL_DARK] = orig_loc_palette[CronoPaletteIndex.GI_DARK]
+    elif orig_pc_id == ctenums.CharID.MARLE:
+        new_palette[RoboPaletteIndex.SKIN_DARK] = orig_loc_palette[MarlePaletteIndex.HAIR_DARKER]
+        new_palette[RoboPaletteIndex.SKIN_DARKEST] = orig_loc_palette[MarlePaletteIndex.HAIR_DARKEST]
+
+        new_palette[RoboPaletteIndex.JOINTS_LIGHT] = orig_loc_palette[MarlePaletteIndex.TUNIC_SHADOW_LIGHT]
+        new_palette[RoboPaletteIndex.JOINTS_MID] = orig_loc_palette[MarlePaletteIndex.TUNIC_SHADOW_MID]
+        new_palette[RoboPaletteIndex.INTERNAL_DARK] = orig_loc_palette[MarlePaletteIndex.TUNIC_SHADOW_DARK]
+
+    elif orig_pc_id == ctenums.CharID.LUCCA:
+        new_palette[RoboPaletteIndex.EYE_LIGHT] = orig_loc_palette[LuccaPaletteIndex.HAIR_LIGHT]
+        new_palette[RoboPaletteIndex.EYE_DARK] = darken(
+            orig_loc_palette[LuccaPaletteIndex.HAIR_LIGHT], 0.5)
+        new_palette[RoboPaletteIndex.SKIN_DARK] = orig_loc_palette[LuccaPaletteIndex.HAT_LIGHTER]
+        new_palette[RoboPaletteIndex.SKIN_DARKEST] = orig_loc_palette[LuccaPaletteIndex.HAT_DARKER]
+
+        new_palette[RoboPaletteIndex.JOINTS_LIGHT] = blend(
+            orig_loc_palette[LuccaPaletteIndex.TUNIC_LIGHT],
+            orig_loc_palette[LuccaPaletteIndex.TUNIC_MID], 0.5)
+        new_palette[RoboPaletteIndex.JOINTS_MID] = blend(
+            orig_loc_palette[LuccaPaletteIndex.TUNIC_MID],
+            orig_loc_palette[LuccaPaletteIndex.TUNIC_DARKER], 0.5)
+        new_palette[RoboPaletteIndex.INTERNAL_DARK] = orig_loc_palette[LuccaPaletteIndex.HAIR_DARK]
+
+    elif orig_pc_id == ctenums.CharID.FROG:
+        new_palette[RoboPaletteIndex.EYE_LIGHT] = lighten(
+            orig_loc_palette[FrogPaletteIndex.GLOVE_BOOT], 0.25
+        )
+        new_palette[RoboPaletteIndex.EYE_DARK] = darken(
+            orig_loc_palette[FrogPaletteIndex.GLOVE_BOOT], 0.25
+        )
+        new_palette[RoboPaletteIndex.SKIN_DARK] = orig_loc_palette[FrogPaletteIndex.CAPE_LIGHT]
+        new_palette[RoboPaletteIndex.SKIN_DARKEST] = orig_loc_palette[FrogPaletteIndex.CAPE_MID]
+        new_palette[RoboPaletteIndex.JOINTS_LIGHT] = orig_loc_palette[FrogPaletteIndex.ARMOR_LIGHT]
+        new_palette[RoboPaletteIndex.JOINTS_MID] = orig_loc_palette[FrogPaletteIndex.ARMOR_DARK]
+        new_palette[RoboPaletteIndex.INTERNAL_DARK] = orig_loc_palette[FrogPaletteIndex.CAPE_DARK]
+    elif orig_pc_id == ctenums.CharID.AYLA:
+        new_palette[RoboPaletteIndex.SKIN_DARK] = orig_loc_palette[AylaPaletteIndex.HAIR_DARK]
+        new_palette[RoboPaletteIndex.SKIN_DARKEST] = orig_loc_palette[AylaPaletteIndex.INTERNAL_DARK]
+
+        new_palette[RoboPaletteIndex.JOINTS_LIGHT] = orig_loc_palette[AylaPaletteIndex.CLOTHES_LIGHT]
+        new_palette[RoboPaletteIndex.JOINTS_MID] = orig_loc_palette[AylaPaletteIndex.CLOTHES_MID]
+        new_palette[RoboPaletteIndex.INTERNAL_DARK] = orig_loc_palette[AylaPaletteIndex.CLOTHES_DARK]
+    elif orig_pc_id == ctenums.CharID.MAGUS:
+        new_palette[RoboPaletteIndex.JOINTS_LIGHT] = orig_loc_palette[MagusPaletteIndex.PANTS_MAIN]
+        new_palette[RoboPaletteIndex.JOINTS_MID] = orig_loc_palette[MagusPaletteIndex.CAPE_MAIN]
+
+        new_palette[RoboPaletteIndex.SKIN_DARK] = blend(
+            orig_loc_palette[MagusPaletteIndex.ARMOR_GLOVE_LIGHT],
+            new_palette[RoboPaletteIndex.INTERNAL_DARK], 0.5
+        )
+        new_palette[RoboPaletteIndex.SKIN_DARKEST] = blend(
+            orig_loc_palette[MagusPaletteIndex.ARMOR_GLOVE_DARK],
+            new_palette[RoboPaletteIndex.INTERNAL_DARK], 0.5
+        )
+    else:
+        raise ValueError
+
+    return new_palette
+
+
+def build_frog_loc_palette(
+        orig_loc_palette: SNESPalette,
+        orig_pc_id: ctenums.CharID,
+        reassign_pc_palette: SNESPalette
+) -> SNESPalette:
+    new_palette = SNESPalette(orig_loc_palette.colors)
+    new_palette[FrogPaletteIndex.TONGUE] =  reassign_pc_palette[FrogPaletteIndex.TONGUE]
+
+    if orig_pc_id == ctenums.CharID.FROG:
+        pass
+    elif orig_pc_id == ctenums.CharID.CRONO:
+        new_palette[FrogPaletteIndex.ARMOR_LIGHT] = blend(
+            orig_loc_palette[CronoPaletteIndex.GI_MID],
+            orig_loc_palette[CronoPaletteIndex.GI_LIGHT], 0.5)
+        new_palette[FrogPaletteIndex.ARMOR_DARK] = blend(
+            orig_loc_palette[CronoPaletteIndex.GI_MID],
+            orig_loc_palette[CronoPaletteIndex.GI_DARK], 0.5)
+        new_palette[FrogPaletteIndex.GLOVE_BOOT] = orig_loc_palette[CronoPaletteIndex.HAIR_LIGHTER]
+        new_palette[FrogPaletteIndex.CAPE_LIGHT] = blend(
+            orig_loc_palette[CronoPaletteIndex.HAIR_LIGHTER],
+            orig_loc_palette[CronoPaletteIndex.SKIN_LIGHTER], 0.5)
+        new_palette[FrogPaletteIndex.CAPE_MID] = blend(
+            orig_loc_palette[CronoPaletteIndex.HAIR_DARKER],
+            orig_loc_palette[CronoPaletteIndex.SKIN_DARKER], 0.5)
+        new_palette[FrogPaletteIndex.CAPE_DARK] = orig_loc_palette[CronoPaletteIndex.HAIR_DARKEST]
+    elif orig_pc_id == ctenums.CharID.MARLE:
+        new_palette[FrogPaletteIndex.ARMOR_LIGHT] = blend(
+            orig_loc_palette[MarlePaletteIndex.TUNIC_SHADOW_LIGHT],
+            orig_loc_palette[MarlePaletteIndex.TUNIC_SHADOW_MID], 0.5)
+        new_palette[FrogPaletteIndex.ARMOR_DARK] = blend(
+            orig_loc_palette[MarlePaletteIndex.TUNIC_SHADOW_MID],
+            orig_loc_palette[MarlePaletteIndex.TUNIC_SHADOW_DARK], 0.5)
+        new_palette[FrogPaletteIndex.GLOVE_BOOT] = blend(
+            orig_loc_palette[MarlePaletteIndex.HAIR_LIGHTER],
+            orig_loc_palette[MarlePaletteIndex.HAIR_MID], 0.5
+        )
+        new_palette[FrogPaletteIndex.CAPE_LIGHT] = blend(
+            orig_loc_palette[MarlePaletteIndex.HAIR_MID],
+            orig_loc_palette[MarlePaletteIndex.SKIN_LIGHTER], 0.5)
+        new_palette[FrogPaletteIndex.CAPE_MID] = blend(
+            orig_loc_palette[MarlePaletteIndex.HAIR_DARKER],
+            orig_loc_palette[MarlePaletteIndex.SKIN_DARKER], 0.5)
+        new_palette[FrogPaletteIndex.CAPE_DARK] = darken(
+            orig_loc_palette[MarlePaletteIndex.HAIR_DARKEST], 0.5)
+    elif orig_pc_id == ctenums.CharID.LUCCA:
+        new_palette[FrogPaletteIndex.ARMOR_LIGHT] = orig_loc_palette[LuccaPaletteIndex.HAT_LIGHTER]
+        new_palette[FrogPaletteIndex.ARMOR_DARK] = orig_loc_palette[LuccaPaletteIndex.HAT_DARKER]
+        new_palette[FrogPaletteIndex.GLOVE_BOOT] = darken(
+            orig_loc_palette[LuccaPaletteIndex.HAIR_LIGHT], 0.5)
+        new_palette[FrogPaletteIndex.CAPE_LIGHT] = blend(
+            orig_loc_palette[LuccaPaletteIndex.TUNIC_MID],
+            orig_loc_palette[LuccaPaletteIndex.SKIN_LIGHTER], 0.25)
+        new_palette[FrogPaletteIndex.CAPE_MID] = blend(
+            orig_loc_palette[LuccaPaletteIndex.TUNIC_DARKER],
+            orig_loc_palette[LuccaPaletteIndex.SKIN_DARKER], 0.25)
+        new_palette[FrogPaletteIndex.CAPE_DARK] = orig_loc_palette[LuccaPaletteIndex.HAIR_DARK]
+    elif orig_pc_id == ctenums.CharID.ROBO:
+        new_palette[FrogPaletteIndex.ARMOR_LIGHT] = orig_loc_palette[RoboPaletteIndex.JOINTS_LIGHT]
+        new_palette[FrogPaletteIndex.ARMOR_DARK] = orig_loc_palette[RoboPaletteIndex.JOINTS_MID]
+
+        new_palette[FrogPaletteIndex.CAPE_LIGHT] = orig_loc_palette[RoboPaletteIndex.SKIN_DARK]
+        new_palette[FrogPaletteIndex.CAPE_MID] = orig_loc_palette[RoboPaletteIndex.SKIN_DARKEST]
+        new_palette[FrogPaletteIndex.CAPE_DARK] = orig_loc_palette[RoboPaletteIndex.INTERNAL_DARK]
+
+        new_palette[FrogPaletteIndex.GLOVE_BOOT] = blend(
+            orig_loc_palette[RoboPaletteIndex.EYE_LIGHT],
+            orig_loc_palette[RoboPaletteIndex.EYE_DARK], 0.75
+        )
+
+    elif orig_pc_id == ctenums.CharID.AYLA:
+        new_palette[FrogPaletteIndex.ARMOR_LIGHT] = blend(
+            orig_loc_palette[AylaPaletteIndex.CLOTHES_LIGHT],
+            orig_loc_palette[AylaPaletteIndex.CLOTHES_MID], 0.5)
+        new_palette[FrogPaletteIndex.ARMOR_DARK] = blend(
+            orig_loc_palette[AylaPaletteIndex.CLOTHES_MID],
+            orig_loc_palette[AylaPaletteIndex.CLOTHES_DARK], 0.5)
+        new_palette[FrogPaletteIndex.GLOVE_BOOT] = blend(
+            orig_loc_palette[AylaPaletteIndex.HAIR_LIGHT],
+            orig_loc_palette[AylaPaletteIndex.HAIR_MID], 0.5
+        )
+        new_palette[FrogPaletteIndex.CAPE_LIGHT] = blend(
+            orig_loc_palette[AylaPaletteIndex.HAIR_MID],
+            orig_loc_palette[AylaPaletteIndex.SKIN_LIGHTER], 0.5)
+        new_palette[FrogPaletteIndex.CAPE_MID] = blend(
+            orig_loc_palette[AylaPaletteIndex.HAIR_DARK],
+            orig_loc_palette[AylaPaletteIndex.SKIN_DARKER], 0.5)
+        new_palette[FrogPaletteIndex.CAPE_DARK] = darken(
+            orig_loc_palette[AylaPaletteIndex.INTERNAL_DARK], 0.5)
+    elif orig_pc_id == ctenums.CharID.MAGUS:
+        new_palette[FrogPaletteIndex.ARMOR_LIGHT] = orig_loc_palette[MagusPaletteIndex.ARMOR_GLOVE_LIGHT]
+        new_palette[FrogPaletteIndex.ARMOR_DARK] = orig_loc_palette[MagusPaletteIndex.ARMOR_GLOVE_DARK]
+        new_palette[FrogPaletteIndex.GLOVE_BOOT] = orig_loc_palette[MagusPaletteIndex.PANTS_MAIN]
+        new_palette[FrogPaletteIndex.CAPE_LIGHT] = blend(
+            orig_loc_palette[MagusPaletteIndex.CAPE_MAIN],
+            orig_loc_palette[MagusPaletteIndex.SKIN_LIGHTER], 0.1)
+        new_palette[FrogPaletteIndex.CAPE_MID] = blend(
+            orig_loc_palette[MagusPaletteIndex.CAPE_MAIN],
+            orig_loc_palette[MagusPaletteIndex.INTERNAL_DARK], 0.2)
+        new_palette[FrogPaletteIndex.CAPE_DARK] = orig_loc_palette[MagusPaletteIndex.INTERNAL_DARK]
+    else:
+        raise ValueError
+
+    return new_palette
+
+
+def build_ayla_loc_palette(
+        orig_loc_palette: SNESPalette,
+        orig_pc_id: ctenums.CharID,
+        reassign_pc_palette: SNESPalette
+) -> SNESPalette:
+    new_palette = SNESPalette(orig_loc_palette.colors)
+
+    def fill_hair(
+            _new_palette: SNESPalette,
+            light_color: SNESColor,
+            dark_color: SNESColor,
+            weight1: float, weight2: float, weight3: float, weight4: float
+    ):
+        colors = make_four_color_hair(
+            light_color, dark_color, weight1, weight2, weight3, weight4
+
+        )
+        _new_palette.colors[AylaPaletteIndex.HAIR_LIGHT:AylaPaletteIndex.INTERNAL_DARK+1] = colors
+
+
+    if orig_pc_id == ctenums.CharID.AYLA:
+        pass
+    elif orig_pc_id == ctenums.CharID.CRONO:
+        new_palette[AylaPaletteIndex.INTERNAL_DARK] = orig_loc_palette[CronoPaletteIndex.HAIR_DARKEST]
+        new_palette[AylaPaletteIndex.HAIR_DARK] = blend(
+            orig_loc_palette[CronoPaletteIndex.HAIR_DARKER],
+            orig_loc_palette[CronoPaletteIndex.HAIR_DARKEST],
+            0.5
+        )
+        tunic_colors = [
+            darken(color, 0.25)
+            for color in orig_loc_palette.colors[CronoPaletteIndex.GI_LIGHT: CronoPaletteIndex.GI_DARK+1]
+        ]
+        new_palette.colors[AylaPaletteIndex.CLOTHES_LIGHT:AylaPaletteIndex.CLOTHES_DARK+1]=tunic_colors
+    elif orig_pc_id == ctenums.CharID.MARLE:
+        tunic_colors = [
+            darken(color, 0.25)
+            for color in orig_loc_palette.colors[MarlePaletteIndex.TUNIC_SHADOW_LIGHT: MarlePaletteIndex.TUNIC_SHADOW_DARK + 1]
+        ]
+        new_palette.colors[AylaPaletteIndex.CLOTHES_LIGHT:AylaPaletteIndex.CLOTHES_DARK + 1] = tunic_colors
+    elif orig_pc_id == ctenums.CharID.LUCCA:
+        fill_hair(
+            new_palette,
+            orig_loc_palette[LuccaPaletteIndex.HAIR_LIGHT],
+            orig_loc_palette[LuccaPaletteIndex.HAIR_DARK],
+            0.25, 0.25, 0.75, 0.0
+        )
+        tunic_colors = [
+            orig_loc_palette[LuccaPaletteIndex.TUNIC_MID],
+            orig_loc_palette[LuccaPaletteIndex.TUNIC_DARKER],
+            darken(orig_loc_palette[LuccaPaletteIndex.TUNIC_DARKER], 0.25)
+        ]
+        new_palette.colors[AylaPaletteIndex.CLOTHES_LIGHT:AylaPaletteIndex.CLOTHES_DARK + 1] = tunic_colors
+
+    elif orig_pc_id == ctenums.CharID.ROBO:
+        fill_hair(
+            new_palette, orig_loc_palette[RoboPaletteIndex.EYE_LIGHT],
+            orig_loc_palette[RoboPaletteIndex.EYE_DARK],
+            0.25, 0.0, 1.0, 0.5
+        )
+        tunic_colors = [
+            orig_loc_palette[RoboPaletteIndex.JOINTS_LIGHT],
+            orig_loc_palette[RoboPaletteIndex.JOINTS_MID],
+            orig_loc_palette[RoboPaletteIndex.INTERNAL_DARK]
+        ]
+        new_palette.colors[AylaPaletteIndex.CLOTHES_LIGHT:AylaPaletteIndex.CLOTHES_DARK + 1] = tunic_colors
+
+    elif orig_pc_id == ctenums.CharID.FROG:
+        new_palette[AylaPaletteIndex.SKIN_LIGHTER] = reassign_pc_palette[AylaPaletteIndex.SKIN_LIGHTER]
+        new_palette[AylaPaletteIndex.SKIN_DARKER] = reassign_pc_palette[AylaPaletteIndex.SKIN_DARKER]
+        new_palette.colors[MarlePaletteIndex.HAIR_LIGHTER: MarlePaletteIndex.HAIR_DARKEST + 1] = (
+            make_four_color_hair(orig_loc_palette[FrogPaletteIndex.SKIN_LIGHTER],
+                                 orig_loc_palette[FrogPaletteIndex.SKIN_MID],
+                                 0.25, 0.0, 1.0, 0.5
+                                 )
+        )
+    elif orig_pc_id == ctenums.CharID.MAGUS:
+        fill_hair(
+            new_palette,
+            orig_loc_palette[MagusPaletteIndex.HAIR_LIGHT],
+            orig_loc_palette[MagusPaletteIndex.HAIR_MID],
+            0.25, 0, 1, 0.5
+        )
+        new_palette[AylaPaletteIndex.CLOTHES_LIGHT] = lighten(
+            orig_loc_palette[MagusPaletteIndex.CAPE_MAIN], 0.25
+        )
+        new_palette[AylaPaletteIndex.CLOTHES_MID] = orig_loc_palette[MagusPaletteIndex.CAPE_MAIN]
+        new_palette[AylaPaletteIndex.CLOTHES_DARK] = orig_loc_palette[MagusPaletteIndex.INTERNAL_DARK]
+    else:
+        raise ValueError
+
+    return new_palette
+
+
+def build_magus_loc_palette(
+        orig_loc_palette: SNESPalette,
+        orig_pc_id: ctenums.CharID,
+        reassign_pc_palette: SNESPalette
+) -> SNESPalette:
+    new_palette = SNESPalette(orig_loc_palette.colors)
+
+    if orig_pc_id == ctenums.CharID.MAGUS:
+        pass
+    elif orig_pc_id == ctenums.CharID.CRONO:
+        new_palette[MagusPaletteIndex.ARMOR_GLOVE_LIGHT] = blend(
+            orig_loc_palette[CronoPaletteIndex.GI_LIGHT],
+            orig_loc_palette[CronoPaletteIndex.GI_MID], 0.5)
+        new_palette[MagusPaletteIndex.ARMOR_GLOVE_DARK] = orig_loc_palette[CronoPaletteIndex.GI_DARK]
+        new_palette[MagusPaletteIndex.CAPE_MAIN] = blend(
+            orig_loc_palette[CronoPaletteIndex.HAIR_DARKER], orig_loc_palette[CronoPaletteIndex.HAIR_DARKEST],
+            0.5
+        )
+        new_palette[MagusPaletteIndex.PANTS_MAIN] = orig_loc_palette[CronoPaletteIndex.PANTS]
+    elif orig_pc_id == ctenums.CharID.MARLE:
+        new_palette[MagusPaletteIndex.ARMOR_GLOVE_LIGHT] = orig_loc_palette[MarlePaletteIndex.TUNIC_SHADOW_MID]
+        new_palette[MagusPaletteIndex.ARMOR_GLOVE_DARK] = orig_loc_palette[MarlePaletteIndex.TUNIC_SHADOW_DARK]
+        new_palette[MagusPaletteIndex.CAPE_MAIN] = orig_loc_palette[MarlePaletteIndex.HAIR_DARKER]
+        new_palette[MagusPaletteIndex.PANTS_MAIN] = blend(
+            orig_loc_palette[MarlePaletteIndex.HAIR_MID],
+            orig_loc_palette[MarlePaletteIndex.TUNIC_SHADOW_LIGHT], 0.5
+        )
+        new_palette[MagusPaletteIndex.INTERNAL_DARK] = darken(
+            orig_loc_palette[MarlePaletteIndex.HAIR_DARKEST], 0.5)
+
+    elif orig_pc_id == ctenums.CharID.LUCCA:
+        new_palette[MagusPaletteIndex.HAIR_LIGHT] = orig_loc_palette[LuccaPaletteIndex.HAIR_LIGHT]
+        new_palette[MagusPaletteIndex.HAIR_MID] = blend(
+            orig_loc_palette[LuccaPaletteIndex.HAIR_LIGHT],
+            orig_loc_palette[LuccaPaletteIndex.HAIR_DARK], 0.5
+        )
+        new_palette[MagusPaletteIndex.ARMOR_GLOVE_LIGHT] = orig_loc_palette[LuccaPaletteIndex.HAT_LIGHTER]
+        new_palette[MagusPaletteIndex.ARMOR_GLOVE_DARK] = orig_loc_palette[LuccaPaletteIndex.HAT_DARKER]
+
+        new_palette[MagusPaletteIndex.CAPE_MAIN] = orig_loc_palette[LuccaPaletteIndex.TUNIC_MID]
+        new_palette[MagusPaletteIndex.PANTS_MAIN] = darken(blend(
+            new_palette[MagusPaletteIndex.HAIR_MID],
+            orig_loc_palette[LuccaPaletteIndex.TUNIC_DARKER], 0.5), 0.25
+        )
+        new_palette[MagusPaletteIndex.INTERNAL_DARK] = darken(
+            new_palette[MagusPaletteIndex.CAPE_MAIN], 0.75
+        )
+    elif orig_pc_id == ctenums.CharID.ROBO:
+        new_palette[MagusPaletteIndex.PANTS_MAIN] = blend(
+            new_palette[MagusPaletteIndex.HAIR_MID],
+            orig_loc_palette[RoboPaletteIndex.JOINTS_MID], 0.5
+        )
+    elif orig_pc_id == ctenums.CharID.FROG:
+        new_palette[MagusPaletteIndex.SKIN_LIGHTER] = reassign_pc_palette[MagusPaletteIndex.SKIN_LIGHTER]
+        new_palette[MagusPaletteIndex.SKIN_DARKER] = reassign_pc_palette[MagusPaletteIndex.SKIN_DARKER]
+        new_palette[MagusPaletteIndex.HAIR_LIGHT] = orig_loc_palette[FrogPaletteIndex.SKIN_LIGHTER]
+        new_palette[MagusPaletteIndex.HAIR_MID] = orig_loc_palette[FrogPaletteIndex.SKIN_MID]
+        new_palette[MagusPaletteIndex.ARMOR_GLOVE_LIGHT] = orig_loc_palette[FrogPaletteIndex.ARMOR_LIGHT]
+        new_palette[MagusPaletteIndex.ARMOR_GLOVE_DARK] = orig_loc_palette[FrogPaletteIndex.ARMOR_DARK]
+        new_palette[MagusPaletteIndex.CAPE_MAIN] = orig_loc_palette[FrogPaletteIndex.CAPE_LIGHT]
+        new_palette[MagusPaletteIndex.INTERNAL_DARK] = orig_loc_palette[FrogPaletteIndex.CAPE_DARK]
+        new_palette[MagusPaletteIndex.PANTS_MAIN] = blend(
+            new_palette[MagusPaletteIndex.HAIR_MID],
+            orig_loc_palette[FrogPaletteIndex.CAPE_MID], 0.5
+        )
+    elif orig_pc_id == ctenums.CharID.AYLA:
+        new_palette[MagusPaletteIndex.ARMOR_GLOVE_LIGHT] = orig_loc_palette[AylaPaletteIndex.CLOTHES_MID]
+        new_palette[MagusPaletteIndex.ARMOR_GLOVE_DARK] = orig_loc_palette[AylaPaletteIndex.CLOTHES_DARK]
+        new_palette[MagusPaletteIndex.CAPE_MAIN] = orig_loc_palette[AylaPaletteIndex.HAIR_DARK]
+        new_palette[MagusPaletteIndex.PANTS_MAIN] = blend(
+            new_palette[MagusPaletteIndex.HAIR_MID],
+            orig_loc_palette[AylaPaletteIndex.CLOTHES_LIGHT], 0.5
+        )
+        new_palette[MagusPaletteIndex.INTERNAL_DARK] = darken(
+            orig_loc_palette[AylaPaletteIndex.INTERNAL_DARK], 0.5)
+    else:
+        raise ValueError
+
+    return new_palette
+
+
+
+def main():
+    import random
+
+    r = random.randint(0, 255)
+    g = random.randint(0, 255)
+    b = random.randint(0, 255)
+
+    hsv = rgb255_to_hsv(r, g, b)
+
+    r1, g1, b1 = hsv_to_rgb255(hsv)
+    pass
+
+
+
+if __name__ == "__main__":
+    main()

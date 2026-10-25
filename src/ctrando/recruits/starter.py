@@ -10,6 +10,7 @@ from ctrando.recruits import recruitassign as ra
 
 def assign_pc_to_spot(
         char_ids: list[ctenums.CharID],
+        reassign_ids: list[ctenums.CharID],
         script_man: ScriptManager,
         min_level: int = 1,
         min_techlevel: int = 0,
@@ -25,14 +26,14 @@ def assign_pc_to_spot(
         raise ValueError("Empty Starters")
 
     recruit_fn = EF()
-    for char_id in char_ids:
+    for char_id, reassign_id in zip(char_ids, reassign_ids):
 
         scale_block = (
             EF().add(EC.set_level(char_id, min_level))
             .add(EC.set_tech_level(char_id, min_techlevel))
         )
         if scale_gear:
-            scale_block.append(ra.get_dynamic_gear_function(char_id))
+            scale_block.append(ra.get_dynamic_gear_function(char_id, reassign_id))
         recruit_fn.append(scale_block)
         recruit_fn.append(owu.get_increment_addr(memory.Memory.RECRUITS_OBTAINED))
 

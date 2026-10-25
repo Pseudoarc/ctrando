@@ -306,12 +306,64 @@ class FlagArg:
             help=self.help_text,
         )
 
-    def get_toml_value(self, value: typing.Any) -> typing.Any:
+    @staticmethod
+    def get_toml_value(value: typing.Any) -> typing.Any:
         if not isinstance(value, bool):
             raise TypeError
 
         return value
 
+
+class RandomFlagAction(argparse.Action):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def __call__(
+            self,
+            parser: argparse.ArgumentParser,
+            namespace: argparse.Namespace,
+            values: str | Sequence[Any] | None,
+            option_string: str | None = None
+    ) -> None:
+        if option_string is None:
+            raise ValueError
+
+        if not values:
+            stored_val = 100
+        elif isinstance(values, str):
+            stored_val = int(values)
+        else:
+            if len(values) > 1:
+                raise ValueError
+            stored_val = int(values[0])
+
+        setattr(namespace, self.dest, stored_val)
+
+
+class RandomFlagArg:
+    def __init__(self, help_text: str, default_value: int = 0):
+        self.help_text = help_text
+        self.default_value = default_value
+
+    def add_to_argparse(
+            self,
+            argparse_name: str,
+            argparse_obj: argparse.ArgumentParser | argparse._ArgumentGroup,
+    ):
+        argparse_obj.add_argument(
+            argparse_name,
+            action = RandomFlagAction,
+            nargs="*",
+            default=argparse.SUPPRESS,
+            help=self.help_text,
+        )
+
+    @staticmethod
+    def get_toml_value(value: typing.Any) -> typing.Any:
+        if not isinstance(value, int):
+            raise TypeError
+
+        return value
 
 
 class DiscreteNumericalArg[_Number]:

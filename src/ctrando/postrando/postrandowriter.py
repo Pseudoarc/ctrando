@@ -1,4 +1,5 @@
 """Write Post-Randomization options to rom data"""
+import copy
 from collections.abc import Callable
 from importlib.resources import files
 import io
@@ -114,9 +115,12 @@ def use_alt_house_warp(ct_rom: ctrom.CTRom,
     script.strings[7] = ctstrings.CTString.from_ascii(home_warp_text)
 
 
+type PaletteReassigner = Callable[[palettes.SNESPalette, ctenums.CharID, palettes.SNESPalette], palettes.SNESPalette]
+
 def write_palettes(
         ct_rom: ctrom.CTRom,
-        post_rando_options: postrandooptions.PostRandoOptions
+        reassign_dict: dict[ctenums.CharID, ctenums.CharID],
+        post_rando_options: postrandooptions.PostRandoOptions,
 ):
     char_palettes = [
         post_rando_options.crono_palette, post_rando_options.marle_palette,
@@ -125,14 +129,36 @@ def write_palettes(
         post_rando_options.magus_palette
     ]
 
+    palette_reassigners: dict[ctenums.CharID, PaletteReassigner] = {
+        ctenums.CharID.CRONO: palettes.build_crono_loc_palette,
+        ctenums.CharID.MARLE: palettes.build_marle_loc_palette,
+        ctenums.CharID.LUCCA: palettes.build_lucca_loc_palette,
+        ctenums.CharID.ROBO: palettes.build_robo_loc_palette,
+        ctenums.CharID.FROG: palettes.build_frog_loc_palette,
+        ctenums.CharID.AYLA: palettes.build_ayla_loc_palette,
+        ctenums.CharID.MAGUS: palettes.build_magus_loc_palette,
+    }
+
+    char_palettes_copy = copy.deepcopy(char_palettes)
+
+    palette_scheme = post_rando_options.character_palette_reassign_scheme
+    for char_id, reassign_id in reassign_dict.items():
+        if palette_scheme == postrandooptions.ReassignPaletteScheme.TRANSFER_BASE:
+            orig_palette = char_palettes_copy[char_id]
+            reassign_palette = char_palettes_copy[reassign_id]
+            palette_builder = palette_reassigners[reassign_id]
+            char_palettes[char_id] = palette_builder(
+                orig_palette, char_id, reassign_palette
+            )
+        # elif palette_scheme == postrandooptions.ReassignPaletteScheme.USE_BASE:
+        #     continue
+        elif palette_scheme == postrandooptions.ReassignPaletteScheme.USE_REASSIGN:
+            char_palettes[char_id] = char_palettes_copy[reassign_id]
+
     for ind, palette in enumerate(char_palettes):
         palette.write_to_ctrom(ct_rom, ind)
 
     ow_pc_palettes = palettes.OWPallete.read_from_ct_rom(ct_rom, 0)
-    # from ctrando.common import byteops
-    # byteops.print_bytes(ow_pc_palettes.to_bytes(), 0x10)
-    # input()
-
 
     defaults = postrandooptions.PostRandoOptions()
     default_palettes = [
@@ -148,24 +174,29 @@ def write_palettes(
         palettes.build_magus_ow_palette,
     ]
 
-    portrait_palette_builders: list[Callable[[palettes.SNESPalette], palettes.PortraitPallete]] = [
-        palettes.build_crono_portrait_palette, palettes.build_marle_portrait_palette,
-        palettes.build_lucca_portrait_palette, palettes.build_robo_portrait_palette,
-        palettes.build_frog_portrait_palette, palettes.build_ayla_portrait_palette,
-        palettes.build_magus_portrait_palette,
-    ]
+    portrait_palette_builder_dict: dict[
+        ctenums.CharID, Callable[[palettes.SNESPalette], palettes.PortraitPallete]
+    ] = {
+        ctenums.CharID.CRONO: palettes.build_crono_portrait_palette,
+        ctenums.CharID.MARLE: palettes.build_marle_portrait_palette,
+        ctenums.CharID.LUCCA: palettes.build_lucca_portrait_palette,
+        ctenums.CharID.ROBO: palettes.build_robo_portrait_palette,
+        ctenums.CharID.FROG: palettes.build_frog_portrait_palette,
+        ctenums.CharID.AYLA: palettes.build_ayla_portrait_palette,
+        ctenums.CharID.MAGUS: palettes.build_magus_portrait_palette,
+    }
 
     portait_ids = [3, 6, 5, 1, 2, 4, 0]
 
-    for ind, (
-            new_palette, default_palette, ow_palette_builder,
-            portrait_palette_builder, portrait_id
-    ) in \
-            enumerate(zip(char_palettes, default_palettes, ow_palette_builders,
-                    portrait_palette_builders, portait_ids)):
+    for char_id in ctenums.CharID:
+        new_palette = char_palettes[char_id]
+        default_palette = default_palettes[char_id]
+        portrait_palette_builder = portrait_palette_builder_dict[reassign_dict[char_id]]
+        portrait_id = portait_ids[char_id]
+
         if new_palette != default_palette:
-            ow_palette = ow_palette_builder(new_palette)
-            ow_pc_palettes.set_pc_palette(ind, ow_palette)
+            ow_palette = ow_palette_builders[reassign_dict[char_id]](new_palette)
+            ow_pc_palettes.set_pc_palette(char_id, ow_palette)
 
             portait_palette = portrait_palette_builder(new_palette)
             portait_palette.write_to_ctrom(ct_rom, portrait_id)
@@ -250,6 +281,7 @@ def write_post_rando_options(
         post_rando_options: postrandooptions.PostRandoOptions,
         script_man: ScriptManager,
         ow_manager: OWManager,
+        char_assign_dict: dict[ctenums.CharID, ctenums.CharID]
 ):
     """Implement settings from PostRandoOptions object."""
 
@@ -274,7 +306,7 @@ def write_post_rando_options(
     default_opts.menu_style = post_rando_options.window_background - 1
 
     default_opts.write_to_ctrom(ct_rom)
-    write_palettes(ct_rom, post_rando_options)
+    write_palettes(ct_rom, char_assign_dict, post_rando_options)
     write_ending_selection(post_rando_options.ending, script_man)
 
     if post_rando_options.remove_flashes:

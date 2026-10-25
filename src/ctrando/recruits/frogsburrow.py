@@ -106,6 +106,7 @@ def write_recruit_startup(
 
 def write_recruit_activate(script: LocationEvent,
                            char_id: ctenums.CharID,
+                           reassign_id: ctenums.CharID,
                            min_level: typing.Optional[int] = None,
                            min_techlevel: typing.Optional[int] = None,
                            has_medal_addr: int = 0x7F0210,
@@ -144,7 +145,7 @@ def write_recruit_activate(script: LocationEvent,
 
     obj_id = _char_objs[char_id]
     scale_block = owu.get_level_techlevel_set_function(
-        char_id, scale_level_to_lead, scale_techlevel_to_lead, scale_gear,
+        char_id, reassign_id, scale_level_to_lead, scale_techlevel_to_lead, scale_gear,
         min_level, min_techlevel
     )
 
@@ -256,6 +257,7 @@ def write_recruit_activate(script: LocationEvent,
 
 def assign_pc_to_spot(
         char_id: ctenums.CharID,
+        reassign_id: ctenums.CharID,
         script_man: ScriptManager,
         min_level: int = 1,
         min_techlevel: int = 0,
@@ -273,7 +275,7 @@ def assign_pc_to_spot(
 
     write_recruit_checks(script)
     write_recruit_startup(script, char_id)
-    write_recruit_activate(script, char_id,
+    write_recruit_activate(script, char_id, reassign_id,
                            min_level=min_level,
                            min_techlevel=min_techlevel,
                            scale_level_to_lead=scale_level_to_lead,

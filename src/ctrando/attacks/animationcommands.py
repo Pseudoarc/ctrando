@@ -13,9 +13,80 @@ from ctrando.overworlds import oweventcommand
 class EnumTarget(enum.IntEnum):
     CASTER_0 = 0
     CASTER_1 = 1
-
-    TARGET_0 = 0xC
-    TARGET_1 = 0xD
+    CASTER_2 = 2
+    TARGET_0 = 3
+    TARGET_1 = 4
+    TARGET_2 = 5
+    TARGET_3 = 6
+    TARGET_4 = 7
+    TARGET_5 = 8
+    CASTER_0_CURSOR = 9
+    CASTER_1_CURSOR = 0xA
+    CASTER_2_CURSOR = 0xB
+    TARGET_0_CURSOR = 0xC
+    TARGET_1_CURSOR = 0xD
+    TARGET_2_CURSOR = 0xE
+    TARGET_3_CURSOR = 0xF
+    TARGET_4_CURSOR = 0x10
+    TARGET_5_CURSOR = 0x11
+    NOTHING = 0x12
+    BETWEEN_CASTER_0_TARGET_0 = 0x13
+    BETWEEN_CASTER_0_CASTER_1 = 0x14
+    BETWEEN_CASTER_0_TARGET_2 = 0x15
+    UNKNOWN_16 = 0x16
+    UNKNOWN_17 = 0x17
+    CENTER_OF_SCREEN = 0x18
+    CASTER_0_START = 0x19
+    CASTER_1_START = 0x1A
+    CASTER_2_START = 0x1B
+    EFFECT_0 = 0x1C
+    EFFECT_1 = 0x1D
+    EFFECT_2 = 0x1E
+    EFFECT_3 = 0x1F
+    EFFECT_4 = 0x20
+    EFFECT_5 = 0x21
+    EFFECT_6 = 0x22
+    EFFECT_7 = 0x23
+    UNKNOWN_24 = 0x24
+    UNKNOWN_25 = 0x25
+    UNKNOWN_26 = 0x26
+    UNKNOWN_27 = 0x27
+    UNKNOWN_28 = 0x28
+    UNKNOWN_29 = 0x29
+    # 0x2A seems to use counters as coordinates
+    # 0x2A - 0x31 are all the same type according to TF
+    UNKNOWN_2A = 0x2A
+    COUNTER_2_3 = 0x2B
+    COUNTER_4_5 = 0x2C
+    COUNTER_6_7 = 0x2D  # Sorry
+    COUNTER_8_9 = 0x2E
+    UNKNOWN_2F = 0x2F
+    UNKNOWN_30 = 0x20
+    UNKNOWN_31 = 0x21
+    UNKNOWN_32 = 0x32
+    UNKNOWN_33 = 0x33
+    UNKNOWN_34 = 0x34
+    UNKNOWN_35 = 0x35
+    UNKNOWN_36 = 0x36
+    UNKNOWN_37 = 0x37
+    UNKNOWN_38 = 0x38
+    UNKNOWN_39 = 0x39
+    UNKNOWN_3A = 0x3A
+    UNKNOWN_3B = 0x3B
+    UNKNOWN_3C = 0x3C
+    UNKNOWN_3D = 0x3D
+    UNKNOWN_3E = 0x3E
+    UNKNOWN_3F = 0x3F
+    BETWEEN_CASTER_1_CASTER_2 = 0x40
+    UNKNOWN_41 = 0x41
+    UNKNOWN_42 = 0x42
+    UNKNOWN_43 = 0x43
+    UNKNOWN_44 = 0x44
+    UNKNOWN_45 = 0x45
+    UNKNOWN_46 = 0x46
+    UNKNOWN_47 = 0x47
+    UNKNOWN_78 = 0x78
+    UNKNOWN_F0 = 0xF0
 
 
 
@@ -134,7 +205,7 @@ class SlideSpriteToTarget(AnimationCommand):
     SIZE = 2
     CMD_ID = 0x12
 
-    target = cty.byte_prop(1)
+    target = cty.byte_prop(1, ret_type=EnumTarget)
 
     def __init__(self, *args, target: int = None, **kwargs):
         AnimationCommand.__init__(self, *args, **kwargs)
@@ -163,11 +234,21 @@ class SpiralSpriteToStoredCoordinates(AnimationCommand):
 
 # 15 cc tt Spiral Sprite to Target - cc = 1 for clockwise
 class SpiralSpriteToTarget(AnimationCommand):
-    SIZE = 2
+    SIZE = 3
     CMD_ID = 0x15
 
-    is_clockwise = cty.byte_prop(1, ret_type=bool)
-    target = cty.byte_prop(2)
+    direction = cty.byte_prop(1, ret_type=int)  # Seems to be 0x80 or 0x00
+    target = cty.byte_prop(2, ret_type=EnumTarget)
+
+    def __init__(self, *args,
+                 target: int | None = None,
+                 direction: int | None = None,
+                 **kwargs):
+        AnimationCommand.__init__(self, *args, **kwargs)
+        self._set_properties(
+            ("target", target),
+            ("direction", direction)
+        )
 
 
 # 16 xx yy Move X, then Y to coordinates
@@ -190,7 +271,7 @@ class MoveXThenYToTarget(AnimationCommand):
     SIZE = 3
     CMD_ID = 0x18
 
-    target = cty.byte_prop(1)
+    target = cty.byte_prop(1, ret_type=EnumTarget)
 
 
 # 19 xx yy Teleport to coordinates xx yy
@@ -220,7 +301,7 @@ class TeleportToTarget(AnimationCommand):
     SIZE = 2
     CMD_ID = 0x1B
 
-    target = cty.byte_prop(1)
+    target = cty.byte_prop(1, ret_type=EnumTarget)
 
     def __init__(self, *args, target: int = None, **kwargs):
         AnimationCommand.__init__(self, *args, **kwargs)
@@ -333,7 +414,7 @@ class ReturnIfTargetAbsent(AnimationCommand):
     SIZE = 2
     CMD_ID = 0x25
 
-    target = cty.byte_prop(1)
+    target = cty.byte_prop(1, ret_type=int)
 
     def __init__(self, *args, target: int = None, **kwargs):
         AnimationCommand.__init__(self, *args, **kwargs)
@@ -441,7 +522,7 @@ class StoreTargetCoordinates(AnimationCommand):
     SIZE = 2
     CMD_ID = 0x33
 
-    target = cty.byte_prop(1)
+    target = cty.byte_prop(1, ret_type=EnumTarget)
 
     def __init__(self, *args, target: int = None, **kwargs):
         AnimationCommand.__init__(self, *args, **kwargs)
@@ -504,6 +585,15 @@ class IncreaseCounterByValue(AnimationCommand):
     counter = cty.byte_prop(1)
     value = cty.byte_prop(2)
 
+    def __init__(self, *args,
+                 counter: int | None = None,
+                 value: int | None = None,
+                 **kwargs):
+        AnimationCommand.__init__(self, *args, **kwargs)
+        self._set_properties(
+            ("counter", counter),
+            ("value", value)
+        )
 
 # 3B vv Increase Counter 0x1C by vv
 class IncreaseCounter1CByValue(AnimationCommand):
@@ -526,7 +616,7 @@ class LoadSpriteAtTarget(AnimationCommand):
     SIZE = 2
     CMD_ID = 0x3D
 
-    target = cty.byte_prop(1)
+    target = cty.byte_prop(1, ret_type=EnumTarget)
 
     def __init__(self, *args,
                  target: int = None,
@@ -584,14 +674,14 @@ class StoreTargetCoordinatesWithOffset(AnimationCommand):
     SIZE = 4
     CMD_ID = 0x43
 
-    target = cty.byte_prop(1)
+    target = cty.byte_prop(1, ret_type=EnumTarget)
     x_offset = cty.byte_prop(2)
     y_offset = cty.byte_prop(3)
 
     def __init__(self, *args,
-                 target: int = None,
-                 x_offset: int = None,
-                 y_offset: int = None,
+                 target: int | None = None,
+                 x_offset: int | None = None,
+                 y_offset: int | None = None,
                  **kwargs):
         AnimationCommand.__init__(self,*args, **kwargs)
         self._set_properties(
@@ -608,19 +698,17 @@ class StoreCurrentObjectCoordinates(AnimationCommand):
 
 
 # 45 tt Load sprite at target tt (00 caster, 01 caster 2, 02 caster 3, 03 target 1 etc) (Differences Unknown)
-class LoadSpriteAtTarget45(AnimationCommand):
+class LoadSpriteAtTarget45(LoadSpriteAtTarget):
     SIZE = 2
     CMD_ID = 0x45
 
-    target = cty.byte_prop(1)
+    target = cty.byte_prop(1, ret_type=EnumTarget)
 
 
 # 46 tt Load sprite at target tt (00 caster, 01 caster 2, 02 caster 3, 03 target 1 etc) (Differences Unknown)
-class LoadSpriteAtTarget46(AnimationCommand):
+class LoadSpriteAtTarget46(LoadSpriteAtTarget):
     SIZE = 2
     CMD_ID = 0x46
-
-    target = cty.byte_prop(1)
 
 
 # 47 tt Store Target tt to RAM at $7E:A4EC
@@ -628,7 +716,7 @@ class StoreTargetTo7E4AEC(AnimationCommand):
     SIZE = 2
     CMD_ID = 0x47
 
-    target = cty.byte_prop(1)
+    target = cty.byte_prop(1, ret_type=EnumTarget)
 
 
 # 48 tt Store Target tt to RAM at $7E:A4ED
@@ -636,7 +724,7 @@ class StoreTargetTo7E4AED(AnimationCommand):
     SIZE = 2
     CMD_ID = 0x48
 
-    target = cty.byte_prop(1)
+    target = cty.byte_prop(1, ret_type=EnumTarget)
 
 
 # 49 cc mv Add or Subtract value mv (max 0x7F) to/from counter cc. mv 0x80 - Subtract.
@@ -976,12 +1064,12 @@ class SetAngleBetweenTargets(AnimationCommand):
     SIZE = 3
     CMD_ID = 0x76
 
-    source_target = cty.byte_prop(1)
-    destination_target = cty.byte_prop(2)
+    source_target = cty.byte_prop(1, ret_type=EnumTarget)
+    destination_target = cty.byte_prop(2, ret_type=EnumTarget)
 
     def __init__(self, *args,
-                 source_target: int = None,
-                 destination_target: int = None,
+                 source_target: int | None = None,
+                 destination_target: int | None = None,
                  **kwargs):
         AnimationCommand.__init__(self, *args, **kwargs)
         self._set_properties(
@@ -1098,9 +1186,9 @@ class StoreTargetTo7E4AE8(AnimationCommand):
     SIZE = 2
     CMD_ID = 0x81
 
-    target = cty.byte_prop(1)
+    target = cty.byte_prop(1, ret_type=EnumTarget)
 
-    def __init__(self, *args, target: int = None, **kwargs):
+    def __init__(self, *args, target: int | None = None, **kwargs):
         AnimationCommand.__init__(self, *args, **kwargs)
         self._set_properties(
             ("target", target),
@@ -1112,9 +1200,9 @@ class StoreTargetTo7E4AE9(AnimationCommand):
     SIZE = 2
     CMD_ID = 0x82
 
-    target = cty.byte_prop(1)
+    target = cty.byte_prop(1, ret_type=EnumTarget)
 
-    def __init__(self, *args, target: int = None, **kwargs):
+    def __init__(self, *args, target: int | None = None, **kwargs):
         AnimationCommand.__init__(self, *args, **kwargs)
         self._set_properties(
             ("target", target),
@@ -1127,7 +1215,7 @@ class StoreTargetTo7E4AEA(AnimationCommand):
     SIZE = 2
     CMD_ID = 0x83
 
-    target = cty.byte_prop(1)
+    target = cty.byte_prop(1, ret_type=EnumTarget)
 
     def __init__(self, *args, target: int = None, **kwargs):
         AnimationCommand.__init__(self, *args, **kwargs)
@@ -1141,9 +1229,9 @@ class StoreTargetTo7E4AEB(AnimationCommand):
     SIZE = 2
     CMD_ID = 0x84
 
-    target = cty.byte_prop(1)
+    target = cty.byte_prop(1, ret_type=EnumTarget)
 
-    def __init__(self, *args, target: int = None, **kwargs):
+    def __init__(self, *args, target: int | None = None, **kwargs):
         AnimationCommand.__init__(self, *args, **kwargs)
         self._set_properties(
             ("target", target),
@@ -1157,7 +1245,7 @@ class SetAngle(AnimationCommand):
 
     angle = cty.byte_prop(1)
 
-    def __init__(self, *args, angle: int = None, **kwargs):
+    def __init__(self, *args, angle: int | None = None, **kwargs):
         AnimationCommand.__init__(self,*args, **kwargs)
         self._set_properties(
             ("angle", angle)
@@ -1277,7 +1365,17 @@ class MoveToTarget(AnimationCommand):
     SIZE = 3
     CMD_ID = 0x98
 
-    target = cty.byte_prop(1)
+    target = cty.byte_prop(2, ret_type=EnumTarget)
+    unknown = cty.byte_prop(1)
+
+    def __init__(self, *args,
+                 target: int | None = None,
+                 unknown: int | None = None,
+                 **kwargs):
+        AnimationCommand.__init__(self, *args, **kwargs)
+        self._set_properties(
+            ("target", target), ("unknown", unknown)
+        )
 
 
 # 99 Move To Stored Coordinates (0x98 variants)

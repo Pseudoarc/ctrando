@@ -1,6 +1,4 @@
 """Openworld Spekkio"""
-from dataclasses import dataclass
-
 from ctrando.base import openworldutils as owu
 from ctrando.common import ctenums, memory
 from ctrando.locations import locationevent
@@ -55,6 +53,104 @@ class EventMod(locationevent.LocEventMod):
                 .add(EC.assign_val_to_mem(tech_level, cls.assign_tech_level_addr, 1))
                 .get_bytearray(), pos
             )
+
+    @classmethod
+    def get_magic_learning_block(
+            cls,
+            script: Event,
+            char_reassign_dict: dict[ctenums.CharID, ctenums.CharID],
+            draw_swirls: bool
+    ):
+
+        magic_learners = {
+            ctenums.CharID.CRONO,
+            ctenums.CharID.MARLE,
+            ctenums.CharID.LUCCA,
+            ctenums.CharID.FROG
+        }
+
+        elem_swirl_dict = {
+            ctenums.CharID.CRONO: 0x0E,
+            ctenums.CharID.MARLE: 0x0C,
+            ctenums.CharID.LUCCA: 0x0B,
+            ctenums.CharID.FROG: 0x0D,
+        }
+
+        new_block = EF()
+        new_block.add(
+            EC.assign_mem_to_mem(cls.assign_tech_level_addr,
+                                 memory.Memory.LOCEVENT_VALUE_STR_0,
+                                 1)
+        ).add(EC.assign_val_to_mem(0, cls.temp_addr, 1))
+
+        for pc_id in ctenums.CharID:
+            reassign_id = char_reassign_dict[pc_id]
+            if reassign_id not in magic_learners:
+                continue
+
+            tech_level_addr = 0x7E2830 + pc_id
+            new_block.add_if(
+                EC.if_pc_active(pc_id),
+                EF()
+                .add(EC.assign_mem_to_mem(tech_level_addr, cls.temp_tech_levl_addr, 1))
+                .add_if(
+                    EC.if_mem_op_mem(cls.temp_tech_levl_addr, OP.LESS_THAN, cls.assign_tech_level_addr),
+                    EF().add(EC.assign_val_to_mem(1, cls.temp_addr, 1))
+                )
+            )
+
+        magic_fn = (
+            EF()
+            .add(EC.call_obj_function(0xA, FID.ARBITRARY_3, 0, FS.HALT))
+            .add(EC.text_box(0xD, False))
+        )
+        for pc_id in ctenums.CharID:
+            reassign_id = char_reassign_dict[pc_id]
+            if reassign_id not in magic_learners:
+                continue
+
+            obj_id = pc_id + 1
+            tech_level_addr = 0x7E2830 + pc_id
+
+            if draw_swirls:
+                elem_obj = elem_swirl_dict[reassign_id]
+                elem_block = (
+                    EF()
+                    .add(EC.call_obj_function(elem_obj, FID.ARBITRARY_0, 4, FS.HALT))
+                    .add(EC.pause(2))
+                    .add(EC.call_obj_function(elem_obj, FID.ARBITRARY_3, 4, FS.HALT))
+                )
+            else:
+                elem_block = EF().add(EC.pause(2))
+
+            magic_fn.add_if(
+                EC.if_pc_active(pc_id),
+                EF()
+                .add(EC.assign_mem_to_mem(tech_level_addr, cls.temp_addr, 1))
+                .add_if(
+                    EC.if_mem_op_mem(cls.temp_addr, OP.LESS_THAN, cls.assign_tech_level_addr),
+                    EF()
+                    .add(EC.call_obj_function(obj_id, FID.ARBITRARY_2, 4, FS.HALT))
+                    .append(elem_block)
+                    .add(EC.call_obj_function(obj_id, FID.ARBITRARY_3, 4, FS.HALT))
+                    # Comment next line if you want to view in TF
+                    .add(EC.set_tech_level_from_memory(pc_id, cls.assign_tech_level_addr))
+                    .add(EC.text_box(
+                        script.add_py_string(
+                            "{line break}"
+                            f"    {{{pc_id}}}'s Tech Level set to {{value 8}}!{{null}}"
+                        ), False
+                    ))
+                )
+            )
+
+        new_block.add_if(
+            EC.if_mem_op_value(cls.temp_addr, OP.EQUALS, 1),
+            magic_fn
+        )
+
+        return new_block
+
 
     @classmethod
     def modify_magic_learning_fn(cls, script: Event):

@@ -489,10 +489,10 @@ class LocationEvent:
         for ptr in range(next_ptr_st, self.num_objects*32, 2):
             next_fn_st = int.from_bytes(self.data[ptr:ptr+2], "little")
             # print("f{next_fn_st:04X}")
-            if next_fn_st != start:
+            if next_fn_st > start:
                 return next_fn_st
 
-        # If we get here, we didn't find a nonempty function after the given
+        # If we get here, we didn't find a nonempty, nonlinked function after the given
         # function.  So our function goes to the end of the data.
         return len(self.data)
 

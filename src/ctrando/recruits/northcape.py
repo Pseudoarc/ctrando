@@ -19,6 +19,7 @@ from ctrando.strings import ctstrings
 
 def assign_pc_to_spot(
         recruit_char_id: ctenums.CharID,
+        reassign_id: ctenums.CharID,
         script_man: ScriptManager,
         min_level: int = 1,
         min_techlevel: int = 0,
@@ -159,7 +160,7 @@ def assign_pc_to_spot(
     # )
 
     scale_block = owu.get_level_techlevel_set_function(
-        recruit_char_id, scale_level_to_lead, scale_techlevel_to_lead, scale_gear,
+        recruit_char_id, reassign_id, scale_level_to_lead, scale_techlevel_to_lead, scale_gear,
         min_level, min_techlevel
     )
 

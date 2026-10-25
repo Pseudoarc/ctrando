@@ -1381,6 +1381,27 @@ def base_patch_ct_rom(ct_rom: ctrom.CTRom):
     ct_rom.seek(0x3DAC28)
     ct_rom.write(b'\xFF')
 
+    # Weird heal combo tech patch that might be dumb
+    # C1D707  EE 9B AD       INC $AD9B
+    # C1D70A  AE C3 B2       LDX $B2C3
+    # C1D70D  BF F5 B1 7E    LDA $7EB1F5,X
+
+    # Don't increment $AD9B for healing effects
+    # This is usually used as index into the team performing the tech,
+    # but healing effects are weird.  They *do* accumulate, but they
+    # always accumulate in the index-0 spot.
+
+    rt = [
+        inst.LDA(0xAEE6, AM.ABS),
+        inst.CMP(0x02, AM.IMM8),  # Test effect healstatus or heal.
+        inst.BCC("skip"),
+        inst.INC(0xAD9B, AM.ABS),
+        "skip",
+        inst.LDX(0xB2C3, AM.ABS),
+        inst.JMP(0xC1D70D, AM.LNG)
+    ]
+    asmpatcher.apply_jmp_patch(rt, 0x01D707, ct_rom)
+
 
 def patch_max_tech_count(ct_rom: ctrom.CTRom):
     """Allow more than 0x7F techs on the rom."""

@@ -186,6 +186,20 @@ class EffectHeader(SizedBinaryData):
             raise ValueError('Effect Type does not support healing')
 
     @property
+    def steal_chance(self) -> int:
+        if self.effect_type != EffectType.STEAL:
+            raise ValueError("Effect type does not support steal")
+
+        return self[1]
+
+    @steal_chance.setter
+    def steal_chance(self, val: int):
+        if self.effect_type != EffectType.STEAL:
+            raise ValueError("Effect type does not support steal")
+
+        self[1] = val
+
+    @property
     def status_effect_chance(self) -> int:
         if self.effect_type != EffectType.DAMAGE:
             raise ValueError("Effect type does not support status effects")

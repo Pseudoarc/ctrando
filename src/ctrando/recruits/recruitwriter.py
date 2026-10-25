@@ -66,7 +66,13 @@ def get_random_recruit_assignment_dict(
     return ret_dict
 
 
-RecruitAssigner: typing.Callable[[CharID, ScriptManager], None]
+type RecruitAssignerList = typing.Callable[
+    [list[CharID], list[CharID], ScriptManager, int, int, bool, bool, bool],
+    None]
+
+type RecruitAssigner = typing.Callable[
+    [CharID, CharID, ScriptManager, int, int, bool, bool, bool],
+    None]
 
 
 def write_recruit_stats(
@@ -82,12 +88,13 @@ def write_recruit_stats(
 
 
 def write_recruits_to_ct_rom(
-        recruit_dict: dict[RecruitID, CharID | None],
+        recruit_dict: dict[RecruitID, list[CharID]],
+        reassign_dict: dict[ctenums.CharID, ctenums.CharID],
         script_manager: ScriptManager,
         settings: Settings = Settings()
 ):
 
-    recruit_writer_dict: dict[RecruitID, RecruitAssigner] = {
+    recruit_writer_dict: dict[RecruitID, RecruitAssigner | RecruitAssignerList] = {
         RecruitID.STARTER: starter.assign_pc_to_spot,
         RecruitID.CRONO_TRIAL: guardiaprison.assign_pc_to_spot,
         RecruitID.CATHEDRAL: manoriacathedral.assign_pc_to_spot,
@@ -117,11 +124,12 @@ def write_recruits_to_ct_rom(
 
     for spot, writer in recruit_writer_dict.items():
         recruits = recruit_dict[spot]
+        reassigns = [reassign_dict[recruit] for recruit in recruits]
         spot_data = spot_levels_dict[spot]
 
         if spot == ctenums.RecruitID.STARTER:
             writer(
-                recruits, script_manager,
+                recruits, reassigns, script_manager,
                 spot_data.min_level, spot_data.min_tech_level,
                 settings.recruit_options.scale_level_to_leader,
                 settings.recruit_options.scale_techlevel_to_leader,
@@ -131,7 +139,7 @@ def write_recruits_to_ct_rom(
             if len(recruits) != 1:
                 raise ValueError(f"Multiple Assignment to {spot}")
             recruit = recruits[0]
-            writer(recruit, script_manager,
+            writer(recruit, reassign_dict[recruit], script_manager,
                    spot_data.min_level, spot_data.min_tech_level,
                    settings.recruit_options.scale_level_to_leader,
                    settings.recruit_options.scale_techlevel_to_leader,
