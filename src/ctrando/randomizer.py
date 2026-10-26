@@ -350,7 +350,7 @@ def get_random_config(
         if isinstance(x, ctenums.ItemID)
     ]
     if settings.gear_rando_options.bronze_fist_policy == gearrandooptions.BronzeFistPolicy.REMOVE:
-        exclude_pool += ctenums.ItemID.BRONZEFIST
+        exclude_pool += [ctenums.ItemID.BRONZEFIST]
 
     config.treasure_assignment = treasureassign.default_assignment(
         treasure_assignment,
