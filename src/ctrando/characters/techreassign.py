@@ -724,12 +724,17 @@ def chaos_reassign_elemental_single_techs(
                 new_id = tech_assignment_list.pop()
                 if reassign_id == ctenums.CharID.MAGUS:
                     new_id = magus_replacements.get(new_id, new_id)
-                orig_pc = ctenums.CharID(tech_pair.tech.battle_group[0])
+
                 new_pair = base_data.vanilla_tech_pairs[new_id]
+                orig_pc = new_pair.tech.battle_group[0]
                 tech = reassign_single_tech(new_pair.tech, char_id)
+
+                if reassign_id == ctenums.CharID.MAGUS and "2" in tech.name:
+                    tech.effect_headers[0].power = magus_x2_power
+
                 script = copy.deepcopy(new_pair.script)
                 script = get_reassigned_tech_script(
-                    script, [orig_pc], [char_reassign_dict[char_id]]
+                    script, [orig_pc], [reassign_id]
                 )
 
                 single_tech_assignment[char_id][ind] = TechScriptPair(tech, script)
@@ -826,7 +831,6 @@ def reassign_elemental_single_techs(
                 # new_script = copy.deepcopy(replacement_pair.script)
 
                 single_tech_assignment[char_id][ind] = TechScriptPair(new_tech, new_script)
-
 
 
 def sort_tech_pair_list(
