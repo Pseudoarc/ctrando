@@ -3,6 +3,7 @@ import copy
 import dataclasses
 import enum
 import itertools
+from operator import index
 from typing import Sequence
 
 from ctrando.arguments import characteroptions, techoptions
@@ -713,6 +714,11 @@ def chaos_reassign_elemental_single_techs(
     tech_assignments: dict[ctenums.CharID, list[ctenums.TechID]] = {
         char_id: [] for char_id in ctenums.CharID
     }
+
+    techs_to_assign = sorted(
+        techs_to_assign,
+        key=lambda x:unique_replacement_dict[x]
+    )
     for tech_id in techs_to_assign:
         num_copies = unique_replacement_dict[tech_id]
         chars_to_assign = rng.sample(
