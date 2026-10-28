@@ -31,6 +31,7 @@ class AltTechID(enum.Enum):
     # Marle
     ARROW_HAIL = enum.auto()
     HASTE_ALL = enum.auto()
+    RERAISE = enum.auto()
     # Lucca
     DOUBLE_TAP = enum.auto()
     PROTECT_ALL = enum.auto()
@@ -97,6 +98,10 @@ def collect_vanilla_tech_data(
     alt_tech_dict[AltTechID.HASTE_ALL] = TechScriptPair(
         charactermods.get_haste_all_tech(base_tech_man),
         animationscript.make_single_marle_haste_all_script(base_rom)
+    )
+    alt_tech_dict[AltTechID.RERAISE] = TechScriptPair(
+        charactermods.get_reraise_tech(base_tech_man),
+        animationscript.make_marle_reraise_script(base_rom)
     )
     alt_tech_dict[AltTechID.DOUBLE_TAP] = TechScriptPair(
         charactermods.get_double_tap_tech(base_tech_man),
@@ -362,6 +367,8 @@ def collect_single_techs(
             data = base_tech_data.alt_tech_pairs[AltTechID.ARROW_HAIL]
         elif tech_id == ctenums.TechID.HASTE and char_opts.use_haste_all:
             data = base_tech_data.alt_tech_pairs[AltTechID.HASTE_ALL]
+        elif tech_id == ctenums.TechID.LIFE_2_M and char_opts.use_reraise:
+            data = base_tech_data.alt_tech_pairs[AltTechID.RERAISE]
         # Lucca Reassigns
         elif tech_id == ctenums.TechID.FLAME_TOSS and char_opts.use_phys_lucca:
             data = TechScriptPair(
