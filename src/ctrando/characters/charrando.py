@@ -783,27 +783,26 @@ def reassign_pc_arbs(
 
         for function_id in function_ids:
             function = func_dict[reassign_id][function_id]
-            if pc_id_addrs:
-                function = function.copy()
-                for ind, command in enumerate(function.commands):
-                    if (command.command == 0x12 and
-                        command.args[0] in script_offsets and
-                        command.args[2] == OP.EQUALS
-                    ):
-                        command.args[1] = int(char_id)
-                        offset = function.offsets[ind]
-                        function.data[offset:offset+len(command)] = command.to_bytearray()
-                    elif command.command in _load_pc_inv_dict:
-                        new_cmd = EC.load_pc_in_party(char_id)
-                        function.commands[ind] = new_cmd
-                        offset = function.offsets[ind]
-                        function.data[offset:offset + len(new_cmd)] = new_cmd.to_bytearray()
-                    elif command.command == EC.load_pc_always(0).command:
-                        new_cmd = EC.load_pc_always(char_id)
-                        function.commands[ind] = new_cmd
-                        offset = function.offsets[ind]
-                        function.data[offset: offset+len(new_cmd)] = new_cmd.to_bytearray()
 
+            function = function.copy()
+            for ind, command in enumerate(function.commands):
+                if (command.command == 0x12 and
+                    command.args[0] in script_offsets and
+                    command.args[2] == OP.EQUALS
+                ):
+                    command.args[1] = int(char_id)
+                    offset = function.offsets[ind]
+                    function.data[offset:offset+len(command)] = command.to_bytearray()
+                elif command.command in _load_pc_inv_dict:
+                    new_cmd = EC.load_pc_in_party(char_id)
+                    function.commands[ind] = new_cmd
+                    offset = function.offsets[ind]
+                    function.data[offset:offset + len(new_cmd)] = new_cmd.to_bytearray()
+                elif command.command == EC.load_pc_always(0).command:
+                    new_cmd = EC.load_pc_always(char_id)
+                    function.commands[ind] = new_cmd
+                    offset = function.offsets[ind]
+                    function.data[offset: offset+len(new_cmd)] = new_cmd.to_bytearray()
 
             script.set_function(obj_id, function_id, function)
 

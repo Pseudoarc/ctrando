@@ -570,6 +570,8 @@ def get_ctrom_from_config(
         settings.enemy_options.forced_sightscope
     )
 
+    # Some of the objective hooks are in places that need charrando, so do the modification first
+    charrando.reassign_scripts(post_config.script_manager, config.char_reassignment_dict)
     objectivewriter.write_test_objectives(post_config.script_manager,
                                           config.boss_assignment_dict,
                                           config.item_db,
@@ -671,8 +673,6 @@ def get_ctrom_from_config(
     if settings.treasure_options.split_linked_chests:
         treasureassign.split_charged_chests(post_config.script_manager,
                                             post_config.treasure_data_dict)
-
-    charrando.reassign_scripts(post_config.script_manager, config.char_reassignment_dict)
 
     if make_tf_friendly:
         clean_scripts_for_tf(post_config.script_manager)
