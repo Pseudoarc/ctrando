@@ -34,7 +34,7 @@ from ctrando.enemyai import randofixes
 from ctrando.enemyscaling import patchscaling, enemyrebalance
 from ctrando.entranceshuffler import (
     entrancefiller, entranceassign, regionmap, maptraversal, locregions,
-    portalshuffle
+    portalshuffle, epochwarp
 )
 from ctrando.entranceshuffler.entrancefiller import update_starting_rewards
 from ctrando.items import gearrando, itemdata, equiprando
@@ -338,6 +338,10 @@ def get_random_config(
         rng
     )
 
+    from ctrando.entranceshuffler import epochwarp
+    epochwarp.get_nearest_ow_coords(region_map, settings.logic_options.starter_rewards,
+                                    treasure_assignment, config.recruit_dict)
+
     objectivelogic.add_objectives_to_map(config.objectives, config.boss_assignment_dict,
                                          settings.objective_options, region_map)
 
@@ -445,6 +449,17 @@ def get_ctrom_from_config(
     basepatch.add_set_level_command(ct_rom, config.pcstat_manager)
     basepatch.set_level_cap(ct_rom, settings.battle_rewards.xp_tp_rewards.level_cap)
 
+    flight_coords = epochwarp.get_nearest_ow_coords(
+        config.region_map, settings.logic_options.starter_rewards,
+        config.treasure_assignment, config.recruit_dict
+    )
+    basepatch.update_ow_warp_patch(
+        ct_rom,
+        overworld_loc_id_flight=flight_coords.loc_id,
+        overworld_x_flight=flight_coords.x_coord,
+        overworld_y_flight=flight_coords.y_coord
+    )
+
     effecttypes.write_bh_percent(ct_rom, config.pctech_manager,
                                  settings.tech_options.black_hole_min,
                                  settings.tech_options.black_hole_factor
@@ -549,8 +564,6 @@ def get_ctrom_from_config(
         settings.scaling_options.static_scaling_options.static_boss_hp_scale,
         settings.scaling_options.static_scaling_options.static_hp_scale_lavos
     )
-    staticbossscaling.set_element_safety_level(post_config.enemy_ai_manager,
-                                               settings.scaling_options.static_scaling_options.element_safety_level)
 
     if settings.enemy_options.normalize_enemies:
         enemyrebalance.normalize_bosses(
