@@ -2115,44 +2115,53 @@ def patch_division(ct_rom: ctrom.CTRom):
     )
 
 
-def apply_ow_warp_patch(
-        ct_rom: ctrom.CTRom,
-        epoch_loc_id: ctenums.LocID = ctenums.LocID.OW_PRESENT,
-):
-    """Make start+select return to Crono's house"""
-
-    # Code for when select is pressed:
-    # C235FC  E2 20          SEP #$20
-    # C235FE  A9 06          LDA #$06
-    # C23600  8D 7C 02       STA $027C
-    # C23603  80 AE          BRA $C235B3
-
-    hook_addr = 0x0235FC
+def make_ow_warp_patch(
+        house_loc_id: ctenums.LocID = ctenums.LocID.CRONOS_KITCHEN,
+        house_x: int = 0x0A,  # 0x0A
+        house_y: int = 0x0B,  # 0x0B
+        overworld_loc_id: ctenums.LocID = ctenums.LocID.OW_PRESENT,
+        overworld_loc_id_flight: ctenums.LocID = ctenums.LocID.OW_PRESENT,
+        overworld_x_flight: int = 0x270,
+        overworld_y_flight: int = 0x258,
+) -> assemble.ASMList:
     return_addr = 0x023600
     return_rom_addr = byteops.to_rom_ptr(return_addr)
 
     buttons_addr_abs = 0x00F2
     start_mask = 0x01
-    ow_status_addr_abs = 0x027C
+
+    house_coords = int.from_bytes(bytes([house_y, house_x]), "little")
 
     AM = inst.AddressingMode
     routine: assemble.ASMList = [
         inst.LDA(buttons_addr_abs, AM.ABS),
         inst.BIT(start_mask, AM.IMM16),
         inst.BEQ("normal_map"),
-        inst.LDA(ctenums.LocID.CRONOS_KITCHEN, AM.IMM16),
+        inst.LDA(house_loc_id, AM.IMM16),
         inst.STA(0x0100, AM.ABS),
-        inst.LDA(0x0B0A, AM.IMM16),  # coords
+        inst.LDA(house_coords, AM.IMM16),  # coords
         inst.STA(0x0102, AM.ABS),
         inst.LDA(memory.Flags.EPOCH_OBTAINED_LOC.value.address, AM.LNG),
         inst.BIT(memory.Flags.EPOCH_OBTAINED_LOC.value.bit, AM.IMM16),
         inst.BEQ("skip_epoch_move"),
-        inst.LDA(epoch_loc_id, AM.IMM16),
+        inst.LDA(memory.Flags.EPOCH_CAN_FLY.value.address, AM.LNG),
+        inst.BIT(memory.Flags.EPOCH_CAN_FLY.value.bit, AM.IMM16),
+        inst.BEQ("no_flight_move"),
+        inst.LDA(overworld_loc_id_flight, AM.IMM16),
+        inst.STA(memory.Memory.EPOCH_MAP_LO & 0xFFFF, AM.ABS),
+        inst.LDA(overworld_x_flight, AM.IMM16),
+        inst.STA(memory.Memory.EPOCH_X_COORD_LO & 0xFFFF, AM.ABS),
+        inst.LDA(overworld_y_flight, AM.IMM16),
+        inst.STA(memory.Memory.EPOCH_Y_COORD_LO & 0xFFFF, AM.ABS),
+        inst.BRA("after_move"),
+        "no_flight_move",
+        inst.LDA(overworld_loc_id, AM.IMM16),
         inst.STA(memory.Memory.EPOCH_MAP_LO & 0xFFFF, AM.ABS),
         inst.LDA(0x270, AM.IMM16),
         inst.STA(memory.Memory.EPOCH_X_COORD_LO & 0xFFFF, AM.ABS),
         inst.LDA(0x258, AM.IMM16),
         inst.STA(memory.Memory.EPOCH_Y_COORD_LO & 0xFFFF, AM.ABS),
+        "after_move",
         inst.LDA(memory.Flags.EPOCH_OUT_OF_HANGAR.value.bit, AM.IMM16),
         inst.ORA(memory.Flags.EPOCH_OUT_OF_HANGAR.value.address, AM.LNG),
         inst.STA(memory.Flags.EPOCH_OUT_OF_HANGAR.value.address, AM.LNG),
@@ -2179,8 +2188,126 @@ def apply_ow_warp_patch(
         inst.JMP(return_rom_addr, AM.LNG)
     ]
 
+    return routine
+
+
+_ow_warp_hook_addr = 0x0235FC
+_ow_warp_return_addr = 0x023600
+def update_ow_warp_patch(
+        ct_rom, *,
+        house_loc_id: ctenums.LocID = ctenums.LocID.CRONOS_KITCHEN,
+        house_x: int = 0x0A,  # 0x0A
+        house_y: int = 0x0B,  # 0x0B
+        overworld_loc_id: ctenums.LocID = ctenums.LocID.OW_PRESENT,
+        overworld_loc_id_flight: ctenums.LocID = ctenums.LocID.OW_PRESENT,
+        overworld_x_flight: int = 0x270,
+        overworld_y_flight: int = 0x258,
+):
+    AM = inst.AddressingMode
+    ct_rom.seek(_ow_warp_hook_addr)
+
+    rt = make_ow_warp_patch(
+        house_loc_id, house_x, house_y,
+        overworld_loc_id,
+        overworld_loc_id_flight, overworld_x_flight, overworld_y_flight)
+    rt_b = assemble.assemble(rt)
+
+    cur_byte = int.from_bytes(ct_rom.read(1))
+    if cur_byte == inst.JMP(0, AM.LNG).opcode:  # is patched
+        jump_rom_addr = int.from_bytes(ct_rom.read(3), "little")
+        jump_addr = byteops.to_file_ptr(jump_rom_addr)
+
+        ct_rom.seek(jump_addr)
+        ct_rom.write(rt_b)
+    elif cur_byte == 0xE2:  # is not patched
+        apply_ow_warp_patch(
+            ct_rom,
+            house_loc_id, house_x, house_y,
+            overworld_loc_id,
+            overworld_loc_id_flight, overworld_x_flight, overworld_y_flight
+        )
+    else:
+        raise ValueError
+
+
+
+
+def apply_ow_warp_patch(
+        ct_rom: ctrom.CTRom,
+        house_loc_id: ctenums.LocID = ctenums.LocID.CRONOS_KITCHEN,
+        house_x: int = 0x0A,  # 0x0A
+        house_y: int = 0x0B,  # 0x0B
+        overworld_loc_id: ctenums.LocID = ctenums.LocID.OW_PRESENT,
+        overworld_loc_id_flight: ctenums.LocID = ctenums.LocID.OW_PRESENT,
+        overworld_x_flight: int = 0x270,
+        overworld_y_flight: int = 0x258,
+):
+    """Make start+select return to Crono's house"""
+
+    # Code for when select is pressed:
+    # C235FC  E2 20          SEP #$20
+    # C235FE  A9 06          LDA #$06
+    # C23600  8D 7C 02       STA $027C
+    # C23603  80 AE          BRA $C235B3
+
+    hook_addr = _ow_warp_hook_addr
+    return_addr = _ow_warp_return_addr
+    return_rom_addr = byteops.to_rom_ptr(_ow_warp_return_addr)
+
+    # buttons_addr_abs = 0x00F2
+    # start_mask = 0x01
+
+    # AM = inst.AddressingMode
+    # routine: assemble.ASMList = [
+    #     inst.LDA(buttons_addr_abs, AM.ABS),
+    #     inst.BIT(start_mask, AM.IMM16),
+    #     inst.BEQ("normal_map"),
+    #     inst.LDA(ctenums.LocID.CRONOS_KITCHEN, AM.IMM16),
+    #     inst.STA(0x0100, AM.ABS),
+    #     inst.LDA(0x0B0A, AM.IMM16),  # coords
+    #     inst.STA(0x0102, AM.ABS),
+    #     inst.LDA(memory.Flags.EPOCH_OBTAINED_LOC.value.address, AM.LNG),
+    #     inst.BIT(memory.Flags.EPOCH_OBTAINED_LOC.value.bit, AM.IMM16),
+    #     inst.BEQ("skip_epoch_move"),
+    #     inst.LDA(epoch_loc_id, AM.IMM16),
+    #     inst.STA(memory.Memory.EPOCH_MAP_LO & 0xFFFF, AM.ABS),
+    #     inst.LDA(0x270, AM.IMM16),
+    #     inst.STA(memory.Memory.EPOCH_X_COORD_LO & 0xFFFF, AM.ABS),
+    #     inst.LDA(0x258, AM.IMM16),
+    #     inst.STA(memory.Memory.EPOCH_Y_COORD_LO & 0xFFFF, AM.ABS),
+    #     inst.LDA(memory.Flags.EPOCH_OUT_OF_HANGAR.value.bit, AM.IMM16),
+    #     inst.ORA(memory.Flags.EPOCH_OUT_OF_HANGAR.value.address, AM.LNG),
+    #     inst.STA(memory.Flags.EPOCH_OUT_OF_HANGAR.value.address, AM.LNG),
+    #     inst.LDA(memory.Flags.EPOCH_IN_EOT.value.address, AM.LNG),
+    #     inst.AND(0xFFFF - memory.Flags.EPOCH_IN_EOT.value.bit, AM.IMM16),
+    #     inst.STA(memory.Flags.EPOCH_IN_EOT.value.address, AM.LNG),
+    #     "skip_epoch_move",
+    #     inst.LDA(0x0218, AM.IMM16),
+    #     inst.STA(memory.Memory.DACTYL_X_COORD_LO & 0xFFFF, AM.ABS),
+    #     inst.LDA(0x0128, AM.IMM16),
+    #     inst.STA(memory.Memory.DACTYL_Y_COORD_LO & 0xFFFF, AM.ABS),
+    #     inst.SEP(0x20),
+    #     inst.LDA(0x01, AM.IMM8),
+    #     inst.STA(0x0105, AM.ABS),
+    #     inst.LDA(0x02, AM.IMM8),
+    #
+    #     # inst.STA(ow_status_addr_abs, AM.ABS),
+    #     inst.BRA("end"),
+    #     "normal_map",
+    #     inst.SEP(0x20),
+    #     inst.LDA(0x06, AM.IMM8),
+    #     # inst.STA
+    #     "end",
+    #     inst.JMP(return_rom_addr, AM.LNG)
+    # ]
+
+    rt = make_ow_warp_patch(
+        house_loc_id, house_x, house_y,
+        overworld_loc_id,
+        overworld_loc_id_flight, overworld_x_flight, overworld_y_flight
+    )
     asmpatcher.apply_jmp_patch(
-        routine, hook_addr, ct_rom, return_addr
+        rt, hook_addr, ct_rom, return_addr
     )
 
 
