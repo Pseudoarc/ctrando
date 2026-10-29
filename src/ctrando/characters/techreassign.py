@@ -717,7 +717,7 @@ def chaos_reassign_elemental_single_techs(
 
     techs_to_assign = sorted(
         techs_to_assign,
-        key=lambda x:unique_replacement_dict[x]
+        key=lambda x:-unique_replacement_dict[x]
     )
     for tech_id in techs_to_assign:
         num_copies = unique_replacement_dict[tech_id]
