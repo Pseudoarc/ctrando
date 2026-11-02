@@ -947,7 +947,7 @@ def get_reassign_techs_scripts(
         for pair in tech_pairs:
             pctechrandomizer.update_dual_tech_power(pair.tech, single_tech_dict)
 
-    current_tech_id = 0x39
+    current_script_id = 0x39
     for group, tech_pairs in combo_tech_pairs.items():
         if len(group) == 2:
             num_techs = 3
@@ -958,9 +958,11 @@ def get_reassign_techs_scripts(
 
         tech_pairs = sort_tech_pair_list(tech_pairs, rng)[:num_techs]
         for pair in tech_pairs:
-            pair.tech.graphics_header.script_id = current_tech_id
-            new_script_man.script_dict[current_tech_id] = pair.script
-            current_tech_id += 1
+            pair.tech.graphics_header.script_id = current_script_id
+            new_script_man.script_dict[current_script_id] = pair.script
+            current_script_id += 1
+            if current_script_id == 0x75:  # Avoid overwriting hard-coded anims (e.g. run away)
+                current_script_id = 0x81
             new_tech_man.add_tech(pair.tech)
 
     pctechrandomizer.randomize_tech_order(
