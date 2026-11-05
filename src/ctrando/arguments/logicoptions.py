@@ -159,7 +159,7 @@ class LogicOptions:
         self.decay_factor = decay_factor
         self.hard_lavos_final_boss = hard_lavos_end_boss
         self.force_early_flight = force_early_flight
-        self.starter_rewards = starter_rewards
+        self.starter_rewards = list(starter_rewards)
         self.out_of_logic_starter_rewards = out_of_logic_starter_rewards
         self.boats_of_time = boats_of_time
         self.jets_of_time = jets_of_time

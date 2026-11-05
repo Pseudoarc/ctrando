@@ -12,11 +12,11 @@ from typing import TextIO
 
 from ctrando.attacks import animationscript
 from ctrando.arguments import (
-    arguments, enemyscaling, techoptions, tomloptions, gearrandooptions
+    arguments, enemyscaling, tomloptions, gearrandooptions
 )
 from ctrando.enemydata import enemystats, rewardrando, enemyrando
 from ctrando.logic import logictweaks, logictypes
-from ctrando.shops import shoptypes, shoprando, shopchars
+from ctrando.shops import shoprando, shopchars
 
 from ctrando.attacks import (
     pctechrandomizer, techdescriptions, techmenu,
@@ -36,11 +36,11 @@ from ctrando.entranceshuffler import (
     entrancefiller, entranceassign, regionmap, maptraversal, locregions,
     portalshuffle, epochwarp
 )
-from ctrando.entranceshuffler.entrancefiller import update_starting_rewards
-from ctrando.items import gearrando, itemdata, equiprando
+
+from ctrando.items import gearrando, equiprando
 from ctrando.locations.scriptmanager import ScriptManager
 from ctrando.objectives import objectivewriter, objectivelogic
-from ctrando.postrando import postrandowriter, flashreduce
+from ctrando.postrando import postrandowriter
 from ctrando.recruits import recruitwriter
 from ctrando.strings import ctstrings
 from ctrando.treasures import treasureassign, treasuretypes as ttypes
@@ -173,6 +173,43 @@ def extract_settings(*in_args: str) -> arguments.Settings:
         settings.treasure_options.split_linked_chests = True
 
     return settings
+
+
+def get_random_romless_config(
+        settings: arguments.Settings,
+        rng: typing.Optional[RNGType]
+) -> randostate.RomlessConfigState:
+    if rng is None:
+        # noinspection PyTypeChecker
+        rng: RNGType = random.Random()
+        rng.seed(settings.general_options.seed, version=2)
+
+    char_reassignment_dict = charrando.get_char_reassign_dict(settings.character_options, rng)
+
+    recruit_dict = recruitwriter.get_random_recruit_assignment_dict(
+        settings.plando_options.recruit_assignment, rng)
+
+    boss_assignment_dict = bossrando.get_random_boss_assignment(settings.boss_rando_options, rng)
+    midboss_assignment = bossrando.get_random_midboss_assignment(settings.boss_rando_options, rng)
+    boss_assignment_dict.update(midboss_assignment)
+    bossrando.resolve_character_conflicts(
+        boss_assignment_dict, recruit_dict,
+        settings.boss_rando_options, rng)
+
+    objectives = objectivewriter.get_random_objectives_from_settings(
+        settings.objective_options,
+        boss_assignment_dict,
+        rng
+    )
+
+    entrancefiller.update_starting_rewards(settings.logic_options.starter_rewards,
+                                           settings.entrance_options)
+    starting_rewards = list(settings.logic_options.starter_rewards)
+    for reward in settings.logic_options.out_of_logic_starter_rewards:
+        if isinstance(reward, ctenums.ItemID):
+            starting_rewards.append(reward)
+        elif reward not in starting_rewards:
+            starting_rewards.append(reward)
 
 
 def get_random_config(
@@ -337,10 +374,6 @@ def get_random_config(
         settings.entrance_options,
         rng
     )
-
-    from ctrando.entranceshuffler import epochwarp
-    epochwarp.get_nearest_ow_coords(region_map, settings.logic_options.starter_rewards,
-                                    treasure_assignment, config.recruit_dict)
 
     objectivelogic.add_objectives_to_map(config.objectives, config.boss_assignment_dict,
                                          settings.objective_options, region_map)

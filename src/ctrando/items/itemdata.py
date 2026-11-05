@@ -1256,13 +1256,6 @@ class Item:
         self.name = bytearray(name_bytes)
         self.desc = bytearray(desc_bytes)
 
-    def _jot_json(self):
-        return {
-            'name': self.get_name_as_str(True),
-            'desc': self.get_desc_as_str(),
-            'price': self.price
-        }
-
     def __eq__(self, other):
         return (
             self.stats == other.stats and
@@ -1413,6 +1406,14 @@ class Item:
         desc = cls.get_desc_from_rom(rom, item_id)
 
         return cls(stats, secondary_stats, name, desc)
+
+    def get_copy(self) -> typing.Self:
+        return self.__class__(
+            self.stats.get_copy(),
+            self.secondary_stats.get_copy(),
+            self.name,
+            self.desc
+        )
 
     def __str__(self):
         ret_str = str(ctstrings.CTNameString(self.name)) + '\n'

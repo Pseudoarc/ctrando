@@ -257,8 +257,6 @@ def make_ds_replacement_weapons(
             crisis_arm.stats.attack = 170
             crisis_arm.stats.critical_rate = 10
 
-
-
     # Doomsickle to Judgement/Reaper
     doomsickle_targets = [
         x for x in (DSItem.JUDGEMENT_SCYTHE, DSItem.DREAMREAPER)
@@ -288,6 +286,180 @@ def make_ds_replacement_weapons(
         demon_hit.secondary_stats.stat_boost_index = BoostID.POWER_5
         demon_hit.set_name_from_str("{sword}Dino Blade")
 
+
+def get_ds_gear_dict(
+        item_db: itemdata.ItemDB,
+) -> dict[DSItem, itemdata.Item]:
+    ret_dict: dict[DSItem, itemdata.Item] = dict()
+    # Weapons
+    rainbow = item_db[ctenums.ItemID.RAINBOW].get_copy()
+    rainbow.stats.attack = 240
+    rainbow.stats.critical_rate = 90
+    rainbow.set_name_from_str("{blade}DreamSeekr")
+    ret_dict[DSItem.DREAMSEEKER] = rainbow
+
+    valk = item_db[ctenums.ItemID.VALKERYE].get_copy()
+    valk.stats.attack = 0
+    # valk.stats.critical_rate = 0
+    valk.stats.has_effect = True
+    valk.stats.effect_id = WeaponEffects.VENUS_BOW
+    valk.set_name_from_str("{bow}Venus Bow")
+    ret_dict[DSItem.VENUS_BOW] = valk
+
+    wondershot = item_db[ctenums.ItemID.WONDERSHOT].get_copy()
+    wondershot.stats.effect_id = WeaponEffects.SPELLSLINGER
+    wondershot.stats.attack = 0
+    wondershot.set_name_from_str("{gun}Spellslngr")
+    ret_dict[DSItem.SPELLSLINGER] = wondershot
+
+    wondershot = item_db[ctenums.ItemID.WONDERSHOT].get_copy()
+    wondershot.stats.attack = 140
+    wondershot.stats.has_effect = False
+    wondershot.secondary_stats.has_stat_boost = True
+    wondershot.stats.stat_boost_index = BoostID.SPEED_3
+    wondershot.set_name_from_str("{gun}Turboshot")
+    ret_dict[DSItem.TURBOSHOT] = wondershot
+
+    crisis_arm = item_db[ctenums.ItemID.CRISIS_ARM].get_copy()
+    crisis_arm.stats.attack = 0
+    crisis_arm.stats.critical_rate = 10
+    crisis_arm.stats.has_effect = True
+    crisis_arm.stats.effect_id = WeaponEffects.CRIT_9999
+    crisis_arm.set_name_from_str("{arm}Apoc. Arm")
+    ret_dict[DSItem.APOCALYPSE_ARM] = crisis_arm
+
+    crisis_arm = item_db[ctenums.ItemID.CRISIS_ARM].get_copy()
+    crisis_arm.stats.has_effect = False
+    crisis_arm.stats.attack = 170
+    crisis_arm.stats.critical_rate = 10
+    ret_dict[DSItem.DRAGON_ARM] = crisis_arm
+
+    doomsickle = item_db[ctenums.ItemID.DOOMSICKLE].get_copy()
+    doomsickle.stats.effect_id = WeaponEffects.STOP_60
+    doomsickle.stats.attack = 155
+    doomsickle.set_name_from_str("{scythe}JudgeScyth")
+    ret_dict[DSItem.JUDGEMENT_SCYTHE] = doomsickle
+
+    doomsickle = item_db[ctenums.ItemID.DOOMSICKLE].get_copy()
+    doomsickle.stats.effect_id = WeaponEffects.CRIT_4X
+    doomsickle.stats.attack = 180
+    doomsickle.set_name_from_str("{scythe}Dreamreapr")
+    ret_dict[DSItem.DREAMREAPER] = doomsickle
+
+    demon_hit = item_db[ctenums.ItemID.DEMON_HIT].get_copy()
+    demon_hit.stats.attack = 160
+    demon_hit.stats.has_effect = False
+    demon_hit.secondary_stats.has_stat_boost = True
+    demon_hit.secondary_stats.stat_boost_index = BoostID.POWER_5
+    demon_hit.set_name_from_str("{sword}Dino Blade")
+    ret_dict[DSItem.DINOBLADE] = demon_hit
+
+    # Armors
+    cape = item_db[ctenums.ItemID.GLOOM_CAPE].get_copy()
+    cape.stats.defense = 90
+    cape.secondary_stats.stat_boost_index = BoostID.MDEF_20
+    cape.stats.has_effect = True
+    cape.stats.effect_id = ArmorEffects.BARRIER_SHIELD
+    cape.set_name_from_str("{armor}ShadowRobe")
+    ret_dict[DSItem.SHADOWPLUME_ROBE] = cape
+
+    item = item_db[ctenums.ItemID.MOON_ARMOR].get_copy()
+    item.stats.defense = 88
+    item.secondary_stats.stat_boost_index = BoostID.MDEF_STAMINA_10
+    item.set_name_from_str("{armor}RegalPlate")
+    ret_dict[DSItem.REGAL_PLATE] = item
+
+    item = item_db[ctenums.ItemID.PRISMDRESS].get_copy()
+    item.stats.defense = 90
+    item.stats.effect_id = ArmorEffects.BARRIER_SHIELD
+    item.set_name_from_str("{armor}Regal Gown")
+    ret_dict[DSItem.REGAL_GOWN] = item
+
+    item = item_db[ctenums.ItemID.NOVA_ARMOR].get_copy()
+    item.stats.defense = 83
+    item.secondary_stats.stat_boost_index = BoostID.POWER_10
+    item.stats.has_effect = False
+    item.set_name_from_str("{armor}Drgn Armor")
+    ret_dict[DSItem.DRAGON_ARMOR] = item
+
+    item = item_db[ctenums.ItemID.ZODIACCAPE].get_copy()
+    item.stats.defense = 82
+    item.secondary_stats.stat_boost_index = BoostID.MAGIC_10
+    item.stats.has_effect = False
+    item.set_name_from_str("{armor}Rept Dress")
+    ret_dict[DSItem.REPTITE_DRESS] = item
+
+    item = item_db[ctenums.ItemID.TABAN_SUIT].get_copy()
+    item.stats.defense = 92
+    item.secondary_stats.elemental_protection_magnitude = 0
+    item.secondary_stats.stat_boost_index = BoostID.NOTHING
+    item.stats.has_effect = True
+    item.stats.effect_id = ArmorEffects.IMMUNE_ELEMENTS
+    item.set_name_from_str("{armor}Elem Aegis")
+    ret_dict[DSItem.ELEMENTAL_AEGIS] = item
+
+    item = item_db[ctenums.ItemID.RUBY_ARMOR].get_copy()
+    item.stats.defense = 88
+    item.secondary_stats.elemental_protection_magnitude = 0
+    item.secondary_stats.stat_boost_index = BoostID.SPD_POW_3
+    item.secondary_stats.set_equipable_by(list(ctenums.CharID))
+    item.stats.has_effect = False
+    item.stats.effect_id = ArmorEffects.NONE
+    item.set_name_from_str("{armor}SaurLeathr")
+    ret_dict[DSItem.SAURIAN_LEATHERS] = item
+
+    item = item_db[ctenums.ItemID.RBOW_HELM].get_copy()
+    item.stats.defense = 36
+    item.secondary_stats.stat_boost_index = BoostID.POWER_5
+    item.secondary_stats.elemental_protection_magnitude = 0
+    item.secondary_stats.set_equipable_by(
+        [ctenums.CharID.CRONO, ctenums.CharID.FROG, ctenums.CharID.ROBO, ctenums.CharID.MAGUS])
+    item.stats.has_effect = False
+    item.stats.effect_id = ArmorEffects.NONE
+    item.set_name_from_str("{helm}DragonHead")
+    ret_dict[DSItem.DRAGONHEAD] = item
+
+    item = item_db[ctenums.ItemID.RBOW_HELM].get_copy()
+    item.stats.defense = 35
+    item.secondary_stats.elemental_protection_magnitude = 0
+    item.secondary_stats.stat_boost_index = BoostID.MAGIC_5
+    item.secondary_stats.set_equipable_by(
+        [ctenums.CharID.MARLE, ctenums.CharID.LUCCA, ctenums.CharID.AYLA])
+    item.stats.has_effect = False
+    item.stats.effect_id = ArmorEffects.NONE
+    item.set_name_from_str("{helm}Rept.Tiara")
+    ret_dict[DSItem.REPTITE_TIARA] = item
+
+    item = item_db[ctenums.ItemID.PRISM_HELM].get_copy()
+    item.stats.defense = 40
+    item.secondary_stats.stat_boost_index = BoostID.NOTHING
+    item.secondary_stats.set_equipable_by(
+        [ctenums.CharID.CRONO, ctenums.CharID.FROG, ctenums.CharID.ROBO, ctenums.CharID.MAGUS])
+    item.stats.has_effect = True
+    item.stats.effect_id = ArmorEffects.MASTERS_CROWN
+    item.set_name_from_str("{helm}MastrCrown")
+    ret_dict[DSItem.MASTERS_CROWN] = item
+
+    item = item_db[ctenums.ItemID.HASTE_HELM].get_copy()
+    item.stats.defense = 36
+    item.secondary_stats.stat_boost_index = BoostID.NOTHING
+    item.secondary_stats.set_equipable_by(
+        [ctenums.CharID.MARLE, ctenums.CharID.LUCCA, ctenums.CharID.AYLA])
+    item.stats.has_effect = False
+    item.stats.effect_id = ArmorEffects.ANGEL_TIARA
+    item.set_name_from_str("{helm}AngelTiara")
+    ret_dict[DSItem.ANGELS_TIARA] = item
+
+    # Accessories (no need?)
+    item = item_db[ctenums.ItemID.HERO_MEDAL].get_copy()
+    stats = item.stats
+    if not isinstance(stats, itemdata.AccessoryStats):
+        raise ValueError
+    stats.has_mp_mod = True
+    stats.mp_mod = 50
+    ret_dict[DSItem.CHAMPIONS_BADGE] = item
+
+    return ret_dict
 
 def make_ds_replacement_armors(
         item_db: itemdata.ItemDB,
@@ -532,6 +704,11 @@ def randomize_weapons_group(
             cur_secondary_stats.stat_boost_index = boost
 
 
+def make_ds_replacements(
+        item_db
+)
+
+
 def randomize_gear(
         item_db: itemdata.ItemDB,
         gear_rando_options: gearrandooptions.GearRandoOptions,
@@ -583,3 +760,95 @@ def randomize_gear(
     if valk.stats.effect_id not in special_atk_effects and valk.stats.attack == 0:
         valk.stats.attack = 180
 
+
+_strict_ds_replacement_choice_dict: dict[DSItem, ctenums.ItemID] = {
+    # Weapons
+    DSItem.DREAMSEEKER: ctenums.ItemID.RAINBOW,
+    DSItem.VENUS_BOW: ctenums.ItemID.VALKERYE,
+    DSItem.DINOBLADE: ctenums.ItemID.DEMON_HIT,
+
+    # Armors
+    DSItem.SHADOWPLUME_ROBE: ctenums.ItemID.GLOOM_CAPE,
+    DSItem.REGAL_PLATE: ctenums.ItemID.MOON_ARMOR,
+    DSItem.REGAL_GOWN: ctenums.ItemID.PRISMDRESS,
+    DSItem.DRAGON_ARMOR: ctenums.ItemID.NOVA_ARMOR,
+    DSItem.REPTITE_DRESS: ctenums.ItemID.ZODIACCAPE,
+    DSItem.ELEMENTAL_AEGIS: ctenums.ItemID.TABAN_SUIT,
+    DSItem.MASTERS_CROWN: ctenums.ItemID.PRISM_HELM,
+    DSItem.ANGELS_TIARA: ctenums.ItemID.HASTE_HELM,
+    # DSItem.DRAGONHEAD: (
+    #     ctenums.ItemID.RBOW_HELM, ctenums.ItemID.DARK_HELM, ctenums.ItemID.MERMAIDCAP,
+    #     ctenums.ItemID.SIGHT_CAP, ctenums.ItemID.MEMORY_CAP, ctenums.ItemID.TIME_HAT
+    # ),
+    # DSItem.REPTITE_TIARA: (
+    #     ctenums.ItemID.RBOW_HELM, ctenums.ItemID.DARK_HELM, ctenums.ItemID.MERMAIDCAP,
+    #     ctenums.ItemID.SIGHT_CAP, ctenums.ItemID.MEMORY_CAP, ctenums.ItemID.TIME_HAT
+    # ),
+    # DSItem.SAURIAN_LEATHERS: (
+    #     ctenums.ItemID.RUBY_ARMOR, ctenums.ItemID.RED_MAIL, ctenums.ItemID.BLACK_MAIL,
+    #     ctenums.ItemID.BLUE_MAIL, ctenums.ItemID.WHITE_MAIL,
+    # ),
+    # Accessories
+    DSItem.CHAMPIONS_BADGE: ctenums.ItemID.HERO_MEDAL,
+
+
+}
+
+def get_ds_replacement_dict(
+        gear_rando_options: gearrandooptions.GearRandoOptions,
+        rng: RNGType
+) -> dict[ctenums.ItemID, DSItem]:
+
+    ret_dict: dict[ctenums.ItemID, DSItem] = dict()
+
+    ds_item_pool = gear_rando_options.ds_item_pool
+    replacement_chance  = gear_rando_options.ds_replacement_chance / 100
+    for ds_item, item_id in _strict_ds_replacement_choice_dict.items():
+        if ds_item in ds_item_pool and rng.random() < replacement_chance:
+
+    # Wondershot to SpellSlinger or Turboshot
+    wonder_targets = [DSItem.SPELLSLINGER, DSItem.TURBOSHOT]
+    wonder_targets = [x for x in wonder_targets if x in ds_item_pool]
+    if wonder_targets and rng.random() < replacement_chance:
+        replacement = rng.choice(wonder_targets)
+
+    # Crisis to Apocalypse/Dragon
+    crisis_targets = [DSItem.APOCALYPSE_ARM, DSItem.DRAGON_ARM]
+    crisis_targets = [x for x in crisis_targets if x in ds_item_pool]
+    if crisis_targets and ds_item_pool and rng.random() < replacement_chance:
+        replacement = rng.choice(crisis_targets)
+        ret_dict[ctenums.ItemID.CRISIS_ARM] = replacement
+
+    # Doomsickle to Judgement/Reaper
+    doomsickle_targets = [
+        x for x in (DSItem.JUDGEMENT_SCYTHE, DSItem.DREAMREAPER)
+        if x in ds_item_pool
+    ]
+    if doomsickle_targets and rng.random() < replacement_chance:
+        replacement = rng.choice(doomsickle_targets)
+        ret_dict[ctenums.ItemID.DOOMSICKLE] = replacement
+
+    # Extra Helms
+    good_helms = [
+        ctenums.ItemID.RBOW_HELM, ctenums.ItemID.DARK_HELM, ctenums.ItemID.MERMAIDCAP,
+        ctenums.ItemID.SIGHT_CAP, ctenums.ItemID.MEMORY_CAP, ctenums.ItemID.TIME_HAT
+    ]
+
+    replacement_helms = [
+        x for x in (DSItem.DRAGONHEAD, DSItem.REPTITE_TIARA)
+        if x in ds_item_pool
+    ]
+    num_good_helms = len(replacement_helms)
+    replaced_helms: list[ctenums.ItemID] = rng.sample(good_helms, num_good_helms)
+    for item_id, ds_item in zip(replaced_helms, replacement_helms)
+        ret_dict[item_id] = ds_item
+
+    good_armors = [
+        ctenums.ItemID.RUBY_ARMOR, ctenums.ItemID.RED_MAIL, ctenums.ItemID.BLACK_MAIL,
+        ctenums.ItemID.BLUE_MAIL, ctenums.ItemID.WHITE_MAIL,
+    ]
+    if DSItem.SAURIAN_LEATHERS in ds_item_pool and rng.random() < replacement_chance:
+        item_id = rng.choice(good_armors)
+        ret_dict[item_id] = DSItem.SAURIAN_LEATHERS
+
+    return ret_dict

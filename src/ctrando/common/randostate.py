@@ -1,6 +1,7 @@
 """Module to store the state of the randomizer during generation."""
 from dataclasses import dataclass, field
 
+from ctrando.arguments.gearrandooptions import DSItem
 from ctrando.characters import characterwriter
 from ctrando.shops import shoptypes
 from ctrando.attacks import pctech, animationscript, enemytech
@@ -57,6 +58,20 @@ def add_dream_devourer(
     schala_id = ctenums.EnemyID.SCHALA
     stats = enemy_dict[schala_id]
     stats.hp = 0
+
+
+@dataclass
+class RomlessConfigState:
+    """
+    Config data that does not require a ROM to generate.
+    """
+    treasure_assignment: dict[ctenums.TreasureID, ttypes.RewardType]
+    boss_assignment_dict: dict[bosstypes.BossSpotID, bosstypes.BossID]
+    recruit_dict: dict[ctenums.RecruitID, list[ctenums.CharID]]
+    omen_elevator_data: encountertypes.OmenElevatorData
+    char_reassignment_dict: dict[ctenums.CharID, ctenums.CharID]
+    ds_assignment: dict[ctenums.ItemID, DSItem]
+    objectives: list[objectivetypes.ObjectiveType]
 
 
 @dataclass
