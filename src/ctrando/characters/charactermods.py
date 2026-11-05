@@ -130,7 +130,9 @@ def get_blurp_script(base_rom: ctrom.CTRom) -> animationscript.PCTechAnimationSc
     blurp_script = animationscript.read_enemy_tech_script_from_ctrom(base_rom, 0x5D)
     blurp_script.main_script.caster_objects[0][1] = animationscript.ac.PlayAnimationOnce(animation_id=0x5)
 
-    return blurp_script
+    return animationscript.PCTechAnimationScript(
+        blurp_script.main_script, blurp_script.miss_script
+    )
 
 
 def get_blurp_tech(vanilla_tech_man: pctech.PCTechManager) -> pctech.PCTech:
@@ -171,7 +173,10 @@ def get_iron_orb_tech(vanilla_tech_man: pctech.PCTechManager) -> pctech.PCTech:
 def get_burst_ball_script(base_rom: ctrom.CTRom) -> animationscript.PCTechAnimationScript:
     burst_ball_script = animationscript.read_enemy_tech_script_from_ctrom(base_rom, 0x88)
     burst_ball_script.main_script.caster_objects[0][4] = animationscript.ac.PlayAnimationOnce(animation_id=0x22)
-    return burst_ball_script
+
+    return animationscript.PCTechAnimationScript(
+        burst_ball_script.main_script, burst_ball_script.miss_script
+    )
 
 
 def get_burst_ball_tech(vanilla_tech_man: pctech.PCTechManager) -> pctech.PCTech:
