@@ -64,14 +64,17 @@ def add_dream_devourer(
 class RomlessConfigState:
     """
     Config data that does not require a ROM to generate.
+    Not exhaustive.  Just what AP needs to generate a seed.
     """
     treasure_assignment: dict[ctenums.TreasureID, ttypes.RewardType]
     boss_assignment_dict: dict[bosstypes.BossSpotID, bosstypes.BossID]
     recruit_dict: dict[ctenums.RecruitID, list[ctenums.CharID]]
-    omen_elevator_data: encountertypes.OmenElevatorData
     char_reassignment_dict: dict[ctenums.CharID, ctenums.CharID]
     ds_assignment: dict[ctenums.ItemID, DSItem]
     objectives: list[objectivetypes.ObjectiveType]
+    region_map: regionmap.RegionMap
+    ow_exit_assignment_dict: dict[owexitdata.OWExitClass, owexitdata.OWExitClass]
+    starting_rewards: list[logictypes.RewardType]
 
 
 @dataclass

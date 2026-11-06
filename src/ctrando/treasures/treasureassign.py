@@ -431,7 +431,7 @@ def treasure_sort_key(
 
 
 def default_assignment(
-        existing_assignment: dict[ctenums.TreasureID, ctenums.ItemID],
+        existing_assignment: dict[ctenums.TreasureID, ttypes.RewardType],
         treasure_options: treasureoptions.TreasureOptions,
         extra_ds_items: Sequence[gearrandooptions.DSItem],
         exclude_pool: collections.abc.Sequence[ctenums.ItemID],

@@ -645,7 +645,6 @@ class Type_08_Buffs(ctenums.StrIntEnum):
         return type_08_abbrev[self]
 
 
-
 Buff = Type_05_Buffs | Type_06_Buffs | Type_08_Buffs | Type_09_Buffs
 BuffIterable = (
         Iterable[Type_05_Buffs] | Iterable[Type_06_Buffs] |

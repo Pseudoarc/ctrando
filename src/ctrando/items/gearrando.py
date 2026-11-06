@@ -115,19 +115,20 @@ def randomize_good_accessory_effects(
 
         # Badge gets a good effect or hp/mp and stats.
         if rng.random() < 0.0:
-            badge_buff_dist: dict[itemdata.BuffIterable, float] = {
-                (T5.GREENDREAM,): 10,
-                (T6.PROT_BLIND, T6.PROT_CHAOS, T6.PROT_HPDOWN, T6.PROT_LOCK,
-                 T6.PROT_POISON, T6.PROT_SLEEP, T6.PROT_SLOW, T6.PROT_STOP): 4,
-                (T8.HASTE,): 2,
-                (T9.BARRIER,): 10,
-                (T9.SHIELD,): 10,
-                (T9.BARRIER, T9.SHIELD): 2,
-                (T9.SHADES,): 5,
-                (T9.SPECS,): 2
-            }
-            buffs, weights = zip(*acc_buff_dist.items())
-            battle_buffs = rng.choices(buffs, weights=weights, k=1)[0]
+            pass
+            # badge_buff_dist: dict[itemdata.BuffIterable, float] = {
+            #     (T5.GREENDREAM,): 10,
+            #     (T6.PROT_BLIND, T6.PROT_CHAOS, T6.PROT_HPDOWN, T6.PROT_LOCK,
+            #      T6.PROT_POISON, T6.PROT_SLEEP, T6.PROT_SLOW, T6.PROT_STOP): 4,
+            #     (T8.HASTE,): 2,
+            #     (T9.BARRIER,): 10,
+            #     (T9.SHIELD,): 10,
+            #     (T9.BARRIER, T9.SHIELD): 2,
+            #     (T9.SHADES,): 5,
+            #     (T9.SPECS,): 2
+            # }
+            # buffs, weights = zip(*acc_buff_dist.items())
+            # battle_buffs = rng.choices(buffs, weights=weights, k=1)[0]
         else:
             assign_random_hp_mp_mod(badge.stats, rng)
             badge_boosts = (
@@ -705,8 +706,13 @@ def randomize_weapons_group(
 
 
 def make_ds_replacements(
-        item_db
-)
+        item_db: itemdata.ItemDB,
+        ds_replacement_dict: dict[ctenums.ItemID, DSItem]
+):
+    ds_items = get_ds_gear_dict(item_db)
+
+    for item_id, ds_item_id in ds_replacement_dict.items():
+        item_db[item_id] = ds_items[ds_item_id].get_copy()
 
 
 def randomize_gear(
@@ -714,26 +720,6 @@ def randomize_gear(
         gear_rando_options: gearrandooptions.GearRandoOptions,
         rng: RNGType
 ):
-
-    IID = ctenums.ItemID
-    # weapon_pool = [
-    #     IID.RAINBOW, IID.SHIVA_EDGE, IID.SWALLOW, IID.RED_KATANA, IID.SLASHER,
-    #     IID.VALKERYE, IID.SIREN, IID.SONICARROW,
-    #     IID.WONDERSHOT, IID.SHOCK_WAVE, IID.PLASMA_GUN,
-    #     IID.TERRA_ARM, IID.CRISIS_ARM,
-    #     IID.MASAMUNE_2, IID.BRAVESWORD, IID.RUNE_BLADE, IID.DEMON_HIT,  IID.PEARL_EDGE,
-    #     IID.IRON_FIST, IID.BRONZEFIST,
-    #     IID.DOOMSICKLE
-    # ]
-
-    ds_replacement_rate = gear_rando_options.ds_replacement_chance / 100
-
-    make_ds_replacement_weapons(
-        item_db, gear_rando_options.ds_item_pool,
-        gear_rando_options.ds_replacement_chance / 100, rng)
-    make_ds_replacement_armors(
-        item_db, gear_rando_options.ds_item_pool,
-        gear_rando_options.ds_replacement_chance / 100, rng)
 
     modify_bronze_fist(item_db, gear_rando_options.bronze_fist_policy, rng)
 
@@ -805,6 +791,7 @@ def get_ds_replacement_dict(
     replacement_chance  = gear_rando_options.ds_replacement_chance / 100
     for ds_item, item_id in _strict_ds_replacement_choice_dict.items():
         if ds_item in ds_item_pool and rng.random() < replacement_chance:
+            ret_dict[item_id] = ds_item
 
     # Wondershot to SpellSlinger or Turboshot
     wonder_targets = [DSItem.SPELLSLINGER, DSItem.TURBOSHOT]
@@ -840,7 +827,7 @@ def get_ds_replacement_dict(
     ]
     num_good_helms = len(replacement_helms)
     replaced_helms: list[ctenums.ItemID] = rng.sample(good_helms, num_good_helms)
-    for item_id, ds_item in zip(replaced_helms, replacement_helms)
+    for item_id, ds_item in zip(replaced_helms, replacement_helms):
         ret_dict[item_id] = ds_item
 
     good_armors = [
