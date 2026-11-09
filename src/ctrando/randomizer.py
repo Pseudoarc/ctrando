@@ -222,6 +222,26 @@ def get_random_romless_config(
         settings.entrance_options,
         rng
     )
+
+    ### Treasure Fill
+    exclude_pool = [
+        x for x in settings.logic_options.starter_rewards
+        if isinstance(x, ctenums.ItemID)
+    ]
+    if settings.gear_rando_options.bronze_fist_policy == gearrandooptions.BronzeFistPolicy.REMOVE:
+        exclude_pool += [ctenums.ItemID.BRONZEFIST]
+
+    treasure_assignment = treasureassign.default_assignment(
+        treasure_assignment,
+        settings.treasure_options,
+        settings.gear_rando_options.ds_item_pool,
+        exclude_pool,
+        region_map,
+        recruit_dict,
+        settings.logic_options.starter_rewards,
+        settings.recruit_options,
+        rng)
+
     objectivelogic.add_objectives_to_map(
         objectives, boss_assignment_dict,
         settings.objective_options, region_map,
@@ -362,25 +382,6 @@ def get_random_config(
     recruitwriter.write_recruit_stats(settings.recruit_options,
                                       config.recruit_dict,
                                       config.pcstat_manager)
-
-    ### Treasure Fill
-    exclude_pool = [
-        x for x in settings.logic_options.starter_rewards
-        if isinstance(x, ctenums.ItemID)
-    ]
-    if settings.gear_rando_options.bronze_fist_policy == gearrandooptions.BronzeFistPolicy.REMOVE:
-        exclude_pool += [ctenums.ItemID.BRONZEFIST]
-
-    config.treasure_assignment = treasureassign.default_assignment(
-        rom_free_config.treasure_assignment,
-        settings.treasure_options,
-        settings.gear_rando_options.ds_item_pool,
-        exclude_pool,
-        config.region_map,
-        config.recruit_dict,
-        settings.logic_options.starter_rewards,
-        settings.recruit_options,
-        rng)
 
     ### Gear Rando
     gearrando.randomize_good_accessory_effects(
