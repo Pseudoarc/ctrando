@@ -558,7 +558,7 @@ def fix_zenan_bridge_scenes(
     reassign_pc_arbs(
         script, reassign_dict,
         list(range(3, 3+7)),
-        [FID.STARTUP, FID.ARBITRARY_1, FID.ARBITRARY_2],
+        [FID.ARBITRARY_1, FID.ARBITRARY_2],
         []
     )
     script = script_manager[ctenums.LocID.ZENAN_BRIDGE_BOSS]
