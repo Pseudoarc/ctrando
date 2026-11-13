@@ -270,6 +270,7 @@ def get_random_config(
     # Copy over from rom-free config
     config.char_reassignment_dict = rom_free_config.char_reassignment_dict
     config.recruit_dict = rom_free_config.recruit_dict
+    config.treasure_assignment = rom_free_config.treasure_assignment
     # config.recruit_dict[ctenums.RecruitID.CATHEDRAL] = [ctenums.CharID.CRONO]
     config.boss_assignment_dict = rom_free_config.boss_assignment_dict
     config.objectives = rom_free_config.objectives
