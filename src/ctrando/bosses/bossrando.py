@@ -262,7 +262,7 @@ def get_random_boss_assignment(
 
 def resolve_character_conflicts(
         boss_assign_dict: dict[bty.BossSpotID, bty.BossID],
-        recruit_assign_dict: dict[ctenums.RecruitID, ctenums.CharID | None],
+        recruit_assign_dict: dict[ctenums.RecruitID, list[ctenums.CharID]],
         boss_rando_options: bro.BossRandoOptions,
         rng: random.RNGType
 ):

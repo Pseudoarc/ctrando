@@ -12,11 +12,11 @@ from typing import TextIO
 
 from ctrando.attacks import animationscript
 from ctrando.arguments import (
-    arguments, enemyscaling, techoptions, tomloptions, gearrandooptions
+    arguments, enemyscaling, tomloptions, gearrandooptions
 )
 from ctrando.enemydata import enemystats, rewardrando, enemyrando
 from ctrando.logic import logictweaks, logictypes
-from ctrando.shops import shoptypes, shoprando, shopchars
+from ctrando.shops import shoprando, shopchars
 
 from ctrando.attacks import (
     pctechrandomizer, techdescriptions, techmenu,
@@ -36,11 +36,11 @@ from ctrando.entranceshuffler import (
     entrancefiller, entranceassign, regionmap, maptraversal, locregions,
     portalshuffle, epochwarp
 )
-from ctrando.entranceshuffler.entrancefiller import update_starting_rewards
-from ctrando.items import gearrando, itemdata, equiprando
+
+from ctrando.items import gearrando, equiprando
 from ctrando.locations.scriptmanager import ScriptManager
 from ctrando.objectives import objectivewriter, objectivelogic
-from ctrando.postrando import postrandowriter, flashreduce
+from ctrando.postrando import postrandowriter
 from ctrando.recruits import recruitwriter
 from ctrando.strings import ctstrings
 from ctrando.treasures import treasureassign, treasuretypes as ttypes
@@ -175,21 +175,110 @@ def extract_settings(*in_args: str) -> arguments.Settings:
     return settings
 
 
+def get_random_romless_config(
+        settings: arguments.Settings,
+        rng: typing.Optional[RNGType]
+) -> randostate.RomlessConfigState:
+    if rng is None:
+        # noinspection PyTypeChecker
+        rng: RNGType = random.Random()
+        rng.seed(settings.general_options.seed, version=2)
+
+    char_reassignment_dict = charrando.get_char_reassign_dict(settings.character_options, rng)
+
+    recruit_dict = recruitwriter.get_random_recruit_assignment_dict(
+        settings.plando_options.recruit_assignment, rng)
+
+    boss_assignment_dict = bossrando.get_random_boss_assignment(settings.boss_rando_options, rng)
+    midboss_assignment = bossrando.get_random_midboss_assignment(settings.boss_rando_options, rng)
+    boss_assignment_dict.update(midboss_assignment)
+    bossrando.resolve_character_conflicts(
+        boss_assignment_dict, recruit_dict,
+        settings.boss_rando_options, rng)
+
+    ### Objectives
+    # After bosses to avoid double dipping.
+    # Before map to allow objectives in logic
+    objectives = objectivewriter.get_random_objectives_from_settings(
+        settings.objective_options,
+        boss_assignment_dict,
+        rng
+    )
+
+    entrancefiller.update_starting_rewards(settings.logic_options.starter_rewards,
+                                           settings.entrance_options)
+    starting_rewards = list(settings.logic_options.starter_rewards)
+    for reward in settings.logic_options.out_of_logic_starter_rewards:
+        if isinstance(reward, ctenums.ItemID):
+            starting_rewards.append(reward)
+        elif reward not in starting_rewards:
+            starting_rewards.append(reward)
+
+    treasure_assignment, entrance_assignment, region_map = entrancefiller.get_key_item_fill(
+        dict(),
+        boss_assignment_dict,
+        recruit_dict,
+        settings.logic_options,
+        settings.entrance_options,
+        rng
+    )
+
+    ### Treasure Fill
+    exclude_pool = [
+        x for x in settings.logic_options.starter_rewards
+        if isinstance(x, ctenums.ItemID)
+    ]
+    if settings.gear_rando_options.bronze_fist_policy == gearrandooptions.BronzeFistPolicy.REMOVE:
+        exclude_pool += [ctenums.ItemID.BRONZEFIST]
+
+    treasure_assignment = treasureassign.default_assignment(
+        treasure_assignment,
+        settings.treasure_options,
+        settings.gear_rando_options.ds_item_pool,
+        exclude_pool,
+        region_map,
+        recruit_dict,
+        settings.logic_options.starter_rewards,
+        settings.recruit_options,
+        rng)
+
+    objectivelogic.add_objectives_to_map(
+        objectives, boss_assignment_dict,
+        settings.objective_options, region_map,
+    )
+
+    ds_replacement_dict = gearrando.get_ds_replacement_dict(settings.gear_rando_options, rng)
+
+    return randostate.RomlessConfigState(
+        treasure_assignment, boss_assignment_dict, recruit_dict,
+        char_reassignment_dict, ds_replacement_dict, objectives,
+        region_map, entrance_assignment, starting_rewards
+    )
+
+
 def get_random_config(
         settings: arguments.Settings,
+        rom_free_config: randostate.RomlessConfigState,
         input_rom: ctrom.CTRom,
-        rng: typing.Optional[RNGType] = None
+        rng: RNGType
 ) -> randostate.ConfigState:
     """
     Test: Try to do everyting EXCEPT rom changes (incl. scripts).  Then combine all rom changes.
     """
 
     config = randostate.ConfigState.get_default_config_from_ctrom(input_rom)
-
-    if rng is None:
-        # noinspection PyTypeChecker
-        rng: RNGType = random.Random()
-        rng.seed(settings.general_options.seed, version=2)
+    # Copy over from rom-free config
+    config.char_reassignment_dict = rom_free_config.char_reassignment_dict
+    config.recruit_dict = rom_free_config.recruit_dict
+    config.treasure_assignment = rom_free_config.treasure_assignment
+    # config.recruit_dict[ctenums.RecruitID.CATHEDRAL] = [ctenums.CharID.CRONO]
+    config.boss_assignment_dict = rom_free_config.boss_assignment_dict
+    config.objectives = rom_free_config.objectives
+    ### Logic (KI Fill, Entrances)
+    config.starting_rewards = rom_free_config.starting_rewards
+    config.ow_exit_assignment_dict = rom_free_config.ow_exit_assignment_dict
+    config.region_map = rom_free_config.region_map
+    gearrando.make_ds_replacements(config.item_db, rom_free_config.ds_assignment)
 
     working_rom = ctrom.CTRom(input_rom.getvalue())
     basepatch.mark_initial_free_space(working_rom)
@@ -203,7 +292,7 @@ def get_random_config(
         individual_char_opt_dict[char_id] = settings.character_options.get_definite_version(rng)
 
     ### Techs
-    config.char_reassignment_dict = charrando.get_char_reassign_dict(settings.character_options, rng)
+
     # config.char_reassignment_dict[ctenums.CharID.MARLE] = ctenums.CharID.MAGUS
     charrando.modify_base_equipability(config.item_db, config.char_reassignment_dict)
 
@@ -242,30 +331,6 @@ def get_random_config(
                                   settings.shop_options,
                                   settings.gear_rando_options.ds_item_pool,
                                   rng)
-
-    ### Recruits
-    config.recruit_dict = recruitwriter.get_random_recruit_assignment_dict(
-        settings.plando_options.recruit_assignment, rng)
-
-    # config.recruit_dict[ctenums.RecruitID.CATHEDRAL] = [ctenums.CharID.CRONO]
-
-    ### Boss/Midboss
-    config.boss_assignment_dict = bossrando.get_random_boss_assignment(settings.boss_rando_options, rng)
-    midboss_assignment = bossrando.get_random_midboss_assignment(settings.boss_rando_options, rng)
-    config.boss_assignment_dict.update(midboss_assignment)
-    bossrando.resolve_character_conflicts(config.boss_assignment_dict,
-                                          config.recruit_dict,
-                                          settings.boss_rando_options,
-                                          rng)
-
-    ### Objectives
-    # After bosses to avoid double dipping.
-    # Before map to allow objectives in logic
-    config.objectives = objectivewriter.get_random_objectives_from_settings(
-        settings.objective_options,
-        config.boss_assignment_dict,
-        rng
-    )
 
     ### Enemy Charm/Drop
     rewardrando.apply_reward_rando(
@@ -318,54 +383,6 @@ def get_random_config(
     recruitwriter.write_recruit_stats(settings.recruit_options,
                                       config.recruit_dict,
                                       config.pcstat_manager)
-
-    ### Logic (KI Fill, Entrances)
-    entrancefiller.update_starting_rewards(settings.logic_options.starter_rewards,
-                                           settings.entrance_options)
-    config.starting_rewards = list(settings.logic_options.starter_rewards)
-    for reward in settings.logic_options.out_of_logic_starter_rewards:
-        if isinstance(reward, ctenums.ItemID):
-            config.starting_rewards.append(reward)
-        elif reward not in config.starting_rewards:
-            config.starting_rewards.append(reward)
-
-    treasure_assignment, entrance_assignment, region_map = entrancefiller.get_key_item_fill(
-        dict(),
-        config.boss_assignment_dict,
-        config.recruit_dict,
-        settings.logic_options,
-        settings.entrance_options,
-        rng
-    )
-
-    from ctrando.entranceshuffler import epochwarp
-    epochwarp.get_nearest_ow_coords(region_map, settings.logic_options.starter_rewards,
-                                    treasure_assignment, config.recruit_dict)
-
-    objectivelogic.add_objectives_to_map(config.objectives, config.boss_assignment_dict,
-                                         settings.objective_options, region_map)
-
-    config.ow_exit_assignment_dict = entrance_assignment
-    config.region_map = region_map
-
-    ### Treasure Fill
-    exclude_pool = [
-        x for x in settings.logic_options.starter_rewards
-        if isinstance(x, ctenums.ItemID)
-    ]
-    if settings.gear_rando_options.bronze_fist_policy == gearrandooptions.BronzeFistPolicy.REMOVE:
-        exclude_pool += [ctenums.ItemID.BRONZEFIST]
-
-    config.treasure_assignment = treasureassign.default_assignment(
-        treasure_assignment,
-        settings.treasure_options,
-        settings.gear_rando_options.ds_item_pool,
-        exclude_pool,
-        config.region_map,
-        config.recruit_dict,
-        settings.logic_options.starter_rewards,
-        settings.recruit_options,
-        rng)
 
     ### Gear Rando
     gearrando.randomize_good_accessory_effects(
@@ -903,7 +920,10 @@ def main():
 
     print("Getting Random Data...", end="")
     a = time.time()
-    config = get_random_config(settings, ct_rom)
+    rng: RNGType = random.Random()
+    rng.seed(settings.general_options.seed, version=2)
+    rom_free_config = get_random_romless_config(settings, rng)
+    config = get_random_config(settings, rom_free_config, ct_rom, rng)
     b = time.time()
     print(f"({b-a})")
 
