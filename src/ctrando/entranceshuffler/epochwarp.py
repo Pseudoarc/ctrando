@@ -77,12 +77,12 @@ def get_nearest_ow_coords(
     cur_ind = 0
 
     while True:
-
         connector = connector_queue[cur_ind]
         if connector.rule(traverser.game):
             to_region = connector.to_region_name
 
             if to_region in reached_regions:
+                cur_ind += 1
                 continue
 
             if to_region in good_ow_regions:

@@ -9,6 +9,10 @@ from ctrando.treasures import treasuretypes as ttypes
 from ctrando.entranceshuffler import regionmap, maptraversal, entrancerandomizer, portalshuffle
 
 
+class FillError(Exception):
+    ...
+
+
 def get_forced_key_items():
     return [
         ctenums.ItemID.C_TRIGGER, ctenums.ItemID.CLONE,
@@ -128,11 +132,15 @@ def get_key_item_fill(
                 rng.shuffle(possible_loose)
                 key_items = normal_key_items + possible_loose
 
-                treasure_assignment = fill_key_items(
-                    region_map, initial_treasure_assignment, recruit_assignment, key_items,
-                    excluded_spots,list(logic_options.forced_spots), list(logic_options.incentive_spots),
-                    logic_options.incentive_factor, logic_options.decay_factor, rng
-                )
+                try:
+                    treasure_assignment = fill_key_items(
+                        region_map, initial_treasure_assignment, recruit_assignment, key_items,
+                        excluded_spots,list(logic_options.forced_spots), list(logic_options.incentive_spots),
+                        logic_options.incentive_factor, logic_options.decay_factor, rng
+                    )
+                except FillError:
+                    continue
+
                 if verify_fill(region_map, treasure_assignment, recruit_assignment,
                                logic_options):
                     break
@@ -292,9 +300,13 @@ def fill_weighted_random_decay(
         for name, weight in group_weights.items():
             group_weights[name] = weight*(decay_factor**num_assignments[name])
 
-        group = _get_random_group(group_weights, rng)
-        tid = _get_random_tid_from_group(available_groups[group],
-                                         spot_weights, ret_dict, rng)
+        try:
+            group = _get_random_group(group_weights, rng)
+            tid = _get_random_tid_from_group(available_groups[group],
+                                             spot_weights, ret_dict, rng)
+        except distribution.ZeroWeightException as exc:
+            raise FillError from exc
+
         # print(f"Assign {next_item} to {tid} in group {group}")
         # input()
         ret_dict[tid] = next_item
