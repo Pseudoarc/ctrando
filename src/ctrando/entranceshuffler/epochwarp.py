@@ -41,7 +41,7 @@ _region_coord_dict: dict[str, OWCoords] = {
     # "sun_keep_2300_overworld": ,
     # "geno_overworld": ,
     # "sun_palace_overworld": ,
-    "ioka_overworld": OWCoords(ctenums.LocID.OW_PREHISTORIC, 0x279, 0x258),
+    "ioka_overworld": OWCoords(ctenums.LocID.OW_PREHISTORIC, 0x270, 0x258),
     "reptite_lair_overworld": OWCoords(ctenums.LocID.OW_PREHISTORIC, 0x238, 0x338),
     # "sun_keep_prehistory_overworld": ,
     # "tyrano_lair_overworld": ,
