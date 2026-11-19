@@ -389,7 +389,7 @@ def update_rock_usability(
         tech_man: pctech.PCTechManager,
         item_man: itemdata.ItemDB
 ):
-    first_rock_tech = tech_man.num_techs - tech_man.num_rock_techs
+    first_rock_tech = tech_man.num_techs - tech_man.num_rock_techs + 1
 
     rock_usage: dict[ctenums.ItemID, set[ctenums.CharID]] = {
         rock_id: set() for rock_id in (
@@ -399,7 +399,7 @@ def update_rock_usability(
         )
     }
 
-    for tech_id in range(first_rock_tech, tech_man.num_techs):
+    for tech_id in range(first_rock_tech, tech_man.num_techs+1):
         tech = tech_man.get_tech(tech_id)
         if tech.rock_used is not None:
             rock_usage[tech.rock_used].update(tech.battle_group.to_char_ids())
