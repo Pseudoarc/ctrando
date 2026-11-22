@@ -111,10 +111,6 @@ class EventMod(locationevent.LocEventMod):
             .add(EC.pause(0.5))
             .add(EC.static_animation(4))
             .add(EC.assign_val_to_mem(0, 0x7F0224, 1))
-            .add_if(
-                EC.if_flag(memory.Flags.EPOCH_OBTAINED_LOC),
-                EF().jump_to_label(EC.jump_forward(0), "out_anim")
-            )
             .add(EC.set_flag(memory.Flags.EPOCH_OBTAINED_LOC))
             .add_if(
                 EC.if_not_flag(memory.Flags.HAS_DARK_AGES_TIMEGAUGE_ACCESS),
