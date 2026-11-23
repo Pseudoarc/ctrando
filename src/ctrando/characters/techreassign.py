@@ -613,7 +613,7 @@ def make_new_combo_techs(
                 reassign_id = reassign_dict[char_id]
 
                 if reassign_id == ctenums.CharID.MAGUS:
-                    if len(char_selection) == 3 or not char_opt_dict[char_id].use_daltonized_magus:
+                    if len(char_selection) == 3 or not char_opt_dict[char_id].use_magus_dual_techs:
                         skip_selection = True
                         break
 
